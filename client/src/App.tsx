@@ -27,6 +27,7 @@ function Router() {
     <Route path="/quan-tri/cau-hoi" component={Admin} />
     <Route path="/quan-tri/nguoi-dung" component={Admin} />
     <Route path="/quan-tri/bao-cao" component={Admin} />
+    <Route path="/quan-tri/nhat-ky" component={Admin} />
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>;

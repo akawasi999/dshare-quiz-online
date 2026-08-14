@@ -358,6 +358,88 @@ export const appRouter = router({
         await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.approved ? "report.approved" : "report.rejected", entityType: "bug_report", entityId: report.id, metadata: { rewardPoints } });
         return { success: true };
       }),
+    users: adminProcedure.input(z.object({ search: z.string().trim().max(120).optional(), tier: z.enum(["basic", "pro", "premium"]).optional(), status: z.enum(["active", "banned"]).optional() }).optional())
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        const rows = await db.select({ user: users, profile: learnerProfiles })
+          .from(users).leftJoin(learnerProfiles, eq(users.id, learnerProfiles.userId))
+          .where(and(
+            input?.tier ? eq(learnerProfiles.tier, input.tier) : undefined,
+            input?.status ? eq(learnerProfiles.isBanned, input.status === "banned") : undefined,
+            input?.search ? sql`(lower(coalesce(${users.name}, '')) like ${`%${input.search.toLowerCase()}%`} or lower(coalesce(${users.email}, '')) like ${`%${input.search.toLowerCase()}%`})` : undefined,
+          )).orderBy(desc(users.createdAt)).limit(100);
+        const counts = await db.select({ userId: attempts.userId, completed: sql<number>`count(*)` })
+          .from(attempts).where(eq(attempts.status, "submitted")).groupBy(attempts.userId);
+        const countByUser = new Map(counts.map(row => [row.userId, Number(row.completed)]));
+        return rows.map(row => ({ ...row, completedCount: countByUser.get(row.user.id) ?? 0 }));
+      }),
+    updateUserTier: adminProcedure.input(z.object({ userId: z.number().int().positive(), tier: z.enum(["basic", "pro", "premium"]) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const profile = await ensureLearnerProfile(input.userId);
+        if (!profile) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy hồ sơ học viên." });
+        await db.update(learnerProfiles).set({ tier: input.tier }).where(eq(learnerProfiles.id, profile.id));
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user.tier_updated", entityType: "user", entityId: input.userId, metadata: { tier: input.tier } });
+        return { success: true };
+      }),
+    updateUserStatus: adminProcedure.input(z.object({ userId: z.number().int().positive(), isBanned: z.boolean() }))
+      .mutation(async ({ ctx, input }) => {
+        if (input.userId === ctx.user.id) throw new TRPCError({ code: "BAD_REQUEST", message: "Không thể khóa tài khoản quản trị đang sử dụng." });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const profile = await ensureLearnerProfile(input.userId);
+        if (!profile) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy hồ sơ học viên." });
+        await db.update(learnerProfiles).set({ isBanned: input.isBanned }).where(eq(learnerProfiles.id, profile.id));
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.isBanned ? "user.banned" : "user.unbanned", entityType: "user", entityId: input.userId });
+        return { success: true };
+      }),
+    adjustPoints: adminProcedure.input(z.object({ userId: z.number().int().positive(), amount: z.number().int().min(-100000).max(100000).refine(value => value !== 0), description: z.string().trim().min(4).max(500) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const profile = await ensureLearnerProfile(input.userId);
+        if (!profile) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy hồ sơ học viên." });
+        const balanceAfter = profile.pointBalance + input.amount;
+        if (balanceAfter < 0) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Điều chỉnh này khiến số dư Point âm." });
+        await db.update(learnerProfiles).set({ pointBalance: balanceAfter }).where(eq(learnerProfiles.id, profile.id));
+        await db.insert(walletTransactions).values({ userId: input.userId, type: "admin_adjustment", amount: input.amount, balanceAfter, description: input.description, referenceType: "admin", referenceId: ctx.user.id });
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "wallet.adjusted", entityType: "user", entityId: input.userId, metadata: { amount: input.amount, description: input.description } });
+        return { success: true, balanceAfter };
+      }),
+    analytics: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return { users: 0, completed: 0, passRate: 0, pointsConsumed: 0, pointsRewarded: 0, pointsTopUp: 0, popularQuizzes: [] as Array<{ title: string; count: number; passRate: number }> };
+      const [userRows, attemptRows, pointRows, popularRows] = await Promise.all([
+        db.select({ total: sql<number>`count(*)` }).from(users),
+        db.select({ completed: sql<number>`count(*)`, passed: sql<number>`sum(case when ${attempts.passed} = true then 1 else 0 end)` }).from(attempts).where(eq(attempts.status, "submitted")),
+        db.select({
+          topUp: sql<number>`coalesce(sum(case when ${walletTransactions.type} = 'top_up' then ${walletTransactions.amount} else 0 end), 0)`,
+          consumed: sql<number>`coalesce(sum(case when ${walletTransactions.type} = 'quiz_fee' then -${walletTransactions.amount} else 0 end), 0)`,
+          rewarded: sql<number>`coalesce(sum(case when ${walletTransactions.type} in ('quiz_reward', 'report_reward', 'referral_reward') then ${walletTransactions.amount} else 0 end), 0)`,
+        }).from(walletTransactions),
+        db.select({ title: quizzes.title, count: sql<number>`count(${attempts.id})`, passed: sql<number>`sum(case when ${attempts.passed} = true then 1 else 0 end)` })
+          .from(quizzes).leftJoin(attempts, and(eq(quizzes.id, attempts.quizId), eq(attempts.status, "submitted"))).groupBy(quizzes.id, quizzes.title).orderBy(desc(sql`count(${attempts.id})`)).limit(5),
+      ]);
+      const completed = Number(attemptRows[0]?.completed ?? 0);
+      const passed = Number(attemptRows[0]?.passed ?? 0);
+      const point = pointRows[0];
+      return {
+        users: Number(userRows[0]?.total ?? 0), completed, passRate: completed ? Math.round((passed / completed) * 100) : 0,
+        pointsConsumed: Number(point?.consumed ?? 0), pointsRewarded: Number(point?.rewarded ?? 0), pointsTopUp: Number(point?.topUp ?? 0),
+        popularQuizzes: popularRows.map(row => ({ title: row.title, count: Number(row.count), passRate: Number(row.count) ? Math.round((Number(row.passed) / Number(row.count)) * 100) : 0 })),
+      };
+    }),
+    auditTrail: adminProcedure.input(z.object({ actorUserId: z.number().int().positive().optional(), action: z.string().trim().max(120).optional() }).optional())
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        return db.select({ log: auditLogs, actorName: users.name, actorEmail: users.email })
+          .from(auditLogs).leftJoin(users, eq(auditLogs.actorUserId, users.id))
+          .where(and(input?.actorUserId ? eq(auditLogs.actorUserId, input.actorUserId) : undefined, input?.action ? eq(auditLogs.action, input.action) : undefined))
+          .orderBy(desc(auditLogs.createdAt)).limit(100);
+      }),
     saveContentNode: adminProcedure.input(z.object({
       kind: z.enum(["category", "subject", "lesson"]),
       id: z.number().int().positive().optional(),

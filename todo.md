@@ -7,8 +7,10 @@
 - [ ] Xây dựng chương trình giới thiệu bằng mã/referral, theo dõi phần thưởng và lịch sử giới thiệu.
 - [ ] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.
 - [ ] Chuẩn bị luồng import/export ngân hàng câu hỏi theo định dạng CSV/Excel.
-- [ ] Xây dựng trang quản lý người dùng cho admin, gồm tìm kiếm, lọc, điều chỉnh hạng, khóa tài khoản và nhật ký hoạt động.
-- [ ] Xây dựng thống kê vận hành gồm doanh thu Point, mức tiêu thụ, phần thưởng, tỷ lệ đậu/rớt và bộ đề phổ biến.
+- [x] Xây dựng trang quản lý người dùng cho admin, gồm tìm kiếm, lọc, điều chỉnh hạng, khóa tài khoản và nhật ký hoạt động.
+- [x] Xây dựng thống kê vận hành gồm doanh thu Point, mức tiêu thụ, phần thưởng, tỷ lệ đậu/rớt và bộ đề phổ biến.
+- [x] Ưu tiên triển khai giao diện và API quản trị người dùng trước các hạng mục nội dung còn lại.
+- [x] Ưu tiên triển khai dashboard thống kê vận hành, sử dụng dữ liệu thực từ cơ sở dữ liệu.
 - [x] Xây dựng màn hình chuẩn bị bài thi với thông tin phí Point, ngưỡng đậu, phần thưởng và xác nhận trước khi vào bài.
 - [x] Tự động nộp bài khi hết giờ và cung cấp lưới điều hướng trạng thái câu hỏi.
 - [x] Chuẩn hóa mô hình nội dung bốn cấp: Chủ đề → Môn học → Bài học → Bài thi/Bộ đề.

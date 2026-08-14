@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BookOpenCheck, ChartNoAxesCombined, CircleHelp, LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { BookOpenCheck, ChartNoAxesCombined, CircleHelp, LayoutDashboard, LogOut, PanelLeft, ScrollText, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -33,6 +33,7 @@ const menuItems = [
   { icon: CircleHelp, label: "Ngân hàng câu hỏi", path: "/quan-tri/cau-hoi" },
   { icon: Users, label: "Người dùng", path: "/quan-tri/nguoi-dung" },
   { icon: ChartNoAxesCombined, label: "Báo cáo", path: "/quan-tri/bao-cao" },
+  { icon: ScrollText, label: "Nhật ký hoạt động", path: "/quan-tri/nhat-ky" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
