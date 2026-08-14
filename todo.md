@@ -1,0 +1,36 @@
+# Project TODO
+
+- [x] Phân tích đầy đủ tài liệu DshareQuizOnline và hợp nhất các yêu cầu bổ sung của người dùng.
+- [x] Triển khai ba hạng tài khoản Basic, Pro và Premium cùng quyền truy cập theo hạng.
+- [ ] Xây dựng ví Point, sổ cái giao dịch, phí vào bài kiểm tra, thưởng đạt và thao tác điều chỉnh thủ công của admin.
+- [ ] Xây dựng trang nạp Point, nâng cấp gói và các điểm mở rộng cho thanh toán tự động hoặc QR thủ công.
+- [ ] Xây dựng chương trình giới thiệu bằng mã/referral, theo dõi phần thưởng và lịch sử giới thiệu.
+- [ ] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.
+- [ ] Chuẩn bị luồng import/export ngân hàng câu hỏi theo định dạng CSV/Excel.
+- [ ] Xây dựng trang quản lý người dùng cho admin, gồm tìm kiếm, lọc, điều chỉnh hạng, khóa tài khoản và nhật ký hoạt động.
+- [ ] Xây dựng thống kê vận hành gồm doanh thu Point, mức tiêu thụ, phần thưởng, tỷ lệ đậu/rớt và bộ đề phổ biến.
+- [x] Xây dựng màn hình chuẩn bị bài thi với thông tin phí Point, ngưỡng đậu, phần thưởng và xác nhận trước khi vào bài.
+- [x] Tự động nộp bài khi hết giờ và cung cấp lưới điều hướng trạng thái câu hỏi.
+- [x] Chuẩn hóa mô hình nội dung bốn cấp: Chủ đề → Môn học → Bài học → Bài thi/Bộ đề.
+- [ ] Thiết kế nhận diện giao diện cao cấp, responsive, có hỗ trợ chủ đề sáng/tối.
+- [ ] Xây dựng trang chủ với khu vực giới thiệu, tìm kiếm, lọc danh mục và các bộ đề nổi bật.
+- [ ] Xây dựng luồng xác thực Manus, hồ sơ cá nhân và thiết lập tài khoản.
+- [x] Thiết kế dữ liệu ngân hàng câu hỏi, đáp án, độ khó, tag và giải thích.
+- [x] Xây dựng trải nghiệm làm quiz từng bước, hỗ trợ chọn một/nhiều đáp án và đồng hồ đếm ngược.
+- [x] Áp dụng xáo trộn câu hỏi và phương án đáp án cho mỗi lượt làm bài.
+- [x] Triển khai chấm điểm tự động, trang kết quả chi tiết và giải thích đáp án.
+- [ ] Xây dựng chế độ luyện tập, làm lại câu sai và phản hồi ngay sau từng câu.
+- [x] Lưu lịch sử thi, tiến độ học tập, tỷ lệ chính xác và điểm trung bình.
+- [ ] Xây dựng leaderboard theo bộ đề và toàn hệ thống.
+- [x] Hiển thị thảo luận/bình luận chỉ sau khi người dùng hoàn thành bài.
+- [x] Xây dựng tính năng báo lỗi câu hỏi, quy trình admin duyệt và hoàn Point cho báo cáo hợp lệ.
+- [ ] Xây dựng khu vực quản trị để quản lý nội dung, câu hỏi, bộ đề và báo cáo lỗi.
+- [ ] Tạo đề thi ngẫu nhiên theo số lượng câu hỏi và tỷ lệ độ khó.
+- [ ] Tích hợp gói thanh toán, điểm thưởng và quyền truy cập nội dung trả phí.
+- [ ] Tích hợp PayOS cho nạp Point và nâng cấp gói, gồm tạo liên kết thanh toán, nhận webhook có xác minh và đối soát giao dịch.
+- [ ] Tích hợp trợ lý AI sinh giải thích, gợi ý tài liệu và trả lời nội dung quiz.
+- [ ] Gửi thông báo cho admin khi có người dùng mới hoàn thành bài, đạt thành tích cao hoặc phá kỷ lục.
+- [x] Triển khai biện pháp hạn chế gian lận trong màn hình làm bài, có ghi nhận sự kiện vi phạm.
+- [ ] Bổ sung xử lý trạng thái tải, trống, lỗi; bảo đảm điều hướng và khả năng truy cập tốt.
+- [x] Viết kiểm thử Vitest cho quy tắc tính điểm, thứ tự ngẫu nhiên và các quyền quản trị.
+- [ ] Rà soát giao diện trên desktop và mobile, chạy kiểm thử, tạo checkpoint và bàn giao.

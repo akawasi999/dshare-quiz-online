@@ -1,28 +1,391 @@
+import { TRPCError } from "@trpc/server";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { z } from "zod";
+import {
+  attempts,
+  auditLogs,
+  bugReports,
+  categories,
+  discussionPosts,
+  learnerProfiles,
+  lessons,
+  questionOptions,
+  questions,
+  quizzes,
+  quizQuestions,
+  subjects,
+  users,
+  walletTransactions,
+} from "../drizzle/schema";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { invokeLLM } from "./_core/llm";
+import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import {
+  createAttempt,
+  ensureLearnerProfile,
+  getDb,
+  getLeaderboard,
+  getLearnerSummary,
+  getQuizDetail,
+  getQuizQuestionSet,
+  getWalletTransactions,
+  listCategories,
+  listPublishedCatalog,
+  logSecurityEvent,
+  saveAnswer,
+  submitAttempt,
+} from "./db";
+import { shuffledForAttempt } from "./quizEngine";
+
+const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
+const quizIdInput = z.object({ quizId: z.number().int().positive() });
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  catalog: router({
+    categories: publicProcedure.query(() => listCategories()),
+    list: publicProcedure.input(z.object({ search: z.string().trim().max(120).optional(), categoryId: z.number().int().positive().optional() }).optional())
+      .query(({ input }) => listPublishedCatalog(input?.search, input?.categoryId)),
+    detail: publicProcedure.input(quizIdInput).query(async ({ input }) => {
+      const detail = await getQuizDetail(input.quizId);
+      if (!detail || !detail.quiz.isPublished) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy bộ đề." });
+      return detail;
+    }),
+  }),
+
+  learner: router({
+    summary: protectedProcedure.query(({ ctx }) => getLearnerSummary(ctx.user.id)),
+    wallet: protectedProcedure.query(({ ctx }) => getWalletTransactions(ctx.user.id)),
+    updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const profile = await ensureLearnerProfile(ctx.user.id);
+        if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        await db.update(learnerProfiles).set({ bio: input.bio || null, avatarUrl: input.avatarUrl || null }).where(eq(learnerProfiles.id, profile.id));
+        return { success: true };
+      }),
+    history: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select({ attempt: attempts, quizTitle: quizzes.title, quizMode: quizzes.mode })
+        .from(attempts).innerJoin(quizzes, eq(attempts.quizId, quizzes.id))
+        .where(eq(attempts.userId, ctx.user.id)).orderBy(desc(attempts.startedAt)).limit(30);
+    }),
+  }),
+
+  leaderboard: router({
+    list: publicProcedure.input(z.object({ quizId: z.number().int().positive().optional() }).optional())
+      .query(({ input }) => getLeaderboard(input?.quizId)),
+  }),
+
+  quiz: router({
+    start: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
+      const detail = await getQuizDetail(input.quizId);
+      if (!detail || !detail.quiz.isPublished) throw new TRPCError({ code: "NOT_FOUND", message: "Bộ đề chưa sẵn sàng." });
+      const profile = await ensureLearnerProfile(ctx.user.id);
+      if (!profile || profile.isBanned) throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản hiện không thể tham gia bài thi." });
+      if (tierRank[profile.tier] < tierRank[detail.quiz.accessTier]) {
+        throw new TRPCError({ code: "FORBIDDEN", message: `Bộ đề này dành cho thành viên ${detail.quiz.accessTier.toUpperCase()} trở lên.` });
+      }
+      const questionSet = await getQuizQuestionSet(input.quizId);
+      if (!questionSet.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Bộ đề chưa có câu hỏi hợp lệ." });
+      if (detail.quiz.mode === "testing" && detail.quiz.entryPointCost > 0) {
+        if (profile.pointBalance < detail.quiz.entryPointCost) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Số dư Point chưa đủ để bắt đầu bài kiểm tra." });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể kết nối ví Point." });
+        const balanceAfter = profile.pointBalance - detail.quiz.entryPointCost;
+        await db.update(learnerProfiles).set({ pointBalance: balanceAfter }).where(eq(learnerProfiles.id, profile.id));
+        await db.insert(walletTransactions).values({
+          userId: ctx.user.id,
+          type: "quiz_fee",
+          amount: -detail.quiz.entryPointCost,
+          balanceAfter,
+          description: `Phí tham gia: ${detail.quiz.title}`,
+          referenceType: "quiz",
+          referenceId: detail.quiz.id,
+        });
+      }
+      const ordered = detail.quiz.randomizeQuestions
+        ? shuffledForAttempt(questionSet, Date.now())
+        : questionSet;
+      const attemptId = await createAttempt({
+        userId: ctx.user.id,
+        quizId: detail.quiz.id,
+        mode: detail.quiz.mode,
+        questionOrder: ordered.map(item => item.question.id),
+      });
+      return {
+        attemptId,
+        quiz: detail.quiz,
+        hierarchy: { category: detail.category.title, subject: detail.subject.title, lesson: detail.lesson.title },
+        questions: ordered.map((item, questionIndex) => ({
+          id: item.question.id,
+          prompt: item.question.prompt,
+          type: item.question.type,
+          difficulty: item.question.difficulty,
+          tags: item.question.tags,
+          questionIndex,
+          options: detail.quiz.randomizeOptions
+            ? shuffledForAttempt(item.options, attemptId + item.question.id)
+            : item.options,
+        })).map(question => ({
+          ...question,
+          options: question.options.map(option => ({ id: option.id, body: option.body })),
+        })),
+      };
+    }),
+    saveAnswer: protectedProcedure.input(z.object({ attemptId: z.number().int().positive(), questionId: z.number().int().positive(), selectedOptionIds: z.array(z.number().int().positive()).max(10) }))
+      .mutation(({ input }) => saveAnswer(input)),
+    submit: protectedProcedure.input(z.object({ attemptId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const result = await submitAttempt(input.attemptId, ctx.user.id);
+      if (result.scorePercent >= 90 || result.passed) {
+        await notifyOwner({
+          title: "Dshare Quiz: kết quả mới đáng chú ý",
+          content: `${ctx.user.name ?? "Một học viên"} vừa hoàn thành “${result.quiz.title}” với ${result.scorePercent}% (${result.passed ? "Đạt" : "Chưa đạt"}).`,
+        });
+      }
+      return result;
+    }),
+    securityEvent: protectedProcedure.input(z.object({ attemptId: z.number().int().positive(), eventType: z.enum(["copy", "paste", "context_menu", "tab_hidden", "fullscreen_exit"]) }))
+      .mutation(({ input }) => logSecurityEvent(input.attemptId, input.eventType)),
+  }),
+
+  discussion: router({
+    list: protectedProcedure.input(quizIdInput).query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const completed = await db.select({ id: attempts.id }).from(attempts)
+        .where(and(eq(attempts.userId, ctx.user.id), eq(attempts.quizId, input.quizId), eq(attempts.status, "submitted"))).limit(1);
+      if (!completed.length) throw new TRPCError({ code: "FORBIDDEN", message: "Thảo luận được mở sau khi bạn hoàn thành bài." });
+      return db.select({ post: discussionPosts, author: users.name }).from(discussionPosts)
+        .innerJoin(users, eq(discussionPosts.userId, users.id)).where(and(eq(discussionPosts.quizId, input.quizId), eq(discussionPosts.status, "visible")))
+        .orderBy(desc(discussionPosts.createdAt));
+    }),
+    create: protectedProcedure.input(z.object({ quizId: z.number().int().positive(), body: z.string().trim().min(3).max(1200) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const completed = await db.select({ id: attempts.id }).from(attempts)
+          .where(and(eq(attempts.userId, ctx.user.id), eq(attempts.quizId, input.quizId), eq(attempts.status, "submitted"))).limit(1);
+        if (!completed.length) throw new TRPCError({ code: "FORBIDDEN", message: "Hãy hoàn thành bài trước khi tham gia thảo luận." });
+        await db.insert(discussionPosts).values({ quizId: input.quizId, userId: ctx.user.id, body: input.body });
+        return { success: true };
+      }),
+  }),
+
+  ai: router({
+    explain: protectedProcedure.input(z.object({ question: z.string().trim().min(8).max(2000), context: z.string().trim().max(2000).optional() }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "Bạn là trợ lý học tập Dshare. Trả lời bằng tiếng Việt, giải thích khái niệm ngắn gọn, có cấu trúc, không bịa nguồn tham khảo và khuyến khích người học tự kiểm chứng." },
+            { role: "user", content: `Câu hỏi: ${input.question}\nNgữ cảnh: ${input.context ?? "Không có"}\nHãy đưa ra giải thích học thuật, gợi ý cách suy luận và 2 từ khóa để tự tìm tài liệu.` },
+          ],
+          maxTokens: 700,
+        });
+        return { content: typeof response.choices[0]?.message.content === "string" ? response.choices[0].message.content : "Chưa thể tạo giải thích lúc này." };
+      }),
+  }),
+
+  reports: router({
+    submit: protectedProcedure.input(z.object({ questionId: z.number().int().positive(), attemptId: z.number().int().positive().optional(), details: z.string().trim().min(10).max(2000) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        if (input.attemptId) {
+          const ownedAttempt = await db.select({ id: attempts.id }).from(attempts)
+            .where(and(eq(attempts.id, input.attemptId), eq(attempts.userId, ctx.user.id))).limit(1);
+          if (!ownedAttempt.length) throw new TRPCError({ code: "FORBIDDEN", message: "Lượt làm bài không hợp lệ." });
+        }
+        const created = await db.insert(bugReports).values({ userId: ctx.user.id, questionId: input.questionId, attemptId: input.attemptId, details: input.details });
+        await notifyOwner({ title: "Dshare Quiz: báo lỗi câu hỏi mới", content: `${ctx.user.name ?? "Một học viên"} vừa báo lỗi câu hỏi #${input.questionId}.` });
+        return { success: true, reportId: Number(created[0].insertId) };
+      }),
+  }),
+
+  admin: router({
+    overview: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return { users: 0, quizzes: 0, submitted: 0, pendingReports: 0 };
+      const [userStat, quizStat, attemptStat, reportStat] = await Promise.all([
+        db.select({ count: sql<number>`count(*)` }).from(users),
+        db.select({ count: sql<number>`count(*)` }).from(quizzes),
+        db.select({ count: sql<number>`count(*)` }).from(attempts).where(eq(attempts.status, "submitted")),
+        db.select({ count: sql<number>`count(*)` }).from(bugReports).where(eq(bugReports.status, "pending")),
+      ]);
+      return { users: Number(userStat[0]?.count ?? 0), quizzes: Number(quizStat[0]?.count ?? 0), submitted: Number(attemptStat[0]?.count ?? 0), pendingReports: Number(reportStat[0]?.count ?? 0) };
+    }),
+    contentTree: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return { categories: [], subjects: [], lessons: [], quizzes: [] };
+      const [categoryRows, subjectRows, lessonRows, quizRows] = await Promise.all([
+        db.select().from(categories).orderBy(categories.sortOrder),
+        db.select().from(subjects).orderBy(subjects.sortOrder),
+        db.select().from(lessons).orderBy(lessons.sortOrder),
+        db.select().from(quizzes).orderBy(desc(quizzes.updatedAt)),
+      ]);
+      return { categories: categoryRows, subjects: subjectRows, lessons: lessonRows, quizzes: quizRows };
+    }),
+    saveQuiz: adminProcedure.input(z.object({ id: z.number().int().positive().optional(), lessonId: z.number().int().positive(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/), mode: z.enum(["training", "testing"]), accessTier: z.enum(["basic", "pro", "premium"]), durationSeconds: z.number().int().min(60).max(14400), passingScore: z.number().int().min(0).max(100), entryPointCost: z.number().int().min(0), completionReward: z.number().int().min(0), isPublished: z.boolean() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const data = { lessonId: input.lessonId, title: input.title, slug: input.slug, mode: input.mode, accessTier: input.accessTier, durationSeconds: input.durationSeconds, passingScore: input.passingScore, entryPointCost: input.entryPointCost, completionReward: input.completionReward, isPublished: input.isPublished };
+        if (input.id) await db.update(quizzes).set(data).where(eq(quizzes.id, input.id));
+        else await db.insert(quizzes).values(data);
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.id ? "quiz.updated" : "quiz.created", entityType: "quiz", entityId: input.id, metadata: { title: input.title } });
+        return { success: true };
+      }),
+    generateRandomQuiz: adminProcedure.input(z.object({
+      lessonId: z.number().int().positive(),
+      title: z.string().trim().min(4).max(220),
+      slug: z.string().trim().regex(/^[a-z0-9-]+$/),
+      mode: z.enum(["training", "testing"]),
+      questionCount: z.number().int().min(5).max(200),
+      easyRatio: z.number().min(0).max(1),
+      mediumRatio: z.number().min(0).max(1),
+      hardRatio: z.number().min(0).max(1),
+    })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const ratioSum = input.easyRatio + input.mediumRatio + input.hardRatio;
+      if (Math.abs(ratioSum - 1) > 0.001) throw new TRPCError({ code: "BAD_REQUEST", message: "Tổng tỷ lệ độ khó phải bằng 100%." });
+      const pool = await db.select().from(questions).where(and(eq(questions.lessonId, input.lessonId), eq(questions.isActive, true)));
+      const wanted = {
+        easy: Math.round(input.questionCount * input.easyRatio),
+        medium: Math.round(input.questionCount * input.mediumRatio),
+        hard: Math.round(input.questionCount * input.hardRatio),
+      };
+      wanted.medium += input.questionCount - wanted.easy - wanted.medium - wanted.hard;
+      const selected = (["easy", "medium", "hard"] as const).flatMap(difficulty => shuffledForAttempt(pool.filter(question => question.difficulty === difficulty), Date.now() + difficulty.length).slice(0, wanted[difficulty]));
+      if (selected.length < input.questionCount) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Ngân hàng chưa đủ câu hỏi theo tỷ lệ đã chọn (có ${selected.length}/${input.questionCount} câu).` });
+      const created = await db.insert(quizzes).values({ lessonId: input.lessonId, title: input.title, slug: input.slug, mode: input.mode, difficulty: "medium", durationSeconds: input.questionCount * 60, passingScore: 70, entryPointCost: input.mode === "testing" ? 20 : 0, completionReward: input.mode === "testing" ? 40 : 0, questionCount: input.questionCount, randomizeQuestions: true, randomizeOptions: true, isPublished: false });
+      const quizId = Number(created[0].insertId);
+      await db.insert(quizQuestions).values(selected.map((question, sortOrder) => ({ quizId, questionId: question.id, points: 1, sortOrder })));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.generated", entityType: "quiz", entityId: quizId, metadata: { questionCount: input.questionCount, ratios: { easy: input.easyRatio, medium: input.mediumRatio, hard: input.hardRatio } } });
+      return { success: true, quizId, selectedCount: selected.length };
+    }),
+    removeQuiz: adminProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(quizzes).where(eq(quizzes.id, input.quizId));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.deleted", entityType: "quiz", entityId: input.quizId });
+      return { success: true };
+    }),
+    listQuestions: adminProcedure.input(z.object({ lessonId: z.number().int().positive().optional() }).optional()).query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select().from(questions).where(input?.lessonId ? eq(questions.lessonId, input.lessonId) : undefined).orderBy(desc(questions.updatedAt));
+      if (!rows.length) return [];
+      const options = await db.select().from(questionOptions).where(sql`${questionOptions.questionId} in (${sql.join(rows.map(row => sql`${row.id}`), sql`, `)})`).orderBy(questionOptions.sortOrder);
+      return rows.map(question => ({ ...question, options: options.filter(option => option.questionId === question.id) }));
+    }),
+    saveQuestion: adminProcedure.input(z.object({
+      id: z.number().int().positive().optional(),
+      lessonId: z.number().int().positive(),
+      quizId: z.number().int().positive().optional(),
+      prompt: z.string().trim().min(8).max(5000),
+      type: z.enum(["single", "multiple", "true_false", "fill_blank", "image", "matching"]),
+      difficulty: z.enum(["easy", "medium", "hard"]),
+      explanation: z.string().trim().max(5000).optional(),
+      tags: z.array(z.string().trim().min(1).max(40)).min(1).max(12),
+      options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).min(2).max(10),
+    })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      if (!input.options.some(option => option.isCorrect)) throw new TRPCError({ code: "BAD_REQUEST", message: "Cần có ít nhất một đáp án đúng." });
+      const questionData = { lessonId: input.lessonId, prompt: input.prompt, type: input.type, difficulty: input.difficulty, explanation: input.explanation || null, tags: input.tags };
+      let questionId = input.id;
+      if (questionId) {
+        await db.update(questions).set(questionData).where(eq(questions.id, questionId));
+        await db.delete(questionOptions).where(eq(questionOptions.questionId, questionId));
+      } else {
+        const created = await db.insert(questions).values(questionData);
+        questionId = Number(created[0].insertId);
+      }
+      await db.insert(questionOptions).values(input.options.map((option, sortOrder) => ({ questionId: questionId!, body: option.body, isCorrect: option.isCorrect, sortOrder })));
+      if (input.quizId) await db.insert(quizQuestions).values({ quizId: input.quizId, questionId: questionId!, points: 1, sortOrder: 0 }).onDuplicateKeyUpdate({ set: { questionId: questionId! } });
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.id ? "question.updated" : "question.created", entityType: "question", entityId: questionId, metadata: { prompt: input.prompt.slice(0, 160) } });
+      return { success: true, questionId };
+    }),
+    removeQuestion: adminProcedure.input(z.object({ questionId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(quizQuestions).where(eq(quizQuestions.questionId, input.questionId));
+      await db.delete(questionOptions).where(eq(questionOptions.questionId, input.questionId));
+      await db.delete(questions).where(eq(questions.id, input.questionId));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "question.deleted", entityType: "question", entityId: input.questionId });
+      return { success: true };
+    }),
+    reports: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select({ report: bugReports, reporter: users.name, prompt: questions.prompt })
+        .from(bugReports).innerJoin(users, eq(bugReports.userId, users.id)).innerJoin(questions, eq(bugReports.questionId, questions.id))
+        .orderBy(desc(bugReports.createdAt)).limit(50);
+    }),
+    reviewReport: adminProcedure.input(z.object({ reportId: z.number().int().positive(), approved: z.boolean(), moderatorNote: z.string().trim().max(1000).optional(), rewardPoints: z.number().int().min(0).max(100000).default(0) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const rows = await db.select().from(bugReports).where(eq(bugReports.id, input.reportId)).limit(1);
+        const report = rows[0];
+        if (!report) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy báo cáo." });
+        if (report.status !== "pending") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Báo cáo này đã được duyệt trước đó." });
+        const rewardPoints = input.approved ? input.rewardPoints : 0;
+        await db.update(bugReports).set({ status: input.approved ? "approved" : "rejected", moderatorNote: input.moderatorNote || null, rewardPoints, reviewedAt: new Date() }).where(eq(bugReports.id, report.id));
+        if (input.approved && rewardPoints > 0) {
+          const profile = await ensureLearnerProfile(report.userId);
+          if (profile) {
+            const balanceAfter = profile.pointBalance + rewardPoints;
+            await db.update(learnerProfiles).set({ pointBalance: balanceAfter }).where(eq(learnerProfiles.id, profile.id));
+            await db.insert(walletTransactions).values({ userId: report.userId, type: "report_reward", amount: rewardPoints, balanceAfter, description: `Bồi hoàn báo lỗi câu hỏi #${report.questionId}`, referenceType: "bug_report", referenceId: report.id });
+          }
+        }
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.approved ? "report.approved" : "report.rejected", entityType: "bug_report", entityId: report.id, metadata: { rewardPoints } });
+        return { success: true };
+      }),
+    saveContentNode: adminProcedure.input(z.object({
+      kind: z.enum(["category", "subject", "lesson"]),
+      id: z.number().int().positive().optional(),
+      parentId: z.number().int().positive().optional(),
+      title: z.string().trim().min(2).max(180),
+      slug: z.string().trim().regex(/^[a-z0-9-]+$/),
+      description: z.string().trim().max(3000).optional(),
+      isPublished: z.boolean(),
+      sortOrder: z.number().int().min(0).max(10000),
+    })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      if (input.kind === "category") {
+        const data = { title: input.title, slug: input.slug, description: input.description || null, isPublished: input.isPublished, sortOrder: input.sortOrder };
+        if (input.id) await db.update(categories).set(data).where(eq(categories.id, input.id)); else await db.insert(categories).values(data);
+      } else if (input.kind === "subject") {
+        if (!input.parentId) throw new TRPCError({ code: "BAD_REQUEST", message: "Môn học cần thuộc một Chủ đề." });
+        const data = { categoryId: input.parentId, title: input.title, slug: input.slug, description: input.description || null, isPublished: input.isPublished, sortOrder: input.sortOrder };
+        if (input.id) await db.update(subjects).set(data).where(eq(subjects.id, input.id)); else await db.insert(subjects).values(data);
+      } else {
+        if (!input.parentId) throw new TRPCError({ code: "BAD_REQUEST", message: "Bài học cần thuộc một Môn học." });
+        const data = { subjectId: input.parentId, title: input.title, slug: input.slug, summary: input.description || null, isPublished: input.isPublished, sortOrder: input.sortOrder };
+        if (input.id) await db.update(lessons).set(data).where(eq(lessons.id, input.id)); else await db.insert(lessons).values(data);
+      }
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: `${input.kind}.${input.id ? "updated" : "created"}`, entityType: input.kind, entityId: input.id, metadata: { title: input.title } });
+      return { success: true };
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
