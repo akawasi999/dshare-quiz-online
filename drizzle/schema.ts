@@ -1,4 +1,5 @@
 import {
+  bigint,
   boolean,
   index,
   int,
@@ -24,6 +25,7 @@ export const users = mysqlTable("users", {
 });
 
 export const accountTierValues = ["basic", "pro", "premium"] as const;
+export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "expired"] as const;
 export const quizModeValues = ["training", "testing"] as const;
 export const questionTypeValues = ["single", "multiple", "true_false", "fill_blank", "image", "matching"] as const;
 export const difficultyValues = ["easy", "medium", "hard"] as const;
@@ -40,6 +42,7 @@ export const learnerProfiles = mysqlTable("learnerProfiles", {
   learningGoal: varchar("learningGoal", { length: 220 }),
   notificationPreferences: json("notificationPreferences").$type<{ studyReminders: boolean; resultUpdates: boolean; platformUpdates: boolean }>(),
   lastPracticeCategoryId: int("lastPracticeCategoryId"),
+  tierExpiresAt: timestamp("tierExpiresAt"),
   isBanned: boolean("isBanned").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -203,10 +206,25 @@ export const paymentRecords = mysqlTable("paymentRecords", {
   stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
   itemType: mysqlEnum("itemType", ["points", "membership"]).notNull(),
   itemCode: varchar("itemCode", { length: 100 }).notNull(),
+  payosOrderCode: bigint("payosOrderCode", { mode: "number" }),
+  payosPaymentLinkId: varchar("payosPaymentLinkId", { length: 255 }),
+  amount: int("amount"),
+  currency: varchar("currency", { length: 8 }).default("VND").notNull(),
+  status: mysqlEnum("status", paymentStatusValues).default("pending").notNull(),
+  pointAmount: int("pointAmount"),
+  targetTier: mysqlEnum("targetTier", accountTierValues),
+  membershipMonths: int("membershipMonths"),
+  description: varchar("description", { length: 500 }),
+  webhookReference: varchar("webhookReference", { length: 255 }),
+  webhookPayload: json("webhookPayload").$type<Record<string, unknown>>(),
+  paidAt: timestamp("paidAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, table => [
   uniqueIndex("payment_records_intent_unique").on(table.stripePaymentIntentId),
+  uniqueIndex("payment_records_payos_order_unique").on(table.payosOrderCode),
+  uniqueIndex("payment_records_payos_link_unique").on(table.payosPaymentLinkId),
   index("payment_records_user_idx").on(table.userId),
+  index("payment_records_status_idx").on(table.status),
 ]);
 
 export const bugReports = mysqlTable("bugReports", {

@@ -11,6 +11,7 @@ import {
   learnerProfiles,
   lessons,
   questionOptions,
+  paymentRecords,
   questions,
   quizzes,
   quizQuestions,
@@ -45,6 +46,8 @@ import {
   submitAttempt,
 } from "./db";
 import { shuffledForAttempt } from "./quizEngine";
+import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
+import { createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const quizIdInput = z.object({ quizId: z.number().int().positive() });
@@ -129,6 +132,68 @@ export const appRouter = router({
       return db.select({ attempt: attempts, quizTitle: quizzes.title, quizMode: quizzes.mode })
         .from(attempts).innerJoin(quizzes, eq(attempts.quizId, quizzes.id))
         .where(eq(attempts.userId, ctx.user.id)).orderBy(desc(attempts.startedAt)).limit(30);
+    }),
+  }),
+
+  payment: router({
+    offers: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập dữ liệu thanh toán." });
+      const records = await db.select({ itemCode: paymentRecords.itemCode })
+        .from(paymentRecords)
+        .where(and(eq(paymentRecords.userId, ctx.user.id), eq(paymentRecords.status, "paid")));
+      return Object.values(paymentPackages).map(pkg => {
+        const paidPurchaseCount = records.filter(record => record.itemCode === pkg.code).length;
+        const discounted = isFirstPurchaseDiscountEligible(pkg, paidPurchaseCount);
+        return { ...pkg, amount: getPaymentAmount(pkg, paidPurchaseCount), discounted, discountLabel: discounted ? "Giảm 50% lần mua đầu" : null };
+      });
+    }),
+    createLink: protectedProcedure.input(z.object({ packageCode: z.string().trim() })).mutation(async ({ ctx, input }) => {
+      if (!isPaymentPackageCode(input.packageCode)) throw new TRPCError({ code: "BAD_REQUEST", message: "Gói thanh toán không hợp lệ." });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể kết nối hệ thống thanh toán." });
+      const clientId = process.env.PAYOS_CLIENT_ID;
+      const apiKey = process.env.PAYOS_API_KEY;
+      const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
+      if (!clientId || !apiKey || !checksumKey) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "PayOS chưa được cấu hình đầy đủ." });
+
+      const pkg = getPaymentPackage(input.packageCode);
+      const priorPurchases = await db.select({ id: paymentRecords.id }).from(paymentRecords)
+        .where(and(eq(paymentRecords.userId, ctx.user.id), eq(paymentRecords.itemCode, pkg.code), eq(paymentRecords.status, "paid")));
+      const amount = getPaymentAmount(pkg, priorPurchases.length);
+      const orderCode = createPayosOrderCode();
+      const origin = `${ctx.req.protocol}://${ctx.req.get("host")}`;
+      const callbacks = buildPayosCallbackUrls(origin, orderCode);
+      const description = `DS ${pkg.code}`.slice(0, 25);
+      const created = await db.insert(paymentRecords).values({
+        userId: ctx.user.id,
+        itemType: pkg.itemType,
+        itemCode: pkg.code,
+        payosOrderCode: orderCode,
+        amount,
+        pointAmount: pkg.pointAmount,
+        targetTier: pkg.targetTier,
+        membershipMonths: pkg.membershipMonths,
+        description,
+      });
+      const recordId = Number(created[0].insertId);
+      try {
+        const link = await createPayosPaymentLink({ clientId, apiKey, checksumKey, orderCode, amount, description, ...callbacks });
+        await db.update(paymentRecords).set({ payosPaymentLinkId: link.paymentLinkId }).where(eq(paymentRecords.id, recordId));
+        return { recordId, orderCode, amount, checkoutUrl: link.checkoutUrl, discounted: isFirstPurchaseDiscountEligible(pkg, priorPurchases.length) };
+      } catch (error) {
+        await db.update(paymentRecords).set({ status: "failed" }).where(eq(paymentRecords.id, recordId));
+        throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? error.message : "Không thể tạo liên kết PayOS." });
+      }
+    }),
+    status: protectedProcedure.input(z.object({ orderCode: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập trạng thái thanh toán." });
+      const rows = await db.select({ id: paymentRecords.id, status: paymentRecords.status, amount: paymentRecords.amount, itemCode: paymentRecords.itemCode, pointAmount: paymentRecords.pointAmount, targetTier: paymentRecords.targetTier, paidAt: paymentRecords.paidAt })
+        .from(paymentRecords).where(and(eq(paymentRecords.userId, ctx.user.id), eq(paymentRecords.payosOrderCode, input.orderCode))).limit(1);
+      const record = rows[0];
+      if (!record) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy đơn thanh toán của bạn." });
+      return record;
     }),
   }),
 

@@ -90,3 +90,10 @@
 - [ ] Bổ sung xử lý trạng thái tải, trống, lỗi; bảo đảm điều hướng và khả năng truy cập tốt.
 - [x] Viết kiểm thử Vitest cho quy tắc tính điểm, thứ tự ngẫu nhiên và các quyền quản trị.
 - [ ] Rà soát giao diện trên desktop và mobile, chạy kiểm thử, tạo checkpoint và bàn giao.
+- [ ] Đối chiếu tài liệu PayOS chính thức với mô hình paymentRecords, ví Point và hạng tài khoản hiện có.
+- [ ] Tạo API máy chủ cho đơn nạp Point/nâng cấp gói và liên kết thanh toán PayOS, không để lộ khóa bí mật ở client.
+- [ ] Triển khai webhook PayOS có xác minh chữ ký, xử lý idempotent, đối soát paymentRecords và cấp Point hoặc quyền truy cập đúng một lần.
+- [ ] Kết nối trang nạp Point/gói học với trạng thái thanh toán PayOS, phản hồi thành công, hủy và thất bại.
+- [ ] Kiểm thử hồi quy cho chữ ký webhook, đơn bị gửi lặp, trạng thái không hợp lệ và sổ cái Point sau thanh toán.
+- [ ] Cấu hình gói Point 150/30.000đ, 250/47.000đ, 500/89.000đ và 1.000/169.000đ theo bảng giá được phê duyệt.
+- [ ] Áp dụng gói Pro 50.000đ/tháng và Premium 200.000đ/tháng, giảm 50% ở lần mua đầu tiên; cấp lần lượt 150 và 1.000 Point khi webhook PayOS thành công.

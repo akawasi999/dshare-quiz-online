@@ -13,6 +13,7 @@ import QuizRunner from "@/pages/QuizRunner";
 import Wallet from "@/pages/Wallet";
 import Referral from "@/pages/Referral";
 import TopUp from "@/pages/TopUp";
+import PaymentStatus from "@/pages/PaymentStatus";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -29,6 +30,7 @@ function Router() {
     <Route path="/vi" component={Wallet} />
     <Route path="/gioi-thieu" component={Referral} />
     <Route path="/nap-point" component={TopUp} />
+    <Route path="/thanh-toan" component={PaymentStatus} />
     <Route path="/luyen-tap" component={Practice} />
     <Route path="/quan-tri" component={Admin} />
     <Route path="/quan-tri/noi-dung" component={Admin} />
