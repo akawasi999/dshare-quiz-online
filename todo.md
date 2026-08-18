@@ -23,6 +23,7 @@
 - [x] Chuẩn hóa mô hình nội dung bốn cấp: Chủ đề → Môn học → Bài học → Bài thi/Bộ đề.
 - [ ] Thiết kế nhận diện giao diện cao cấp, responsive, có hỗ trợ chủ đề sáng/tối.
 - [x] Áp dụng bảng màu #4299e1, #3182ce, #ffffff, #ebf8ff, #2a4365 và font Montserrat/Open Sans nhất quán trên giao diện.
+- [x] Điều chỉnh token màu Dshare theo bảng màu và phong cách trực quan tham chiếu từ i-quiz.vn.
 - [ ] Thay thế trực tiếp các màu navy, ivory và gold hardcode còn lại trên các trang trọng yếu bằng bảng màu xanh mới.
 - [ ] Thay trực tiếp các mã màu legacy trong Profile, Practice, QuizRunner, Admin và component trọng yếu sang palette xanh, không chỉ dựa vào CSS override.
 - [ ] Rà soát grep mã màu cũ trên các route chính và chỉ giữ lại màu cảnh báo/semantic có chủ đích.
