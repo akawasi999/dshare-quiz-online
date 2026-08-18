@@ -61,7 +61,7 @@
 - [x] Chỉ hiển thị thẻ gợi ý danh mục gần nhất trước khi người học tìm kiếm hoặc lọc bộ đề.
 - [x] Ẩn ngay thẻ gợi ý danh mục gần nhất khi người học bắt đầu tìm kiếm hoặc lọc bộ đề.
 - [x] Xáo trộn toàn bộ phương án ghép nối ở cột phải trong mỗi lượt luyện tập.
-- [ ] Kiểm thử toàn bộ luồng luyện tập đa dạng câu hỏi, gồm chấm điểm tức thời và điều hướng sau khi hoàn thành.
+- [x] Kiểm thử toàn bộ luồng luyện tập đa dạng câu hỏi, gồm chấm điểm tức thời và điều hướng sau khi hoàn thành.
 - [x] Lưu lịch sử thi, tiến độ học tập, tỷ lệ chính xác và điểm trung bình.
 - [x] Xây dựng leaderboard theo bộ đề và toàn hệ thống.
 - [x] Hoàn thiện giao diện leaderboard với chuyển đổi giữa phạm vi toàn hệ thống và từng bộ đề.
@@ -124,3 +124,6 @@
 - [ ] Áp dụng quota 5 quiz tạo bởi Basic và không giới hạn cho Pro/Premium tại API quản trị tạo bộ đề.
 - [ ] Định nghĩa và áp dụng quota AI Credits theo hạng trước khi kích hoạt các luồng AI tiêu tốn Credit.
 - [x] Rà soát và chuẩn hóa các chỉnh sửa trực quan trên trang bảng giá, loại bỏ lỗi JSX trùng thuộc tính và xác minh responsive trước checkpoint.
+- [x] Sửa các route học viên bị 404 trong rà soát trực quan, đồng bộ URL điều hướng Bảng xếp hạng và Ví Point với định tuyến ứng dụng.
+- [x] Viết kiểm thử component/E2E cho Practice bao phủ single, multiple, true_false, fill_blank, image và matching với phản hồi tức thời.
+- [x] Kiểm thử hoàn tất Practice end-to-end: gọi completePractice, hiển thị thẻ hoàn thành và xác nhận CTA Luyện thêm/Khám phá bộ đề điều hướng đúng.

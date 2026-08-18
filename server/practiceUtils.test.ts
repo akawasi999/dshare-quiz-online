@@ -22,6 +22,7 @@ describe("practice utilities", () => {
     expect(haveSameSelectedOptions([2, 5], [5, 2])).toBe(true);
     expect(haveSameSelectedOptions([2], [2, 5])).toBe(false);
     expect(haveSameSelectedOptions([2, 5, 5], [2, 5])).toBe(false);
+    expect(haveSameSelectedOptions([], [])).toBe(true);
   });
 
   it("chấm nhất quán single, đúng/sai và câu ảnh theo đáp án lựa chọn", () => {
@@ -48,6 +49,7 @@ describe("practice utilities", () => {
     expect(getPracticeTransition({ questionIndex: 0, questionCount: 2, matchingIndex: 1, matchingCount: 2 })).toBe("next-question");
     expect(getPracticeTransition({ questionIndex: 1, questionCount: 2 })).toBe("complete-session");
     expect(getPracticeTransition({ questionIndex: 0, questionCount: 1, matchingCount: 0 })).toBe("complete-session");
+    expect(getPracticeTransition({ questionIndex: 0, questionCount: 0 })).toBe("complete-session");
     expect(practiceCompletionDestination).toBe("/kham-pha");
   });
 });

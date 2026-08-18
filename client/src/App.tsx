@@ -25,9 +25,11 @@ function Router() {
     <Route path="/quiz/:id" component={QuizRunner} />
     <Route path="/ket-qua/:id" component={QuizResult} />
     <Route path="/bang-xep-hang" component={Leaderboard} />
+    <Route path="/xep-hang" component={Leaderboard} />
     <Route path="/bang-gia" component={Pricing} />
     <Route path="/ho-so" component={Profile} />
     <Route path="/vi" component={Wallet} />
+    <Route path="/vi-point" component={Wallet} />
     <Route path="/gioi-thieu" component={Referral} />
     <Route path="/nap-point" component={TopUp} />
     <Route path="/thanh-toan" component={PaymentStatus} />
