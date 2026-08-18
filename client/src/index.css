@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Playfair Display", Georgia, serif;
-  --font-mono: "DM Mono", ui-monospace, monospace;
+  --font-sans: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Open Sans", ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -32,35 +32,52 @@
 }
 
 :root {
-  --background: #fffdf8;
-  --foreground: #17334a;
-  --card: #fffdf8;
-  --card-foreground: #17334a;
-  --popover: #fffdf8;
-  --popover-foreground: #17334a;
-  --primary: #17334a;
-  --primary-foreground: #fffdf8;
-  --secondary: #eef0eb;
-  --secondary-foreground: #17334a;
-  --muted: #eff1ed;
-  --muted-foreground: #667583;
-  --accent: #e8d8ab;
-  --accent-foreground: #17334a;
+  --background: #ebf8ff;
+  --foreground: #2a4365;
+  --card: #ffffff;
+  --card-foreground: #2a4365;
+  --popover: #ffffff;
+  --popover-foreground: #2a4365;
+  --primary: #3182ce;
+  --primary-foreground: #ffffff;
+  --secondary: #ebf8ff;
+  --secondary-foreground: #2a4365;
+  --muted: #ebf8ff;
+  --muted-foreground: #4a6684;
+  --accent: #4299e1;
+  --accent-foreground: #ffffff;
   --destructive: #b64f45;
-  --border: rgba(23, 51, 74, 0.12);
-  --input: rgba(23, 51, 74, 0.12);
-  --ring: #b88f44;
+  --border: rgba(42, 67, 101, 0.16);
+  --input: rgba(42, 67, 101, 0.16);
+  --ring: #4299e1;
   --radius: 0.8rem;
 }
 
 * { border-color: var(--border); }
 html { scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; background: #fffdf8; color: #17334a; font-family: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; min-width: 320px; background: #ebf8ff; color: #2a4365; font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif; }
+h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease, color 160ms ease, border-color 160ms ease; }
 button:active { transform: scale(.97); }
 .container { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: clamp(1.25rem, 3vw, 2.5rem); }
-.ink-grid { background-image: linear-gradient(rgba(219, 203, 165, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(219, 203, 165, .08) 1px, transparent 1px); background-size: 36px 36px; }
+.ink-grid { background-image: linear-gradient(rgba(66, 153, 225, .12) 1px, transparent 1px), linear-gradient(90deg, rgba(66, 153, 225, .12) 1px, transparent 1px); background-size: 36px 36px; }
 .grain { position: relative; }
 .grain::after { content: ""; pointer-events: none; position: absolute; inset: 0; opacity: .18; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E"); mix-blend-mode: multiply; }
+
+/* Chuyển đổi nhận diện cũ sang hệ xanh Dshare, gồm cả các tiện ích màu đã có trong màn hình hiện hữu. */
+[class*="bg-[#173a51"], [class*="bg-[#183a51"] { background-color: #3182ce !important; }
+[class*="bg-[#17334a"], [class*="bg-[#13293d"] { background-color: #2a4365 !important; }
+[class*="text-[#173a51"], [class*="text-[#17334a"], [class*="text-[#183a51"], [class*="text-[#25465b"], [class*="text-[#294b60"] { color: #2a4365 !important; }
+[class*="border-[#173a51"], [class*="border-[#17334a"], [class*="border-[#183a51"] { border-color: rgba(42, 67, 101, .16) !important; }
+[class*="bg-[#b88f44"], [class*="bg-[#e4c378"], [class*="bg-[#e5c981"], [class*="bg-[#e9ddbd"], [class*="bg-[#e8d8ab"], [class*="bg-[#e8d9b0"], [class*="bg-[#e5ddd0"], [class*="bg-[#e1bf78"], [class*="bg-[#e0c98d"], [class*="bg-[#e4c67f"], [class*="bg-[#e4c77f"], [class*="bg-[#e8dcc0"], [class*="bg-[#e6d69f"], [class*="bg-[#f0cd89"], [class*="bg-[#efd38e"] { background-color: #4299e1 !important; }
+[class*="text-[#b88f44"], [class*="text-[#e4c378"], [class*="text-[#e5c981"], [class*="text-[#e1bf78"], [class*="text-[#e0c98d"], [class*="text-[#e4c67f"], [class*="text-[#e4c77f"], [class*="text-[#9d7c40"], [class*="text-[#a37b3a"], [class*="text-[#a47b36"], [class*="text-[#9e7836"], [class*="text-[#9c783d"], [class*="text-[#b48639"] { color: #3182ce !important; }
+[class*="border-[#b88f44"], [class*="border-[#e4c378"], [class*="border-[#d6c590"], [class*="border-[#d9c687"], [class*="border-[#dfc586"] { border-color: #4299e1 !important; }
+[class*="bg-[#fffdf8"], [class*="bg-[#fffaf0"], [class*="bg-[#f5f5ef"], [class*="bg-[#f7f7f3"], [class*="bg-[#f4f5f1"], [class*="bg-[#f2f2ed"], [class*="bg-[#eff1ed"], [class*="bg-[#edf0ec"], [class*="bg-[#f5f6f2"] { background-color: #ffffff !important; }
+[class*="bg-[#ebf8ff"] { background-color: #ebf8ff !important; }
+[class*="bg-[#e1bf78"], [class*="bg-[#f0d18e"], [class*="bg-[#f0d695"], [class*="bg-[#f3d995"], [class*="bg-[#c8a65e"] { background-color: #4299e1 !important; }
+[class*="text-[#dfc586"], [class*="text-[#dcc184"], [class*="text-[#e8cc8e"], [class*="text-[#e4c67f"], [class*="text-[#f8e2aa"] { color: #4299e1 !important; }
+[class*="border-[#e1bf78"], [class*="border-[#f0cd89"] { border-color: #4299e1 !important; }
+[class*="from-[#dbb869"] { --tw-gradient-from: #4299e1 var(--tw-gradient-from-position) !important; }
+[class*="to-[#f3d995"] { --tw-gradient-to: #3182ce var(--tw-gradient-to-position) !important; }
 @media (prefers-reduced-motion: no-preference) { .rise-in { animation: rise-in 640ms cubic-bezier(.23,1,.32,1) both; } .rise-in-delay { animation: rise-in 640ms 90ms cubic-bezier(.23,1,.32,1) both; } @keyframes rise-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } } }

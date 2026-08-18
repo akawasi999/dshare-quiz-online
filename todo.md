@@ -6,11 +6,11 @@
 - [ ] Xây dựng trang nạp Point, nâng cấp gói và các điểm mở rộng cho thanh toán tự động hoặc QR thủ công.
 - [ ] Xây dựng chương trình giới thiệu bằng mã/referral, theo dõi phần thưởng và lịch sử giới thiệu.
 - [x] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.
-- [ ] Chuẩn bị luồng import/export ngân hàng câu hỏi theo định dạng CSV/Excel.
+- [x] Chuẩn bị luồng import/export ngân hàng câu hỏi theo định dạng CSV/Excel.
 - [x] Ưu tiên triển khai biểu mẫu biên soạn cho các loại câu hỏi đa dạng và quy tắc xác thực riêng từng loại.
 - [x] Bổ sung kiểm tra số lượng và cấu hình đáp án trước khi lưu câu hỏi đa lựa chọn, điền từ, hình ảnh và ghép nối.
 - [x] Ưu tiên triển khai nhập/xuất CSV có báo cáo dòng lỗi và mẫu định dạng cho ngân hàng câu hỏi.
-- [ ] Triển khai import/export Excel một sheet “Questions”, sử dụng cùng các cột với định dạng CSV.
+- [x] Triển khai import/export Excel một sheet “Questions”, sử dụng cùng các cột với định dạng CSV.
 - [x] Thay file picker Excel tạm thời bằng nút chọn tệp gọn được tích hợp trong giao diện quản trị.
 - [x] Xây dựng trang quản lý người dùng cho admin, gồm tìm kiếm, lọc, điều chỉnh hạng, khóa tài khoản và nhật ký hoạt động.
 - [x] Xây dựng thống kê vận hành gồm doanh thu Point, mức tiêu thụ, phần thưởng, tỷ lệ đậu/rớt và bộ đề phổ biến.
@@ -20,6 +20,9 @@
 - [x] Tự động nộp bài khi hết giờ và cung cấp lưới điều hướng trạng thái câu hỏi.
 - [x] Chuẩn hóa mô hình nội dung bốn cấp: Chủ đề → Môn học → Bài học → Bài thi/Bộ đề.
 - [ ] Thiết kế nhận diện giao diện cao cấp, responsive, có hỗ trợ chủ đề sáng/tối.
+- [x] Áp dụng bảng màu #4299e1, #3182ce, #ffffff, #ebf8ff, #2a4365 và font Montserrat/Open Sans nhất quán trên giao diện.
+- [ ] Thay thế trực tiếp các màu navy, ivory và gold hardcode còn lại trên các trang trọng yếu bằng bảng màu xanh mới.
+- [ ] Rà soát desktop/mobile toàn bộ route trọng yếu sau khi chuẩn hóa nhận diện xanh và kiểu chữ.
 - [x] Xây dựng trang chủ với khu vực giới thiệu, tìm kiếm, lọc danh mục và các bộ đề nổi bật.
 - [x] Ưu tiên hoàn thiện thao tác tìm kiếm và lọc danh mục trực tiếp trên trang chủ, có trạng thái không tìm thấy phù hợp.
 - [ ] Xây dựng luồng xác thực Manus, hồ sơ cá nhân và thiết lập tài khoản.
