@@ -62,7 +62,8 @@
 - [ ] Tạo đề thi ngẫu nhiên theo số lượng câu hỏi và tỷ lệ độ khó.
 - [ ] Tích hợp gói thanh toán, điểm thưởng và quyền truy cập nội dung trả phí.
 - [ ] Tích hợp PayOS cho nạp Point và nâng cấp gói, gồm tạo liên kết thanh toán, nhận webhook có xác minh và đối soát giao dịch.
-- [ ] Tích hợp trợ lý AI sinh giải thích, gợi ý tài liệu và trả lời nội dung quiz.
+- [x] Tích hợp trợ lý AI sinh giải thích, gợi ý tài liệu và trả lời nội dung quiz.
+- [x] Xây dựng giao diện trợ lý AI có ngữ cảnh câu hỏi tại trang kết quả bài làm.
 - [ ] Gửi thông báo cho admin khi có người dùng mới hoàn thành bài, đạt thành tích cao hoặc phá kỷ lục.
 - [x] Triển khai biện pháp hạn chế gian lận trong màn hình làm bài, có ghi nhận sự kiện vi phạm.
 - [ ] Bổ sung xử lý trạng thái tải, trống, lỗi; bảo đảm điều hướng và khả năng truy cập tốt.

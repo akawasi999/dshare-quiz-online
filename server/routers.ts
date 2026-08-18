@@ -20,7 +20,8 @@ import {
 } from "../drizzle/schema";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
-import { invokeLLM } from "./_core/llm";
+import { invokeLLM, listLLMModels } from "./_core/llm";
+import { buildQuizAssistantMessages, type QuizAssistantIntent } from "./aiAssistant";
 import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -245,6 +246,35 @@ export const appRouter = router({
           maxTokens: 700,
         });
         return { content: typeof response.choices[0]?.message.content === "string" ? response.choices[0].message.content : "Chưa thể tạo giải thích lúc này." };
+      }),
+    assist: protectedProcedure.input(z.object({ questionId: z.number().int().positive(), intent: z.enum(["explain", "resources", "follow_up"]), followUp: z.string().trim().min(3).max(600).optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập nội dung quiz lúc này." });
+        const completedQuestion = await db.select({ question: questions }).from(questions)
+          .innerJoin(attemptAnswers, eq(attemptAnswers.questionId, questions.id))
+          .innerJoin(attempts, eq(attemptAnswers.attemptId, attempts.id))
+          .where(and(eq(questions.id, input.questionId), eq(attempts.userId, ctx.user.id), eq(attempts.status, "submitted")))
+          .limit(1);
+        const question = completedQuestion[0]?.question;
+        if (!question) throw new TRPCError({ code: "FORBIDDEN", message: "Trợ lý chỉ mở cho câu hỏi bạn đã hoàn thành." });
+        const options = await db.select({ body: questionOptions.body, isCorrect: questionOptions.isCorrect }).from(questionOptions)
+          .where(eq(questionOptions.questionId, question.id)).orderBy(questionOptions.sortOrder);
+        const models = await listLLMModels();
+        const model = models.data.find(candidate => candidate.id === "gpt-5-mini")?.id ?? models.data[0]?.id;
+        const response = await invokeLLM({
+          model,
+          messages: buildQuizAssistantMessages({
+            intent: input.intent as QuizAssistantIntent,
+            prompt: question.prompt,
+            explanation: question.explanation,
+            options,
+            followUp: input.followUp,
+          }),
+          maxTokens: 850,
+        });
+        const content = response.choices[0]?.message.content;
+        return { content: typeof content === "string" && content.trim() ? content : "Trợ lý chưa thể tạo phản hồi lúc này. Vui lòng thử lại sau.", intent: input.intent };
       }),
   }),
 
