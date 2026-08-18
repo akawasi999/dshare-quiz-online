@@ -5,7 +5,8 @@ import Home from "@/pages/Home";
 import Leaderboard from "@/pages/Leaderboard";
 import NotFound from "@/pages/NotFound";
 import Pricing from "@/pages/Pricing";
-import Profile from "@/pages/Profile";
+import Profile from "./pages/Profile";
+import Practice from "./pages/Practice";
 import QuizLibrary from "@/pages/QuizLibrary";
 import QuizResult from "@/pages/QuizResult";
 import QuizRunner from "@/pages/QuizRunner";
@@ -22,6 +23,7 @@ function Router() {
     <Route path="/bang-xep-hang" component={Leaderboard} />
     <Route path="/bang-gia" component={Pricing} />
     <Route path="/ho-so" component={Profile} />
+    <Route path="/luyen-tap" component={Practice} />
     <Route path="/quan-tri" component={Admin} />
     <Route path="/quan-tri/noi-dung" component={Admin} />
     <Route path="/quan-tri/cau-hoi" component={Admin} />

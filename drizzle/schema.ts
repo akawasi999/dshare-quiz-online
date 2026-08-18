@@ -38,6 +38,7 @@ export const learnerProfiles = mysqlTable("learnerProfiles", {
   avatarUrl: varchar("avatarUrl", { length: 1024 }),
   bio: varchar("bio", { length: 500 }),
   notificationPreferences: json("notificationPreferences").$type<{ studyReminders: boolean; resultUpdates: boolean; platformUpdates: boolean }>(),
+  lastPracticeCategoryId: int("lastPracticeCategoryId"),
   isBanned: boolean("isBanned").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

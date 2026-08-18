@@ -1,0 +1,1 @@
+ALTER TABLE `learnerProfiles` ADD `lastPracticeCategoryId` int;

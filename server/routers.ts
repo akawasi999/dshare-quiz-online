@@ -3,6 +3,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   attempts,
+  attemptAnswers,
   auditLogs,
   bugReports,
   categories,
@@ -98,6 +99,47 @@ export const appRouter = router({
   }),
 
   quiz: router({
+    practiceWrong: protectedProcedure.input(z.object({ quizId: z.number().int().positive().optional() }).optional()).query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const wrongRows = await db.select({ questionId: attemptAnswers.questionId, latestAnswerId: sql<number>`max(${attemptAnswers.id})` })
+        .from(attemptAnswers).innerJoin(attempts, eq(attemptAnswers.attemptId, attempts.id))
+        .where(and(eq(attempts.userId, ctx.user.id), eq(attempts.status, "submitted"), eq(attemptAnswers.isCorrect, false), input?.quizId ? eq(attempts.quizId, input.quizId) : undefined))
+        .groupBy(attemptAnswers.questionId).limit(30);
+      const result = [];
+      for (const row of wrongRows) {
+        const question = await db.select({ question: questions, categoryId: categories.id, categoryTitle: categories.title })
+          .from(questions)
+          .innerJoin(lessons, eq(questions.lessonId, lessons.id))
+          .innerJoin(subjects, eq(lessons.subjectId, subjects.id))
+          .innerJoin(categories, eq(subjects.categoryId, categories.id))
+          .where(eq(questions.id, row.questionId)).limit(1);
+        if (!question[0]) continue;
+        const options = await db.select().from(questionOptions).where(eq(questionOptions.questionId, row.questionId)).orderBy(questionOptions.sortOrder);
+        result.push({
+          question: question[0].question,
+          category: { id: question[0].categoryId, title: question[0].categoryTitle },
+          options: options.map(option => ({ id: option.id, body: option.body, isCorrect: option.isCorrect })),
+        });
+      }
+      return result;
+    }),
+    completePractice: protectedProcedure.input(z.object({ questionId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật tiến trình luyện tập." });
+      const source = await db.select({ categoryId: categories.id, categoryTitle: categories.title })
+        .from(questions)
+        .innerJoin(lessons, eq(questions.lessonId, lessons.id))
+        .innerJoin(subjects, eq(lessons.subjectId, subjects.id))
+        .innerJoin(categories, eq(subjects.categoryId, categories.id))
+        .where(eq(questions.id, input.questionId)).limit(1);
+      const category = source[0];
+      if (!category) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy nguồn nội dung của câu luyện tập." });
+      const profile = await ensureLearnerProfile(ctx.user.id);
+      if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập hồ sơ học viên." });
+      await db.update(learnerProfiles).set({ lastPracticeCategoryId: category.categoryId }).where(eq(learnerProfiles.id, profile.id));
+      return { category };
+    }),
     start: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
       const detail = await getQuizDetail(input.quizId);
       if (!detail || !detail.quiz.isPublished) throw new TRPCError({ code: "NOT_FOUND", message: "Bộ đề chưa sẵn sàng." });

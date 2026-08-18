@@ -28,7 +28,30 @@
 - [x] Xây dựng trải nghiệm làm quiz từng bước, hỗ trợ chọn một/nhiều đáp án và đồng hồ đếm ngược.
 - [x] Áp dụng xáo trộn câu hỏi và phương án đáp án cho mỗi lượt làm bài.
 - [x] Triển khai chấm điểm tự động, trang kết quả chi tiết và giải thích đáp án.
-- [ ] Xây dựng chế độ luyện tập, làm lại câu sai và phản hồi ngay sau từng câu.
+- [x] Xây dựng chế độ luyện tập, làm lại câu sai và phản hồi ngay sau từng câu.
+- [x] Ưu tiên tạo phiên luyện tập cá nhân hóa từ các câu người học đã trả lời sai.
+- [x] Mở rộng giao diện luyện tập cho câu nhiều đáp án, điền từ và ghép nối với phản hồi riêng theo từng dạng.
+- [x] Dùng tương tác kéo-thả cho câu ghép nối trong chế độ luyện tập.
+- [x] Giữ luồng ghép nối kéo-thả tối giản, không có thao tác hoàn tác riêng.
+- [x] Hiển thị phản hồi đúng/sai cho từng cặp sau khi kiểm tra đáp án ghép nối.
+- [x] Hiển thị phản hồi đúng/sai ngay bên cạnh từng hàng ghép sau khi kiểm tra.
+- [x] Hiển thị đáp án đúng ngay bên cạnh cặp ghép sai để người học đối chiếu.
+- [x] Chuyển sang cặp ghép tiếp theo sau khi hiển thị đáp án đúng, không cho kéo-thả lại cùng hàng.
+- [x] Hiển thị xác nhận hoàn thành tối giản sau khi người học xử lý xong toàn bộ cặp ghép.
+- [x] Hiển thị xác nhận hoàn thành bằng thẻ ngay trong khu vực luyện tập.
+- [ ] Thêm nút quay lại luyện tập trên thẻ hoàn thành sau lượt ghép nối.
+- [x] Điều hướng nút quay lại luyện tập từ thẻ hoàn thành về trang khám phá bộ đề.
+- [x] Giữ lại danh mục gần nhất khi người học quay về khám phá bộ đề từ luyện tập.
+- [x] Lưu danh mục khám phá gần nhất trong hồ sơ người học để khôi phục sau khi đăng nhập lại.
+- [x] Chỉ cập nhật danh mục khám phá gần nhất vào hồ sơ sau khi hoàn thành phiên luyện tập.
+- [ ] Gợi ý danh mục khám phá gần nhất để người học xác nhận, không tự áp dụng ngay.
+- [x] Hiển thị gợi ý danh mục gần nhất bằng thẻ nhỏ ở đầu trang khám phá.
+- [x] Giữ thẻ gợi ý danh mục ở dạng thông tin thụ động, không có nút xác nhận.
+- [x] Luôn giữ thẻ gợi ý danh mục gần nhất hiển thị ở đầu trang khám phá trong phiên hiện tại.
+- [x] Chỉ hiển thị thẻ gợi ý danh mục gần nhất trước khi người học tìm kiếm hoặc lọc bộ đề.
+- [x] Ẩn ngay thẻ gợi ý danh mục gần nhất khi người học bắt đầu tìm kiếm hoặc lọc bộ đề.
+- [x] Xáo trộn toàn bộ phương án ghép nối ở cột phải trong mỗi lượt luyện tập.
+- [ ] Kiểm thử toàn bộ luồng luyện tập đa dạng câu hỏi, gồm chấm điểm tức thời và điều hướng sau khi hoàn thành.
 - [x] Lưu lịch sử thi, tiến độ học tập, tỷ lệ chính xác và điểm trung bình.
 - [ ] Xây dựng leaderboard theo bộ đề và toàn hệ thống.
 - [x] Hiển thị thảo luận/bình luận chỉ sau khi người dùng hoàn thành bài.
