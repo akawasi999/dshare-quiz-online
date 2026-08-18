@@ -22,6 +22,8 @@
 - [x] Xây dựng trang chủ với khu vực giới thiệu, tìm kiếm, lọc danh mục và các bộ đề nổi bật.
 - [x] Ưu tiên hoàn thiện thao tác tìm kiếm và lọc danh mục trực tiếp trên trang chủ, có trạng thái không tìm thấy phù hợp.
 - [ ] Xây dựng luồng xác thực Manus, hồ sơ cá nhân và thiết lập tài khoản.
+- [ ] Ưu tiên hoàn thiện biểu mẫu hồ sơ, mục tiêu học tập và thiết lập tài khoản từ không gian cá nhân.
+- [x] Thêm tùy chọn nhận thông báo về nhắc học, kết quả bài làm và cập nhật nền tảng trong cài đặt tài khoản.
 - [x] Thiết kế dữ liệu ngân hàng câu hỏi, đáp án, độ khó, tag và giải thích.
 - [x] Xây dựng trải nghiệm làm quiz từng bước, hỗ trợ chọn một/nhiều đáp án và đồng hồ đếm ngược.
 - [x] Áp dụng xáo trộn câu hỏi và phương án đáp án cho mỗi lượt làm bài.

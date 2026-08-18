@@ -74,13 +74,13 @@ export const appRouter = router({
   learner: router({
     summary: protectedProcedure.query(({ ctx }) => getLearnerSummary(ctx.user.id)),
     wallet: protectedProcedure.query(({ ctx }) => getWalletTransactions(ctx.user.id)),
-    updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")) }))
+    updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")), notificationPreferences: z.object({ studyReminders: z.boolean(), resultUpdates: z.boolean(), platformUpdates: z.boolean() }).optional() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         const profile = await ensureLearnerProfile(ctx.user.id);
         if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-        await db.update(learnerProfiles).set({ bio: input.bio || null, avatarUrl: input.avatarUrl || null }).where(eq(learnerProfiles.id, profile.id));
+        await db.update(learnerProfiles).set({ bio: input.bio || null, avatarUrl: input.avatarUrl || null, notificationPreferences: input.notificationPreferences }).where(eq(learnerProfiles.id, profile.id));
         return { success: true };
       }),
     history: protectedProcedure.query(async ({ ctx }) => {
