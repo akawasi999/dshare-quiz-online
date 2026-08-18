@@ -127,3 +127,4 @@
 - [x] Sửa các route học viên bị 404 trong rà soát trực quan, đồng bộ URL điều hướng Bảng xếp hạng và Ví Point với định tuyến ứng dụng.
 - [x] Viết kiểm thử component/E2E cho Practice bao phủ single, multiple, true_false, fill_blank, image và matching với phản hồi tức thời.
 - [x] Kiểm thử hoàn tất Practice end-to-end: gọi completePractice, hiển thị thẻ hoàn thành và xác nhận CTA Luyện thêm/Khám phá bộ đề điều hướng đúng.
+- [x] Đồng bộ bảng quyền lợi gói phí và nhãn điều hướng đầu trang theo chỉnh sửa trực quan mới, sau đó xác minh responsive trước checkpoint.

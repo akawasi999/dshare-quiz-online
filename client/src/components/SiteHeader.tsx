@@ -8,9 +8,9 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 
 const links = [
-  { href: "/kham-pha", label: "Khám phá" },
+  { href: "/kham-pha", label: "Quiz" },
   { href: "/bang-xep-hang", label: "Xếp hạng" },
-  { href: "/bang-gia", label: "Gói học" },
+  { href: "/bang-gia", label: "Gói phí" },
   { href: "/gioi-thieu", label: "Giới thiệu" },
 ];
 
