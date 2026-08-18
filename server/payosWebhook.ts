@@ -24,7 +24,7 @@ const webhookSchema = z.object({
   }).passthrough(),
 });
 
-async function processPayosWebhook(payload: z.infer<typeof webhookSchema>) {
+export async function processPayosWebhook(payload: z.infer<typeof webhookSchema>) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   const recordRows = await db.select().from(paymentRecords).where(eq(paymentRecords.payosOrderCode, payload.data.orderCode)).limit(1);
