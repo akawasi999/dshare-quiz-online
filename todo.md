@@ -6,6 +6,7 @@
 - [x] Hiển thị ví Point với lịch sử giao dịch, biến động số dư và liên kết rõ ràng tới các luồng Point đang có.
 - [ ] Xây dựng trang nạp Point, nâng cấp gói và các điểm mở rộng cho thanh toán tự động hoặc QR thủ công.
 - [ ] Xây dựng chương trình giới thiệu bằng mã/referral, theo dõi phần thưởng và lịch sử giới thiệu.
+- [ ] Bổ sung giao diện chia sẻ mã referral, nhập mã một lần và hiển thị danh sách lượt giới thiệu cùng Point thưởng.
 - [x] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.
 - [x] Chuẩn bị luồng import/export ngân hàng câu hỏi theo định dạng CSV/Excel.
 - [x] Ưu tiên triển khai biểu mẫu biên soạn cho các loại câu hỏi đa dạng và quy tắc xác thực riêng từng loại.
@@ -69,6 +70,7 @@
 - [x] Xây dựng khu vực quản trị để quản lý nội dung, câu hỏi, bộ đề và báo cáo lỗi.
 - [x] Hoàn thiện dashboard admin thống nhất với tổng quan vận hành, điều hướng mô-đun và thao tác quản lý nhanh.
 - [x] Bổ sung khu vực admin quản lý Point, người dùng, nội dung, câu hỏi, bộ đề, báo cáo lỗi và nhật ký từ một dashboard hoàn chỉnh.
+- [x] Bổ sung mô-đun sổ cái Point trong admin với lọc giao dịch, số dư sau giao dịch và liên kết điều chỉnh người dùng.
 - [x] Hiển thị chỉ số vận hành có thể hành động, trạng thái trống/lỗi và liên kết dẫn tới từng mô-đun quản trị.
 - [x] Tạo mô-đun quản lý báo lỗi riêng cho admin và nối đúng hàng đợi kiểm duyệt từ dashboard.
 - [x] Rà soát toàn bộ CTA trên dashboard admin để bảo đảm mỗi liên kết mở đúng mô-đun quản trị tương ứng.

@@ -517,6 +517,15 @@ export const appRouter = router({
         await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "wallet.adjusted", entityType: "user", entityId: input.userId, metadata: { amount: input.amount, description: input.description } });
         return { success: true, balanceAfter };
       }),
+    pointLedger: adminProcedure.input(z.object({ type: z.enum(["top_up", "quiz_fee", "quiz_reward", "referral_reward", "report_reward", "admin_adjustment", "plan_upgrade"]).optional(), search: z.string().trim().max(120).optional() }).optional())
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        return db.select({ transaction: walletTransactions, userName: users.name, userEmail: users.email })
+          .from(walletTransactions).leftJoin(users, eq(walletTransactions.userId, users.id))
+          .where(and(input?.type ? eq(walletTransactions.type, input.type) : undefined, input?.search ? sql`(lower(coalesce(${users.name}, '')) like ${`%${input.search.toLowerCase()}%`} or lower(coalesce(${users.email}, '')) like ${`%${input.search.toLowerCase()}%`})` : undefined))
+          .orderBy(desc(walletTransactions.createdAt)).limit(150);
+      }),
     analytics: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return { users: 0, completed: 0, passRate: 0, pointsConsumed: 0, pointsRewarded: 0, pointsTopUp: 0, popularQuizzes: [] as Array<{ title: string; count: number; passRate: number }> };

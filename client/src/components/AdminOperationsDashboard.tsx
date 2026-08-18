@@ -9,6 +9,7 @@ const modules = [
   ["/quan-tri/tao-de-ngau-nhien", "Tạo đề ngẫu nhiên", "Ma trận câu hỏi theo độ khó", Sparkles],
   ["/quan-tri/import-xuat", "Import / Export", "Trao đổi ngân hàng với CSV và Excel", ClipboardList],
   ["/quan-tri/nguoi-dung", "Người dùng & Point", "Phân hạng, khóa tài khoản, điều chỉnh Point", UsersRound],
+  ["/quan-tri/point", "Sổ cái Point", "Theo dõi biến động và số dư sau giao dịch", CircleDollarSign],
   ["/quan-tri/bao-loi", "Duyệt báo lỗi", "Xử lý báo lỗi và bồi hoàn Point", FileWarning],
   ["/quan-tri/bao-cao", "Báo cáo vận hành", "Kết quả học tập, Point và nội dung phổ biến", BarChart3],
   ["/quan-tri/nhat-ky", "Nhật ký kiểm toán", "Lịch sử thao tác quản trị", ScrollText],

@@ -2,6 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
 import AdminOperationsDashboard from "@/components/AdminOperationsDashboard";
 import AdminBugReportsPanel from "@/components/AdminBugReportsPanel";
+import AdminPointLedgerPanel from "@/components/AdminPointLedgerPanel";
 import QuestionEditorPanel from "@/components/QuestionEditorPanel";
 import QuestionTransferPanel from "@/components/QuestionTransferPanel";
 import RandomQuizBuilder from "@/components/RandomQuizBuilder";
@@ -29,6 +30,7 @@ export default function Admin() {
   if (location === "/quan-tri/nguoi-dung") content = <UserManager />;
   if (location === "/quan-tri/bao-cao") content = <AnalyticsDashboard />;
   if (location === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
+  if (location === "/quan-tri/point") content = <AdminPointLedgerPanel />;
   if (location === "/quan-tri/nhat-ky") content = <AuditTrail />;
   return <DashboardLayout>{content}</DashboardLayout>;
 }
