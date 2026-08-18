@@ -8,7 +8,7 @@
 |---|---:|---:|---:|---:|---:|---|---|
 | Gói Miễn phí | `basic` | Miễn phí | Không áp dụng | 0 | 20 | 20/tháng | 2 |
 | Gói PRO | `pro` | 50.000đ | 25.000đ | 150 | 200 | 40/tháng | 20 |
-| Gói PREMIUM | `premium` | 100.000đ | 50.000đ | 1.000 | 500 | 50/tháng | Vô hạn |
+| Gói PREMIUM | `premium` | 100.000đ | 50.000đ | 1.000 | 500 | Vô hạn | 50 |
 
 ## Quyền lợi hiển thị
 

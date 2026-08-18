@@ -9,7 +9,7 @@ describe("pricing plans display quotas", () => {
     expect(getValue("Basic", "Số Quiz được tạo")).toBe("2");
     expect(getValue("Pro", "Lượt thi tối đa/tháng")).toBe("40");
     expect(getValue("Pro", "Số Quiz được tạo")).toBe("20");
-    expect(getValue("Premium", "Lượt thi tối đa/tháng")).toBe("50");
-    expect(getValue("Premium", "Số Quiz được tạo")).toBe("Vô hạn");
+    expect(getValue("Premium", "Lượt thi tối đa/tháng")).toBe("Vô hạn");
+    expect(getValue("Premium", "Số Quiz được tạo")).toBe("50");
   });
 });
