@@ -17,8 +17,8 @@ export const paymentPackages: Record<PaymentPackageCode, PaymentPackage> = {
   point_250: { code: "point_250", itemType: "points", label: "250 Point", regularAmount: 47_000, pointAmount: 250 },
   point_500: { code: "point_500", itemType: "points", label: "500 Point", regularAmount: 89_000, pointAmount: 500 },
   point_1000: { code: "point_1000", itemType: "points", label: "1.000 Point", regularAmount: 169_000, pointAmount: 1_000 },
-  pro_monthly: { code: "pro_monthly", itemType: "membership", label: "Standard (Pro) · 1 tháng", regularAmount: 50_000, pointAmount: 150, targetTier: "pro", membershipMonths: 1 },
-  premium_monthly: { code: "premium_monthly", itemType: "membership", label: "Gói PRO (Premium) · 1 tháng", regularAmount: 100_000, pointAmount: 1_000, targetTier: "premium", membershipMonths: 1 },
+  pro_monthly: { code: "pro_monthly", itemType: "membership", label: "Gói PRO (Pro) · 1 tháng", regularAmount: 50_000, pointAmount: 150, targetTier: "pro", membershipMonths: 1 },
+  premium_monthly: { code: "premium_monthly", itemType: "membership", label: "Gói PREMIUM (Premium) · 1 tháng", regularAmount: 100_000, pointAmount: 1_000, targetTier: "premium", membershipMonths: 1 },
 };
 
 export function isPaymentPackageCode(value: string): value is PaymentPackageCode {

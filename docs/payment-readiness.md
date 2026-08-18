@@ -28,8 +28,8 @@ Khi xuất bản, thay `<ten-mien-da-xuat-ban>` bằng tên miền HTTPS thực 
 | 250 Point | 47.000đ | 47.000đ | +250 Point |
 | 500 Point | 89.000đ | 89.000đ | +500 Point |
 | 1.000 Point | 169.000đ | 169.000đ | +1.000 Point |
-| Pro, 1 tháng | 25.000đ | 50.000đ | Hạng Pro 1 tháng, +150 Point |
-| Premium, 1 tháng | 100.000đ | 200.000đ | Hạng Premium 1 tháng, +1.000 Point |
+| Gói PRO, 1 tháng | 25.000đ | 50.000đ | Hạng Pro 1 tháng, +150 Point |
+| Gói PREMIUM, 1 tháng | 50.000đ | 100.000đ | Hạng Premium 1 tháng, +1.000 Point |
 
 > Giảm giá 50% được kiểm tra dựa trên giao dịch PayOS đã thanh toán thành công của chính mã gói; giao dịch hủy, lỗi hoặc đang chờ không làm mất quyền ưu đãi.
 

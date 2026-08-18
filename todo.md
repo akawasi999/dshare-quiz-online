@@ -120,3 +120,7 @@
 - [x] Lưu đặc tả bảng giá từ ảnh tham chiếu dưới dạng văn bản trong repo, gồm tên gói, ánh xạ tier, giá và quyền lợi.
 - [x] Bổ sung kiểm thử payment.offers cho giá, giảm 50% lần đầu và Point thưởng Standard/PRO trả về từ catalog PayOS.
 - [x] Thêm kiểm thử router payment.offers xác nhận payload Standard/Gói PRO, giá ưu đãi, giá gốc và Point thưởng theo số giao dịch paid của người học.
+- [ ] Áp dụng quota 100 lượt thi/tháng cho Basic và không giới hạn cho Pro/Premium tại API bắt đầu quiz.
+- [ ] Áp dụng quota 5 quiz tạo bởi Basic và không giới hạn cho Pro/Premium tại API quản trị tạo bộ đề.
+- [ ] Định nghĩa và áp dụng quota AI Credits theo hạng trước khi kích hoạt các luồng AI tiêu tốn Credit.
+- [x] Rà soát và chuẩn hóa các chỉnh sửa trực quan trên trang bảng giá, loại bỏ lỗi JSX trùng thuộc tính và xác minh responsive trước checkpoint.

@@ -30,9 +30,9 @@ describe("PayOS package rules", () => {
     expect(isFirstPurchaseDiscountEligible(pro, 1)).toBe(false);
   });
 
-  it("trả payload offer Standard/PRO đúng giá ưu đãi và Point thưởng cho giao diện", () => {
-    expect(buildPaymentOffer(getPaymentPackage("pro_monthly"), 0)).toMatchObject({ label: "Standard (Pro) · 1 tháng", amount: 25_000, regularAmount: 50_000, pointAmount: 150, targetTier: "pro", discounted: true, discountLabel: "Giảm 50% lần mua đầu" });
-    expect(buildPaymentOffer(getPaymentPackage("premium_monthly"), 0)).toMatchObject({ label: "Gói PRO (Premium) · 1 tháng", amount: 50_000, regularAmount: 100_000, pointAmount: 1_000, targetTier: "premium", discounted: true });
+  it("trả payload offer Gói PRO/PREMIUM đúng giá ưu đãi và Point thưởng cho giao diện", () => {
+    expect(buildPaymentOffer(getPaymentPackage("pro_monthly"), 0)).toMatchObject({ label: "Gói PRO (Pro) · 1 tháng", amount: 25_000, regularAmount: 50_000, pointAmount: 150, targetTier: "pro", discounted: true, discountLabel: "Giảm 50% lần mua đầu" });
+    expect(buildPaymentOffer(getPaymentPackage("premium_monthly"), 0)).toMatchObject({ label: "Gói PREMIUM (Premium) · 1 tháng", amount: 50_000, regularAmount: 100_000, pointAmount: 1_000, targetTier: "premium", discounted: true });
     expect(buildPaymentOffer(getPaymentPackage("premium_monthly"), 1)).toMatchObject({ amount: 100_000, discounted: false, discountLabel: null });
   });
 });

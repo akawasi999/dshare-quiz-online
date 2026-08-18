@@ -2,17 +2,17 @@
 
 ## Nguồn yêu cầu
 
-Đặc tả này phản ánh bảng tham chiếu do chủ dự án cung cấp ngày 18/08/2026. Trong giao diện tham chiếu, **Standard ánh xạ hạng kỹ thuật `Pro`** và **Gói PRO ánh xạ hạng kỹ thuật `Premium`**.
+Đặc tả này phản ánh bảng tham chiếu do chủ dự án cung cấp ngày 18/08/2026. Trong giao diện hiện tại, **Gói PRO ánh xạ hạng kỹ thuật `Pro`** và **Gói PREMIUM ánh xạ hạng kỹ thuật `Premium`**.
 
 | Gói hiển thị | Hạng kỹ thuật | Giá/tháng | Giá lần mua đầu | Point khi kích hoạt | AI Credits | Lượt thi | Số Quiz |
 |---|---:|---:|---:|---:|---:|---|---|
 | Gói Miễn phí | `basic` | Miễn phí | Không áp dụng | 0 | 20 | 100/tháng | 5 |
-| Standard | `pro` | 50.000đ | 25.000đ | 150 | 200 | Vô hạn | Vô hạn |
-| Gói PRO | `premium` | 100.000đ | 50.000đ | 1.000 | 500 | Vô hạn | Vô hạn |
+| Gói PRO | `pro` | 50.000đ | 25.000đ | 150 | 200 | Vô hạn | Vô hạn |
+| Gói PREMIUM | `premium` | 100.000đ | 50.000đ | 1.000 | 500 | Vô hạn | Vô hạn |
 
 ## Quyền lợi hiển thị
 
-Standard và Gói PRO hiển thị quyền truy cập vào Phân tích Leads, tải báo cáo, upload câu hỏi bằng AI, Live Monitoring, hỗ trợ ưu tiên và tùy chỉnh thương hiệu. Gói Miễn phí hiển thị các quyền này là không bao gồm.
+Gói PRO và Gói PREMIUM hiển thị quyền truy cập vào Phân tích Leads, tải báo cáo, upload câu hỏi bằng AI, Live Monitoring, hỗ trợ ưu tiên và tùy chỉnh thương hiệu. Gói Miễn phí hiển thị các quyền này là không bao gồm.
 
 > Các quyền lợi trên được hiển thị trong bảng giá. Việc thực thi quota và feature gate riêng cần được triển khai trước khi công bố từng năng lực như một tính năng vận hành thực tế.
 

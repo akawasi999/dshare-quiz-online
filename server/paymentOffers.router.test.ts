@@ -28,11 +28,11 @@ function mockPaidItems(itemCodes: string[]) {
 describe("payment.offers", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("trả Standard/Pro và Gói PRO/Premium với ưu đãi lần mua đầu cùng Point thưởng đúng", async () => {
+  it("trả Gói PRO/Pro và Gói PREMIUM/Premium với ưu đãi lần mua đầu cùng Point thưởng đúng", async () => {
     mockPaidItems([]);
     const offers = await caller().payment.offers();
-    expect(offers.find(offer => offer.code === "pro_monthly")).toMatchObject({ label: "Standard (Pro) · 1 tháng", amount: 25_000, regularAmount: 50_000, pointAmount: 150, targetTier: "pro", discounted: true, discountLabel: "Giảm 50% lần mua đầu" });
-    expect(offers.find(offer => offer.code === "premium_monthly")).toMatchObject({ label: "Gói PRO (Premium) · 1 tháng", amount: 50_000, regularAmount: 100_000, pointAmount: 1_000, targetTier: "premium", discounted: true, discountLabel: "Giảm 50% lần mua đầu" });
+    expect(offers.find(offer => offer.code === "pro_monthly")).toMatchObject({ label: "Gói PRO (Pro) · 1 tháng", amount: 25_000, regularAmount: 50_000, pointAmount: 150, targetTier: "pro", discounted: true, discountLabel: "Giảm 50% lần mua đầu" });
+    expect(offers.find(offer => offer.code === "premium_monthly")).toMatchObject({ label: "Gói PREMIUM (Premium) · 1 tháng", amount: 50_000, regularAmount: 100_000, pointAmount: 1_000, targetTier: "premium", discounted: true, discountLabel: "Giảm 50% lần mua đầu" });
   });
 
   it("chỉ bỏ ưu đãi ở mã gói đã có giao dịch paid", async () => {
