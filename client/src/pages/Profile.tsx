@@ -49,6 +49,6 @@ export default function Profile() {
 }
 
 function ProfileShell({ children }: { children: React.ReactNode }) { return <div className="min-h-screen bg-[#eef4ff]"><SiteHeader />{children}</div>; }
-function LoadingState({ label }: { label: string }) { return <main className="container grid min-h-[70vh] place-items-center py-12"><p className="text-sm text-[#617786]">{label}</p></main>; }
+function LoadingState({ label }: { label: string }) { return <main className="container grid min-h-[70vh] place-items-center py-12"><p role="status" aria-live="polite" className="text-sm text-[#617786]">{label}</p></main>; }
 function Field({ label, full, children }: { label: string; full?: boolean; children: React.ReactNode }) { return <label className={`text-xs font-semibold text-[#617786] ${full ? "sm:col-span-2" : ""}`}>{label}<span className="mt-2 block">{children}</span></label>; }
 function Metric({ icon: Icon, label, value, suffix }: { icon: typeof Target; label: string; value: number; suffix: string }) { return <div className="rounded-[22px] border border-[#172554]/10 bg-white p-5"><Icon size={18} className="text-[#2563eb]" /><p className="mt-4 text-[10px] font-bold uppercase tracking-[.14em] text-[#71838d]">{label}</p><p className="mt-1 font-serif text-[30px] font-semibold text-[#172554]">{value}<span className="ml-1 text-xs font-sans font-medium text-[#71838d]">{suffix}</span></p></div>; }
