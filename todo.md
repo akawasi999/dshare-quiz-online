@@ -19,7 +19,8 @@
 - [x] Tự động nộp bài khi hết giờ và cung cấp lưới điều hướng trạng thái câu hỏi.
 - [x] Chuẩn hóa mô hình nội dung bốn cấp: Chủ đề → Môn học → Bài học → Bài thi/Bộ đề.
 - [ ] Thiết kế nhận diện giao diện cao cấp, responsive, có hỗ trợ chủ đề sáng/tối.
-- [ ] Xây dựng trang chủ với khu vực giới thiệu, tìm kiếm, lọc danh mục và các bộ đề nổi bật.
+- [x] Xây dựng trang chủ với khu vực giới thiệu, tìm kiếm, lọc danh mục và các bộ đề nổi bật.
+- [x] Ưu tiên hoàn thiện thao tác tìm kiếm và lọc danh mục trực tiếp trên trang chủ, có trạng thái không tìm thấy phù hợp.
 - [ ] Xây dựng luồng xác thực Manus, hồ sơ cá nhân và thiết lập tài khoản.
 - [x] Thiết kế dữ liệu ngân hàng câu hỏi, đáp án, độ khó, tag và giải thích.
 - [x] Xây dựng trải nghiệm làm quiz từng bước, hỗ trợ chọn một/nhiều đáp án và đồng hồ đếm ngược.

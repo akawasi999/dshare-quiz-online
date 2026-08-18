@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
+import QuestionEditorPanel from "@/components/QuestionEditorPanel";
 import QuestionTransferPanel from "@/components/QuestionTransferPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,7 @@ export default function Admin() {
   if (user?.role !== "admin") return <main className="grid min-h-screen place-items-center bg-[#f5f5ef] p-6"><div className="max-w-md rounded-[28px] bg-white p-8 text-center shadow-sm"><ShieldAlert className="mx-auto text-[#b66b59]" size={30} /><h1 className="mt-4 font-serif text-3xl font-semibold text-[#173a51]">Khu vực hạn chế</h1><p className="mt-3 text-sm leading-6 text-[#6c7c84]">Chỉ tài khoản quản trị có quyền truy cập vào trung tâm điều hành Dshare.</p></div></main>;
   let content = <AdminOverview />;
   if (location === "/quan-tri/noi-dung") content = <ContentManager />;
-  if (location === "/quan-tri/cau-hoi") content = <QuestionManager />;
+  if (location === "/quan-tri/cau-hoi") content = <QuestionEditorPanel />;
   if (location === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;
   if (location === "/quan-tri/nguoi-dung") content = <UserManager />;
   if (location === "/quan-tri/bao-cao") content = <AnalyticsDashboard />;
