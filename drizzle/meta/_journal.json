@@ -36,6 +36,13 @@
       "when": 1787020095077,
       "tag": "0004_naive_mesmero",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1787023662446,
+      "tag": "0005_previous_eternity",
+      "breakpoints": true
     }
   ]
 }

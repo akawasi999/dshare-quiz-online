@@ -1,0 +1,1 @@
+ALTER TABLE `learnerProfiles` ADD `learningGoal` varchar(220);

@@ -23,11 +23,14 @@
 - [ ] Thiết kế nhận diện giao diện cao cấp, responsive, có hỗ trợ chủ đề sáng/tối.
 - [x] Áp dụng bảng màu #4299e1, #3182ce, #ffffff, #ebf8ff, #2a4365 và font Montserrat/Open Sans nhất quán trên giao diện.
 - [ ] Thay thế trực tiếp các màu navy, ivory và gold hardcode còn lại trên các trang trọng yếu bằng bảng màu xanh mới.
+- [ ] Thay trực tiếp các mã màu legacy trong Profile, Practice, QuizRunner, Admin và component trọng yếu sang palette xanh, không chỉ dựa vào CSS override.
+- [ ] Rà soát grep mã màu cũ trên các route chính và chỉ giữ lại màu cảnh báo/semantic có chủ đích.
 - [ ] Rà soát desktop/mobile toàn bộ route trọng yếu sau khi chuẩn hóa nhận diện xanh và kiểu chữ.
 - [x] Xây dựng trang chủ với khu vực giới thiệu, tìm kiếm, lọc danh mục và các bộ đề nổi bật.
 - [x] Ưu tiên hoàn thiện thao tác tìm kiếm và lọc danh mục trực tiếp trên trang chủ, có trạng thái không tìm thấy phù hợp.
-- [ ] Xây dựng luồng xác thực Manus, hồ sơ cá nhân và thiết lập tài khoản.
-- [ ] Ưu tiên hoàn thiện biểu mẫu hồ sơ, mục tiêu học tập và thiết lập tài khoản từ không gian cá nhân.
+- [x] Xây dựng luồng xác thực Manus, hồ sơ cá nhân và thiết lập tài khoản.
+- [x] Ưu tiên hoàn thiện biểu mẫu hồ sơ, mục tiêu học tập và thiết lập tài khoản từ không gian cá nhân.
+- [x] Bổ sung mục tiêu học tập cùng trạng thái tải, lỗi và trống hoàn chỉnh cho không gian hồ sơ/cài đặt.
 - [x] Thêm tùy chọn nhận thông báo về nhắc học, kết quả bài làm và cập nhật nền tảng trong cài đặt tài khoản.
 - [x] Thiết kế dữ liệu ngân hàng câu hỏi, đáp án, độ khó, tag và giải thích.
 - [x] Xây dựng trải nghiệm làm quiz từng bước, hỗ trợ chọn một/nhiều đáp án và đồng hồ đếm ngược.
@@ -63,7 +66,7 @@
 - [x] Hoàn thiện tiêu chí phá hòa bảng xếp hạng theo số lượt hoàn thành và mã học viên ổn định.
 - [x] Hiển thị thảo luận/bình luận chỉ sau khi người dùng hoàn thành bài.
 - [x] Xây dựng tính năng báo lỗi câu hỏi, quy trình admin duyệt và hoàn Point cho báo cáo hợp lệ.
-- [ ] Xây dựng khu vực quản trị để quản lý nội dung, câu hỏi, bộ đề và báo cáo lỗi.
+- [x] Xây dựng khu vực quản trị để quản lý nội dung, câu hỏi, bộ đề và báo cáo lỗi.
 - [x] Tạo đề thi ngẫu nhiên theo số lượng câu hỏi và tỷ lệ độ khó.
 - [x] Bổ sung giao diện quản trị để cấu hình số câu, phân bổ dễ/trung bình/khó và tạo bộ đề ngẫu nhiên.
 - [x] Bổ sung trạng thái tải, lỗi, trống và phản hồi liên kết quản trị sau khi tạo đề ngẫu nhiên.
