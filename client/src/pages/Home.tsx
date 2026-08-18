@@ -27,38 +27,18 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#eef4ff]">
-      <section className="grain relative overflow-hidden bg-[#172554] text-white">
-        <div className="pointer-events-none absolute inset-0 ink-grid opacity-60" />
-        <div className="pointer-events-none absolute -right-32 top-14 h-[440px] w-[440px] rounded-full border border-[#3b82f6]/35" />
-        <div className="pointer-events-none absolute -right-6 top-36 h-[250px] w-[250px] rounded-full border border-[#3b82f6]/40" />
-        <SiteHeader variant="dark" />
-        <div className="container relative grid min-h-[590px] gap-10 pb-20 pt-16 lg:grid-cols-[1.1fr_.9fr] lg:items-center lg:pb-28 lg:pt-20">
-          <div className="rise-in max-w-2xl">
-            <div className="mb-7 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.19em] text-[#3b82f6]"><span className="h-px w-8 bg-[#3b82f6]" /> Học sâu hơn mỗi ngày</div>
-            <h1 className="font-serif text-[42px] font-semibold leading-[1.04] tracking-[-.055em] sm:text-[58px] lg:text-[68px]">Một không gian<br /><em className="font-medium text-[#3b82f6]">để tư duy tốt hơn.</em></h1>
-            <p className="mt-7 max-w-xl text-[15px] leading-7 text-[#eef4ff]">Dshare kết hợp lộ trình học có chủ đích, bộ đề được tuyển chọn và phản hồi rõ ràng để mỗi lần làm bài trở thành một bước tiến có ý nghĩa.</p>
-            <form onSubmit={submitSearch} className="mt-9 flex max-w-xl items-center rounded-[18px] border border-white/15 bg-white/10 p-1.5 shadow-2xl backdrop-blur-sm">
-              <Search className="ml-3 shrink-0 text-[#3b82f6]" size={19} />
-              <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Tìm bộ đề, môn học hoặc chủ đề..." className="h-12 min-w-0 flex-1 bg-transparent px-3 text-sm text-white outline-none placeholder:text-[#617786]" />
-              <Button type="submit" className="h-12 rounded-[13px] bg-[#3b82f6] px-5 text-xs font-bold text-white hover:bg-[#2563eb]">Tìm đề <ArrowRight size={15} /></Button>
-            </form>
-            <div className="mt-5 flex flex-wrap gap-2">{["Tất cả", "Công nghệ", "Ngoại ngữ", "Kỹ năng"].map(topic => <button key={topic} onClick={() => setSelectedTopic(topic)} className={`rounded-full border px-3 py-1.5 text-[10px] font-bold transition-colors ${selectedTopic === topic ? "border-[#3b82f6] bg-[#3b82f6] text-white" : "border-white/15 bg-white/5 text-[#eef4ff] hover:bg-white/10"}`}>{topic}</button>)}</div>
-            <div className="mt-5 flex flex-wrap gap-x-7 gap-y-3 text-xs text-[#eef4ff]"><span className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#3b82f6]" /> Lộ trình rõ ràng</span><span className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#3b82f6]" /> Tiến độ riêng tư</span><span className="flex items-center gap-2"><CheckCircle2 size={14} className="text-[#3b82f6]" /> Kết quả có giải thích</span></div>
-          </div>
-          <div className="rise-in-delay relative mx-auto w-full max-w-[470px] lg:mr-0">
-            <div className="absolute -left-6 top-10 h-24 w-24 rounded-[28px] bg-[#3b82f6]/35 blur-2xl" />
-            <div className="relative rounded-[32px] border border-white/15 bg-[#172554]/90 p-5 shadow-[0_35px_80px_rgba(0,0,0,.28)] backdrop-blur-xl sm:p-7">
-              <div className="flex items-center justify-between"><span className="font-serif text-[21px] font-medium">Hành trình hôm nay</span><span className="rounded-full bg-[#3b82f6] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">19 Aug</span></div>
-              <div className="mt-7 rounded-[22px] bg-[#172554] p-5">
-                <div className="flex items-center justify-between text-[11px] uppercase tracking-[.14em] text-[#617786]"><span>Chuyên đề đang học</span><span className="text-[#3b82f6]">72%</span></div>
-                <p className="mt-3 font-serif text-[26px] leading-tight">Lập trình Python</p>
-                <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#3b82f6] to-[#2563eb]" /></div>
-                <div className="mt-5 flex items-center justify-between text-xs text-[#eef4ff]"><span>18 / 25 bài học</span><span className="flex items-center gap-1"><Trophy size={13} className="text-[#3b82f6]" /> 1.240 Point</span></div>
-              </div>
-              <div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-[18px] border border-white/10 bg-white/[.05] p-4"><TimerReset size={17} className="text-[#3b82f6]" /><p className="mt-3 text-[10px] font-bold uppercase tracking-[.13em] text-[#617786]">Nhịp học</p><p className="mt-1 font-serif text-[22px]">04 ngày</p></div><div className="rounded-[18px] border border-white/10 bg-white/[.05] p-4"><BrainCircuit size={17} className="text-[#3b82f6]" /><p className="mt-3 text-[10px] font-bold uppercase tracking-[.13em] text-[#617786]">Độ chính xác</p><p className="mt-1 font-serif text-[22px]">86%</p></div></div>
-              <Link href="/ho-so" className="mt-5 flex items-center justify-between rounded-[17px] bg-[#3b82f6] px-5 py-4 text-xs font-bold text-white transition-colors hover:bg-[#2563eb]">Mở không gian học tập <ChevronRight size={16} /></Link>
-            </div>
+    <div className="min-h-screen overflow-hidden bg-[#ebf8ff]">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#ebf8ff] via-[#f9fdff] to-white">
+        <div className="pointer-events-none absolute -left-24 top-20 h-80 w-80 rounded-full bg-[#60a5fa]/15 blur-3xl" />
+        <div className="pointer-events-none absolute right-[-4rem] top-24 h-72 w-72 rounded-full bg-[#7c3aed]/10 blur-3xl" />
+        <SiteHeader />
+        <div className="container relative flex min-h-[620px] items-center py-20 lg:min-h-[650px] lg:py-28">
+          <div className="rise-in max-w-4xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#2563eb]/10 bg-white/80 px-4 py-2 text-[11px] font-bold uppercase tracking-[.08em] text-[#4f46e5] shadow-sm"><span className="h-2 w-2 rounded-full bg-[#4f46e5]" /> 🏆 Tạo Quiz bằng AI</div>
+            <h1 className="mt-8 font-serif text-[48px] font-semibold leading-[1.15] tracking-[-.05em] text-[#172554] sm:text-[64px] lg:text-[74px]">Tạo Quiz bằng <span className="bg-gradient-to-r from-[#4f46e5] to-[#7c3aed] bg-clip-text text-transparent">Trí tuệ nhân tạo - AI</span></h1>
+            <p className="mt-8 max-w-3xl text-[18px] leading-8 text-[#516172] sm:text-[20px]">Tạo quiz từ văn bản, file PDF, URL hoặc chủ đề bất kỳ. Chấm điểm AI, không gian làm bài và xuất Excel trong cùng một nền tảng.</p>
+            <Button asChild className="mt-10 h-16 rounded-full bg-gradient-to-r from-[#4f46e5] to-[#5b3df0] px-8 text-base font-bold text-white shadow-[0_16px_34px_rgba(79,70,229,.28)] hover:from-[#4338ca] hover:to-[#4f46e5]"><Link href="/kham-pha">Khám phá miễn phí <ArrowRight size={20} /></Link></Button>
+            <div className="mt-8 flex flex-wrap gap-x-7 gap-y-3 text-sm font-medium text-[#516172]"><span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-emerald-500" /> Tạo FlipCard miễn phí</span><span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-emerald-500" /> Tạo Quiz thủ công</span><span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-emerald-500" /> Không cần thẻ thanh toán</span></div>
           </div>
         </div>
       </section>

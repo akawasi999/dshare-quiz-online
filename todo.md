@@ -143,3 +143,4 @@
 - [x] Chuẩn hóa background toàn hệ thống sang #ebf8ff, kiểm tra tương phản sáng/tối và responsive trước checkpoint.
 - [x] Xây dựng Live Monitoring theo dõi lượt thi đang diễn ra và mới hoàn thành, có phân quyền hạng và tự làm mới.
 - [x] Bổ sung kiểm thử API, trạng thái trống/lỗi và responsive cho Live Monitoring trước checkpoint.
+- [x] Thiết kế lại hero Trang chủ theo ảnh tham chiếu: nền xanh nhạt, nhãn tạo Quiz bằng AI, headline gradient, CTA và tín hiệu tin cậy.
