@@ -134,3 +134,6 @@
 - [x] Áp dụng AI Credits theo quota tháng của hạng thành viên tại các API trợ lý AI, có kiểm thử giới hạn.
 - [x] Hiển thị phản hồi rõ ràng khi người học hoặc người tạo chạm quota và rà soát hồi quy toàn bộ luồng quota.
 - [x] Hiển thị mức dùng và quota còn lại theo tháng tại hồ sơ người học sau khi quota máy chủ được kích hoạt.
+- [ ] Rà soát loading/empty/error/accessibility có bằng chứng rõ ràng cho Home, Referral, PaymentStatus, QuizRunner và Admin.
+- [ ] Kiểm kê mutation có UI và bổ sung phản hồi loading/error/success cùng kiểm thử phù hợp cho Profile, Referral, Payment, Discussion, Reports, Admin và AI.
+- [ ] Cập nhật quality audit thành checklist bao phủ từng route và mutation trước khi chốt rà soát chất lượng.
