@@ -123,6 +123,7 @@ export const quizzes = mysqlTable("quizzes", {
 export const questions = mysqlTable("questions", {
   id: int("id").autoincrement().primaryKey(),
   lessonId: int("lessonId").notNull(),
+  creatorUserId: int("creatorUserId"),
   prompt: text("prompt").notNull(),
   type: mysqlEnum("type", questionTypeValues).default("single").notNull(),
   difficulty: mysqlEnum("difficulty", difficultyValues).default("medium").notNull(),
@@ -135,6 +136,7 @@ export const questions = mysqlTable("questions", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => [
   index("questions_lesson_idx").on(table.lessonId),
+  index("questions_creator_idx").on(table.creatorUserId),
   index("questions_difficulty_idx").on(table.difficulty),
 ]);
 

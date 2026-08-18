@@ -145,3 +145,6 @@
 - [x] Bổ sung kiểm thử API, trạng thái trống/lỗi và responsive cho Live Monitoring trước checkpoint.
 - [x] Thiết kế lại hero Trang chủ theo ảnh tham chiếu: nền xanh nhạt, nhãn tạo Quiz bằng AI, headline gradient, CTA và tín hiệu tin cậy.
 - [x] Thiết kế lại hồ sơ thành dashboard tài khoản với menu trái: Bảng điều khiển, Tạo Quiz, Làm Quiz, Xếp hạng, Mời bạn bè, Thông tin cá nhân, Nạp Point, Nâng cấp, Lịch sử giao dịch, Hỗ trợ, Đăng xuất.
+- [x] Cho phép người học tạo quiz riêng và câu hỏi riêng với quota Basic 2, PRO 20, PREMIUM 50 mỗi tháng.
+- [x] Xây dựng trang tạo quiz/câu hỏi cho người học, chỉ hiển thị nội dung do chính họ tạo và không công khai mặc định.
+- [x] Kiểm thử quyền sở hữu, quota và giao diện tạo quiz người học trước checkpoint.

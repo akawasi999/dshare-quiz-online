@@ -274,7 +274,7 @@ export const appRouter = router({
     }),
     start: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
       const detail = await getQuizDetail(input.quizId);
-      if (!detail || !detail.quiz.isPublished) throw new TRPCError({ code: "NOT_FOUND", message: "Bộ đề chưa sẵn sàng." });
+      if (!detail || (!detail.quiz.isPublished && detail.quiz.creatorUserId !== ctx.user.id)) throw new TRPCError({ code: "NOT_FOUND", message: "Bộ đề chưa sẵn sàng." });
       const profile = await ensureLearnerProfile(ctx.user.id);
       if (!profile || profile.isBanned) throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản hiện không thể tham gia bài thi." });
       await assertQuotaAvailable(ctx.user.id, "attemptsPerMonth");
@@ -338,6 +338,39 @@ export const appRouter = router({
     }),
     securityEvent: protectedProcedure.input(z.object({ attemptId: z.number().int().positive(), eventType: z.enum(["copy", "paste", "context_menu", "tab_hidden", "fullscreen_exit"]) }))
       .mutation(({ input }) => logSecurityEvent(input.attemptId, input.eventType)),
+  }),
+
+  creator: router({
+    myQuizzes: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select().from(quizzes).where(eq(quizzes.creatorUserId, ctx.user.id)).orderBy(desc(quizzes.updatedAt));
+    }),
+    createQuiz: protectedProcedure.input(z.object({
+      lessonId: z.number().int().positive(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(),
+      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
+    })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo quiz lúc này." });
+      await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
+      const lesson = await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.id, input.lessonId)).limit(1);
+      if (!lesson.length) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy bài học để gắn quiz." });
+      for (const item of input.questions) {
+        const error = validateQuestionConfiguration({ type: item.type, options: item.options, answerConfig: item.answerConfig, imageUrl: null });
+        if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` });
+      }
+      const quizSlug = `my-${ctx.user.id}-${Date.now()}`;
+      const createdQuiz = await db.insert(quizzes).values({ lessonId: input.lessonId, creatorUserId: ctx.user.id, title: input.title, slug: quizSlug, summary: input.summary, mode: "training", accessTier: "basic", durationSeconds: 900, passingScore: 70, questionCount: input.questions.length, isPublished: false });
+      const quizId = Number(createdQuiz[0].insertId);
+      for (let index = 0; index < input.questions.length; index += 1) {
+        const item = input.questions[index]!;
+        const createdQuestion = await db.insert(questions).values({ lessonId: input.lessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig });
+        const questionId = Number(createdQuestion[0].insertId);
+        if (item.options.length) await db.insert(questionOptions).values(item.options.map((option: { body: string; isCorrect: boolean }, optionIndex: number) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex })));
+        await db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: 1 });
+      }
+      return { quizId, title: input.title, questionCount: input.questions.length, isPublished: false };
+    }),
   }),
 
   discussion: router({

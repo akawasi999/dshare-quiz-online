@@ -14,6 +14,7 @@ import Wallet from "@/pages/Wallet";
 import Referral from "@/pages/Referral";
 import TopUp from "@/pages/TopUp";
 import PaymentStatus from "@/pages/PaymentStatus";
+import UserQuizCreator from "@/pages/UserQuizCreator";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -34,6 +35,7 @@ function Router() {
     <Route path="/nap-point" component={TopUp} />
     <Route path="/thanh-toan" component={PaymentStatus} />
     <Route path="/luyen-tap" component={Practice} />
+    <Route path="/tao-quiz" component={UserQuizCreator} />
     <Route path="/quan-tri" component={Admin} />
     <Route path="/quan-tri/noi-dung" component={Admin} />
     <Route path="/quan-tri/tao-de-ngau-nhien" component={Admin} />
