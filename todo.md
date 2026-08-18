@@ -5,9 +5,10 @@
 - [ ] Xây dựng ví Point, sổ cái giao dịch, phí vào bài kiểm tra, thưởng đạt và thao tác điều chỉnh thủ công của admin.
 - [ ] Xây dựng trang nạp Point, nâng cấp gói và các điểm mở rộng cho thanh toán tự động hoặc QR thủ công.
 - [ ] Xây dựng chương trình giới thiệu bằng mã/referral, theo dõi phần thưởng và lịch sử giới thiệu.
-- [ ] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.
+- [x] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.
 - [ ] Chuẩn bị luồng import/export ngân hàng câu hỏi theo định dạng CSV/Excel.
-- [ ] Ưu tiên triển khai biểu mẫu biên soạn cho các loại câu hỏi đa dạng và quy tắc xác thực riêng từng loại.
+- [x] Ưu tiên triển khai biểu mẫu biên soạn cho các loại câu hỏi đa dạng và quy tắc xác thực riêng từng loại.
+- [x] Bổ sung kiểm tra số lượng và cấu hình đáp án trước khi lưu câu hỏi đa lựa chọn, điền từ, hình ảnh và ghép nối.
 - [x] Ưu tiên triển khai nhập/xuất CSV có báo cáo dòng lỗi và mẫu định dạng cho ngân hàng câu hỏi.
 - [ ] Triển khai import/export Excel một sheet “Questions”, sử dụng cùng các cột với định dạng CSV.
 - [x] Thay file picker Excel tạm thời bằng nút chọn tệp gọn được tích hợp trong giao diện quản trị.

@@ -22,6 +22,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM, listLLMModels } from "./_core/llm";
 import { buildQuizAssistantMessages, type QuizAssistantIntent } from "./aiAssistant";
+import { validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -382,11 +383,12 @@ export const appRouter = router({
       tags: z.array(z.string().trim().min(1).max(40)).min(1).max(12),
       answerConfig: z.record(z.string(), z.unknown()).optional(),
       imageUrl: z.string().url().max(1024).optional().or(z.literal("")),
-      options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).min(2).max(10),
+      options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10),
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      if (!input.options.some(option => option.isCorrect)) throw new TRPCError({ code: "BAD_REQUEST", message: "Cần có ít nhất một đáp án đúng." });
+      const validationError = validateQuestionConfiguration(input);
+      if (validationError) throw new TRPCError({ code: "BAD_REQUEST", message: validationError });
       const questionData = { lessonId: input.lessonId, prompt: input.prompt, type: input.type, difficulty: input.difficulty, explanation: input.explanation || null, tags: input.tags, answerConfig: input.answerConfig, imageUrl: input.imageUrl || null };
       let questionId = input.id;
       if (questionId) {
@@ -396,7 +398,7 @@ export const appRouter = router({
         const created = await db.insert(questions).values(questionData);
         questionId = Number(created[0].insertId);
       }
-      await db.insert(questionOptions).values(input.options.map((option, sortOrder) => ({ questionId: questionId!, body: option.body, isCorrect: option.isCorrect, sortOrder })));
+      if (input.options.length) await db.insert(questionOptions).values(input.options.map((option, sortOrder) => ({ questionId: questionId!, body: option.body, isCorrect: option.isCorrect, sortOrder })));
       if (input.quizId) await db.insert(quizQuestions).values({ quizId: input.quizId, questionId: questionId!, points: 1, sortOrder: 0 }).onDuplicateKeyUpdate({ set: { questionId: questionId! } });
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.id ? "question.updated" : "question.created", entityType: "question", entityId: questionId, metadata: { prompt: input.prompt.slice(0, 160) } });
       return { success: true, questionId };
