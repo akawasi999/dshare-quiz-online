@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   attempts,
@@ -17,6 +17,7 @@ import {
   walletTransactions,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { sortLeaderboardEntries } from "./leaderboard";
 import { scoreQuiz } from "./quizEngine";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -249,18 +250,20 @@ export async function logSecurityEvent(attemptId: number, eventType: "copy" | "p
 export async function getLeaderboard(quizId?: number) {
   const db = await getDb();
   if (!db) return [];
+  const bestScore = sql<number>`max(${attempts.score})`;
+  const completedCount = sql<number>`count(${attempts.id})`;
   const rows = await db.select({
     userId: attempts.userId,
     name: users.name,
-    bestScore: sql<number>`max(${attempts.score})`,
-    completedCount: sql<number>`count(${attempts.id})`,
+    bestScore,
+    completedCount,
   }).from(attempts)
     .innerJoin(users, eq(attempts.userId, users.id))
     .where(and(eq(attempts.status, "submitted"), quizId ? eq(attempts.quizId, quizId) : undefined))
     .groupBy(attempts.userId, users.name)
-    .orderBy(desc(sql`max(${attempts.score})`))
+    .orderBy(desc(bestScore), desc(completedCount), asc(attempts.userId))
     .limit(20);
-  return rows;
+  return sortLeaderboardEntries(rows);
 }
 
 export async function getWalletTransactions(userId: number) {

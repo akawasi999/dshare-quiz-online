@@ -53,7 +53,9 @@
 - [x] Xáo trộn toàn bộ phương án ghép nối ở cột phải trong mỗi lượt luyện tập.
 - [ ] Kiểm thử toàn bộ luồng luyện tập đa dạng câu hỏi, gồm chấm điểm tức thời và điều hướng sau khi hoàn thành.
 - [x] Lưu lịch sử thi, tiến độ học tập, tỷ lệ chính xác và điểm trung bình.
-- [ ] Xây dựng leaderboard theo bộ đề và toàn hệ thống.
+- [x] Xây dựng leaderboard theo bộ đề và toàn hệ thống.
+- [x] Hoàn thiện giao diện leaderboard với chuyển đổi giữa phạm vi toàn hệ thống và từng bộ đề.
+- [x] Hoàn thiện tiêu chí phá hòa bảng xếp hạng theo số lượt hoàn thành và mã học viên ổn định.
 - [x] Hiển thị thảo luận/bình luận chỉ sau khi người dùng hoàn thành bài.
 - [x] Xây dựng tính năng báo lỗi câu hỏi, quy trình admin duyệt và hoàn Point cho báo cáo hợp lệ.
 - [ ] Xây dựng khu vực quản trị để quản lý nội dung, câu hỏi, bộ đề và báo cáo lỗi.
