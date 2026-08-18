@@ -22,7 +22,7 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const isDark = variant === "dark";
 
   return (
-    <header className={cn("relative z-40 border-b", isDark ? "border-white/10 text-white" : "border-[#172554]/10 text-[#172554]") }>
+    <header className={cn("relative z-40 border-b", isDark ? "border-white/10 bg-[#172554] text-white" : "border-[#172554]/10 bg-white text-[#172554]") }>
       <div className="container flex h-[76px] items-center justify-between gap-5">
         <Link href="/" className="group flex items-center gap-3" aria-label="Dshare Quiz Online">
           <span className={cn("grid h-10 w-10 place-items-center rounded-[14px] shadow-sm transition-transform duration-200 group-hover:-rotate-3", isDark ? "bg-[#3b82f6] text-white" : "bg-[#172554] text-white") }>

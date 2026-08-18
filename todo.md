@@ -129,3 +129,4 @@
 - [x] Kiểm thử hoàn tất Practice end-to-end: gọi completePractice, hiển thị thẻ hoàn thành và xác nhận CTA Luyện thêm/Khám phá bộ đề điều hướng đúng.
 - [x] Đồng bộ bảng quyền lợi gói phí và nhãn điều hướng đầu trang theo chỉnh sửa trực quan mới, sau đó xác minh responsive trước checkpoint.
 - [x] Đảo quota hiển thị 50/Vô hạn của hai quyền lợi Gói PREMIUM theo chỉnh sửa trực quan mới nhất và đồng bộ kiểm thử, tài liệu.
+- [x] Chuẩn hóa nền trắng cho bảng giá và header theo chỉnh sửa trực quan mới, bảo toàn tương thích chế độ tối trước checkpoint.
