@@ -4,6 +4,7 @@ import AdminOperationsDashboard from "@/components/AdminOperationsDashboard";
 import AdminBugReportsPanel from "@/components/AdminBugReportsPanel";
 import AdminPointLedgerPanel from "@/components/AdminPointLedgerPanel";
 import AIQuestionGeneratorPanel from "@/components/AIQuestionGeneratorPanel";
+import LiveMonitoringPanel from "@/components/LiveMonitoringPanel";
 import QuestionEditorPanel from "@/components/QuestionEditorPanel";
 import QuestionTransferPanel from "@/components/QuestionTransferPanel";
 import RandomQuizBuilder from "@/components/RandomQuizBuilder";
@@ -30,6 +31,7 @@ export default function Admin() {
   if (location === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;
   if (location === "/quan-tri/nguoi-dung") content = <UserManager />;
   if (location === "/quan-tri/bao-cao") content = <AnalyticsDashboard />;
+  if (location === "/quan-tri/live-monitoring") content = <LiveMonitoringPanel />;
   if (location === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
   if (location === "/quan-tri/point") content = <AdminPointLedgerPanel />;
   if (location === "/quan-tri/nhat-ky") content = <AuditTrail />;

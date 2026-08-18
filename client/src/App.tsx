@@ -42,6 +42,7 @@ function Router() {
     <Route path="/quan-tri/nguoi-dung" component={Admin} />
     <Route path="/quan-tri/point" component={Admin} />
     <Route path="/quan-tri/bao-cao" component={Admin} />
+    <Route path="/quan-tri/live-monitoring" component={Admin} />
     <Route path="/quan-tri/bao-loi" component={Admin} />
     <Route path="/quan-tri/nhat-ky" component={Admin} />
     <Route path="/404" component={NotFound} />

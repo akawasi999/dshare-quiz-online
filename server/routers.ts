@@ -449,6 +449,15 @@ export const appRouter = router({
       ]);
       return { categories: categoryRows, subjects: subjectRows, lessons: lessonRows, quizzes: quizRows };
     }),
+    liveMonitoring: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return { active: [], recent: [], refreshedAt: new Date() };
+      const since = new Date(Date.now() - 60 * 60 * 1000);
+      const rows = await db.select({ attempt: attempts, learnerName: users.name, learnerEmail: users.email, quizTitle: quizzes.title })
+        .from(attempts).innerJoin(users, eq(attempts.userId, users.id)).innerJoin(quizzes, eq(attempts.quizId, quizzes.id))
+        .where(sql`${attempts.startedAt} >= ${since}`).orderBy(desc(attempts.startedAt)).limit(50);
+      return { active: rows.filter(row => row.attempt.status === "in_progress"), recent: rows.filter(row => row.attempt.status !== "in_progress").slice(0, 20), refreshedAt: new Date() };
+    }),
     generateQuestionAI: adminProcedure.input(aiQuestionInputSchema).mutation(async ({ ctx, input }) => {
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       const response = await invokeLLM({

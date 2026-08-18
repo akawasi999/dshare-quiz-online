@@ -141,3 +141,5 @@
 - [x] Thêm màn hình quản trị nhập ngữ cảnh, xem trước, chỉnh sửa và duyệt lưu câu hỏi AI vào ngân hàng câu hỏi.
 - [x] Bổ sung kiểm thử tạo câu hỏi AI, quota, lỗi đầu ra và kiểm tra responsive trước checkpoint.
 - [x] Chuẩn hóa background toàn hệ thống sang #ebf8ff, kiểm tra tương phản sáng/tối và responsive trước checkpoint.
+- [x] Xây dựng Live Monitoring theo dõi lượt thi đang diễn ra và mới hoàn thành, có phân quyền hạng và tự làm mới.
+- [x] Bổ sung kiểm thử API, trạng thái trống/lỗi và responsive cho Live Monitoring trước checkpoint.
