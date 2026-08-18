@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+type Theme = StoredTheme;
 
 interface ThemeContextType {
   theme: Theme;
@@ -23,8 +23,8 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
+      const requestedTheme = new URLSearchParams(window.location.search).get("theme");
+      return getInitialTheme(localStorage.getItem("theme"), defaultTheme, requestedTheme);
     }
     return defaultTheme;
   });
@@ -62,3 +62,4 @@ export function useTheme() {
   }
   return context;
 }
+import { getInitialTheme, type StoredTheme } from "@/lib/themeUtils";

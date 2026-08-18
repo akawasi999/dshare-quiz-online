@@ -20,8 +20,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { startLogin } from "@/const";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { ArrowDownToLine, BookOpenCheck, ChartNoAxesCombined, CircleDollarSign, CircleHelp, FileWarning, LayoutDashboard, LogOut, PanelLeft, ScrollText, Shuffle, Users } from "lucide-react";
+import { ArrowDownToLine, BookOpenCheck, ChartNoAxesCombined, CircleDollarSign, CircleHelp, FileWarning, LayoutDashboard, LogOut, Moon, PanelLeft, ScrollText, Shuffle, Sun, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -113,6 +114,7 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -185,6 +187,14 @@ function DashboardLayoutContent({
           </SidebarHeader>
 
           <SidebarContent className="gap-0">
+            <SidebarMenu className="px-2 pt-1">
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={toggleTheme} tooltip={theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"} className="h-10 font-normal">
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  <span>{theme === "dark" ? "Chế độ sáng" : "Chế độ tối"}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
             <SidebarMenu className="px-2 py-1">
               {menuItems.map(item => {
                 const isActive = location === item.path;
@@ -261,6 +271,7 @@ function DashboardLayoutContent({
                 </div>
               </div>
             </div>
+            <button type="button" onClick={toggleTheme} aria-label={theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"} aria-pressed={theme === "dark"} className="grid h-9 w-9 place-items-center rounded-lg bg-background text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button>
           </div>
         )}
         <main className="flex-1 p-4">{children}</main>
