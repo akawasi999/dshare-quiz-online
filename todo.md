@@ -2,7 +2,8 @@
 
 - [x] Phân tích đầy đủ tài liệu DshareQuizOnline và hợp nhất các yêu cầu bổ sung của người dùng.
 - [x] Triển khai ba hạng tài khoản Basic, Pro và Premium cùng quyền truy cập theo hạng.
-- [ ] Xây dựng ví Point, sổ cái giao dịch, phí vào bài kiểm tra, thưởng đạt và thao tác điều chỉnh thủ công của admin.
+- [x] Xây dựng ví Point, sổ cái giao dịch, phí vào bài kiểm tra, thưởng đạt và thao tác điều chỉnh thủ công của admin.
+- [x] Hiển thị ví Point với lịch sử giao dịch, biến động số dư và liên kết rõ ràng tới các luồng Point đang có.
 - [ ] Xây dựng trang nạp Point, nâng cấp gói và các điểm mở rộng cho thanh toán tự động hoặc QR thủ công.
 - [ ] Xây dựng chương trình giới thiệu bằng mã/referral, theo dõi phần thưởng và lịch sử giới thiệu.
 - [x] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.

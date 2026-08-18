@@ -10,6 +10,7 @@ import Practice from "./pages/Practice";
 import QuizLibrary from "@/pages/QuizLibrary";
 import QuizResult from "@/pages/QuizResult";
 import QuizRunner from "@/pages/QuizRunner";
+import Wallet from "@/pages/Wallet";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -23,6 +24,7 @@ function Router() {
     <Route path="/bang-xep-hang" component={Leaderboard} />
     <Route path="/bang-gia" component={Pricing} />
     <Route path="/ho-so" component={Profile} />
+    <Route path="/vi" component={Wallet} />
     <Route path="/luyen-tap" component={Practice} />
     <Route path="/quan-tri" component={Admin} />
     <Route path="/quan-tri/noi-dung" component={Admin} />
