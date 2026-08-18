@@ -140,3 +140,4 @@
 - [x] Xây dựng API quản trị tạo câu hỏi bằng AI với đầu ra cấu trúc, xác thực dữ liệu và quota AI Credits.
 - [x] Thêm màn hình quản trị nhập ngữ cảnh, xem trước, chỉnh sửa và duyệt lưu câu hỏi AI vào ngân hàng câu hỏi.
 - [x] Bổ sung kiểm thử tạo câu hỏi AI, quota, lỗi đầu ra và kiểm tra responsive trước checkpoint.
+- [x] Chuẩn hóa background toàn hệ thống sang #ebf8ff, kiểm tra tương phản sáng/tối và responsive trước checkpoint.
