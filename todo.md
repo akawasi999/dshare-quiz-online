@@ -101,3 +101,4 @@
 - [x] Áp dụng kiểm tra tierExpiresAt trong mọi gate nội dung trả phí và bổ sung test cho hết hạn/gia hạn gói Pro/Premium.
 - [x] Viết test integration cho webhook PayOS xác nhận paymentRecords chuyển trạng thái paid, walletTransactions được ghi đúng một lần, Point/tier được cấp đúng và webhook lặp không nhân đôi sổ cái.
 - [x] Bổ sung integration test cho webhook PayOS với gói Pro/Premium: xác nhận paymentRecords sang paid, learnerProfiles.tier/tierExpiresAt cập nhật đúng, Point thưởng được cộng đúng một lần và webhook lặp không nhân đôi quyền lợi.
+- [x] Xác nhận phạm vi chỉ dùng kiểm thử PayOS mô phỏng; không thực hiện giao dịch thực tế hoặc đăng ký webhook production trong phiên này.
