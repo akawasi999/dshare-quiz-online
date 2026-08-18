@@ -133,3 +133,4 @@
 - [x] Áp dụng quota vận hành Basic 20 lượt thi/tháng và 2 quiz; PRO 40 lượt thi/tháng và 20 quiz; PREMIUM lượt thi vô hạn và 50 quiz.
 - [x] Áp dụng AI Credits theo quota tháng của hạng thành viên tại các API trợ lý AI, có kiểm thử giới hạn.
 - [x] Hiển thị phản hồi rõ ràng khi người học hoặc người tạo chạm quota và rà soát hồi quy toàn bộ luồng quota.
+- [x] Hiển thị mức dùng và quota còn lại theo tháng tại hồ sơ người học sau khi quota máy chủ được kích hoạt.

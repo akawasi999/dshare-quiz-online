@@ -100,6 +100,19 @@ export const appRouter = router({
 
   learner: router({
     summary: protectedProcedure.query(({ ctx }) => getLearnerSummary(ctx.user.id)),
+    quota: protectedProcedure.query(async ({ ctx }) => {
+      const profile = await ensureLearnerProfile(ctx.user.id);
+      if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập quota thành viên." });
+      const tier = profile.tier as QuotaTier;
+      const limits = membershipQuotas[tier];
+      const usage = await getMonthlyQuotaUsage(ctx.user.id);
+      const remaining = {
+        attempts: limits.attemptsPerMonth === null ? null : Math.max(0, limits.attemptsPerMonth - usage.attempts),
+        quizzes: limits.quizzesPerMonth === null ? null : Math.max(0, limits.quizzesPerMonth - usage.quizzes),
+        aiCredits: limits.aiCreditsPerMonth === null ? null : Math.max(0, limits.aiCreditsPerMonth - usage.aiCredits),
+      };
+      return { tier, limits, usage, remaining };
+    }),
     wallet: protectedProcedure.query(({ ctx }) => getWalletTransactions(ctx.user.id)),
     updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), learningGoal: z.string().trim().max(220).optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")), notificationPreferences: z.object({ studyReminders: z.boolean(), resultUpdates: z.boolean(), platformUpdates: z.boolean() }).optional() }))
       .mutation(async ({ ctx, input }) => {

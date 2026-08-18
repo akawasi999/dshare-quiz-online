@@ -49,4 +49,13 @@ describe("membership quota gates", () => {
     mocks.getMonthlyQuotaUsage.mockResolvedValue({ attempts: 0, quizzes: 0, aiCredits: 20 });
     await expect(caller().ai.explain({ question: "Giải thích khái niệm về biến trong lập trình", context: "Python" })).rejects.toMatchObject({ message: expect.stringContaining("quota AI Credits (20/tháng)") });
   });
+
+  it("trả quota còn lại để hồ sơ người học hiển thị", async () => {
+    mocks.getMonthlyQuotaUsage.mockResolvedValue({ attempts: 4, quizzes: 1, aiCredits: 6 });
+    await expect(caller().learner.quota()).resolves.toMatchObject({
+      tier: "basic",
+      limits: { attemptsPerMonth: 20, quizzesPerMonth: 2, aiCreditsPerMonth: 20 },
+      remaining: { attempts: 16, quizzes: 1, aiCredits: 14 },
+    });
+  });
 });
