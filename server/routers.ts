@@ -23,6 +23,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM, listLLMModels } from "./_core/llm";
 import { buildQuizAssistantMessages, type QuizAssistantIntent } from "./aiAssistant";
 import { buildAttemptMilestoneAlert } from "./attemptNotifications";
+import { getReferralValidationError, normalizeReferralCode } from "./referralUtils";
 import { allocateQuestionCounts } from "./randomQuiz";
 import { validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
@@ -88,6 +89,40 @@ export const appRouter = router({
         await db.update(learnerProfiles).set({ bio: input.bio || null, learningGoal: input.learningGoal || null, avatarUrl: input.avatarUrl || null, notificationPreferences: input.notificationPreferences }).where(eq(learnerProfiles.id, profile.id));
         return { success: true };
       }),
+    referral: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return { referralCode: "", referredByCode: null, invitations: [], rewards: [], totalRewarded: 0 };
+      const profile = await ensureLearnerProfile(ctx.user.id);
+      if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập hồ sơ referral." });
+      const [invitations, rewards] = await Promise.all([
+        db.select({ profile: learnerProfiles, name: users.name, email: users.email }).from(learnerProfiles).leftJoin(users, eq(learnerProfiles.userId, users.id)).where(eq(learnerProfiles.referredByCode, profile.referralCode)).orderBy(desc(learnerProfiles.createdAt)).limit(50),
+        db.select().from(walletTransactions).where(and(eq(walletTransactions.userId, ctx.user.id), eq(walletTransactions.type, "referral_reward"))).orderBy(desc(walletTransactions.createdAt)).limit(50),
+      ]);
+      return { referralCode: profile.referralCode, referredByCode: profile.referredByCode, invitations, rewards, totalRewarded: rewards.reduce((sum, item) => sum + item.amount, 0) };
+    }),
+    applyReferralCode: protectedProcedure.input(z.object({ code: z.string().trim().toUpperCase().min(4).max(20) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể kết nối chương trình giới thiệu." });
+      const profile = await ensureLearnerProfile(ctx.user.id);
+      if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập hồ sơ referral." });
+      const referralCode = normalizeReferralCode(input.code);
+      const validationError = getReferralValidationError({ code: referralCode, ownCode: profile.referralCode, hasReferredByCode: Boolean(profile.referredByCode) });
+      if (validationError) throw new TRPCError({ code: validationError.includes("chính mình") ? "BAD_REQUEST" : "PRECONDITION_FAILED", message: validationError });
+      const referrer = await db.select().from(learnerProfiles).where(eq(learnerProfiles.referralCode, referralCode)).limit(1);
+      const referrerProfile = referrer[0];
+      if (!referrerProfile) throw new TRPCError({ code: "NOT_FOUND", message: "Mã giới thiệu chưa hợp lệ." });
+      const recipientReward = 10;
+      const referrerReward = 20;
+      const recipientBalance = profile.pointBalance + recipientReward;
+      const referrerBalance = referrerProfile.pointBalance + referrerReward;
+      await db.update(learnerProfiles).set({ referredByCode: referralCode, pointBalance: recipientBalance }).where(eq(learnerProfiles.id, profile.id));
+      await db.update(learnerProfiles).set({ pointBalance: referrerBalance }).where(eq(learnerProfiles.id, referrerProfile.id));
+      await db.insert(walletTransactions).values([
+        { userId: ctx.user.id, type: "referral_reward", amount: recipientReward, balanceAfter: recipientBalance, description: `Thưởng chào mừng từ mã ${referralCode}`, referenceType: "referral", referenceId: referrerProfile.userId },
+        { userId: referrerProfile.userId, type: "referral_reward", amount: referrerReward, balanceAfter: referrerBalance, description: `Thưởng giới thiệu học viên mới`, referenceType: "referral", referenceId: ctx.user.id },
+      ]);
+      return { success: true, recipientReward, referrerReward };
+    }),
     history: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
