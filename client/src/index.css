@@ -67,31 +67,4 @@ button:active { transform: scale(.97); }
 .grain { position: relative; }
 .grain::after { content: ""; pointer-events: none; position: absolute; inset: 0; opacity: .18; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E"); mix-blend-mode: multiply; }
 
-/* Chuyển đổi nhận diện cũ sang hệ xanh Dshare, gồm cả các tiện ích màu đã có trong màn hình hiện hữu. */
-[class*="bg-[#173a51"], [class*="bg-[#183a51"] { background-color: #3182ce !important; }
-[class*="bg-[#17334a"], [class*="bg-[#13293d"] { background-color: #2a4365 !important; }
-[class*="text-[#173a51"], [class*="text-[#17334a"], [class*="text-[#183a51"], [class*="text-[#25465b"], [class*="text-[#294b60"] { color: #2a4365 !important; }
-[class*="border-[#173a51"], [class*="border-[#17334a"], [class*="border-[#183a51"] { border-color: rgba(42, 67, 101, .16) !important; }
-[class*="bg-[#b88f44"], [class*="bg-[#e4c378"], [class*="bg-[#e5c981"], [class*="bg-[#e9ddbd"], [class*="bg-[#e8d8ab"], [class*="bg-[#e8d9b0"], [class*="bg-[#e5ddd0"], [class*="bg-[#e1bf78"], [class*="bg-[#e0c98d"], [class*="bg-[#e4c67f"], [class*="bg-[#e4c77f"], [class*="bg-[#e8dcc0"], [class*="bg-[#e6d69f"], [class*="bg-[#f0cd89"], [class*="bg-[#efd38e"] { background-color: #4299e1 !important; }
-[class*="text-[#b88f44"], [class*="text-[#e4c378"], [class*="text-[#e5c981"], [class*="text-[#e1bf78"], [class*="text-[#e0c98d"], [class*="text-[#e4c67f"], [class*="text-[#e4c77f"], [class*="text-[#9d7c40"], [class*="text-[#a37b3a"], [class*="text-[#a47b36"], [class*="text-[#9e7836"], [class*="text-[#9c783d"], [class*="text-[#b48639"] { color: #3182ce !important; }
-[class*="text-[#8a6b2e"], [class*="text-[#956f2e"], [class*="text-[#986f2f"], [class*="text-[#92702f"], [class*="text-[#8b6b2e"], [class*="text-[#70561f"] { color: #3182ce !important; }
-[class*="border-[#b88f44"], [class*="border-[#e4c378"], [class*="border-[#d6c590"], [class*="border-[#d9c687"], [class*="border-[#dfc586"] { border-color: #4299e1 !important; }
-[class*="bg-[#fffdf8"], [class*="bg-[#fffaf0"], [class*="bg-[#f5f5ef"], [class*="bg-[#f7f7f3"], [class*="bg-[#f4f5f1"], [class*="bg-[#f2f2ed"], [class*="bg-[#eff1ed"], [class*="bg-[#edf0ec"], [class*="bg-[#f5f6f2"] { background-color: #ffffff !important; }
-[class*="bg-[#ebf8ff"] { background-color: #ebf8ff !important; }
-[class*="bg-[#e1bf78"], [class*="bg-[#f0d18e"], [class*="bg-[#f0d695"], [class*="bg-[#f3d995"], [class*="bg-[#c8a65e"] { background-color: #4299e1 !important; }
-[class*="text-[#dfc586"], [class*="text-[#dcc184"], [class*="text-[#e8cc8e"], [class*="text-[#e4c67f"], [class*="text-[#f8e2aa"] { color: #4299e1 !important; }
-[class*="border-[#e1bf78"], [class*="border-[#f0cd89"] { border-color: #4299e1 !important; }
-[class*="from-[#dbb869"] { --tw-gradient-from: #4299e1 var(--tw-gradient-from-position) !important; }
-[class*="to-[#f3d995"] { --tw-gradient-to: #3182ce var(--tw-gradient-to-position) !important; }
 @media (prefers-reduced-motion: no-preference) { .rise-in { animation: rise-in 640ms cubic-bezier(.23,1,.32,1) both; } .rise-in-delay { animation: rise-in 640ms 90ms cubic-bezier(.23,1,.32,1) both; } @keyframes rise-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } } }
-
-/* Lớp màu tham chiếu i-quiz: indigo/royal blue cho cấu trúc, blue cho thao tác, amber cho điểm nhấn. */
-[class*="bg-[#2a4365"], [class*="bg-[#173a51"], [class*="bg-[#183a51"] { background-color: #1e3a8a !important; }
-[class*="bg-[#3182ce"] { background-color: #2563eb !important; }
-[class*="bg-[#4299e1"] { background-color: #3b82f6 !important; }
-[class*="bg-[#ebf8ff"], [class*="bg-[#e7f5ff"], [class*="bg-[#e5f3ff"] { background-color: #f4f7ff !important; }
-[class*="text-[#2a4365"], [class*="text-[#173a51"], [class*="text-[#183a51"] { color: #172554 !important; }
-[class*="text-[#3182ce"], [class*="text-[#4299e1"] { color: #2563eb !important; }
-[class*="border-[#2a4365"], [class*="border-[#173a51"], [class*="border-[#183a51"] { border-color: rgba(30, 58, 138, .14) !important; }
-[class*="bg-[#b88f44"], [class*="bg-[#e4c378"], [class*="bg-[#e5c981"], [class*="bg-[#e1bf78"], [class*="bg-[#f0d18e"], [class*="bg-[#f0d695"], [class*="bg-[#f3d995"] { background-color: #f59e0b !important; }
-[class*="text-[#b88f44"], [class*="text-[#e4c378"], [class*="text-[#e5c981"], [class*="text-[#e1bf78"], [class*="text-[#9d7c40"] { color: #d97706 !important; }

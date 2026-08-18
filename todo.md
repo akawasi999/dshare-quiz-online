@@ -24,10 +24,10 @@
 - [ ] Thiết kế nhận diện giao diện cao cấp, responsive, có hỗ trợ chủ đề sáng/tối.
 - [x] Áp dụng bảng màu #4299e1, #3182ce, #ffffff, #ebf8ff, #2a4365 và font Montserrat/Open Sans nhất quán trên giao diện.
 - [x] Điều chỉnh token màu Dshare theo bảng màu và phong cách trực quan tham chiếu từ i-quiz.vn.
-- [ ] Thay thế trực tiếp các màu navy, ivory và gold hardcode còn lại trên các trang trọng yếu bằng bảng màu xanh mới.
-- [ ] Thay trực tiếp các mã màu legacy trong Profile, Practice, QuizRunner, Admin và component trọng yếu sang palette xanh, không chỉ dựa vào CSS override.
-- [ ] Rà soát grep mã màu cũ trên các route chính và chỉ giữ lại màu cảnh báo/semantic có chủ đích.
-- [ ] Rà soát desktop/mobile toàn bộ route trọng yếu sau khi chuẩn hóa nhận diện xanh và kiểu chữ.
+- [x] Thay thế trực tiếp các màu navy, ivory và gold hardcode còn lại trên các trang trọng yếu bằng bảng màu xanh mới.
+- [x] Thay trực tiếp các mã màu legacy trong Profile, Practice, QuizRunner, Admin và component trọng yếu sang palette xanh, không chỉ dựa vào CSS override.
+- [x] Rà soát grep mã màu cũ trên các route chính và chỉ giữ lại màu cảnh báo/semantic có chủ đích.
+- [x] Rà soát desktop/mobile toàn bộ route trọng yếu sau khi chuẩn hóa nhận diện xanh và kiểu chữ.
 - [x] Xây dựng trang chủ với khu vực giới thiệu, tìm kiếm, lọc danh mục và các bộ đề nổi bật.
 - [x] Ưu tiên hoàn thiện thao tác tìm kiếm và lọc danh mục trực tiếp trên trang chủ, có trạng thái không tìm thấy phù hợp.
 - [x] Xây dựng luồng xác thực Manus, hồ sơ cá nhân và thiết lập tài khoản.
