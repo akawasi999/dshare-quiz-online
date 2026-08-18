@@ -22,6 +22,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM, listLLMModels } from "./_core/llm";
 import { buildQuizAssistantMessages, type QuizAssistantIntent } from "./aiAssistant";
+import { allocateQuestionCounts } from "./randomQuiz";
 import { validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
@@ -343,12 +344,7 @@ export const appRouter = router({
       const ratioSum = input.easyRatio + input.mediumRatio + input.hardRatio;
       if (Math.abs(ratioSum - 1) > 0.001) throw new TRPCError({ code: "BAD_REQUEST", message: "Tổng tỷ lệ độ khó phải bằng 100%." });
       const pool = await db.select().from(questions).where(and(eq(questions.lessonId, input.lessonId), eq(questions.isActive, true)));
-      const wanted = {
-        easy: Math.round(input.questionCount * input.easyRatio),
-        medium: Math.round(input.questionCount * input.mediumRatio),
-        hard: Math.round(input.questionCount * input.hardRatio),
-      };
-      wanted.medium += input.questionCount - wanted.easy - wanted.medium - wanted.hard;
+      const wanted = allocateQuestionCounts(input.questionCount, { easy: input.easyRatio, medium: input.mediumRatio, hard: input.hardRatio });
       const selected = (["easy", "medium", "hard"] as const).flatMap(difficulty => shuffledForAttempt(pool.filter(question => question.difficulty === difficulty), Date.now() + difficulty.length).slice(0, wanted[difficulty]));
       if (selected.length < input.questionCount) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Ngân hàng chưa đủ câu hỏi theo tỷ lệ đã chọn (có ${selected.length}/${input.questionCount} câu).` });
       const created = await db.insert(quizzes).values({ lessonId: input.lessonId, title: input.title, slug: input.slug, mode: input.mode, difficulty: "medium", durationSeconds: input.questionCount * 60, passingScore: 70, entryPointCost: input.mode === "testing" ? 20 : 0, completionReward: input.mode === "testing" ? 40 : 0, questionCount: input.questionCount, randomizeQuestions: true, randomizeOptions: true, isPublished: false });

@@ -1,0 +1,47 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { trpc } from "@/lib/trpc";
+import { Loader2, Shuffle, Sparkles } from "lucide-react";
+import { FormEvent, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Link } from "wouter";
+
+const toSlug = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `de-ngau-nhien-${Date.now()}`;
+
+export default function RandomQuizBuilder() {
+  const content = trpc.admin.contentTree.useQuery();
+  const createRandom = trpc.admin.generateRandomQuiz.useMutation();
+  const [lessonId, setLessonId] = useState("");
+  const [title, setTitle] = useState("");
+  const [questionCount, setQuestionCount] = useState(20);
+  const [mode, setMode] = useState<"training" | "testing">("testing");
+  const [ratios, setRatios] = useState({ easy: 40, medium: 40, hard: 20 });
+  const [createdQuiz, setCreatedQuiz] = useState<{ id: number; count: number } | null>(null);
+  const ratioSum = ratios.easy + ratios.medium + ratios.hard;
+  const lessons = content.data?.lessons ?? [];
+  const selectedLesson = useMemo(() => content.data?.lessons.find(lesson => lesson.id === Number(lessonId)), [content.data?.lessons, lessonId]);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (ratioSum !== 100) { toast.error("Tỷ lệ độ khó phải bằng 100%."); return; }
+    try {
+      const result = await createRandom.mutateAsync({
+        lessonId: Number(lessonId),
+        title,
+        slug: toSlug(title),
+        mode,
+        questionCount,
+        easyRatio: ratios.easy / 100,
+        mediumRatio: ratios.medium / 100,
+        hardRatio: ratios.hard / 100,
+      });
+      setCreatedQuiz({ id: result.quizId, count: result.selectedCount });
+      toast.success(`Đã tạo bộ đề với ${result.selectedCount} câu hỏi.`, { description: "Bộ đề đang ở trạng thái nháp để bạn kiểm tra trước khi xuất bản." });
+    } catch (error) {
+      toast.error("Chưa thể tạo bộ đề", { description: error instanceof Error ? error.message : "Hãy kiểm tra số lượng câu hỏi trong ngân hàng." });
+    }
+  };
+
+  return <div className="mx-auto max-w-5xl"><p className="text-[10px] font-bold uppercase tracking-[.17em] text-[#3182ce]">Dshare / Quản trị / Tạo đề ngẫu nhiên</p><div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="font-serif text-[36px] font-semibold tracking-[-.045em] text-[#2a4365]">Tạo đề theo ma trận độ khó</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#617786]">Hệ thống chọn ngẫu nhiên câu hỏi đang hoạt động trong một bài học, đúng theo số lượng và tỷ lệ độ khó bạn thiết lập.</p></div><Button asChild variant="outline" className="rounded-full"><Link href="/quan-tri/noi-dung">Quay lại nội dung</Link></Button></div>{content.isLoading ? <div className="mt-7 rounded-[24px] border border-[#2a4365]/12 bg-white p-8 text-center text-sm text-[#617786]"><Loader2 className="mx-auto mb-3 animate-spin text-[#3182ce]" size={22} />Đang tải danh sách bài học…</div> : content.error ? <div className="mt-7 rounded-[24px] border border-[#f0c5bd] bg-[#fff7f5] p-6 text-sm text-[#a8493e]">Không thể tải danh sách bài học. {content.error.message}</div> : !lessons.length ? <div className="mt-7 rounded-[24px] border border-[#2a4365]/12 bg-white p-7 text-center"><p className="font-serif text-2xl font-semibold text-[#2a4365]">Chưa có bài học để tạo đề</p><p className="mt-2 text-sm text-[#617786]">Hãy tạo Chủ đề, Môn học và Bài học trước khi sử dụng ngân hàng câu hỏi.</p><Button asChild className="mt-5 rounded-full bg-[#3182ce]"><Link href="/quan-tri/noi-dung">Quản lý nội dung</Link></Button></div> : <div className="mt-7 grid gap-6 lg:grid-cols-[1fr_.72fr]"><form onSubmit={submit} className="rounded-[28px] border border-[#2a4365]/12 bg-white p-5 sm:p-7"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#ebf8ff] text-[#3182ce]"><Shuffle size={19} /></span><div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#3182ce]">Cấu hình đề</p><h2 className="mt-1 font-serif text-2xl font-semibold text-[#2a4365]">Chọn nguồn câu hỏi</h2></div></div><div className="mt-6 grid gap-4 sm:grid-cols-2"><div className="sm:col-span-2"><Label>Bài học nguồn</Label><select value={lessonId} onChange={event => setLessonId(event.target.value)} required className="mt-2 h-10 w-full rounded-md border border-[#2a4365]/15 bg-white px-3 text-xs text-[#2a4365]"><option value="">Chọn bài học…</option>{lessons.map(lesson => <option key={lesson.id} value={lesson.id}>{lesson.title} · #{lesson.id}</option>)}</select></div><div><Label>Tên bộ đề</Label><Input value={title} onChange={event => setTitle(event.target.value)} required minLength={4} className="mt-2" placeholder="Ví dụ: Đề luyện chương 01" /></div><div><Label>Số câu hỏi</Label><Input value={questionCount} onChange={event => setQuestionCount(Math.max(5, Math.min(200, Number(event.target.value) || 5)))} required type="number" min={5} max={200} className="mt-2" /></div><div className="sm:col-span-2"><Label>Hình thức</Label><div className="mt-2 grid grid-cols-2 gap-3">{(["testing", "training"] as const).map(value => <button key={value} type="button" onClick={() => setMode(value)} className={`rounded-xl border px-4 py-3 text-left text-xs font-bold transition ${mode === value ? "border-[#4299e1] bg-[#ebf8ff] text-[#2a4365]" : "border-[#2a4365]/10 bg-white text-[#6d7f89]"}`}><span className="block">{value === "testing" ? "Kiểm tra" : "Ôn tập"}</span><span className="mt-1 block text-[10px] font-normal opacity-75">{value === "testing" ? "Có phí và Point thưởng theo cấu hình mặc định." : "Tập trung củng cố kiến thức."}</span></button>)}</div></div></div><div className="mt-7 border-t border-[#2a4365]/10 pt-6"><div className="flex items-end justify-between"><div><Label>Phân bổ độ khó</Label><p className="mt-1 text-[11px] text-[#70838d]">Tổng cần bằng 100% để đảm bảo số câu được phân bổ chính xác.</p></div><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${ratioSum === 100 ? "bg-[#ebf8ff] text-[#3182ce]" : "bg-[#fff2f0] text-[#b65043]"}`}>{ratioSum}%</span></div><div className="mt-4 grid grid-cols-3 gap-3">{(["easy", "medium", "hard"] as const).map(key => <div key={key}><Label className="text-[11px]">{key === "easy" ? "Dễ" : key === "medium" ? "Trung bình" : "Khó"}</Label><div className="relative mt-2"><Input value={ratios[key]} onChange={event => setRatios(current => ({ ...current, [key]: Math.max(0, Math.min(100, Number(event.target.value) || 0)) }))} type="number" min={0} max={100} className="pr-7" /><span className="absolute right-3 top-2.5 text-xs text-[#6d7f89]">%</span></div></div>)}</div></div><Button disabled={createRandom.isPending || !lessonId || !title.trim() || ratioSum !== 100} className="mt-7 w-full rounded-full bg-[#3182ce] hover:bg-[#2a4365]">{createRandom.isPending ? <Loader2 className="animate-spin" size={16} /> : <Shuffle size={16} />} Tạo bộ đề ngẫu nhiên</Button>{createdQuiz ? <div className="mt-4 rounded-2xl border border-[#9ed0f4] bg-[#ebf8ff] p-4 text-xs text-[#2a4365]"><strong>Đã tạo bộ đề nháp #{createdQuiz.id}</strong> với {createdQuiz.count} câu hỏi.<Button asChild variant="link" className="ml-1 h-auto p-0 text-xs text-[#3182ce]"><Link href="/quan-tri/noi-dung">Mở quản lý nội dung</Link></Button></div> : null}</form><aside className="rounded-[28px] bg-[#2a4365] p-6 text-white"><Sparkles className="text-[#4299e1]" size={21} /><p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-[#4299e1]">Dự kiến tạo</p><h2 className="mt-2 font-serif text-[28px] font-semibold leading-tight">{title || "Bộ đề ngẫu nhiên mới"}</h2><dl className="mt-7 space-y-4 text-sm"><div className="flex items-center justify-between border-b border-white/10 pb-3"><dt className="text-[#c6dce9]">Nguồn</dt><dd className="max-w-[60%] truncate text-right font-semibold">{selectedLesson?.title ?? "Chưa chọn bài học"}</dd></div><div className="flex items-center justify-between border-b border-white/10 pb-3"><dt className="text-[#c6dce9]">Tổng số câu</dt><dd className="font-serif text-xl font-semibold">{questionCount}</dd></div><div className="space-y-2"><div className="flex justify-between text-xs"><span>Dễ</span><strong>{Math.round(questionCount * ratios.easy / 100)} câu</strong></div><div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-[#4299e1]" style={{ width: `${ratios.easy}%` }} /></div><div className="flex justify-between text-xs"><span>Trung bình</span><strong>{Math.round(questionCount * ratios.medium / 100)} câu</strong></div><div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-[#3182ce]" style={{ width: `${ratios.medium}%` }} /></div><div className="flex justify-between text-xs"><span>Khó</span><strong>{questionCount - Math.round(questionCount * ratios.easy / 100) - Math.round(questionCount * ratios.medium / 100)} câu</strong></div><div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-white/60" style={{ width: `${ratios.hard}%` }} /></div></div></dl><p className="mt-7 rounded-2xl bg-white/10 p-4 text-[11px] leading-5 text-[#d7e7ef]">Nếu ngân hàng chưa đủ câu ở một mức độ khó, hệ thống sẽ không tạo đề và thông báo chính xác số câu còn thiếu.</p></aside></div>}</div>;
+}

@@ -63,7 +63,9 @@
 - [x] Hiển thị thảo luận/bình luận chỉ sau khi người dùng hoàn thành bài.
 - [x] Xây dựng tính năng báo lỗi câu hỏi, quy trình admin duyệt và hoàn Point cho báo cáo hợp lệ.
 - [ ] Xây dựng khu vực quản trị để quản lý nội dung, câu hỏi, bộ đề và báo cáo lỗi.
-- [ ] Tạo đề thi ngẫu nhiên theo số lượng câu hỏi và tỷ lệ độ khó.
+- [x] Tạo đề thi ngẫu nhiên theo số lượng câu hỏi và tỷ lệ độ khó.
+- [x] Bổ sung giao diện quản trị để cấu hình số câu, phân bổ dễ/trung bình/khó và tạo bộ đề ngẫu nhiên.
+- [x] Bổ sung trạng thái tải, lỗi, trống và phản hồi liên kết quản trị sau khi tạo đề ngẫu nhiên.
 - [ ] Tích hợp gói thanh toán, điểm thưởng và quyền truy cập nội dung trả phí.
 - [ ] Tích hợp PayOS cho nạp Point và nâng cấp gói, gồm tạo liên kết thanh toán, nhận webhook có xác minh và đối soát giao dịch.
 - [x] Tích hợp trợ lý AI sinh giải thích, gợi ý tài liệu và trả lời nội dung quiz.
