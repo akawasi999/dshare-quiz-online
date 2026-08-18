@@ -44,7 +44,7 @@
 - [x] Chuyển sang cặp ghép tiếp theo sau khi hiển thị đáp án đúng, không cho kéo-thả lại cùng hàng.
 - [x] Hiển thị xác nhận hoàn thành tối giản sau khi người học xử lý xong toàn bộ cặp ghép.
 - [x] Hiển thị xác nhận hoàn thành bằng thẻ ngay trong khu vực luyện tập.
-- [ ] Thêm nút quay lại luyện tập trên thẻ hoàn thành sau lượt ghép nối.
+- [x] Thêm nút quay lại luyện tập trên thẻ hoàn thành sau lượt ghép nối.
 - [x] Điều hướng nút quay lại luyện tập từ thẻ hoàn thành về trang khám phá bộ đề.
 - [x] Giữ lại danh mục gần nhất khi người học quay về khám phá bộ đề từ luyện tập.
 - [x] Lưu danh mục khám phá gần nhất trong hồ sơ người học để khôi phục sau khi đăng nhập lại.
