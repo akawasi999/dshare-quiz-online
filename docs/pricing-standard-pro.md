@@ -14,7 +14,7 @@
 
 Gói PRO và Gói PREMIUM hiển thị quyền truy cập vào Phân tích Leads, tải báo cáo, upload câu hỏi bằng AI, Live Monitoring, hỗ trợ ưu tiên và tùy chỉnh thương hiệu. Gói Miễn phí hiển thị các quyền này là không bao gồm.
 
-> Các quyền lợi trên được hiển thị trong bảng giá. Việc thực thi quota và feature gate riêng cần được triển khai trước khi công bố từng năng lực như một tính năng vận hành thực tế.
+> Quota **lượt thi**, **số quiz tạo** và **AI Credits** đã được kiểm soát ở máy chủ theo chu kỳ tháng UTC. AI Credits được tính bằng số lần gọi trợ lý AI trong tháng, không trừ trực tiếp số dư Ví Point. Các quyền lợi còn lại trong bảng giá cần feature gate riêng trước khi được công bố là năng lực vận hành thực tế.
 
 ## Quy tắc PayOS
 

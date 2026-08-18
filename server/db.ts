@@ -1,10 +1,11 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
-  attempts,
-  attemptAnswers,
-  attemptSecurityEvents,
-  categories,
+	attempts,
+	attemptAnswers,
+	attemptSecurityEvents,
+	aiUsageEvents,
+	categories,
   InsertUser,
   learnerProfiles,
   lessons,
@@ -20,6 +21,7 @@ import { ENV } from "./_core/env";
 import { sortLeaderboardEntries } from "./leaderboard";
 import { scoreQuiz } from "./quizEngine";
 import { getEffectiveTier } from "./membershipUtils";
+import { getQuotaPeriod } from "./quotaUtils";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -175,6 +177,28 @@ export async function createAttempt(input: { userId: number; quizId: number; mod
     totalQuestions: input.questionOrder.length,
   });
   return Number(result[0].insertId);
+}
+
+export async function getMonthlyQuotaUsage(userId: number, now = new Date()) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const { start, end } = getQuotaPeriod(now);
+  const [attemptRows, quizRows, aiRows] = await Promise.all([
+    db.select({ count: sql<number>`count(${attempts.id})` }).from(attempts).where(and(eq(attempts.userId, userId), sql`${attempts.startedAt} >= ${start}`, sql`${attempts.startedAt} < ${end}`)),
+    db.select({ count: sql<number>`count(${quizzes.id})` }).from(quizzes).where(and(eq(quizzes.creatorUserId, userId), sql`${quizzes.createdAt} >= ${start}`, sql`${quizzes.createdAt} < ${end}`)),
+    db.select({ count: sql<number>`count(${aiUsageEvents.id})` }).from(aiUsageEvents).where(and(eq(aiUsageEvents.userId, userId), sql`${aiUsageEvents.createdAt} >= ${start}`, sql`${aiUsageEvents.createdAt} < ${end}`)),
+  ]);
+  return {
+    attempts: Number(attemptRows[0]?.count ?? 0),
+    quizzes: Number(quizRows[0]?.count ?? 0),
+    aiCredits: Number(aiRows[0]?.count ?? 0),
+  };
+}
+
+export async function recordAiUsage(userId: number, action: "explain" | "assist") {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(aiUsageEvents).values({ userId, action });
 }
 
 export async function saveAnswer(input: { attemptId: number; questionId: number; selectedOptionIds: number[] }) {

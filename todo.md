@@ -120,9 +120,9 @@
 - [x] Lưu đặc tả bảng giá từ ảnh tham chiếu dưới dạng văn bản trong repo, gồm tên gói, ánh xạ tier, giá và quyền lợi.
 - [x] Bổ sung kiểm thử payment.offers cho giá, giảm 50% lần đầu và Point thưởng Standard/PRO trả về từ catalog PayOS.
 - [x] Thêm kiểm thử router payment.offers xác nhận payload Standard/Gói PRO, giá ưu đãi, giá gốc và Point thưởng theo số giao dịch paid của người học.
-- [ ] Áp dụng quota 100 lượt thi/tháng cho Basic và không giới hạn cho Pro/Premium tại API bắt đầu quiz.
-- [ ] Áp dụng quota 5 quiz tạo bởi Basic và không giới hạn cho Pro/Premium tại API quản trị tạo bộ đề.
-- [ ] Định nghĩa và áp dụng quota AI Credits theo hạng trước khi kích hoạt các luồng AI tiêu tốn Credit.
+- [x] Áp dụng quota lượt thi/tháng tại API bắt đầu quiz: Basic 20, PRO 40 và PREMIUM không giới hạn.
+- [x] Áp dụng quota tạo quiz tại API quản trị: Basic 2, PRO 20 và PREMIUM 50 quiz mỗi tháng.
+- [x] Định nghĩa và áp dụng quota AI Credits tháng theo hạng trước khi kích hoạt các luồng AI tiêu tốn Credit.
 - [x] Rà soát và chuẩn hóa các chỉnh sửa trực quan trên trang bảng giá, loại bỏ lỗi JSX trùng thuộc tính và xác minh responsive trước checkpoint.
 - [x] Sửa các route học viên bị 404 trong rà soát trực quan, đồng bộ URL điều hướng Bảng xếp hạng và Ví Point với định tuyến ứng dụng.
 - [x] Viết kiểm thử component/E2E cho Practice bao phủ single, multiple, true_false, fill_blank, image và matching với phản hồi tức thời.
@@ -130,3 +130,6 @@
 - [x] Đồng bộ bảng quyền lợi gói phí và nhãn điều hướng đầu trang theo chỉnh sửa trực quan mới, sau đó xác minh responsive trước checkpoint.
 - [x] Đảo quota hiển thị 50/Vô hạn của hai quyền lợi Gói PREMIUM theo chỉnh sửa trực quan mới nhất và đồng bộ kiểm thử, tài liệu.
 - [x] Chuẩn hóa nền trắng cho bảng giá và header theo chỉnh sửa trực quan mới, bảo toàn tương thích chế độ tối trước checkpoint.
+- [x] Áp dụng quota vận hành Basic 20 lượt thi/tháng và 2 quiz; PRO 40 lượt thi/tháng và 20 quiz; PREMIUM lượt thi vô hạn và 50 quiz.
+- [x] Áp dụng AI Credits theo quota tháng của hạng thành viên tại các API trợ lý AI, có kiểm thử giới hạn.
+- [x] Hiển thị phản hồi rõ ràng khi người học hoặc người tạo chạm quota và rà soát hồi quy toàn bộ luồng quota.

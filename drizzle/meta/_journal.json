@@ -57,6 +57,13 @@
       "when": 1787033343911,
       "tag": "0007_fantastic_punisher",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1787041727591,
+      "tag": "0008_futuristic_victor_mancha",
+      "breakpoints": true
     }
   ]
 }

@@ -33,8 +33,8 @@ export function QuizAIStudyAssistant({ question }: { question: ReviewQuestion })
         followUp: intent === "follow_up" ? userContent : undefined,
       });
       setMessages(current => [...current, { role: "assistant", content: response.content }]);
-    } catch {
-      toast.error("Trợ lý AI đang bận", { description: "Vui lòng thử lại sau ít phút." });
+    } catch (error) {
+      toast.error("Không thể dùng trợ lý AI", { description: error instanceof Error ? error.message : "Vui lòng thử lại sau ít phút." });
     }
   };
 

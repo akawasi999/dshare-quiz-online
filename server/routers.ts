@@ -36,22 +36,40 @@ import {
   getDb,
   getLeaderboard,
   getLearnerSummary,
+  getMonthlyQuotaUsage,
   getQuizDetail,
   getQuizQuestionSet,
   getWalletTransactions,
   listCategories,
   listPublishedCatalog,
   logSecurityEvent,
+  recordAiUsage,
   saveAnswer,
   submitAttempt,
 } from "./db";
 import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
+import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const quizIdInput = z.object({ quizId: z.number().int().positive() });
 const csvEscape = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+
+async function assertQuotaAvailable(userId: number, resource: "attemptsPerMonth" | "quizzesPerMonth" | "aiCreditsPerMonth") {
+  const profile = await ensureLearnerProfile(userId);
+  if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập quota thành viên." });
+  const usage = await getMonthlyQuotaUsage(userId);
+  const tier = profile.tier as QuotaTier;
+  const quota = membershipQuotas[tier];
+  const limit = quota[resource];
+  const used = resource === "attemptsPerMonth" ? usage.attempts : resource === "quizzesPerMonth" ? usage.quizzes : usage.aiCredits;
+  if (hasReachedQuota(used, limit)) {
+    const label = resource === "attemptsPerMonth" ? "lượt thi" : resource === "quizzesPerMonth" ? "quiz tạo" : "AI Credits";
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Bạn đã dùng hết quota ${label} (${quotaLabel(limit)}) của gói ${tier.toUpperCase()}.` });
+  }
+  return { tier, limit, used };
+}
 export const parseCsv = (text: string) => text.trim().split(/\r?\n/).map(line => {
   const values: string[] = []; let value = ""; let quoted = false;
   for (let index = 0; index < line.length; index += 1) { const char = line[index]; const next = line[index + 1]; if (char === '"' && quoted && next === '"') { value += '"'; index += 1; } else if (char === '"') quoted = !quoted; else if (char === ',' && !quoted) { values.push(value); value = ""; } else value += char; }
@@ -245,6 +263,7 @@ export const appRouter = router({
       if (!detail || !detail.quiz.isPublished) throw new TRPCError({ code: "NOT_FOUND", message: "Bộ đề chưa sẵn sàng." });
       const profile = await ensureLearnerProfile(ctx.user.id);
       if (!profile || profile.isBanned) throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản hiện không thể tham gia bài thi." });
+      await assertQuotaAvailable(ctx.user.id, "attemptsPerMonth");
       if (tierRank[profile.tier as keyof typeof tierRank] < tierRank[detail.quiz.accessTier]) {
         throw new TRPCError({ code: "FORBIDDEN", message: `Bộ đề này dành cho thành viên ${detail.quiz.accessTier.toUpperCase()} trở lên.` });
       }
@@ -332,7 +351,8 @@ export const appRouter = router({
 
   ai: router({
     explain: protectedProcedure.input(z.object({ question: z.string().trim().min(8).max(2000), context: z.string().trim().max(2000).optional() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
         const response = await invokeLLM({
           messages: [
             { role: "system", content: "Bạn là trợ lý học tập Dshare. Trả lời bằng tiếng Việt, giải thích khái niệm ngắn gọn, có cấu trúc, không bịa nguồn tham khảo và khuyến khích người học tự kiểm chứng." },
@@ -340,7 +360,8 @@ export const appRouter = router({
           ],
           maxTokens: 700,
         });
-        return { content: typeof response.choices[0]?.message.content === "string" ? response.choices[0].message.content : "Chưa thể tạo giải thích lúc này." };
+        await recordAiUsage(ctx.user.id, "explain");
+        return { content: typeof response.choices[0]?.message.content === "string" ? response.choices[0].message.content : "Chưa thể tạo giải thích lúc này.", quota: { used: quota.used + 1, limit: quota.limit } };
       }),
     assist: protectedProcedure.input(z.object({ questionId: z.number().int().positive(), intent: z.enum(["explain", "resources", "follow_up"]), followUp: z.string().trim().min(3).max(600).optional() }))
       .mutation(async ({ ctx, input }) => {
@@ -353,6 +374,7 @@ export const appRouter = router({
           .limit(1);
         const question = completedQuestion[0]?.question;
         if (!question) throw new TRPCError({ code: "FORBIDDEN", message: "Trợ lý chỉ mở cho câu hỏi bạn đã hoàn thành." });
+        const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
         const options = await db.select({ body: questionOptions.body, isCorrect: questionOptions.isCorrect }).from(questionOptions)
           .where(eq(questionOptions.questionId, question.id)).orderBy(questionOptions.sortOrder);
         const models = await listLLMModels();
@@ -369,7 +391,8 @@ export const appRouter = router({
           maxTokens: 850,
         });
         const content = response.choices[0]?.message.content;
-        return { content: typeof content === "string" && content.trim() ? content : "Trợ lý chưa thể tạo phản hồi lúc này. Vui lòng thử lại sau.", intent: input.intent };
+        await recordAiUsage(ctx.user.id, "assist");
+        return { content: typeof content === "string" && content.trim() ? content : "Trợ lý chưa thể tạo phản hồi lúc này. Vui lòng thử lại sau.", intent: input.intent, quota: { used: quota.used + 1, limit: quota.limit } };
       }),
   }),
 
@@ -418,7 +441,10 @@ export const appRouter = router({
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         const data = { lessonId: input.lessonId, title: input.title, slug: input.slug, mode: input.mode, accessTier: input.accessTier, durationSeconds: input.durationSeconds, passingScore: input.passingScore, entryPointCost: input.entryPointCost, completionReward: input.completionReward, isPublished: input.isPublished };
         if (input.id) await db.update(quizzes).set(data).where(eq(quizzes.id, input.id));
-        else await db.insert(quizzes).values(data);
+        else {
+          await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
+          await db.insert(quizzes).values({ ...data, creatorUserId: ctx.user.id });
+        }
         await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.id ? "quiz.updated" : "quiz.created", entityType: "quiz", entityId: input.id, metadata: { title: input.title } });
         return { success: true };
       }),
@@ -434,13 +460,14 @@ export const appRouter = router({
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
       const ratioSum = input.easyRatio + input.mediumRatio + input.hardRatio;
       if (Math.abs(ratioSum - 1) > 0.001) throw new TRPCError({ code: "BAD_REQUEST", message: "Tổng tỷ lệ độ khó phải bằng 100%." });
       const pool = await db.select().from(questions).where(and(eq(questions.lessonId, input.lessonId), eq(questions.isActive, true)));
       const wanted = allocateQuestionCounts(input.questionCount, { easy: input.easyRatio, medium: input.mediumRatio, hard: input.hardRatio });
       const selected = (["easy", "medium", "hard"] as const).flatMap(difficulty => shuffledForAttempt(pool.filter(question => question.difficulty === difficulty), Date.now() + difficulty.length).slice(0, wanted[difficulty]));
       if (selected.length < input.questionCount) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Ngân hàng chưa đủ câu hỏi theo tỷ lệ đã chọn (có ${selected.length}/${input.questionCount} câu).` });
-      const created = await db.insert(quizzes).values({ lessonId: input.lessonId, title: input.title, slug: input.slug, mode: input.mode, difficulty: "medium", durationSeconds: input.questionCount * 60, passingScore: 70, entryPointCost: input.mode === "testing" ? 20 : 0, completionReward: input.mode === "testing" ? 40 : 0, questionCount: input.questionCount, randomizeQuestions: true, randomizeOptions: true, isPublished: false });
+      const created = await db.insert(quizzes).values({ lessonId: input.lessonId, creatorUserId: ctx.user.id, title: input.title, slug: input.slug, mode: input.mode, difficulty: "medium", durationSeconds: input.questionCount * 60, passingScore: 70, entryPointCost: input.mode === "testing" ? 20 : 0, completionReward: input.mode === "testing" ? 40 : 0, questionCount: input.questionCount, randomizeQuestions: true, randomizeOptions: true, isPublished: false });
       const quizId = Number(created[0].insertId);
       await db.insert(quizQuestions).values(selected.map((question, sortOrder) => ({ quizId, questionId: question.id, points: 1, sortOrder })));
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.generated", entityType: "quiz", entityId: quizId, metadata: { questionCount: input.questionCount, ratios: { easy: input.easyRatio, medium: input.mediumRatio, hard: input.hardRatio } } });

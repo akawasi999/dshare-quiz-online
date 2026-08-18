@@ -96,6 +96,7 @@ export const lessons = mysqlTable("lessons", {
 export const quizzes = mysqlTable("quizzes", {
   id: int("id").autoincrement().primaryKey(),
   lessonId: int("lessonId").notNull(),
+  creatorUserId: int("creatorUserId"),
   title: varchar("title", { length: 220 }).notNull(),
   slug: varchar("slug", { length: 240 }).notNull(),
   summary: text("summary"),
@@ -115,6 +116,7 @@ export const quizzes = mysqlTable("quizzes", {
 }, table => [
   uniqueIndex("quizzes_slug_unique").on(table.slug),
   index("quizzes_lesson_idx").on(table.lessonId),
+  index("quizzes_creator_idx").on(table.creatorUserId),
   index("quizzes_publish_idx").on(table.isPublished),
 ]);
 
@@ -198,6 +200,15 @@ export const walletTransactions = mysqlTable("walletTransactions", {
   referenceId: int("referenceId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, table => [index("wallet_transactions_user_idx").on(table.userId)]);
+
+export const aiUsageEvents = mysqlTable("aiUsageEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  action: mysqlEnum("action", ["explain", "assist"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [
+  index("ai_usage_events_user_created_idx").on(table.userId, table.createdAt),
+]);
 
 export const paymentRecords = mysqlTable("paymentRecords", {
   id: int("id").autoincrement().primaryKey(),
