@@ -148,3 +148,4 @@
 - [x] Cho phép người học tạo quiz riêng và câu hỏi riêng với quota Basic 2, PRO 20, PREMIUM 50 mỗi tháng.
 - [x] Xây dựng trang tạo quiz/câu hỏi cho người học, chỉ hiển thị nội dung do chính họ tạo và không công khai mặc định.
 - [x] Kiểm thử quyền sở hữu, quota và giao diện tạo quiz người học trước checkpoint.
+- [x] Áp dụng nhất quán menu tài khoản bên trái cho các chức năng người học: tạo quiz, làm quiz, bảng xếp hạng, mời bạn, nạp Point, nâng cấp và lịch sử giao dịch.

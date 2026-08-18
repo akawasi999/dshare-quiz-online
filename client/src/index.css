@@ -88,6 +88,8 @@ body { margin: 0; min-width: 320px; background: #ebf8ff; color: #172554; font-fa
 h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif; }
 .field { width: 100%; border-radius: .75rem; border: 1px solid rgba(30, 58, 138, .15); background: #ebf8ff; padding: .625rem .75rem; font-size: .75rem; font-weight: 400; color: #172554; outline: none; }
 .field:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, .2); }
+.account-embedded > div > header { display: none; }
+.account-embedded > div { min-height: calc(100vh - 76px); }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease, color 160ms ease, border-color 160ms ease; }
 button:active { transform: scale(.97); }

@@ -15,6 +15,7 @@ import Referral from "@/pages/Referral";
 import TopUp from "@/pages/TopUp";
 import PaymentStatus from "@/pages/PaymentStatus";
 import UserQuizCreator from "@/pages/UserQuizCreator";
+import AccountLayout from "@/components/AccountLayout";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -22,17 +23,17 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 function Router() {
   return <Switch>
     <Route path="/" component={Home} />
-    <Route path="/kham-pha" component={QuizLibrary} />
+    <Route path="/kham-pha">{() => <LearnerAccountPage Page={QuizLibrary} />}</Route>
     <Route path="/quiz/:id" component={QuizRunner} />
     <Route path="/ket-qua/:id" component={QuizResult} />
-    <Route path="/bang-xep-hang" component={Leaderboard} />
+    <Route path="/bang-xep-hang">{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
     <Route path="/xep-hang" component={Leaderboard} />
     <Route path="/bang-gia" component={Pricing} />
     <Route path="/ho-so" component={Profile} />
-    <Route path="/vi" component={Wallet} />
+    <Route path="/vi">{() => <LearnerAccountPage Page={Wallet} />}</Route>
     <Route path="/vi-point" component={Wallet} />
-    <Route path="/gioi-thieu" component={Referral} />
-    <Route path="/nap-point" component={TopUp} />
+    <Route path="/gioi-thieu">{() => <LearnerAccountPage Page={Referral} />}</Route>
+    <Route path="/nap-point">{() => <LearnerAccountPage Page={TopUp} />}</Route>
     <Route path="/thanh-toan" component={PaymentStatus} />
     <Route path="/luyen-tap" component={Practice} />
     <Route path="/tao-quiz" component={UserQuizCreator} />
@@ -50,6 +51,10 @@ function Router() {
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>;
+}
+
+function LearnerAccountPage({ Page }: { Page: React.ComponentType }) {
+  return <AccountLayout><div className="account-embedded"><Page /></div></AccountLayout>;
 }
 
 function App() {
