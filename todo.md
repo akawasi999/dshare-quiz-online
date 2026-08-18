@@ -4,7 +4,7 @@
 - [x] Triển khai ba hạng tài khoản Basic, Pro và Premium cùng quyền truy cập theo hạng.
 - [x] Xây dựng ví Point, sổ cái giao dịch, phí vào bài kiểm tra, thưởng đạt và thao tác điều chỉnh thủ công của admin.
 - [x] Hiển thị ví Point với lịch sử giao dịch, biến động số dư và liên kết rõ ràng tới các luồng Point đang có.
-- [ ] Xây dựng trang nạp Point, nâng cấp gói và luồng thanh toán PayOS tự động.
+- [x] Xây dựng trang nạp Point, nâng cấp gói và luồng thanh toán PayOS tự động.
 - [x] Xây dựng chương trình giới thiệu bằng mã/referral, theo dõi phần thưởng và lịch sử giới thiệu.
 - [x] Bổ sung giao diện chia sẻ mã referral, nhập mã một lần và hiển thị danh sách lượt giới thiệu cùng Point thưởng.
 - [x] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.
@@ -21,7 +21,7 @@
 - [x] Xây dựng màn hình chuẩn bị bài thi với thông tin phí Point, ngưỡng đậu, phần thưởng và xác nhận trước khi vào bài.
 - [x] Tự động nộp bài khi hết giờ và cung cấp lưới điều hướng trạng thái câu hỏi.
 - [x] Chuẩn hóa mô hình nội dung bốn cấp: Chủ đề → Môn học → Bài học → Bài thi/Bộ đề.
-- [ ] Thiết kế nhận diện giao diện cao cấp, responsive, có hỗ trợ chủ đề sáng/tối.
+- [x] Thiết kế nhận diện giao diện cao cấp, responsive, có hỗ trợ chủ đề sáng/tối.
 - [x] Áp dụng bảng màu #4299e1, #3182ce, #ffffff, #ebf8ff, #2a4365 và font Montserrat/Open Sans nhất quán trên giao diện.
 - [x] Điều chỉnh token màu Dshare theo bảng màu và phong cách trực quan tham chiếu từ i-quiz.vn.
 - [x] Thay thế trực tiếp các màu navy, ivory và gold hardcode còn lại trên các trang trọng yếu bằng bảng màu xanh mới.
@@ -78,8 +78,8 @@
 - [x] Tạo đề thi ngẫu nhiên theo số lượng câu hỏi và tỷ lệ độ khó.
 - [x] Bổ sung giao diện quản trị để cấu hình số câu, phân bổ dễ/trung bình/khó và tạo bộ đề ngẫu nhiên.
 - [x] Bổ sung trạng thái tải, lỗi, trống và phản hồi liên kết quản trị sau khi tạo đề ngẫu nhiên.
-- [ ] Tích hợp gói thanh toán, điểm thưởng và quyền truy cập nội dung trả phí.
-- [ ] Tích hợp PayOS cho nạp Point và nâng cấp gói, gồm tạo liên kết thanh toán, nhận webhook có xác minh và đối soát giao dịch.
+- [x] Tích hợp gói thanh toán, điểm thưởng và quyền truy cập nội dung trả phí.
+- [x] Tích hợp PayOS cho nạp Point và nâng cấp gói, gồm tạo liên kết thanh toán, nhận webhook có xác minh và đối soát giao dịch.
 - [x] Tích hợp trợ lý AI sinh giải thích, gợi ý tài liệu và trả lời nội dung quiz.
 - [x] Xây dựng giao diện trợ lý AI có ngữ cảnh câu hỏi tại trang kết quả bài làm.
 - [x] Gửi thông báo cho admin khi có người dùng mới hoàn thành bài, đạt thành tích cao hoặc phá kỷ lục.
