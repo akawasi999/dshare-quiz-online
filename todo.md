@@ -144,3 +144,4 @@
 - [x] Xây dựng Live Monitoring theo dõi lượt thi đang diễn ra và mới hoàn thành, có phân quyền hạng và tự làm mới.
 - [x] Bổ sung kiểm thử API, trạng thái trống/lỗi và responsive cho Live Monitoring trước checkpoint.
 - [x] Thiết kế lại hero Trang chủ theo ảnh tham chiếu: nền xanh nhạt, nhãn tạo Quiz bằng AI, headline gradient, CTA và tín hiệu tin cậy.
+- [x] Thiết kế lại hồ sơ thành dashboard tài khoản với menu trái: Bảng điều khiển, Tạo Quiz, Làm Quiz, Xếp hạng, Mời bạn bè, Thông tin cá nhân, Nạp Point, Nâng cấp, Lịch sử giao dịch, Hỗ trợ, Đăng xuất.
