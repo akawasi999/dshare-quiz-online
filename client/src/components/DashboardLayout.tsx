@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BookOpenCheck, ChartNoAxesCombined, CircleHelp, LayoutDashboard, LogOut, PanelLeft, ScrollText, Users } from "lucide-react";
+import { ArrowDownToLine, BookOpenCheck, ChartNoAxesCombined, CircleHelp, LayoutDashboard, LogOut, PanelLeft, ScrollText, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -31,6 +31,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Tổng quan", path: "/quan-tri" },
   { icon: BookOpenCheck, label: "Nội dung", path: "/quan-tri/noi-dung" },
   { icon: CircleHelp, label: "Ngân hàng câu hỏi", path: "/quan-tri/cau-hoi" },
+  { icon: ArrowDownToLine, label: "Import / Export", path: "/quan-tri/import-xuat" },
   { icon: Users, label: "Người dùng", path: "/quan-tri/nguoi-dung" },
   { icon: ChartNoAxesCombined, label: "Báo cáo", path: "/quan-tri/bao-cao" },
   { icon: ScrollText, label: "Nhật ký hoạt động", path: "/quan-tri/nhat-ky" },

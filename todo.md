@@ -7,6 +7,10 @@
 - [ ] Xây dựng chương trình giới thiệu bằng mã/referral, theo dõi phần thưởng và lịch sử giới thiệu.
 - [ ] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.
 - [ ] Chuẩn bị luồng import/export ngân hàng câu hỏi theo định dạng CSV/Excel.
+- [ ] Ưu tiên triển khai biểu mẫu biên soạn cho các loại câu hỏi đa dạng và quy tắc xác thực riêng từng loại.
+- [x] Ưu tiên triển khai nhập/xuất CSV có báo cáo dòng lỗi và mẫu định dạng cho ngân hàng câu hỏi.
+- [ ] Triển khai import/export Excel một sheet “Questions”, sử dụng cùng các cột với định dạng CSV.
+- [x] Thay file picker Excel tạm thời bằng nút chọn tệp gọn được tích hợp trong giao diện quản trị.
 - [x] Xây dựng trang quản lý người dùng cho admin, gồm tìm kiếm, lọc, điều chỉnh hạng, khóa tài khoản và nhật ký hoạt động.
 - [x] Xây dựng thống kê vận hành gồm doanh thu Point, mức tiêu thụ, phần thưởng, tỷ lệ đậu/rớt và bộ đề phổ biến.
 - [x] Ưu tiên triển khai giao diện và API quản trị người dùng trước các hạng mục nội dung còn lại.

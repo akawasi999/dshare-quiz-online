@@ -120,6 +120,7 @@ export const questions = mysqlTable("questions", {
   difficulty: mysqlEnum("difficulty", difficultyValues).default("medium").notNull(),
   explanation: text("explanation"),
   tags: json("tags").$type<string[]>().notNull(),
+  answerConfig: json("answerConfig").$type<Record<string, unknown>>(),
   imageUrl: varchar("imageUrl", { length: 1024 }),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

@@ -25,6 +25,7 @@ function Router() {
     <Route path="/quan-tri" component={Admin} />
     <Route path="/quan-tri/noi-dung" component={Admin} />
     <Route path="/quan-tri/cau-hoi" component={Admin} />
+    <Route path="/quan-tri/import-xuat" component={Admin} />
     <Route path="/quan-tri/nguoi-dung" component={Admin} />
     <Route path="/quan-tri/bao-cao" component={Admin} />
     <Route path="/quan-tri/nhat-ky" component={Admin} />

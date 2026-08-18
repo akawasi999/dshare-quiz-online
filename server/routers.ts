@@ -42,6 +42,12 @@ import { shuffledForAttempt } from "./quizEngine";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const quizIdInput = z.object({ quizId: z.number().int().positive() });
+const csvEscape = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+export const parseCsv = (text: string) => text.trim().split(/\r?\n/).map(line => {
+  const values: string[] = []; let value = ""; let quoted = false;
+  for (let index = 0; index < line.length; index += 1) { const char = line[index]; const next = line[index + 1]; if (char === '"' && quoted && next === '"') { value += '"'; index += 1; } else if (char === '"') quoted = !quoted; else if (char === ',' && !quoted) { values.push(value); value = ""; } else value += char; }
+  values.push(value); return values;
+});
 
 export const appRouter = router({
   system: systemRouter,
@@ -302,12 +308,14 @@ export const appRouter = router({
       difficulty: z.enum(["easy", "medium", "hard"]),
       explanation: z.string().trim().max(5000).optional(),
       tags: z.array(z.string().trim().min(1).max(40)).min(1).max(12),
+      answerConfig: z.record(z.string(), z.unknown()).optional(),
+      imageUrl: z.string().url().max(1024).optional().or(z.literal("")),
       options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).min(2).max(10),
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       if (!input.options.some(option => option.isCorrect)) throw new TRPCError({ code: "BAD_REQUEST", message: "Cần có ít nhất một đáp án đúng." });
-      const questionData = { lessonId: input.lessonId, prompt: input.prompt, type: input.type, difficulty: input.difficulty, explanation: input.explanation || null, tags: input.tags };
+      const questionData = { lessonId: input.lessonId, prompt: input.prompt, type: input.type, difficulty: input.difficulty, explanation: input.explanation || null, tags: input.tags, answerConfig: input.answerConfig, imageUrl: input.imageUrl || null };
       let questionId = input.id;
       if (questionId) {
         await db.update(questions).set(questionData).where(eq(questions.id, questionId));
@@ -320,6 +328,40 @@ export const appRouter = router({
       if (input.quizId) await db.insert(quizQuestions).values({ quizId: input.quizId, questionId: questionId!, points: 1, sortOrder: 0 }).onDuplicateKeyUpdate({ set: { questionId: questionId! } });
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.id ? "question.updated" : "question.created", entityType: "question", entityId: questionId, metadata: { prompt: input.prompt.slice(0, 160) } });
       return { success: true, questionId };
+    }),
+    exportQuestions: adminProcedure.input(z.object({ lessonId: z.number().int().positive().optional() }).optional()).query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { filename: "dshare-question-bank.csv", csv: "" };
+      const rows = await db.select().from(questions).where(input?.lessonId ? eq(questions.lessonId, input.lessonId) : undefined).orderBy(desc(questions.updatedAt));
+      const options = rows.length ? await db.select().from(questionOptions).where(sql`${questionOptions.questionId} in (${sql.join(rows.map(row => sql`${row.id}`), sql`, `)})`).orderBy(questionOptions.sortOrder) : [];
+      const header = ["lessonId", "prompt", "type", "difficulty", "tags", "explanation", "imageUrl", "answerConfig", "options"].join(",");
+      const lines = rows.map(question => [question.lessonId, question.prompt, question.type, question.difficulty, JSON.stringify(question.tags), question.explanation, question.imageUrl, JSON.stringify(question.answerConfig ?? {}), JSON.stringify(options.filter(option => option.questionId === question.id).map(option => ({ body: option.body, isCorrect: option.isCorrect })))].map(csvEscape).join(","));
+      return { filename: `dshare-question-bank-${new Date().toISOString().slice(0, 10)}.csv`, csv: [header, ...lines].join("\n") };
+    }),
+    importQuestions: adminProcedure.input(z.object({ csv: z.string().min(20).max(2_000_000) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [header, ...rows] = parseCsv(input.csv);
+      const columns = header.map(column => column.trim());
+      const required = ["lessonId", "prompt", "type", "difficulty", "tags", "options"];
+      if (required.some(column => !columns.includes(column))) throw new TRPCError({ code: "BAD_REQUEST", message: "CSV thiếu cột bắt buộc. Hãy export mẫu để dùng đúng định dạng." });
+      let created = 0; const errors: Array<{ row: number; message: string }> = [];
+      for (let index = 0; index < rows.length; index += 1) {
+        const row = rows[index];
+        try {
+          const data = Object.fromEntries(columns.map((column, columnIndex) => [column, row[columnIndex] ?? ""]));
+          const lessonId = Number(data.lessonId); const type = data.type as "single" | "multiple" | "true_false" | "fill_blank" | "image" | "matching"; const difficulty = data.difficulty as "easy" | "medium" | "hard";
+          if (!Number.isInteger(lessonId) || !["single", "multiple", "true_false", "fill_blank", "image", "matching"].includes(type) || !["easy", "medium", "hard"].includes(difficulty)) throw new Error("lessonId, type hoặc difficulty không hợp lệ");
+          const tags = JSON.parse(data.tags || "[]") as string[]; const importedOptions = JSON.parse(data.options || "[]") as Array<{ body: string; isCorrect: boolean }>;
+          if (!Array.isArray(tags) || !Array.isArray(importedOptions) || importedOptions.length < 2 || !importedOptions.some(option => option.isCorrect)) throw new Error("tags hoặc options không hợp lệ");
+          const createdQuestion = await db.insert(questions).values({ lessonId, prompt: data.prompt, type, difficulty, tags, explanation: data.explanation || null, imageUrl: data.imageUrl || null, answerConfig: JSON.parse(data.answerConfig || "{}") });
+          const questionId = Number(createdQuestion[0].insertId);
+          await db.insert(questionOptions).values(importedOptions.map((option, sortOrder) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder })));
+          created += 1;
+        } catch (error) { errors.push({ row: index + 2, message: error instanceof Error ? error.message : "Dữ liệu không hợp lệ" }); }
+      }
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "question.imported", entityType: "question_bank", metadata: { created, failed: errors.length } });
+      return { created, failed: errors.length, errors: errors.slice(0, 50) };
     }),
     removeQuestion: adminProcedure.input(z.object({ questionId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
