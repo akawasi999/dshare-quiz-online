@@ -18,3 +18,10 @@ export function getPayosWebhookValidationError(input: { expectedOrderCode: numbe
   if (input.payload.data.currency && input.payload.data.currency !== "VND") return "Đơn PayOS không dùng tiền tệ VND.";
   return null;
 }
+
+export function getPayosFulfillmentDecision(input: { currentStatus: "pending" | "paid" | "cancelled" | "failed" | "expired"; webhookSuccess: boolean }) {
+  if (input.currentStatus === "paid") return "idempotent" as const;
+  if (!input.webhookSuccess) return "mark_failed" as const;
+  if (input.currentStatus !== "pending") return "reject" as const;
+  return "fulfill" as const;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPayosWebhookValidationError, isSuccessfulPayosWebhook } from "./payosWebhookUtils";
+import { getPayosFulfillmentDecision, getPayosWebhookValidationError, isSuccessfulPayosWebhook } from "./payosWebhookUtils";
 
 const successPayload = { success: true, code: "00", data: { orderCode: 99, amount: 30_000, code: "00", desc: "success", currency: "VND" } };
 
@@ -14,5 +14,12 @@ describe("PayOS webhook rules", () => {
     expect(getPayosWebhookValidationError({ expectedOrderCode: 100, expectedAmount: 30_000, payload: successPayload })).toContain("Mã đơn");
     expect(getPayosWebhookValidationError({ expectedOrderCode: 99, expectedAmount: 47_000, payload: successPayload })).toContain("Số tiền");
     expect(getPayosWebhookValidationError({ expectedOrderCode: 99, expectedAmount: 30_000, payload: { ...successPayload, data: { ...successPayload.data, currency: "USD" } } })).toContain("VND");
+  });
+
+  it("không cấp Point hoặc quyền truy cập lần hai khi webhook bị gửi lặp", () => {
+    expect(getPayosFulfillmentDecision({ currentStatus: "pending", webhookSuccess: true })).toBe("fulfill");
+    expect(getPayosFulfillmentDecision({ currentStatus: "paid", webhookSuccess: true })).toBe("idempotent");
+    expect(getPayosFulfillmentDecision({ currentStatus: "pending", webhookSuccess: false })).toBe("mark_failed");
+    expect(getPayosFulfillmentDecision({ currentStatus: "cancelled", webhookSuccess: true })).toBe("reject");
   });
 });

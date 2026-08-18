@@ -19,6 +19,7 @@ import {
 import { ENV } from "./_core/env";
 import { sortLeaderboardEntries } from "./leaderboard";
 import { scoreQuiz } from "./quizEngine";
+import { getEffectiveTier } from "./membershipUtils";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -69,7 +70,12 @@ export async function ensureLearnerProfile(userId: number) {
     set: { userId },
   });
   const result = await db.select().from(learnerProfiles).where(eq(learnerProfiles.userId, userId)).limit(1);
-  return result[0];
+  const profile = result[0];
+  if (profile && getEffectiveTier({ tier: profile.tier, tierExpiresAt: profile.tierExpiresAt }) === "basic" && profile.tier !== "basic") {
+    await db.update(learnerProfiles).set({ tier: "basic", tierExpiresAt: null }).where(eq(learnerProfiles.id, profile.id));
+    return { ...profile, tier: "basic", tierExpiresAt: null };
+  }
+  return profile;
 }
 
 export async function getLearnerSummary(userId: number) {

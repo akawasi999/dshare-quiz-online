@@ -249,7 +249,7 @@ export const appRouter = router({
       if (!detail || !detail.quiz.isPublished) throw new TRPCError({ code: "NOT_FOUND", message: "Bộ đề chưa sẵn sàng." });
       const profile = await ensureLearnerProfile(ctx.user.id);
       if (!profile || profile.isBanned) throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản hiện không thể tham gia bài thi." });
-      if (tierRank[profile.tier] < tierRank[detail.quiz.accessTier]) {
+      if (tierRank[profile.tier as keyof typeof tierRank] < tierRank[detail.quiz.accessTier]) {
         throw new TRPCError({ code: "FORBIDDEN", message: `Bộ đề này dành cho thành viên ${detail.quiz.accessTier.toUpperCase()} trở lên.` });
       }
       const questionSet = await getQuizQuestionSet(input.quizId);

@@ -4,7 +4,7 @@
 - [x] Triển khai ba hạng tài khoản Basic, Pro và Premium cùng quyền truy cập theo hạng.
 - [x] Xây dựng ví Point, sổ cái giao dịch, phí vào bài kiểm tra, thưởng đạt và thao tác điều chỉnh thủ công của admin.
 - [x] Hiển thị ví Point với lịch sử giao dịch, biến động số dư và liên kết rõ ràng tới các luồng Point đang có.
-- [ ] Xây dựng trang nạp Point, nâng cấp gói và các điểm mở rộng cho thanh toán tự động hoặc QR thủ công.
+- [ ] Xây dựng trang nạp Point, nâng cấp gói và luồng thanh toán PayOS tự động.
 - [x] Xây dựng chương trình giới thiệu bằng mã/referral, theo dõi phần thưởng và lịch sử giới thiệu.
 - [x] Bổ sung giao diện chia sẻ mã referral, nhập mã một lần và hiển thị danh sách lượt giới thiệu cùng Point thưởng.
 - [x] Hỗ trợ câu hỏi đúng/sai, điền từ, hình ảnh và ghép nối trong kiến trúc ngân hàng câu hỏi.
@@ -90,10 +90,13 @@
 - [ ] Bổ sung xử lý trạng thái tải, trống, lỗi; bảo đảm điều hướng và khả năng truy cập tốt.
 - [x] Viết kiểm thử Vitest cho quy tắc tính điểm, thứ tự ngẫu nhiên và các quyền quản trị.
 - [ ] Rà soát giao diện trên desktop và mobile, chạy kiểm thử, tạo checkpoint và bàn giao.
-- [ ] Đối chiếu tài liệu PayOS chính thức với mô hình paymentRecords, ví Point và hạng tài khoản hiện có.
-- [ ] Tạo API máy chủ cho đơn nạp Point/nâng cấp gói và liên kết thanh toán PayOS, không để lộ khóa bí mật ở client.
-- [ ] Triển khai webhook PayOS có xác minh chữ ký, xử lý idempotent, đối soát paymentRecords và cấp Point hoặc quyền truy cập đúng một lần.
-- [ ] Kết nối trang nạp Point/gói học với trạng thái thanh toán PayOS, phản hồi thành công, hủy và thất bại.
+- [x] Đối chiếu tài liệu PayOS chính thức với mô hình paymentRecords, ví Point và hạng tài khoản hiện có.
+- [x] Tạo API máy chủ cho đơn nạp Point/nâng cấp gói và liên kết thanh toán PayOS, không để lộ khóa bí mật ở client.
+- [x] Triển khai webhook PayOS có xác minh chữ ký, xử lý idempotent, đối soát paymentRecords và cấp Point hoặc quyền truy cập đúng một lần.
+- [x] Kết nối trang nạp Point/gói học với trạng thái thanh toán PayOS, phản hồi thành công, hủy và thất bại.
 - [ ] Kiểm thử hồi quy cho chữ ký webhook, đơn bị gửi lặp, trạng thái không hợp lệ và sổ cái Point sau thanh toán.
-- [ ] Cấu hình gói Point 150/30.000đ, 250/47.000đ, 500/89.000đ và 1.000/169.000đ theo bảng giá được phê duyệt.
-- [ ] Áp dụng gói Pro 50.000đ/tháng và Premium 200.000đ/tháng, giảm 50% ở lần mua đầu tiên; cấp lần lượt 150 và 1.000 Point khi webhook PayOS thành công.
+- [x] Cấu hình gói Point 150/30.000đ, 250/47.000đ, 500/89.000đ và 1.000/169.000đ theo bảng giá được phê duyệt.
+- [x] Áp dụng gói Pro 50.000đ/tháng và Premium 200.000đ/tháng, giảm 50% ở lần mua đầu tiên; cấp lần lượt 150 và 1.000 Point khi webhook PayOS thành công.
+- [x] Điều chỉnh phạm vi thanh toán chỉ hỗ trợ PayOS theo yêu cầu đã xác nhận; không triển khai QR thủ công riêng.
+- [x] Áp dụng kiểm tra tierExpiresAt trong mọi gate nội dung trả phí và bổ sung test cho hết hạn/gia hạn gói Pro/Premium.
+- [ ] Viết test integration cho webhook PayOS xác nhận paymentRecords chuyển trạng thái paid, walletTransactions được ghi đúng một lần, Point/tier được cấp đúng và webhook lặp không nhân đôi sổ cái.
