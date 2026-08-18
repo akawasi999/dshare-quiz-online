@@ -204,7 +204,7 @@ export const walletTransactions = mysqlTable("walletTransactions", {
 export const aiUsageEvents = mysqlTable("aiUsageEvents", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  action: mysqlEnum("action", ["explain", "assist"]).notNull(),
+  action: mysqlEnum("action", ["explain", "assist", "generate_question"]).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, table => [
   index("ai_usage_events_user_created_idx").on(table.userId, table.createdAt),

@@ -137,3 +137,6 @@
 - [ ] Rà soát loading/empty/error/accessibility có bằng chứng rõ ràng cho Home, Referral, PaymentStatus, QuizRunner và Admin.
 - [ ] Kiểm kê mutation có UI và bổ sung phản hồi loading/error/success cùng kiểm thử phù hợp cho Profile, Referral, Payment, Discussion, Reports, Admin và AI.
 - [ ] Cập nhật quality audit thành checklist bao phủ từng route và mutation trước khi chốt rà soát chất lượng.
+- [x] Xây dựng API quản trị tạo câu hỏi bằng AI với đầu ra cấu trúc, xác thực dữ liệu và quota AI Credits.
+- [x] Thêm màn hình quản trị nhập ngữ cảnh, xem trước, chỉnh sửa và duyệt lưu câu hỏi AI vào ngân hàng câu hỏi.
+- [x] Bổ sung kiểm thử tạo câu hỏi AI, quota, lỗi đầu ra và kiểm tra responsive trước checkpoint.

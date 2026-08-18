@@ -3,6 +3,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import AdminOperationsDashboard from "@/components/AdminOperationsDashboard";
 import AdminBugReportsPanel from "@/components/AdminBugReportsPanel";
 import AdminPointLedgerPanel from "@/components/AdminPointLedgerPanel";
+import AIQuestionGeneratorPanel from "@/components/AIQuestionGeneratorPanel";
 import QuestionEditorPanel from "@/components/QuestionEditorPanel";
 import QuestionTransferPanel from "@/components/QuestionTransferPanel";
 import RandomQuizBuilder from "@/components/RandomQuizBuilder";
@@ -25,7 +26,7 @@ export default function Admin() {
   let content = <AdminOperationsDashboard />;
   if (location === "/quan-tri/noi-dung") content = <ContentManager />;
   if (location === "/quan-tri/tao-de-ngau-nhien") content = <RandomQuizBuilder />;
-  if (location === "/quan-tri/cau-hoi") content = <QuestionEditorPanel />;
+  if (location === "/quan-tri/cau-hoi") content = <><AIQuestionGeneratorPanel /><QuestionEditorPanel /></>;
   if (location === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;
   if (location === "/quan-tri/nguoi-dung") content = <UserManager />;
   if (location === "/quan-tri/bao-cao") content = <AnalyticsDashboard />;

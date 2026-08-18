@@ -195,7 +195,7 @@ export async function getMonthlyQuotaUsage(userId: number, now = new Date()) {
   };
 }
 
-export async function recordAiUsage(userId: number, action: "explain" | "assist") {
+export async function recordAiUsage(userId: number, action: "explain" | "assist" | "generate_question") {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   await db.insert(aiUsageEvents).values({ userId, action });

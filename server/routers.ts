@@ -51,6 +51,7 @@ import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
+import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const quizIdInput = z.object({ quizId: z.number().int().positive() });
@@ -447,6 +448,24 @@ export const appRouter = router({
         db.select().from(quizzes).orderBy(desc(quizzes.updatedAt)),
       ]);
       return { categories: categoryRows, subjects: subjectRows, lessons: lessonRows, quizzes: quizRows };
+    }),
+    generateQuestionAI: adminProcedure.input(aiQuestionInputSchema).mutation(async ({ ctx, input }) => {
+      const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: "Bạn là chuyên gia biên soạn câu hỏi học thuật bằng tiếng Việt. Chỉ trả về JSON hợp lệ, không thêm markdown. Không dùng nội dung có bản quyền dài hoặc thông tin bịa đặt." },
+          { role: "user", content: `Tạo đúng một câu hỏi loại ${input.type}, độ khó ${input.difficulty}, về chủ đề: ${input.topic}. Ngữ cảnh: ${input.context ?? "Không có"}. Trả JSON có prompt, explanation, options (mỗi phần tử body/isCorrect) và answerConfig. Với fill_blank, answerConfig.acceptedAnswers là mảng chuỗi; với matching, answerConfig.pairs là mảng {left,right}; với true_false, options phải là Đúng/Sai.` },
+        ],
+        maxTokens: 1200,
+        response_format: { type: "json_schema", json_schema: { name: "question_draft", strict: true, schema: { type: "object", properties: { prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["prompt", "explanation", "options", "answerConfig"], additionalProperties: false } } },
+      });
+      try {
+        const draft = parseAiQuestionDraft(response.choices[0]?.message.content, input.type);
+        await recordAiUsage(ctx.user.id, "generate_question");
+        return { ...input, ...draft, quota: { used: quota.used + 1, limit: quota.limit } };
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI tạo bản nháp không hợp lệ: ${error.message}` : "AI tạo bản nháp không hợp lệ." });
+      }
     }),
     saveQuiz: adminProcedure.input(z.object({ id: z.number().int().positive().optional(), lessonId: z.number().int().positive(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/), mode: z.enum(["training", "testing"]), accessTier: z.enum(["basic", "pro", "premium"]), durationSeconds: z.number().int().min(60).max(14400), passingScore: z.number().int().min(0).max(100), entryPointCost: z.number().int().min(0), completionReward: z.number().int().min(0), isPublished: z.boolean() }))
       .mutation(async ({ ctx, input }) => {
