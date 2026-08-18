@@ -52,7 +52,7 @@
 - [x] Giữ lại danh mục gần nhất khi người học quay về khám phá bộ đề từ luyện tập.
 - [x] Lưu danh mục khám phá gần nhất trong hồ sơ người học để khôi phục sau khi đăng nhập lại.
 - [x] Chỉ cập nhật danh mục khám phá gần nhất vào hồ sơ sau khi hoàn thành phiên luyện tập.
-- [ ] Gợi ý danh mục khám phá gần nhất để người học xác nhận, không tự áp dụng ngay.
+- [x] Gợi ý danh mục khám phá gần nhất ở dạng thụ động, không tự áp dụng hoặc yêu cầu người học xác nhận.
 - [x] Hiển thị gợi ý danh mục gần nhất bằng thẻ nhỏ ở đầu trang khám phá.
 - [x] Giữ thẻ gợi ý danh mục ở dạng thông tin thụ động, không có nút xác nhận.
 - [x] Luôn giữ thẻ gợi ý danh mục gần nhất hiển thị ở đầu trang khám phá trong phiên hiện tại.
@@ -67,6 +67,11 @@
 - [x] Hiển thị thảo luận/bình luận chỉ sau khi người dùng hoàn thành bài.
 - [x] Xây dựng tính năng báo lỗi câu hỏi, quy trình admin duyệt và hoàn Point cho báo cáo hợp lệ.
 - [x] Xây dựng khu vực quản trị để quản lý nội dung, câu hỏi, bộ đề và báo cáo lỗi.
+- [x] Hoàn thiện dashboard admin thống nhất với tổng quan vận hành, điều hướng mô-đun và thao tác quản lý nhanh.
+- [x] Bổ sung khu vực admin quản lý Point, người dùng, nội dung, câu hỏi, bộ đề, báo cáo lỗi và nhật ký từ một dashboard hoàn chỉnh.
+- [x] Hiển thị chỉ số vận hành có thể hành động, trạng thái trống/lỗi và liên kết dẫn tới từng mô-đun quản trị.
+- [x] Tạo mô-đun quản lý báo lỗi riêng cho admin và nối đúng hàng đợi kiểm duyệt từ dashboard.
+- [x] Rà soát toàn bộ CTA trên dashboard admin để bảo đảm mỗi liên kết mở đúng mô-đun quản trị tương ứng.
 - [x] Tạo đề thi ngẫu nhiên theo số lượng câu hỏi và tỷ lệ độ khó.
 - [x] Bổ sung giao diện quản trị để cấu hình số câu, phân bổ dễ/trung bình/khó và tạo bộ đề ngẫu nhiên.
 - [x] Bổ sung trạng thái tải, lỗi, trống và phản hồi liên kết quản trị sau khi tạo đề ngẫu nhiên.
