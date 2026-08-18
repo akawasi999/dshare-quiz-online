@@ -7,7 +7,7 @@ import { ArrowLeft, Check, CircleDollarSign, Clock3, Crown, Loader2, LockKeyhole
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
 
-const requestedPlanCode: Record<string, string> = { Pro: "pro_monthly", Premium: "premium_monthly" };
+const requestedPlanCode: Record<string, string> = { Standard: "pro_monthly", "Gói PRO": "premium_monthly", Pro: "pro_monthly", Premium: "premium_monthly" };
 const formatVnd = (value: number) => new Intl.NumberFormat("vi-VN").format(value) + "đ";
 
 export default function TopUp() {

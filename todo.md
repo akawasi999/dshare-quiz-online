@@ -96,9 +96,27 @@
 - [x] Kết nối trang nạp Point/gói học với trạng thái thanh toán PayOS, phản hồi thành công, hủy và thất bại.
 - [x] Kiểm thử hồi quy cho chữ ký webhook, đơn bị gửi lặp, trạng thái không hợp lệ và sổ cái Point sau thanh toán.
 - [x] Cấu hình gói Point 150/30.000đ, 250/47.000đ, 500/89.000đ và 1.000/169.000đ theo bảng giá được phê duyệt.
-- [x] Áp dụng gói Pro 50.000đ/tháng và Premium 200.000đ/tháng, giảm 50% ở lần mua đầu tiên; cấp lần lượt 150 và 1.000 Point khi webhook PayOS thành công.
+- [x] Áp dụng Standard/Pro 50.000đ/tháng và Gói PRO/Premium 100.000đ/tháng, giảm 50% ở lần mua đầu tiên; cấp lần lượt 150 và 1.000 Point khi webhook PayOS thành công.
 - [x] Điều chỉnh phạm vi thanh toán chỉ hỗ trợ PayOS theo yêu cầu đã xác nhận; không triển khai QR thủ công riêng.
 - [x] Áp dụng kiểm tra tierExpiresAt trong mọi gate nội dung trả phí và bổ sung test cho hết hạn/gia hạn gói Pro/Premium.
 - [x] Viết test integration cho webhook PayOS xác nhận paymentRecords chuyển trạng thái paid, walletTransactions được ghi đúng một lần, Point/tier được cấp đúng và webhook lặp không nhân đôi sổ cái.
 - [x] Bổ sung integration test cho webhook PayOS với gói Pro/Premium: xác nhận paymentRecords sang paid, learnerProfiles.tier/tierExpiresAt cập nhật đúng, Point thưởng được cộng đúng một lần và webhook lặp không nhân đôi quyền lợi.
 - [x] Xác nhận phạm vi chỉ dùng kiểm thử PayOS mô phỏng; không thực hiện giao dịch thực tế hoặc đăng ký webhook production trong phiên này.
+- [ ] Thực hiện kiểm thử tương tác end-to-end cho toàn bộ luồng Practice trên tất cả dạng câu hỏi, gồm chấm điểm tức thời và CTA/điều hướng sau hoàn tất.
+- [ ] Rà soát và bổ sung loading/empty/error/accessibility cho toàn bộ route và mutation còn lại; liệt kê rõ các màn đã được bao phủ.
+- [ ] Chỉ đánh dấu hạng mục rà soát desktop/mobile và bàn giao sau khi mọi todo còn lại hoàn tất và có báo cáo bàn giao cuối cùng.
+- [x] Phân tích file DOCX câu hỏi mẫu; theo chỉ đạo người dùng, không chuẩn hóa hay nhập do thiếu đáp án xác nhận.
+- [x] Đối chiếu file IC3 thứ hai để xác định quy ước đáp án; dùng riêng Training 01 làm nguồn nội dung có đáp án.
+- [x] Thay thư viện bộ đề và màn hình chuẩn bị quiz dùng dữ liệu demo bằng catalog nội dung công khai, để hiển thị bộ IC3 đã nhập.
+- [x] Bỏ qua đối chiếu đáp án chi tiết giữa hai file theo chỉ đạo người dùng, vì file mẫu đầu tiên không được import.
+- [x] Không nhập câu từ file mẫu đầu tiên theo chỉ đạo người dùng do không có đáp án xác nhận.
+- [x] Ghi chú rõ hai file không cùng bộ câu hỏi, giữ riêng tập câu đã nhập từ Training 01.
+- [x] Chỉ sử dụng nội dung đã xác nhận từ IC3_GS6_SPARK_LV2_TRAINING.docx; import phần còn lại được tạm dừng theo chỉ đạo người dùng.
+- [x] Tạm dừng import IC3 còn lại và cập nhật bảng giá thành viên: Standard ánh xạ Pro, PRO ánh xạ Premium theo ảnh tham chiếu.
+- [x] Đồng bộ quyền lợi gói (AI Credits, lượt thi, số quiz, phân tích, báo cáo, AI upload, monitoring, hỗ trợ, tùy chỉnh thương hiệu) ở giao diện và tài liệu gói.
+- [x] Điều chỉnh giá Pro/Premium, ưu đãi lần đầu và Point thưởng trong catalog PayOS theo bảng giá được chủ dự án xác nhận lại.
+- [ ] Thiết kế và thực thi quota/quyền hạn thực tế cho các quyền lợi mới hiển thị của gói Pro/Premium trước khi công bố là tính năng đã kích hoạt.
+- [x] Cập nhật tài liệu gói học/thanh toán cho Standard (Pro) và Gói PRO (Premium), đồng bộ bảng quyền lợi đang hiển thị.
+- [x] Lưu đặc tả bảng giá từ ảnh tham chiếu dưới dạng văn bản trong repo, gồm tên gói, ánh xạ tier, giá và quyền lợi.
+- [x] Bổ sung kiểm thử payment.offers cho giá, giảm 50% lần đầu và Point thưởng Standard/PRO trả về từ catalog PayOS.
+- [x] Thêm kiểm thử router payment.offers xác nhận payload Standard/Gói PRO, giá ưu đãi, giá gốc và Point thưởng theo số giao dịch paid của người học.

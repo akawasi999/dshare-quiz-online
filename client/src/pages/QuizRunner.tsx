@@ -19,7 +19,24 @@ export default function QuizRunner() {
   const quizId = Number(params?.id ?? 101);
   const [, setLocation] = useLocation();
   const { user } = useAuth();
-  const fallback = showcaseQuizzes.find(quiz => quiz.id === quizId) ?? showcaseQuizzes[0];
+  const detail = trpc.catalog.detail.useQuery({ quizId }, { enabled: Number.isInteger(quizId) && quizId > 0 });
+  const demoFallback = showcaseQuizzes.find(quiz => quiz.id === quizId) ?? showcaseQuizzes[0];
+  const fallback = useMemo(() => detail.data ? {
+    id: detail.data.quiz.id,
+    title: detail.data.quiz.title,
+    category: detail.data.category.title,
+    subject: detail.data.subject.title,
+    lesson: detail.data.lesson.title,
+    summary: detail.data.quiz.summary ?? "Bộ đề đã được biên soạn trong Dshare.",
+    mode: detail.data.quiz.mode === "testing" ? "Kiểm tra" as const : "Ôn tập" as const,
+    difficulty: { easy: "Dễ", medium: "Trung bình", hard: "Nâng cao" }[detail.data.quiz.difficulty],
+    duration: `${Math.ceil(detail.data.quiz.durationSeconds / 60)} phút`,
+    questionCount: detail.data.quiz.questionCount,
+    accent: "#2563eb",
+    points: detail.data.quiz.entryPointCost,
+    reward: detail.data.quiz.completionReward,
+    tier: { basic: "Basic", pro: "Pro", premium: "Premium" }[detail.data.quiz.accessTier],
+  } : demoFallback, [detail.data, demoFallback]);
   const start = trpc.quiz.start.useMutation();
   const saveAnswer = trpc.quiz.saveAnswer.useMutation();
   const submit = trpc.quiz.submit.useMutation();

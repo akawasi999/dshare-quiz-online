@@ -47,7 +47,7 @@ import {
 } from "./db";
 import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
-import { createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
+import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const quizIdInput = z.object({ quizId: z.number().int().positive() });
@@ -142,11 +142,7 @@ export const appRouter = router({
       const records = await db.select({ itemCode: paymentRecords.itemCode })
         .from(paymentRecords)
         .where(and(eq(paymentRecords.userId, ctx.user.id), eq(paymentRecords.status, "paid")));
-      return Object.values(paymentPackages).map(pkg => {
-        const paidPurchaseCount = records.filter(record => record.itemCode === pkg.code).length;
-        const discounted = isFirstPurchaseDiscountEligible(pkg, paidPurchaseCount);
-        return { ...pkg, amount: getPaymentAmount(pkg, paidPurchaseCount), discounted, discountLabel: discounted ? "Giảm 50% lần mua đầu" : null };
-      });
+      return Object.values(paymentPackages).map(pkg => buildPaymentOffer(pkg, records.filter(record => record.itemCode === pkg.code).length));
     }),
     createLink: protectedProcedure.input(z.object({ packageCode: z.string().trim() })).mutation(async ({ ctx, input }) => {
       if (!isPaymentPackageCode(input.packageCode)) throw new TRPCError({ code: "BAD_REQUEST", message: "Gói thanh toán không hợp lệ." });
@@ -520,8 +516,11 @@ export const appRouter = router({
           const lessonId = Number(data.lessonId); const type = data.type as "single" | "multiple" | "true_false" | "fill_blank" | "image" | "matching"; const difficulty = data.difficulty as "easy" | "medium" | "hard";
           if (!Number.isInteger(lessonId) || !["single", "multiple", "true_false", "fill_blank", "image", "matching"].includes(type) || !["easy", "medium", "hard"].includes(difficulty)) throw new Error("lessonId, type hoặc difficulty không hợp lệ");
           const tags = JSON.parse(data.tags || "[]") as string[]; const importedOptions = JSON.parse(data.options || "[]") as Array<{ body: string; isCorrect: boolean }>;
-          if (!Array.isArray(tags) || !Array.isArray(importedOptions) || importedOptions.length < 2 || !importedOptions.some(option => option.isCorrect)) throw new Error("tags hoặc options không hợp lệ");
-          const createdQuestion = await db.insert(questions).values({ lessonId, prompt: data.prompt, type, difficulty, tags, explanation: data.explanation || null, imageUrl: data.imageUrl || null, answerConfig: JSON.parse(data.answerConfig || "{}") });
+          const answerConfig = JSON.parse(data.answerConfig || "{}") as Record<string, unknown>;
+          if (!Array.isArray(tags) || !tags.length || !Array.isArray(importedOptions)) throw new Error("tags hoặc options không hợp lệ");
+          const validationError = validateQuestionConfiguration({ type, options: importedOptions, answerConfig, imageUrl: data.imageUrl || null });
+          if (validationError) throw new Error(validationError);
+          const createdQuestion = await db.insert(questions).values({ lessonId, prompt: data.prompt, type, difficulty, tags, explanation: data.explanation || null, imageUrl: data.imageUrl || null, answerConfig });
           const questionId = Number(createdQuestion[0].insertId);
           await db.insert(questionOptions).values(importedOptions.map((option, sortOrder) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder })));
           created += 1;
