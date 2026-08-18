@@ -22,6 +22,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM, listLLMModels } from "./_core/llm";
 import { buildQuizAssistantMessages, type QuizAssistantIntent } from "./aiAssistant";
+import { buildAttemptMilestoneAlert } from "./attemptNotifications";
 import { allocateQuestionCounts } from "./randomQuiz";
 import { validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
@@ -202,12 +203,8 @@ export const appRouter = router({
       .mutation(({ input }) => saveAnswer(input)),
     submit: protectedProcedure.input(z.object({ attemptId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const result = await submitAttempt(input.attemptId, ctx.user.id);
-      if (result.scorePercent >= 90 || result.passed) {
-        await notifyOwner({
-          title: "Dshare Quiz: kết quả mới đáng chú ý",
-          content: `${ctx.user.name ?? "Một học viên"} vừa hoàn thành “${result.quiz.title}” với ${result.scorePercent}% (${result.passed ? "Đạt" : "Chưa đạt"}).`,
-        });
-      }
+      const alert = buildAttemptMilestoneAlert({ learnerName: ctx.user.name ?? "Một học viên", quizTitle: result.quiz.title, scorePercent: result.scorePercent, passed: result.passed, isFirstCompletion: result.isFirstCompletion, isQuizRecord: result.isQuizRecord, isPersonalRecord: result.isPersonalRecord });
+      try { await notifyOwner(alert); } catch (error) { console.warn("[Quiz notification] Delivery failed without affecting submission", error); }
       return result;
     }),
     securityEvent: protectedProcedure.input(z.object({ attemptId: z.number().int().positive(), eventType: z.enum(["copy", "paste", "context_menu", "tab_hidden", "fullscreen_exit"]) }))

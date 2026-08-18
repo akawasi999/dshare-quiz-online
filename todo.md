@@ -70,7 +70,10 @@
 - [ ] Tích hợp PayOS cho nạp Point và nâng cấp gói, gồm tạo liên kết thanh toán, nhận webhook có xác minh và đối soát giao dịch.
 - [x] Tích hợp trợ lý AI sinh giải thích, gợi ý tài liệu và trả lời nội dung quiz.
 - [x] Xây dựng giao diện trợ lý AI có ngữ cảnh câu hỏi tại trang kết quả bài làm.
-- [ ] Gửi thông báo cho admin khi có người dùng mới hoàn thành bài, đạt thành tích cao hoặc phá kỷ lục.
+- [x] Gửi thông báo cho admin khi có người dùng mới hoàn thành bài, đạt thành tích cao hoặc phá kỷ lục.
+- [x] Phân biệt thông báo hoàn thành, điểm cao và kỷ lục mới để quản trị viên theo dõi ưu tiên vận hành.
+- [x] Kiểm tra kỷ lục điểm cấp bộ đề trước khi nộp bài và cảnh báo quản trị khi có kỷ lục mới thực sự.
+- [x] Kiểm thử thứ tự ưu tiên giữa hoàn thành, điểm cao, kỷ lục cá nhân và kỷ lục bộ đề.
 - [x] Triển khai biện pháp hạn chế gian lận trong màn hình làm bài, có ghi nhận sự kiện vi phạm.
 - [ ] Bổ sung xử lý trạng thái tải, trống, lỗi; bảo đảm điều hướng và khả năng truy cập tốt.
 - [x] Viết kiểm thử Vitest cho quy tắc tính điểm, thứ tự ngẫu nhiên và các quyền quản trị.

@@ -202,6 +202,18 @@ export async function submitAttempt(attemptId: number, userId: number) {
     answers.map(answer => ({ questionId: answer.questionId, selectedOptionIds: answer.selectedOptionIds }))
   );
   const passed = summary.scorePercent >= detail.quiz.passingScore;
+  const [priorCompletions, priorQuizCompletions] = await Promise.all([
+    db.select({ quizId: attempts.quizId, score: attempts.score }).from(attempts)
+    .where(and(eq(attempts.userId, userId), eq(attempts.status, "submitted"))),
+    db.select({ score: attempts.score }).from(attempts)
+      .where(and(eq(attempts.quizId, attempt.quizId), eq(attempts.status, "submitted"))),
+  ]);
+  const priorQuizScores = priorCompletions.filter(item => item.quizId === attempt.quizId).map(item => item.score ?? 0);
+  const previousBest = priorQuizScores.length ? Math.max(...priorQuizScores) : -1;
+  const previousQuizBest = priorQuizCompletions.length ? Math.max(...priorQuizCompletions.map(item => item.score ?? 0)) : -1;
+  const isFirstCompletion = priorCompletions.length === 0;
+  const isPersonalRecord = summary.scorePercent > previousBest;
+  const isQuizRecord = summary.scorePercent > previousQuizBest;
   await db.update(attempts).set({
     status: "submitted",
     completedAt: new Date(),
@@ -237,7 +249,7 @@ export async function submitAttempt(attemptId: number, userId: number) {
     isCorrect: correctnessByQuestion.get(row.question.id) ?? false,
     options: row.options.map(option => ({ id: option.id, body: option.body })),
   }));
-  return { ...summary, passed, quiz: detail.quiz, review };
+  return { ...summary, passed, quiz: detail.quiz, review, isFirstCompletion, isPersonalRecord, isQuizRecord };
 }
 
 export async function logSecurityEvent(attemptId: number, eventType: "copy" | "paste" | "context_menu" | "tab_hidden" | "fullscreen_exit") {
