@@ -20,13 +20,13 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const [location] = useLocation();
   const { user, loading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const isDark = variant === "dark";
+  const isDark = variant === "dark" || theme === "dark";
 
   return (
     <header className={cn("relative z-40 border-b", isDark ? "border-white/10 bg-[#172554] text-white" : "border-[#172554]/10 bg-white text-[#172554]") }>
       <div className="container flex h-[76px] items-center justify-between gap-5">
         <Link href="/" className="group flex items-center" aria-label="Dshare Quiz Online">
-          <BrandLogo className="h-9 max-w-[132px] transition-transform duration-200 group-hover:scale-[1.02] sm:h-10 sm:max-w-[155px]" />
+          <BrandLogo monochrome={isDark} className="h-9 max-w-[132px] transition-transform duration-200 group-hover:scale-[1.02] sm:h-10 sm:max-w-[155px]" />
         </Link>
 
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Điều hướng chính">

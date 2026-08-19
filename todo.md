@@ -155,3 +155,4 @@
 - [x] Bổ sung trạng thái tải/lỗi/retry rõ ràng cho chi tiết quiz tại QuizRunner và dữ liệu myQuizzes/quota tại UserQuizCreator.
 - [x] Đồng bộ quality audit với bằng chứng code/test thực tế sau khi hoàn tất các route truy vấn còn thiếu.
 - [x] Thay logo Dshare Quiz Online mới trên toàn bộ header, sidebar, điểm nhận diện và cấu hình ứng dụng; kiểm tra desktop/mobile trước checkpoint.
+- [x] Tạo biến thể logo Dshare đơn sắc tương phản cao cho dark mode và tự động dùng theo chế độ giao diện.

@@ -11,4 +11,12 @@ describe("BrandLogo", () => {
     expect(logo.getAttribute("src")).toBe(BRAND_LOGO_URL);
     expect(BRAND_LOGO_URL).toContain("dshare-quiz-online-logo");
   });
+
+  it("áp dụng biến thể đơn sắc có độ tương phản cao cho chế độ tối", () => {
+    const { container } = render(<BrandLogo monochrome />);
+    const logo = container.querySelector("img");
+    expect(logo).not.toBeNull();
+    expect(logo?.className).toContain("brightness-0");
+    expect(logo?.className).toContain("invert");
+  });
 });
