@@ -184,3 +184,4 @@
 - [x] Thêm biểu tượng nhỏ bên cạnh tên từng chủ đề trong hàng cuộn ngang.
 - [x] Thêm hiệu ứng mép mờ và nút mũi tên trái/phải để điều hướng hàng chủ đề trên máy tính.
 - [x] Loại bỏ khu vực Sắp xếp và số lượng bộ đề phù hợp trên trang Làm Quiz.
+- [x] Đồng bộ nền banner quota với nội dung Làm Quiz và bỏ đường kẻ phân cách bên dưới.
