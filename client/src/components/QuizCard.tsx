@@ -1,21 +1,23 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShowcaseQuiz } from "@/data/demo";
+import { isQuizNew } from "@shared/quizFreshness";
 import { ArrowUpRight, Award, Clock3, LockKeyhole, Sparkles, UsersRound } from "lucide-react";
 import { Link } from "wouter";
 
 export default function QuizCard({ quiz, compact = false }: { quiz: ShowcaseQuiz; compact?: boolean }) {
   const isTesting = quiz.mode === "Kiểm tra";
+  const isNew = isQuizNew(quiz.createdAt);
   return (
     <article className="group overflow-hidden rounded-[26px] border border-[#172554]/10 bg-[#fff7e6] shadow-[0_12px_34px_rgba(22,43,62,.055)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(22,43,62,.11)]">
-      {quiz.coverImage ? <div className="relative h-32 overflow-hidden bg-[#ebf4ff]"><img src={quiz.coverImage} alt={`Ảnh bìa ${quiz.title}`} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-[#141432]/55 via-transparent to-transparent" /><div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3"><p className="truncate text-[10px] font-bold uppercase tracking-[.16em] text-white">{quiz.category} · {quiz.lesson}</p><Badge className={isTesting ? "shrink-0 border-0 bg-[#141432] px-2.5 py-1 text-[10px] text-white" : "shrink-0 border-0 bg-white/90 px-2.5 py-1 text-[10px] text-[#141432]"}>{quiz.mode}</Badge></div></div> : null}
+      {quiz.coverImage ? <div className="relative h-32 overflow-hidden bg-[#ebf4ff]"><img src={quiz.coverImage} alt={`Ảnh bìa ${quiz.title}`} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-[#141432]/55 via-transparent to-transparent" />{isNew ? <Badge className="absolute left-3 top-3 border-0 bg-[#de1264] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[.12em] text-white shadow-lg">Mới</Badge> : null}<div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3"><p className="truncate text-[10px] font-bold uppercase tracking-[.16em] text-white">{quiz.category} · {quiz.lesson}</p><Badge className={isTesting ? "shrink-0 border-0 bg-[#141432] px-2.5 py-1 text-[10px] text-white" : "shrink-0 border-0 bg-white/90 px-2.5 py-1 text-[10px] text-[#141432]"}>{quiz.mode}</Badge></div></div> : null}
       <div className="p-5">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-sm font-serif font-bold" style={{ backgroundColor: `${quiz.accent}1f`, color: quiz.accent }}>{quiz.subject.slice(0, 1)}</span>
           <div className="min-w-0">{!quiz.coverImage && <p className="truncate text-[10px] font-bold uppercase tracking-[.16em] text-[#f59e0b]">{quiz.category} · {quiz.lesson}</p>}<p className={quiz.coverImage ? "text-xs font-semibold text-[#172554]" : "mt-1 text-xs font-semibold text-[#172554]"}>{quiz.subject}</p></div>
         </div>
-        {!quiz.coverImage && <Badge className={isTesting ? "border-0 bg-[#172554] px-2.5 py-1 text-[10px] text-[#fff7e6]" : "border-0 bg-[#eaf0e6] px-2.5 py-1 text-[10px] text-[#172554]"}>{quiz.mode}</Badge>}
+        {!quiz.coverImage && <div className="flex shrink-0 items-center gap-1.5">{isNew ? <Badge className="border-0 bg-[#de1264] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[.1em] text-white">Mới</Badge> : null}<Badge className={isTesting ? "border-0 bg-[#172554] px-2.5 py-1 text-[10px] text-[#fff7e6]" : "border-0 bg-[#eaf0e6] px-2.5 py-1 text-[10px] text-[#172554]"}>{quiz.mode}</Badge></div>}
       </div>
       <h3 className="font-serif text-[22px] font-semibold leading-[1.15] tracking-[-.035em] text-[#172554]">{quiz.title}</h3>
       {!compact && <p className="mt-3 line-clamp-2 min-h-10 text-[13px] leading-5 text-[#617786]">{quiz.summary}</p>}
