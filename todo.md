@@ -163,3 +163,4 @@
 - [x] Xây dựng thiết lập nhận diện thương hiệu cho quản trị viên và đồng bộ màu trạng thái trên biểu đồ báo cáo vận hành.
 - [x] Lưu nhận diện thương hiệu vào cơ sở dữ liệu dùng chung và hiển thị biểu đồ Recharts dữ liệu vận hành thực theo bộ màu mới.
 - [x] Hoàn tất đổi nhãn menu quản trị và tiêu đề Style theo chỉnh sửa trực quan của người dùng.
+- [x] Thiết kế lại trang Làm Quiz theo mẫu tham chiếu: banner quota, bộ lọc chủ đề/độ khó và lưới thẻ bộ đề có CTA.
