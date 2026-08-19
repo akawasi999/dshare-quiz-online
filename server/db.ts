@@ -109,6 +109,8 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
     entryPointCost: quizzes.entryPointCost,
     completionReward: quizzes.completionReward,
     questionCount: quizzes.questionCount,
+    coverImageUrl: quizzes.coverImageUrl,
+    attemptCount: sql<number>`count(${attempts.id})`,
     categoryId: categories.id,
     categoryTitle: categories.title,
     subjectTitle: subjects.title,
@@ -117,11 +119,32 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
     .innerJoin(lessons, eq(quizzes.lessonId, lessons.id))
     .innerJoin(subjects, eq(lessons.subjectId, subjects.id))
     .innerJoin(categories, eq(subjects.categoryId, categories.id))
+    .leftJoin(attempts, and(eq(attempts.quizId, quizzes.id), eq(attempts.status, "submitted")))
     .where(and(
       eq(quizzes.isPublished, true),
       categoryId ? eq(categories.id, categoryId) : undefined,
       search ? sql`lower(${quizzes.title}) like ${`%${search.toLowerCase()}%`}` : undefined,
     ))
+    .groupBy(
+      quizzes.id,
+      quizzes.title,
+      quizzes.slug,
+      quizzes.summary,
+      quizzes.mode,
+      quizzes.difficulty,
+      quizzes.accessTier,
+      quizzes.durationSeconds,
+      quizzes.passingScore,
+      quizzes.entryPointCost,
+      quizzes.completionReward,
+      quizzes.questionCount,
+      quizzes.coverImageUrl,
+      quizzes.createdAt,
+      categories.id,
+      categories.title,
+      subjects.title,
+      lessons.title,
+    )
     .orderBy(desc(quizzes.createdAt));
   return rows;
 }

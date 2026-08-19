@@ -42,6 +42,8 @@ export default function QuizLibrary() {
     accent: "#2563eb",
     points: quiz.entryPointCost,
     reward: quiz.completionReward,
+    attemptCount: Number(quiz.attemptCount ?? 0),
+    coverImage: quiz.coverImageUrl ?? undefined,
     tier: tierLabels[quiz.accessTier],
   })), [catalog.data]);
   const filtered = useMemo(() => liveQuizzes.filter(quiz => {

@@ -11,6 +11,8 @@ export type ShowcaseQuiz = {
   duration: string;
   points: number;
   reward: number;
+  attemptCount?: number;
+  coverImage?: string;
   tier: "Basic" | "Pro" | "Premium";
   accent: string;
 };
