@@ -185,3 +185,5 @@
 - [x] Thêm hiệu ứng mép mờ và nút mũi tên trái/phải để điều hướng hàng chủ đề trên máy tính.
 - [x] Loại bỏ khu vực Sắp xếp và số lượng bộ đề phù hợp trên trang Làm Quiz.
 - [x] Đồng bộ nền banner quota với nội dung Làm Quiz và bỏ đường kẻ phân cách bên dưới.
+- [x] Thu gọn khoảng trống phía dưới banner quota trên trang Làm Quiz.
+- [x] Hiển thị thanh tiến độ nhỏ gọn cho lượt làm đã dùng trong banner quota.
