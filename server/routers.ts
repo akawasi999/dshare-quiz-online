@@ -5,6 +5,7 @@ import {
   attempts,
   attemptAnswers,
   auditLogs,
+  brandSettings,
   bugReports,
   categories,
   discussionPosts,
@@ -459,6 +460,10 @@ export const appRouter = router({
       }),
   }),
 
+  branding: router({
+    get: publicProcedure.query(async () => { const db = await getDb(); if (!db) return null; return (await db.select().from(brandSettings).limit(1))[0] ?? null; }),
+    save: adminProcedure.input(z.object({ primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), successColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), attentionColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), pageColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), surfaceColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/) })).mutation(async ({ input }) => { const db = await getDb(); if (!db) throw new Error("Database unavailable"); const existing = (await db.select().from(brandSettings).limit(1))[0]; if (existing) await db.update(brandSettings).set(input).where(eq(brandSettings.id, existing.id)); else await db.insert(brandSettings).values(input); return input; }),
+  }),
   admin: router({
     overview: adminProcedure.query(async () => {
       const db = await getDb();

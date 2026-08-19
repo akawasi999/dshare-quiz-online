@@ -161,3 +161,4 @@
 - [x] Áp dụng xanh mint #007453 cho trạng thái thành công và gradient CTA theo Primary/Accent mới trên toàn website.
 - [x] Chuẩn hóa lỗi đỏ #DE1264, cảnh báo Accent hồng và thêm bảng xem trước bảng màu trong quản trị.
 - [x] Xây dựng thiết lập nhận diện thương hiệu cho quản trị viên và đồng bộ màu trạng thái trên biểu đồ báo cáo vận hành.
+- [x] Lưu nhận diện thương hiệu vào cơ sở dữ liệu dùng chung và hiển thị biểu đồ Recharts dữ liệu vận hành thực theo bộ màu mới.

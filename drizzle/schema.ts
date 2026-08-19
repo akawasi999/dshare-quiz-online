@@ -24,6 +24,17 @@ export const users = mysqlTable("users", {
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
+export const brandSettings = mysqlTable("brandSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  primaryColor: varchar("primaryColor", { length: 16 }).default("#065BE5").notNull(),
+  accentColor: varchar("accentColor", { length: 16 }).default("#3762D2").notNull(),
+  successColor: varchar("successColor", { length: 16 }).default("#007453").notNull(),
+  attentionColor: varchar("attentionColor", { length: 16 }).default("#DE1264").notNull(),
+  pageColor: varchar("pageColor", { length: 16 }).default("#EBF4FF").notNull(),
+  surfaceColor: varchar("surfaceColor", { length: 16 }).default("#FFFFFF").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export const accountTierValues = ["basic", "pro", "premium"] as const;
 export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "expired"] as const;
 export const quizModeValues = ["training", "testing"] as const;

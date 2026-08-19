@@ -2,6 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
 import ColorPalettePreview from "@/components/ColorPalettePreview";
 import BrandSettingsPanel from "@/components/BrandSettingsPanel";
+import OperationalCharts from "@/components/OperationalCharts";
 import AdminOperationsDashboard from "@/components/AdminOperationsDashboard";
 import AdminBugReportsPanel from "@/components/AdminBugReportsPanel";
 import AdminPointLedgerPanel from "@/components/AdminPointLedgerPanel";
@@ -32,7 +33,7 @@ export default function Admin() {
   if (location === "/quan-tri/cau-hoi") content = <><AIQuestionGeneratorPanel /><QuestionEditorPanel /></>;
   if (location === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;
   if (location === "/quan-tri/nguoi-dung") content = <UserManager />;
-  if (location === "/quan-tri/bao-cao") content = <AnalyticsDashboard />;
+  if (location === "/quan-tri/bao-cao") content = <><OperationalCharts /><AnalyticsDashboard /></>;
   if (location === "/quan-tri/live-monitoring") content = <LiveMonitoringPanel />;
   if (location === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
   if (location === "/quan-tri/point") content = <AdminPointLedgerPanel />;
