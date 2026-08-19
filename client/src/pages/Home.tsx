@@ -27,8 +27,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#fff7e6]">
-      <section className="relative overflow-hidden bg-[#fff7e6]">
+    <div className="min-h-screen overflow-hidden bg-[#ebf4ff]">
+      <section className="relative overflow-hidden bg-[#ebf4ff]">
         <SiteHeader />
         <div className="container relative flex min-h-[620px] items-center py-20 lg:min-h-[650px] lg:py-28">
           <div className="rise-in max-w-4xl">

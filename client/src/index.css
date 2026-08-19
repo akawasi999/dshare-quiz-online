@@ -32,60 +32,60 @@
 }
 
 :root {
-  --background: #fff7e6;
-  --foreground: #172554;
+  --background: #ebf4ff;
+  --foreground: #141432;
   --card: #ffffff;
-  --card-foreground: #172554;
+  --card-foreground: #141432;
   --popover: #ffffff;
-  --popover-foreground: #172554;
-  --primary: #2563eb;
+  --popover-foreground: #141432;
+  --primary: #065be5;
   --primary-foreground: #ffffff;
-  --secondary: #fffaf0;
-  --secondary-foreground: #172554;
-  --muted: #fffaf0;
-  --muted-foreground: #61719a;
-  --accent: #f59e0b;
-  --accent-foreground: #172554;
-  --destructive: #b64f45;
-  --border: rgba(30, 58, 138, 0.14);
-  --input: rgba(30, 58, 138, 0.14);
-  --ring: #2563eb;
+  --secondary: #f0f1ff;
+  --secondary-foreground: #141432;
+  --muted: #f0f1ff;
+  --muted-foreground: #6c6c7a;
+  --accent: #3762d2;
+  --accent-foreground: #ffffff;
+  --destructive: #de1264;
+  --border: rgba(20, 20, 50, 0.14);
+  --input: rgba(20, 20, 50, 0.14);
+  --ring: #065be5;
   --radius: 0.8rem;
 }
 
 .dark {
-  --background: #0b1224;
-  --foreground: #e6efff;
-  --card: #111c36;
-  --card-foreground: #e6efff;
-  --popover: #111c36;
-  --popover-foreground: #e6efff;
-  --primary: #60a5fa;
-  --primary-foreground: #0b1224;
-  --secondary: #18284c;
-  --secondary-foreground: #e6efff;
-  --muted: #16233f;
-  --muted-foreground: #b7c5df;
-  --accent: #fbbf24;
-  --accent-foreground: #172554;
-  --border: rgba(191, 219, 254, 0.18);
-  --input: rgba(191, 219, 254, 0.18);
-  --ring: #60a5fa;
+  --background: #0a0f1a;
+  --foreground: #ffffff;
+  --card: #171e26;
+  --card-foreground: #ffffff;
+  --popover: #171e26;
+  --popover-foreground: #ffffff;
+  --primary: #82bbfd;
+  --primary-foreground: #0a0f1a;
+  --secondary: #121821;
+  --secondary-foreground: #ffffff;
+  --muted: #121821;
+  --muted-foreground: #a1a1ab;
+  --accent: #5093f6;
+  --accent-foreground: #0a0f1a;
+  --border: rgba(255, 255, 255, 0.18);
+  --input: rgba(255, 255, 255, 0.18);
+  --ring: #82bbfd;
 }
 
 * { border-color: var(--border); }
 html { scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; background: #fff7e6; color: #172554; font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif; }
-.dark body { background: #0b1224; color: #e6efff; }
-.min-h-screen { background-color: #fff7e6 !important; }
-.dark .min-h-screen { background-color: #0b1224 !important; }
-.min-h-screen [class*="bg-[#ebf8ff"], .min-h-screen [class*="bg-[#eef4ff"], .min-h-screen [class*="bg-[#f4f7ff"] { background-color: #fff7e6 !important; }
-.dark [class*="bg-[#fff7e6"], .dark [class*="bg-[#f4f7ff"], .dark [class*="bg-[#eef4ff"], .dark [class*="bg-[#ebf8ff"] { background-color: #0b1224 !important; }
-.dark [class*="bg-white"] { background-color: #111c36 !important; }
-.dark [class*="text-[#172554"] { color: #e6efff !important; }
-.dark [class*="text-[#617786"] { color: #b7c5df !important; }
-.dark [class*="border-[#172554"] { border-color: rgba(191, 219, 254, .18) !important; }
-.dark .field { background: #111c36; border-color: rgba(191, 219, 254, .2); color: #e6efff; }
+body { margin: 0; min-width: 320px; background: #ebf4ff; color: #141432; font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif; }
+.dark body { background: #0a0f1a; color: #ffffff; }
+.min-h-screen { background-color: #ebf4ff !important; }
+.dark .min-h-screen { background-color: #0a0f1a !important; }
+.min-h-screen [class*="bg-[#fff7e6"], .min-h-screen [class*="bg-[#ebf8ff"], .min-h-screen [class*="bg-[#eef4ff"], .min-h-screen [class*="bg-[#f4f7ff"] { background-color: #f0f1ff !important; }
+.dark [class*="bg-[#fff7e6"], .dark [class*="bg-[#f4f7ff"], .dark [class*="bg-[#eef4ff"], .dark [class*="bg-[#ebf8ff"] { background-color: #121821 !important; }
+.dark [class*="bg-white"] { background-color: #171e26 !important; }
+.dark [class*="text-[#172554"] { color: #ffffff !important; }
+.dark [class*="text-[#617786"] { color: #a1a1ab !important; }
+.dark [class*="border-[#172554"] { border-color: rgba(255, 255, 255, .18) !important; }
+.dark .field { background: #171e26; border-color: rgba(255, 255, 255, .2); color: #ffffff; }
 h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif; }
 .field { width: 100%; border-radius: .75rem; border: 1px solid rgba(30, 58, 138, .15); background: #fffaf0; padding: .625rem .75rem; font-size: .75rem; font-weight: 400; color: #172554; outline: none; }
 .field:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, .2); }
