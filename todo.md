@@ -154,3 +154,4 @@
 - [x] Áp dụng nhất quán menu tài khoản bên trái cho các chức năng người học: tạo quiz, làm quiz, bảng xếp hạng, mời bạn, nạp Point, nâng cấp và lịch sử giao dịch.
 - [x] Bổ sung trạng thái tải/lỗi/retry rõ ràng cho chi tiết quiz tại QuizRunner và dữ liệu myQuizzes/quota tại UserQuizCreator.
 - [x] Đồng bộ quality audit với bằng chứng code/test thực tế sau khi hoàn tất các route truy vấn còn thiếu.
+- [x] Thay logo Dshare Quiz Online mới trên toàn bộ header, sidebar, điểm nhận diện và cấu hình ứng dụng; kiểm tra desktop/mobile trước checkpoint.

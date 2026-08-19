@@ -26,6 +26,7 @@ import { Activity, ArrowDownToLine, BookOpenCheck, ChartNoAxesCombined, CircleDo
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
+import BrandLogo from "./BrandLogo";
 import { Button } from "./ui/button";
 
 const menuItems = [
@@ -177,13 +178,7 @@ function DashboardLayoutContent({
               >
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
-              {!isCollapsed ? (
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-semibold tracking-tight truncate">
-                    Dshare Admin
-                  </span>
-                </div>
-              ) : null}
+              {!isCollapsed ? <BrandLogo className="h-8 max-w-[158px]" /> : null}
             </div>
           </SidebarHeader>
 

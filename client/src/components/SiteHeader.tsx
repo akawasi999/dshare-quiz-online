@@ -1,8 +1,9 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { Button } from "@/components/ui/button";
+import BrandLogo from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
-import { BookOpen, Menu, Moon, Sparkles, Sun, UserRound, X } from "lucide-react";
+import { Menu, Moon, Sparkles, Sun, UserRound, X } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -24,14 +25,8 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   return (
     <header className={cn("relative z-40 border-b", isDark ? "border-white/10 bg-[#172554] text-white" : "border-[#172554]/10 bg-white text-[#172554]") }>
       <div className="container flex h-[76px] items-center justify-between gap-5">
-        <Link href="/" className="group flex items-center gap-3" aria-label="Dshare Quiz Online">
-          <span className={cn("grid h-10 w-10 place-items-center rounded-[14px] shadow-sm transition-transform duration-200 group-hover:-rotate-3", isDark ? "bg-[#3b82f6] text-white" : "bg-[#172554] text-white") }>
-            <BookOpen size={19} strokeWidth={2.3} />
-          </span>
-          <span className="leading-none">
-            <span className="block font-serif text-[19px] font-semibold tracking-[-0.04em]">dshare</span>
-            <span className={cn("mt-1 block text-[9px] font-bold uppercase tracking-[0.22em]", isDark ? "text-[#3b82f6]" : "text-[#2563eb]")}>quiz online</span>
-          </span>
+        <Link href="/" className="group flex items-center" aria-label="Dshare Quiz Online">
+          <BrandLogo className="h-9 max-w-[132px] transition-transform duration-200 group-hover:scale-[1.02] sm:h-10 sm:max-w-[155px]" />
         </Link>
 
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Điều hướng chính">
