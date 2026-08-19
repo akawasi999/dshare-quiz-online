@@ -41,6 +41,8 @@ export default function MembershipGroupPermissionsPanel() {
   const [activeView, setActiveView] = useState<"groups" | "plans">("groups");
   const [groupOpen, setGroupOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
+  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
+  const [editingPlanId, setEditingPlanId] = useState<number | null>(null);
   const [groupForm, setGroupForm] = useState<GroupForm>(emptyGroup());
   const [planForm, setPlanForm] = useState<PlanForm>(emptyPlan());
   const [groupFilter, setGroupFilter] = useState("");
@@ -75,13 +77,15 @@ export default function MembershipGroupPermissionsPanel() {
 
   const openGroupEditor = (group?: NonNullable<typeof data>["groups"][number]) => {
     setPermissionDraft("");
-    if (!group) { setGroupForm({ ...emptyGroup(), permissions: normalizePermissions([]) }); setGroupOpen(true); return; }
+    if (!group) { setEditingGroupId(null); setGroupForm({ ...emptyGroup(), permissions: normalizePermissions([]) }); setGroupOpen(true); return; }
+    setEditingGroupId(group.id);
     setGroupForm({ id: group.id, planId: group.planId ? String(group.planId) : "", name: group.name, description: group.description ?? "", displayOrder: group.displayOrder, isSystem: group.isSystem, permissions: normalizePermissions(group.permissions) });
     setGroupOpen(true);
   };
   const openPlanEditor = (plan?: NonNullable<typeof data>["plans"][number]) => {
     setPermissionDraft("");
-    if (!plan) { setPlanForm({ ...emptyPlan(), permissions: normalizePermissions([]) }); setPlanOpen(true); return; }
+    if (!plan) { setEditingPlanId(null); setPlanForm({ ...emptyPlan(), permissions: normalizePermissions([]) }); setPlanOpen(true); return; }
+    setEditingPlanId(plan.id);
     const linkedGroup = data?.groups.find(group => group.planId === plan.id);
     setPlanForm({ id: plan.id, code: plan.code, name: plan.name, tier: plan.tier, description: plan.description ?? "", monthlyPrice: plan.monthlyPrice, promoPrice: plan.promoPrice ?? "", displayOrder: plan.displayOrder, isActive: plan.isActive, isSystem: plan.isSystem, permissions: normalizePermissions(linkedGroup?.permissions ?? []) });
     setPlanOpen(true);
@@ -103,7 +107,7 @@ export default function MembershipGroupPermissionsPanel() {
   const submitGroup = async (event: FormEvent) => {
     event.preventDefault();
     try {
-      const result = await groupSave.mutateAsync({ id: groupForm.id, planId: groupForm.planId ? Number(groupForm.planId) : null, name: groupForm.name, description: groupForm.description || null, displayOrder: Number(groupForm.displayOrder) });
+      const result = await groupSave.mutateAsync({ id: editingGroupId ?? undefined, planId: groupForm.planId ? Number(groupForm.planId) : null, name: groupForm.name, description: groupForm.description || null, displayOrder: Number(groupForm.displayOrder) });
       if (!result.groupId) throw new Error("Không xác định được nhóm vừa lưu.");
       await permissionSave.mutateAsync({ groupId: result.groupId, permissions: groupForm.permissions });
       await refresh(); setGroupOpen(false); toast.success("Đã lưu nhóm người dùng và các quyền liên kết.");
@@ -112,7 +116,7 @@ export default function MembershipGroupPermissionsPanel() {
   const submitPlan = async (event: FormEvent) => {
     event.preventDefault();
     try {
-      const result = await planSave.mutateAsync({ id: planForm.id, code: planForm.code, name: planForm.name, tier: planForm.tier, description: planForm.description || null, monthlyPrice: Number(planForm.monthlyPrice), promoPrice: planForm.promoPrice === "" ? null : Number(planForm.promoPrice), displayOrder: Number(planForm.displayOrder), isActive: planForm.isActive });
+      const result = await planSave.mutateAsync({ id: editingPlanId ?? undefined, code: planForm.code, name: planForm.name, tier: planForm.tier, description: planForm.description || null, monthlyPrice: Number(planForm.monthlyPrice), promoPrice: planForm.promoPrice === "" ? null : Number(planForm.promoPrice), displayOrder: Number(planForm.displayOrder), isActive: planForm.isActive });
       await planPermissionSave.mutateAsync({ planId: result.planId, permissions: planForm.permissions });
       await refresh(); setPlanOpen(false); toast.success("Đã lưu gói đăng ký và quyền của các nhóm liên kết.");
     } catch (error) { toast.error("Không thể lưu gói", { description: error instanceof Error ? error.message : "Vui lòng thử lại." }); }
