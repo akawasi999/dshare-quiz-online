@@ -36,12 +36,12 @@ const menuItems = [
   { icon: CircleHelp, label: "Ngân hàng câu hỏi", path: "/quan-tri/cau-hoi" },
   { icon: ArrowDownToLine, label: "Import / Export", path: "/quan-tri/import-xuat" },
   { icon: Users, label: "Người dùng", path: "/quan-tri/nguoi-dung" },
-  { icon: CircleDollarSign, label: "Sổ cái Point", path: "/quan-tri/point" },
+  { icon: CircleDollarSign, label: "Quản lý Point", path: "/quan-tri/point" },
   { icon: FileWarning, label: "Báo lỗi", path: "/quan-tri/bao-loi" },
   { icon: ChartNoAxesCombined, label: "Báo cáo", path: "/quan-tri/bao-cao" },
   { icon: Activity, label: "Live Monitoring", path: "/quan-tri/live-monitoring" },
   { icon: ScrollText, label: "Nhật ký hoạt động", path: "/quan-tri/nhat-ky" },
-  { icon: Palette, label: "Nhận diện thương hiệu", path: "/quan-tri/thuong-hieu" },
+  { icon: Palette, label: "Tuỳ chỉnh Style", path: "/quan-tri/thuong-hieu" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
