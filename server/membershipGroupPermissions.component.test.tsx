@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   savePlan: { mutate: vi.fn(), mutateAsync: vi.fn().mockResolvedValue({ success: true, planId: 1 }), isPending: false },
   deletePlan: { mutate: vi.fn(), isPending: false },
   saveGroup: { mutate: vi.fn(), mutateAsync: vi.fn().mockResolvedValue({ success: true, groupId: 10 }), isPending: false },
+  deleteGroup: { mutate: vi.fn(), isPending: false },
   savePermissions: { mutate: vi.fn(), mutateAsync: vi.fn().mockResolvedValue({ success: true }), isPending: false },
   savePlanPermissions: { mutate: vi.fn(), mutateAsync: vi.fn().mockResolvedValue({ success: true, groupCount: 1 }), isPending: false },
 }));
@@ -41,7 +42,7 @@ vi.mock("@/lib/trpc", () => ({
       saveSubscriptionPlan: { useMutation: () => mocks.savePlan },
       deleteSubscriptionPlan: { useMutation: () => mocks.deletePlan },
       saveUserGroup: { useMutation: () => mocks.saveGroup },
-      deleteUserGroup: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
+      deleteUserGroup: { useMutation: () => mocks.deleteGroup },
       saveCustomGroupPermissions: { useMutation: () => mocks.savePermissions },
       savePlanLinkedGroupPermissions: { useMutation: () => mocks.savePlanPermissions },
       assignUserGroupMember: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
@@ -60,6 +61,7 @@ describe("MembershipGroupPermissionsPanel", () => {
     mocks.savePlan.mutateAsync.mockClear();
     mocks.deletePlan.mutate.mockClear();
     mocks.saveGroup.mutateAsync.mockClear();
+    mocks.deleteGroup.mutate.mockClear();
     mocks.savePermissions.mutateAsync.mockClear();
     mocks.savePlanPermissions.mutateAsync.mockClear();
   });
@@ -94,6 +96,17 @@ describe("MembershipGroupPermissionsPanel", () => {
     await user.type(nameInput, "Basic đã cập nhật");
     await user.click(within(dialog).getByRole("button", { name: "Lưu nhóm và quyền" }));
     await waitFor(() => expect(mocks.saveGroup.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ id: 10, name: "Basic đã cập nhật" })));
+  });
+
+  it("cho phép xóa cả nhóm mặc định cùng dữ liệu liên kết", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<MembershipGroupPermissionsPanel />);
+    const deleteSelect = screen.getAllByRole("combobox").find(element => Array.from((element as HTMLSelectElement).options).some(option => option.text === "Chọn nhóm cần xóa"))!;
+    await user.selectOptions(deleteSelect, "10");
+    await user.click(screen.getByRole("button", { name: "Xóa nhóm" }));
+    expect(mocks.deleteGroup.mutate).toHaveBeenCalledWith({ groupId: 10 });
+    confirmSpy.mockRestore();
   });
 
   it("mở danh sách và cấu hình gói gồm giá khuyến mãi cùng quyền liên kết", async () => {

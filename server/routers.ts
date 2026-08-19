@@ -96,16 +96,6 @@ async function ensureMembershipManagementDefaults() {
   const db = await getDb();
   if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập quản trị thành viên." });
   for (const plan of defaultSubscriptionPlans) await db.insert(subscriptionPlans).values({ ...plan, isSystem: true }).onDuplicateKeyUpdate({ set: { code: plan.code } });
-  const plans = await db.select().from(subscriptionPlans);
-  for (const plan of defaultSubscriptionPlans) {
-    const planRow = plans.find(item => item.code === plan.code);
-    if (!planRow) continue;
-    await db.insert(userGroups).values({ planId: planRow.id, name: `${plan.name} mặc định`, description: `Nhóm mặc định của gói ${plan.name}.`, isSystem: true }).onDuplicateKeyUpdate({ set: { name: `${plan.name} mặc định` } });
-    const group = (await db.select().from(userGroups).where(eq(userGroups.name, `${plan.name} mặc định`)).limit(1))[0];
-    const defaults = defaultMembershipGroupPermissions.find(item => item.tier === plan.tier);
-    if (!group || !defaults) continue;
-    for (const permissionKey of membershipPermissionKeys) await db.insert(userGroupPermissions).values({ groupId: group.id, permissionKey, isAllowed: defaults[permissionKey] }).onDuplicateKeyUpdate({ set: { groupId: group.id } });
-  }
   return db;
 }
 
@@ -900,13 +890,12 @@ export const appRouter = router({
       const db = await ensureMembershipManagementDefaults();
       const group = (await db.select().from(userGroups).where(eq(userGroups.id, input.groupId)).limit(1))[0];
       if (!group) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy nhóm người dùng." });
-      if (group.isSystem) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Không thể xóa nhóm mặc định theo gói." });
-      const members = await db.select({ id: userGroupMembers.id }).from(userGroupMembers).where(eq(userGroupMembers.groupId, group.id)).limit(1);
-      if (members.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Hãy xóa hoặc chuyển thành viên trước khi xóa nhóm." });
+      const members = await db.select({ id: userGroupMembers.id }).from(userGroupMembers).where(eq(userGroupMembers.groupId, group.id));
+      await db.delete(userGroupMembers).where(eq(userGroupMembers.groupId, group.id));
       await db.delete(userGroupPermissions).where(eq(userGroupPermissions.groupId, group.id));
       await db.delete(userGroups).where(eq(userGroups.id, group.id));
-      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user_group.deleted", entityType: "user_group", entityId: group.id, metadata: { name: group.name } });
-      return { success: true };
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user_group.deleted", entityType: "user_group", entityId: group.id, metadata: { name: group.name, removedMemberCount: members.length, wasDefaultGroup: group.isSystem } });
+      return { success: true, removedMemberCount: members.length };
     }),
     saveCustomGroupPermissions: adminProcedure.input(customGroupPermissionsInput).mutation(async ({ ctx, input }) => {
       const db = await ensureMembershipManagementDefaults();

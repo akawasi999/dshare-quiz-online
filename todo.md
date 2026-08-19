@@ -203,3 +203,4 @@
 - [x] Thêm menu Gói đăng ký với danh sách/bộ lọc/nút tạo mới và popup tên, thứ tự, giá, khuyến mãi, mô tả, quyền liên kết.
 - [x] Sửa lỗi lưu chỉnh sửa Nhóm người dùng tạo bản ghi mới thay vì cập nhật đúng nhóm hiện tại.
 - [x] Hoàn thiện thao tác sửa và xóa Gói đăng ký, gồm phản hồi và kiểm thử các điều kiện bảo vệ.
+- [x] Cho phép thêm, sửa và xóa tất cả nhóm người dùng, kể cả nhóm mặc định, với xử lý dữ liệu liên kết an toàn.
