@@ -1,0 +1,1 @@
+ALTER TABLE `quizzes` ADD `coverImageUrl` varchar(1024);

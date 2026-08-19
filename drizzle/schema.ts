@@ -111,6 +111,7 @@ export const quizzes = mysqlTable("quizzes", {
   title: varchar("title", { length: 220 }).notNull(),
   slug: varchar("slug", { length: 240 }).notNull(),
   summary: text("summary"),
+  coverImageUrl: varchar("coverImageUrl", { length: 1024 }),
   mode: mysqlEnum("mode", quizModeValues).default("training").notNull(),
   difficulty: mysqlEnum("difficulty", difficultyValues).default("medium").notNull(),
   accessTier: mysqlEnum("accessTier", accountTierValues).default("basic").notNull(),

@@ -348,7 +348,7 @@ export const appRouter = router({
       return db.select().from(quizzes).where(eq(quizzes.creatorUserId, ctx.user.id)).orderBy(desc(quizzes.updatedAt));
     }),
     createQuiz: protectedProcedure.input(z.object({
-      lessonId: z.number().int().positive(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(),
+      lessonId: z.number().int().positive(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -361,7 +361,7 @@ export const appRouter = router({
         if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` });
       }
       const quizSlug = `my-${ctx.user.id}-${Date.now()}`;
-      const createdQuiz = await db.insert(quizzes).values({ lessonId: input.lessonId, creatorUserId: ctx.user.id, title: input.title, slug: quizSlug, summary: input.summary, mode: "training", accessTier: "basic", durationSeconds: 900, passingScore: 70, questionCount: input.questions.length, isPublished: false });
+      const createdQuiz = await db.insert(quizzes).values({ lessonId: input.lessonId, creatorUserId: ctx.user.id, title: input.title, slug: quizSlug, summary: input.summary, coverImageUrl: input.coverImageUrl, mode: "training", accessTier: "basic", durationSeconds: 900, passingScore: 70, questionCount: input.questions.length, isPublished: false });
       const quizId = Number(createdQuiz[0].insertId);
       for (let index = 0; index < input.questions.length; index += 1) {
         const item = input.questions[index]!;
