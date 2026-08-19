@@ -22,7 +22,7 @@ import {
 import { startLogin } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Activity, ArrowDownToLine, BookOpenCheck, ChartNoAxesCombined, CircleDollarSign, CircleHelp, FileWarning, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, ScrollText, Shuffle, Sun, Users } from "lucide-react";
+import { Activity, ArrowDownToLine, BookOpenCheck, ChartNoAxesCombined, CircleDollarSign, CircleHelp, FileWarning, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, ScrollText, Shuffle, Sun, Users, UsersRound } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -36,6 +36,7 @@ const menuItems = [
   { icon: CircleHelp, label: "Ngân hàng câu hỏi", path: "/quan-tri/cau-hoi" },
   { icon: ArrowDownToLine, label: "Import / Export", path: "/quan-tri/import-xuat" },
   { icon: Users, label: "Người dùng", path: "/quan-tri/nguoi-dung" },
+  { icon: UsersRound, label: "Nhóm người dùng", path: "/quan-tri/nhom-nguoi-dung" },
   { icon: CircleDollarSign, label: "Quản lý Point", path: "/quan-tri/point" },
   { icon: FileWarning, label: "Báo lỗi", path: "/quan-tri/bao-loi" },
   { icon: ChartNoAxesCombined, label: "Báo cáo", path: "/quan-tri/bao-cao" },

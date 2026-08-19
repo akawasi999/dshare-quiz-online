@@ -11,6 +11,7 @@ import {
   discussionPosts,
   learnerProfiles,
   lessons,
+  membershipGroupPermissions,
   questionOptions,
   paymentRecords,
   questions,
@@ -54,10 +55,36 @@ import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
+import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const quizIdInput = z.object({ quizId: z.number().int().positive() });
 const csvEscape = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+const membershipGroupPermissionInput = z.object({
+  tier: z.enum(["basic", "pro", "premium"]),
+  canCreateQuiz: z.boolean(),
+  canUseAi: z.boolean(),
+  canExportData: z.boolean(),
+  canViewAdvancedReports: z.boolean(),
+  canReceivePrioritySupport: z.boolean(),
+});
+
+async function getMembershipGroupPermissions() {
+  const db = await getDb();
+  if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cấu hình nhóm người dùng." });
+  for (const group of defaultMembershipGroupPermissions) {
+    await db.insert(membershipGroupPermissions).values(group).onDuplicateKeyUpdate({ set: { tier: group.tier } });
+  }
+  return db.select().from(membershipGroupPermissions);
+}
+
+async function assertMembershipGroupPermission(userId: number, permission: MembershipPermissionKey, featureLabel: string) {
+  const profile = await ensureLearnerProfile(userId);
+  if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập hồ sơ thành viên." });
+  const groups = await getMembershipGroupPermissions();
+  const group = groups.find(item => item.tier === profile.tier);
+  if (!group?.[permission]) throw new TRPCError({ code: "FORBIDDEN", message: `Nhóm ${profile.tier.toUpperCase()} chưa được cấp quyền ${featureLabel}.` });
+}
 
 async function assertQuotaAvailable(userId: number, resource: "attemptsPerMonth" | "quizzesPerMonth" | "aiCreditsPerMonth") {
   const profile = await ensureLearnerProfile(userId);
@@ -364,6 +391,7 @@ export const appRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo quiz lúc này." });
       await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
+      await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "tạo Quiz");
       const lesson = await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.id, input.lessonId)).limit(1);
       if (!lesson.length) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy bài học để gắn quiz." });
       for (const item of input.questions) {
@@ -411,6 +439,7 @@ export const appRouter = router({
     explain: protectedProcedure.input(z.object({ question: z.string().trim().min(8).max(2000), context: z.string().trim().max(2000).optional() }))
       .mutation(async ({ ctx, input }) => {
         const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+        await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng trợ lý AI");
         const response = await invokeLLM({
           messages: [
             { role: "system", content: "Bạn là trợ lý học tập Dshare. Trả lời bằng tiếng Việt, giải thích khái niệm ngắn gọn, có cấu trúc, không bịa nguồn tham khảo và khuyến khích người học tự kiểm chứng." },
@@ -433,6 +462,7 @@ export const appRouter = router({
         const question = completedQuestion[0]?.question;
         if (!question) throw new TRPCError({ code: "FORBIDDEN", message: "Trợ lý chỉ mở cho câu hỏi bạn đã hoàn thành." });
         const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+        await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng trợ lý AI");
         const options = await db.select({ body: questionOptions.body, isCorrect: questionOptions.isCorrect }).from(questionOptions)
           .where(eq(questionOptions.questionId, question.id)).orderBy(questionOptions.sortOrder);
         const models = await listLLMModels();
@@ -712,6 +742,27 @@ export const appRouter = router({
         const countByUser = new Map(counts.map(row => [row.userId, Number(row.completed)]));
         return rows.map(row => ({ ...row, completedCount: countByUser.get(row.user.id) ?? 0 }));
       }),
+    groupPermissions: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      const [groups, counts] = await Promise.all([
+        getMembershipGroupPermissions(),
+        db.select({ tier: learnerProfiles.tier, count: sql<number>`count(*)` }).from(learnerProfiles).groupBy(learnerProfiles.tier),
+      ]);
+      const countByTier = new Map(counts.map(item => [item.tier, Number(item.count)]));
+      return defaultMembershipGroupPermissions.map(defaultGroup => {
+        const group = groups.find(item => item.tier === defaultGroup.tier) ?? defaultGroup;
+        return { ...group, memberCount: countByTier.get(defaultGroup.tier) ?? 0 };
+      });
+    }),
+    saveGroupPermissions: adminProcedure.input(membershipGroupPermissionInput).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu quyền nhóm." });
+      await getMembershipGroupPermissions();
+      await db.update(membershipGroupPermissions).set({ ...input, updatedAt: new Date() }).where(eq(membershipGroupPermissions.tier, input.tier));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "membership_group.permissions_updated", entityType: "membership_group", metadata: { tier: input.tier, permissions: Object.fromEntries(membershipPermissionKeys.map(permission => [permission, input[permission]])) } });
+      return { success: true };
+    }),
     updateUserTier: adminProcedure.input(z.object({ userId: z.number().int().positive(), tier: z.enum(["basic", "pro", "premium"]) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();

@@ -189,3 +189,5 @@
 - [x] Hiển thị thanh tiến độ nhỏ gọn cho lượt làm đã dùng trong banner quota.
 - [x] Thêm nút Nâng cấp ngay nổi bật trong banner khi quota lượt làm sắp hết.
 - [x] Bỏ nhãn Tiến độ và câu mô tả cập nhật dữ liệu máy chủ trong banner quota.
+- [x] Thêm quản lý nhóm người dùng theo gói trong khu vực quản trị.
+- [x] Thêm ma trận phân quyền và kiểm soát quyền truy cập theo nhóm người dùng.

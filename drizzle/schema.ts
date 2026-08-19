@@ -62,6 +62,17 @@ export const learnerProfiles = mysqlTable("learnerProfiles", {
   uniqueIndex("learner_profiles_referral_unique").on(table.referralCode),
 ]);
 
+export const membershipGroupPermissions = mysqlTable("membershipGroupPermissions", {
+  id: int("id").autoincrement().primaryKey(),
+  tier: mysqlEnum("tier", accountTierValues).notNull(),
+  canCreateQuiz: boolean("canCreateQuiz").default(true).notNull(),
+  canUseAi: boolean("canUseAi").default(true).notNull(),
+  canExportData: boolean("canExportData").default(false).notNull(),
+  canViewAdvancedReports: boolean("canViewAdvancedReports").default(false).notNull(),
+  canReceivePrioritySupport: boolean("canReceivePrioritySupport").default(false).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("membership_group_permissions_tier_unique").on(table.tier)]);
+
 export const categories = mysqlTable("categories", {
   id: int("id").autoincrement().primaryKey(),
   title: varchar("title", { length: 180 }).notNull(),
