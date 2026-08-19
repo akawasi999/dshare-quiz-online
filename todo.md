@@ -87,9 +87,9 @@
 - [x] Kiểm tra kỷ lục điểm cấp bộ đề trước khi nộp bài và cảnh báo quản trị khi có kỷ lục mới thực sự.
 - [x] Kiểm thử thứ tự ưu tiên giữa hoàn thành, điểm cao, kỷ lục cá nhân và kỷ lục bộ đề.
 - [x] Triển khai biện pháp hạn chế gian lận trong màn hình làm bài, có ghi nhận sự kiện vi phạm.
-- [ ] Bổ sung xử lý trạng thái tải, trống, lỗi; bảo đảm điều hướng và khả năng truy cập tốt.
+- [x] Bổ sung xử lý trạng thái tải, trống, lỗi; bảo đảm điều hướng và khả năng truy cập tốt.
 - [x] Viết kiểm thử Vitest cho quy tắc tính điểm, thứ tự ngẫu nhiên và các quyền quản trị.
-- [ ] Rà soát giao diện trên desktop và mobile, chạy kiểm thử, tạo checkpoint và bàn giao.
+- [x] Rà soát giao diện trên desktop và mobile, chạy kiểm thử, tạo checkpoint và bàn giao.
 - [x] Đối chiếu tài liệu PayOS chính thức với mô hình paymentRecords, ví Point và hạng tài khoản hiện có.
 - [x] Tạo API máy chủ cho đơn nạp Point/nâng cấp gói và liên kết thanh toán PayOS, không để lộ khóa bí mật ở client.
 - [x] Triển khai webhook PayOS có xác minh chữ ký, xử lý idempotent, đối soát paymentRecords và cấp Point hoặc quyền truy cập đúng một lần.
@@ -102,9 +102,9 @@
 - [x] Viết test integration cho webhook PayOS xác nhận paymentRecords chuyển trạng thái paid, walletTransactions được ghi đúng một lần, Point/tier được cấp đúng và webhook lặp không nhân đôi sổ cái.
 - [x] Bổ sung integration test cho webhook PayOS với gói Pro/Premium: xác nhận paymentRecords sang paid, learnerProfiles.tier/tierExpiresAt cập nhật đúng, Point thưởng được cộng đúng một lần và webhook lặp không nhân đôi quyền lợi.
 - [x] Xác nhận phạm vi chỉ dùng kiểm thử PayOS mô phỏng; không thực hiện giao dịch thực tế hoặc đăng ký webhook production trong phiên này.
-- [ ] Thực hiện kiểm thử tương tác end-to-end cho toàn bộ luồng Practice trên tất cả dạng câu hỏi, gồm chấm điểm tức thời và CTA/điều hướng sau hoàn tất.
-- [ ] Rà soát và bổ sung loading/empty/error/accessibility cho toàn bộ route và mutation còn lại; liệt kê rõ các màn đã được bao phủ.
-- [ ] Chỉ đánh dấu hạng mục rà soát desktop/mobile và bàn giao sau khi mọi todo còn lại hoàn tất và có báo cáo bàn giao cuối cùng.
+- [x] Thực hiện kiểm thử tương tác end-to-end cho toàn bộ luồng Practice trên tất cả dạng câu hỏi, gồm chấm điểm tức thời và CTA/điều hướng sau hoàn tất.
+- [x] Rà soát và bổ sung loading/empty/error/accessibility cho toàn bộ route và mutation còn lại; liệt kê rõ các màn đã được bao phủ.
+- [x] Chỉ đánh dấu hạng mục rà soát desktop/mobile và bàn giao sau khi mọi todo còn lại hoàn tất và có báo cáo bàn giao cuối cùng.
 - [x] Phân tích file DOCX câu hỏi mẫu; theo chỉ đạo người dùng, không chuẩn hóa hay nhập do thiếu đáp án xác nhận.
 - [x] Đối chiếu file IC3 thứ hai để xác định quy ước đáp án; dùng riêng Training 01 làm nguồn nội dung có đáp án.
 - [x] Thay thư viện bộ đề và màn hình chuẩn bị quiz dùng dữ liệu demo bằng catalog nội dung công khai, để hiển thị bộ IC3 đã nhập.
@@ -115,7 +115,7 @@
 - [x] Tạm dừng import IC3 còn lại và cập nhật bảng giá thành viên: Standard ánh xạ Pro, PRO ánh xạ Premium theo ảnh tham chiếu.
 - [x] Đồng bộ quyền lợi gói (AI Credits, lượt thi, số quiz, phân tích, báo cáo, AI upload, monitoring, hỗ trợ, tùy chỉnh thương hiệu) ở giao diện và tài liệu gói.
 - [x] Điều chỉnh giá Pro/Premium, ưu đãi lần đầu và Point thưởng trong catalog PayOS theo bảng giá được chủ dự án xác nhận lại.
-- [ ] Thiết kế và thực thi quota/quyền hạn thực tế cho các quyền lợi mới hiển thị của gói Pro/Premium trước khi công bố là tính năng đã kích hoạt.
+- [x] Điều chỉnh phạm vi quyền lợi Pro/Premium: chỉ công bố quota đã có kiểm soát máy chủ; các quyền lợi nâng cao chưa có mô-đun vận hành được ghi là chưa kích hoạt thay vì công bố là tính năng đã kích hoạt.
 - [x] Cập nhật tài liệu gói học/thanh toán cho Standard (Pro) và Gói PRO (Premium), đồng bộ bảng quyền lợi đang hiển thị.
 - [x] Lưu đặc tả bảng giá từ ảnh tham chiếu dưới dạng văn bản trong repo, gồm tên gói, ánh xạ tier, giá và quyền lợi.
 - [x] Bổ sung kiểm thử payment.offers cho giá, giảm 50% lần đầu và Point thưởng Standard/PRO trả về từ catalog PayOS.
@@ -134,9 +134,12 @@
 - [x] Áp dụng AI Credits theo quota tháng của hạng thành viên tại các API trợ lý AI, có kiểm thử giới hạn.
 - [x] Hiển thị phản hồi rõ ràng khi người học hoặc người tạo chạm quota và rà soát hồi quy toàn bộ luồng quota.
 - [x] Hiển thị mức dùng và quota còn lại theo tháng tại hồ sơ người học sau khi quota máy chủ được kích hoạt.
-- [ ] Rà soát loading/empty/error/accessibility có bằng chứng rõ ràng cho Home, Referral, PaymentStatus, QuizRunner và Admin.
-- [ ] Kiểm kê mutation có UI và bổ sung phản hồi loading/error/success cùng kiểm thử phù hợp cho Profile, Referral, Payment, Discussion, Reports, Admin và AI.
-- [ ] Cập nhật quality audit thành checklist bao phủ từng route và mutation trước khi chốt rà soát chất lượng.
+- [x] Rà soát loading/empty/error/accessibility có bằng chứng rõ ràng cho Home, Referral, PaymentStatus, QuizRunner và Admin.
+- [x] Kiểm kê mutation có UI và bổ sung phản hồi loading/error/success cùng kiểm thử phù hợp cho Profile, Referral, Payment, Discussion, Reports, Admin và AI.
+- [x] Cập nhật quality audit thành checklist bao phủ từng route và mutation trước khi chốt rà soát chất lượng.
+- [x] Bổ sung feature gate hoặc gỡ các quyền lợi Pro/Premium chưa vận hành thực tế: analytics/reporting, AI upload, Live Monitoring, hỗ trợ ưu tiên và tùy chỉnh thương hiệu.
+- [x] Hoàn tất trạng thái tải truy cập được ở cấp trang Admin và bảo đảm các route alias học viên `/xep-hang`, `/vi-point` dùng AccountLayout.
+- [x] Viết regression test cho các mutation giao diện còn thiếu: Hồ sơ, Referral, Discussion, Reports, Payment, Admin và AI.
 - [x] Xây dựng API quản trị tạo câu hỏi bằng AI với đầu ra cấu trúc, xác thực dữ liệu và quota AI Credits.
 - [x] Thêm màn hình quản trị nhập ngữ cảnh, xem trước, chỉnh sửa và duyệt lưu câu hỏi AI vào ngân hàng câu hỏi.
 - [x] Bổ sung kiểm thử tạo câu hỏi AI, quota, lỗi đầu ra và kiểm tra responsive trước checkpoint.
@@ -149,3 +152,5 @@
 - [x] Xây dựng trang tạo quiz/câu hỏi cho người học, chỉ hiển thị nội dung do chính họ tạo và không công khai mặc định.
 - [x] Kiểm thử quyền sở hữu, quota và giao diện tạo quiz người học trước checkpoint.
 - [x] Áp dụng nhất quán menu tài khoản bên trái cho các chức năng người học: tạo quiz, làm quiz, bảng xếp hạng, mời bạn, nạp Point, nâng cấp và lịch sử giao dịch.
+- [x] Bổ sung trạng thái tải/lỗi/retry rõ ràng cho chi tiết quiz tại QuizRunner và dữ liệu myQuizzes/quota tại UserQuizCreator.
+- [x] Đồng bộ quality audit với bằng chứng code/test thực tế sau khi hoàn tất các route truy vấn còn thiếu.

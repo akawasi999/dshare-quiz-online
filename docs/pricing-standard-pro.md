@@ -7,14 +7,14 @@
 | Gói hiển thị | Hạng kỹ thuật | Giá/tháng | Giá lần mua đầu | Point khi kích hoạt | AI Credits | Lượt thi | Số Quiz |
 |---|---:|---:|---:|---:|---:|---|---|
 | Gói Miễn phí | `basic` | Miễn phí | Không áp dụng | 0 | 20 | 20/tháng | 2 |
-| Gói PRO | `pro` | 50.000đ | 25.000đ | 150 | 200 | 40/tháng | 20 |
-| Gói PREMIUM | `premium` | 100.000đ | 50.000đ | 1.000 | 500 | Vô hạn | 50 |
+| Gói PRO | `pro` | 50.000đ | 25.000đ | 150 | 40 | 40/tháng | 20 |
+| Gói PREMIUM | `premium` | 100.000đ | 50.000đ | 1.000 | 50 | Vô hạn | 50 |
 
 ## Quyền lợi hiển thị
 
-Gói PRO và Gói PREMIUM hiển thị quyền truy cập vào Phân tích Leads, tải báo cáo, upload câu hỏi bằng AI, Live Monitoring, hỗ trợ ưu tiên và tùy chỉnh thương hiệu. Gói Miễn phí hiển thị các quyền này là không bao gồm.
+Phân tích, xuất báo cáo, upload câu hỏi bằng AI, Live Monitoring, hỗ trợ ưu tiên và tùy chỉnh thương hiệu hiện được ghi rõ là **chưa kích hoạt** trên bảng giá. Các quyền lợi này chỉ được công bố khi đã có mô-đun vận hành cùng feature gate tại máy chủ.
 
-> Quota **lượt thi**, **số quiz tạo** và **AI Credits** đã được kiểm soát ở máy chủ theo chu kỳ tháng UTC. AI Credits được tính bằng số lần gọi trợ lý AI trong tháng, không trừ trực tiếp số dư Ví Point. Các quyền lợi còn lại trong bảng giá cần feature gate riêng trước khi được công bố là năng lực vận hành thực tế.
+> Quota **lượt thi**, **số quiz tạo** và **AI Credits** đã được kiểm soát ở máy chủ theo chu kỳ tháng UTC. AI Credits được tính bằng số lần gọi trợ lý AI trong tháng, không trừ trực tiếp số dư Ví Point.
 
 ## Quy tắc PayOS
 

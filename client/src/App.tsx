@@ -27,11 +27,11 @@ function Router() {
     <Route path="/quiz/:id" component={QuizRunner} />
     <Route path="/ket-qua/:id" component={QuizResult} />
     <Route path="/bang-xep-hang">{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
-    <Route path="/xep-hang" component={Leaderboard} />
+    <Route path="/xep-hang">{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
     <Route path="/bang-gia" component={Pricing} />
     <Route path="/ho-so" component={Profile} />
     <Route path="/vi">{() => <LearnerAccountPage Page={Wallet} />}</Route>
-    <Route path="/vi-point" component={Wallet} />
+    <Route path="/vi-point">{() => <LearnerAccountPage Page={Wallet} />}</Route>
     <Route path="/gioi-thieu">{() => <LearnerAccountPage Page={Referral} />}</Route>
     <Route path="/nap-point">{() => <LearnerAccountPage Page={TopUp} />}</Route>
     <Route path="/thanh-toan" component={PaymentStatus} />
