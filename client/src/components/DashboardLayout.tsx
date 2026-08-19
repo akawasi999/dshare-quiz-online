@@ -22,7 +22,7 @@ import {
 import { startLogin } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Activity, ArrowDownToLine, BookOpenCheck, ChartNoAxesCombined, CircleDollarSign, CircleHelp, FileWarning, LayoutDashboard, LogOut, Moon, PanelLeft, ScrollText, Shuffle, Sun, Users } from "lucide-react";
+import { Activity, ArrowDownToLine, BookOpenCheck, ChartNoAxesCombined, CircleDollarSign, CircleHelp, FileWarning, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, ScrollText, Shuffle, Sun, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -41,6 +41,7 @@ const menuItems = [
   { icon: ChartNoAxesCombined, label: "Báo cáo", path: "/quan-tri/bao-cao" },
   { icon: Activity, label: "Live Monitoring", path: "/quan-tri/live-monitoring" },
   { icon: ScrollText, label: "Nhật ký hoạt động", path: "/quan-tri/nhat-ky" },
+  { icon: Palette, label: "Nhận diện thương hiệu", path: "/quan-tri/thuong-hieu" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

@@ -49,6 +49,11 @@
   --accent-foreground: #ffffff;
   --destructive: #de1264;
   --success: #007453;
+  --chart-1: #065be5;
+  --chart-2: #3762d2;
+  --chart-3: #007453;
+  --chart-4: #de1264;
+  --chart-5: #6c6c7a;
   --border: rgba(20, 20, 50, 0.14);
   --input: rgba(20, 20, 50, 0.14);
   --ring: #065be5;
@@ -71,6 +76,11 @@
   --accent: #5093f6;
   --accent-foreground: #0a0f1a;
   --success: #00d095;
+  --chart-1: #82bbfd;
+  --chart-2: #5093f6;
+  --chart-3: #00d095;
+  --chart-4: #ec508e;
+  --chart-5: #a1a1ab;
   --border: rgba(255, 255, 255, 0.18);
   --input: rgba(255, 255, 255, 0.18);
   --ring: #82bbfd;

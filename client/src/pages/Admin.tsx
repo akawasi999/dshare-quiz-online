@@ -1,6 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
 import ColorPalettePreview from "@/components/ColorPalettePreview";
+import BrandSettingsPanel from "@/components/BrandSettingsPanel";
 import AdminOperationsDashboard from "@/components/AdminOperationsDashboard";
 import AdminBugReportsPanel from "@/components/AdminBugReportsPanel";
 import AdminPointLedgerPanel from "@/components/AdminPointLedgerPanel";
@@ -36,6 +37,7 @@ export default function Admin() {
   if (location === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
   if (location === "/quan-tri/point") content = <AdminPointLedgerPanel />;
   if (location === "/quan-tri/nhat-ky") content = <AuditTrail />;
+  if (location === "/quan-tri/thuong-hieu") content = <BrandSettingsPanel />;
   return <DashboardLayout>{content}</DashboardLayout>;
 }
 

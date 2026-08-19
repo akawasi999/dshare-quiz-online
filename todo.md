@@ -160,3 +160,4 @@
 - [x] Chuẩn hóa bảng màu website theo bộ ảnh tham chiếu mới, gồm nền, surface, chữ, nút chính và trạng thái tương tác.
 - [x] Áp dụng xanh mint #007453 cho trạng thái thành công và gradient CTA theo Primary/Accent mới trên toàn website.
 - [x] Chuẩn hóa lỗi đỏ #DE1264, cảnh báo Accent hồng và thêm bảng xem trước bảng màu trong quản trị.
+- [x] Xây dựng thiết lập nhận diện thương hiệu cho quản trị viên và đồng bộ màu trạng thái trên biểu đồ báo cáo vận hành.
