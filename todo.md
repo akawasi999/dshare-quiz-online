@@ -180,3 +180,4 @@
 - [x] Thêm bộ lọc Mới công bố cho thư viện bộ đề.
 - [x] Hiển thị nhãn Thịnh hành cho các bộ đề có lượt làm cao trong 24 giờ qua.
 - [x] Bỏ phần thời gian hiển thị trên nhãn Mới theo yêu cầu.
+- [x] Tinh giản trang Làm Quiz: bỏ tìm kiếm, bộ lọc quyền truy cập và Mới công bố; chuyển chủ đề thành hàng cuộn ngang.

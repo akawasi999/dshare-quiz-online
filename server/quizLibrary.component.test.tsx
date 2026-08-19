@@ -45,9 +45,10 @@ describe("QuizLibrary component", () => {
     expect(mocks.catalog.refetch).toHaveBeenCalledTimes(1);
   });
 
-  it("gắn nhãn tìm kiếm và trạng thái được chọn cho bộ lọc mặc định", () => {
+  it("hiển thị hàng chủ đề và trạng thái được chọn cho bộ lọc mặc định", () => {
     render(<QuizLibrary />);
-    expect(screen.getByLabelText("Tìm kiếm bộ đề")).toBeTruthy();
+    expect(screen.queryByLabelText("Tìm kiếm bộ đề")).toBeNull();
+    expect(screen.getByText("Chủ đề")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Tất cả" }).every(button => button.getAttribute("aria-pressed") === "true")).toBe(true);
   });
 });
