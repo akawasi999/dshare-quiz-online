@@ -158,3 +158,4 @@
 - [x] Tạo biến thể logo Dshare đơn sắc tương phản cao cho dark mode và tự động dùng theo chế độ giao diện.
 - [x] Đồng bộ nền giao diện sáng toàn website sang tông trắng ngà theo ảnh tham chiếu, giữ tương phản tốt và không ảnh hưởng dark mode.
 - [x] Chuẩn hóa bảng màu website theo bộ ảnh tham chiếu mới, gồm nền, surface, chữ, nút chính và trạng thái tương tác.
+- [x] Áp dụng xanh mint #007453 cho trạng thái thành công và gradient CTA theo Primary/Accent mới trên toàn website.

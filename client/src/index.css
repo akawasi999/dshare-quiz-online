@@ -23,6 +23,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -47,6 +48,7 @@
   --accent: #3762d2;
   --accent-foreground: #ffffff;
   --destructive: #de1264;
+  --success: #007453;
   --border: rgba(20, 20, 50, 0.14);
   --input: rgba(20, 20, 50, 0.14);
   --ring: #065be5;
@@ -68,6 +70,7 @@
   --muted-foreground: #a1a1ab;
   --accent: #5093f6;
   --accent-foreground: #0a0f1a;
+  --success: #00d095;
   --border: rgba(255, 255, 255, 0.18);
   --input: rgba(255, 255, 255, 0.18);
   --ring: #82bbfd;
@@ -86,6 +89,12 @@ body { margin: 0; min-width: 320px; background: #ebf4ff; color: #141432; font-fa
 .dark [class*="text-[#617786"] { color: #a1a1ab !important; }
 .dark [class*="border-[#172554"] { border-color: rgba(255, 255, 255, .18) !important; }
 .dark .field { background: #171e26; border-color: rgba(255, 255, 255, .2); color: #ffffff; }
+.cta-gradient, button[class*="bg-[#2563eb"], a[class*="bg-[#2563eb"] { background-color: #065be5 !important; background-image: linear-gradient(135deg, #065be5 0%, #3762d2 100%) !important; box-shadow: 0 12px 28px rgba(6, 91, 229, .24); }
+.cta-gradient:hover, button[class*="bg-[#2563eb"]:hover, a[class*="bg-[#2563eb"]:hover { background-image: linear-gradient(135deg, #054bc0 0%, #2b4eaf 100%) !important; }
+[class*="text-emerald"], [class*="text-green"] { color: #007453 !important; }
+[class*="bg-emerald"], [class*="bg-green"] { background-color: rgba(0, 116, 83, .12) !important; }
+.dark [class*="text-emerald"], .dark [class*="text-green"] { color: #00d095 !important; }
+.dark [class*="bg-emerald"], .dark [class*="bg-green"] { background-color: rgba(0, 208, 149, .14) !important; }
 h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif; }
 .field { width: 100%; border-radius: .75rem; border: 1px solid rgba(30, 58, 138, .15); background: #fffaf0; padding: .625rem .75rem; font-size: .75rem; font-weight: 400; color: #172554; outline: none; }
 .field:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, .2); }
