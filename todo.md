@@ -165,3 +165,6 @@
 - [x] Hoàn tất đổi nhãn menu quản trị và tiêu đề Style theo chỉnh sửa trực quan của người dùng.
 - [x] Thiết kế lại trang Làm Quiz theo mẫu tham chiếu: banner quota, bộ lọc chủ đề/độ khó và lưới thẻ bộ đề có CTA.
 - [x] Đồng bộ banner quota theo gói, nổi bật thưởng/lượt làm, thêm tải thêm và upload ảnh bìa trong tạo quiz.
+- [x] Cho phép người học chỉnh sửa hoặc thay ảnh bìa cho quiz riêng đã tạo.
+- [x] Thêm công cụ cắt ảnh bìa theo tỷ lệ 16:9 trước khi tải lên.
+- [x] Cho phép quản trị viên đặt ảnh bìa mặc định theo từng chủ đề.

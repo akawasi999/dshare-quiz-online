@@ -67,6 +67,7 @@ export const categories = mysqlTable("categories", {
   title: varchar("title", { length: 180 }).notNull(),
   slug: varchar("slug", { length: 200 }).notNull(),
   description: text("description"),
+  coverImageUrl: varchar("coverImageUrl", { length: 1024 }),
   accent: varchar("accent", { length: 24 }).default("#C7A76C").notNull(),
   sortOrder: int("sortOrder").default(0).notNull(),
   isPublished: boolean("isPublished").default(false).notNull(),

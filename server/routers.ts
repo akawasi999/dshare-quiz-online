@@ -349,6 +349,14 @@ export const appRouter = router({
       if (!db) return [];
       return db.select().from(quizzes).where(eq(quizzes.creatorUserId, ctx.user.id)).orderBy(desc(quizzes.updatedAt));
     }),
+    updateCover: protectedProcedure.input(z.object({ quizId: z.number().int().positive(), coverImageUrl: z.string().url().max(1024).nullable() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật ảnh bìa lúc này." });
+      const ownedQuiz = await db.select({ id: quizzes.id }).from(quizzes).where(and(eq(quizzes.id, input.quizId), eq(quizzes.creatorUserId, ctx.user.id))).limit(1);
+      if (!ownedQuiz.length) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy quiz riêng của bạn." });
+      await db.update(quizzes).set({ coverImageUrl: input.coverImageUrl }).where(eq(quizzes.id, input.quizId));
+      return { success: true, coverImageUrl: input.coverImageUrl };
+    }),
     createQuiz: protectedProcedure.input(z.object({
       lessonId: z.number().int().positive(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
@@ -488,6 +496,20 @@ export const appRouter = router({
         db.select().from(quizzes).orderBy(desc(quizzes.updatedAt)),
       ]);
       return { categories: categoryRows, subjects: subjectRows, lessons: lessonRows, quizzes: quizRows };
+    }),
+    uploadCategoryCover: adminProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) })).mutation(async ({ ctx, input }) => {
+      const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64");
+      const uploaded = await storagePut(`category-covers/${ctx.user.id}/${input.fileName}`, bytes, input.mimeType);
+      return { url: uploaded.url };
+    }),
+    updateCategoryCover: adminProcedure.input(z.object({ categoryId: z.number().int().positive(), coverImageUrl: z.string().url().max(1024).nullable() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật ảnh chủ đề." });
+      const category = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, input.categoryId)).limit(1);
+      if (!category.length) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy chủ đề." });
+      await db.update(categories).set({ coverImageUrl: input.coverImageUrl }).where(eq(categories.id, input.categoryId));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "category.cover_updated", entityType: "category", entityId: input.categoryId, metadata: { coverImageUrl: input.coverImageUrl } });
+      return { success: true, coverImageUrl: input.coverImageUrl };
     }),
     liveMonitoring: adminProcedure.query(async () => {
       const db = await getDb();
@@ -772,13 +794,14 @@ export const appRouter = router({
       title: z.string().trim().min(2).max(180),
       slug: z.string().trim().regex(/^[a-z0-9-]+$/),
       description: z.string().trim().max(3000).optional(),
+      coverImageUrl: z.string().url().max(1024).optional(),
       isPublished: z.boolean(),
       sortOrder: z.number().int().min(0).max(10000),
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       if (input.kind === "category") {
-        const data = { title: input.title, slug: input.slug, description: input.description || null, isPublished: input.isPublished, sortOrder: input.sortOrder };
+        const data = { title: input.title, slug: input.slug, description: input.description || null, coverImageUrl: input.coverImageUrl || null, isPublished: input.isPublished, sortOrder: input.sortOrder };
         if (input.id) await db.update(categories).set(data).where(eq(categories.id, input.id)); else await db.insert(categories).values(data);
       } else if (input.kind === "subject") {
         if (!input.parentId) throw new TRPCError({ code: "BAD_REQUEST", message: "Môn học cần thuộc một Chủ đề." });

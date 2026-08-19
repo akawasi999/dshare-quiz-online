@@ -1,0 +1,1 @@
+ALTER TABLE `categories` ADD `coverImageUrl` varchar(1024);
