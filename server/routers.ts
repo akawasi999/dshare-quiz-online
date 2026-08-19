@@ -95,7 +95,6 @@ async function getMembershipGroupPermissions() {
 async function ensureMembershipManagementDefaults() {
   const db = await getDb();
   if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập quản trị thành viên." });
-  for (const plan of defaultSubscriptionPlans) await db.insert(subscriptionPlans).values({ ...plan, isSystem: true }).onDuplicateKeyUpdate({ set: { code: plan.code } });
   return db;
 }
 
@@ -150,6 +149,11 @@ export const appRouter = router({
 
   catalog: router({
     categories: publicProcedure.query(() => listCategories()),
+    membershipPlans: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, true)).orderBy(asc(subscriptionPlans.displayOrder), subscriptionPlans.name);
+    }),
     list: publicProcedure.input(z.object({ search: z.string().trim().max(120).optional(), categoryId: z.number().int().positive().optional() }).optional())
       .query(({ input }) => listPublishedCatalog(input?.search, input?.categoryId)),
     detail: publicProcedure.input(quizIdInput).query(async ({ input }) => {
@@ -848,7 +852,6 @@ export const appRouter = router({
       const existing = input.id ? (await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, input.id)).limit(1))[0] : undefined;
       if (input.id && !existing) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy gói đăng ký." });
       if (input.promoPrice !== null && input.promoPrice !== undefined && input.promoPrice > input.monthlyPrice) throw new TRPCError({ code: "BAD_REQUEST", message: "Giá khuyến mãi không được lớn hơn giá gốc." });
-      if (existing?.isSystem && (existing.code !== input.code || existing.tier !== input.tier || existing.monthlyPrice !== input.monthlyPrice || existing.promoPrice !== (input.promoPrice ?? null))) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Không thể thay đổi mã, hạng hoặc giá của gói hệ thống đang liên kết thanh toán." });
       const data = { code: input.code, name: input.name, tier: input.tier, description: input.description ?? null, monthlyPrice: input.monthlyPrice, promoPrice: input.promoPrice ?? null, displayOrder: input.displayOrder, isActive: input.isActive };
       if (existing) await db.update(subscriptionPlans).set(data).where(eq(subscriptionPlans.id, existing.id));
       else {
@@ -864,12 +867,11 @@ export const appRouter = router({
       const db = await ensureMembershipManagementDefaults();
       const plan = (await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, input.planId)).limit(1))[0];
       if (!plan) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy gói đăng ký." });
-      if (plan.isSystem) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Không thể xóa gói hệ thống đang liên kết dữ liệu thành viên/thanh toán." });
-      const groups = await db.select({ id: userGroups.id }).from(userGroups).where(eq(userGroups.planId, plan.id)).limit(1);
-      if (groups.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Hãy xóa hoặc chuyển các nhóm đang dùng gói này trước." });
+      const groups = await db.select({ id: userGroups.id }).from(userGroups).where(eq(userGroups.planId, plan.id));
+      await db.update(userGroups).set({ planId: null }).where(eq(userGroups.planId, plan.id));
       await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, plan.id));
-      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "subscription_plan.deleted", entityType: "subscription_plan", entityId: plan.id, metadata: { code: plan.code } });
-      return { success: true };
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "subscription_plan.deleted", entityType: "subscription_plan", entityId: plan.id, metadata: { code: plan.code, unlinkedGroupCount: groups.length } });
+      return { success: true, unlinkedGroupCount: groups.length };
     }),
     saveUserGroup: adminProcedure.input(userGroupInput).mutation(async ({ ctx, input }) => {
       const db = await ensureMembershipManagementDefaults();

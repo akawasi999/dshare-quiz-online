@@ -143,4 +143,16 @@ describe("MembershipGroupPermissionsPanel", () => {
     expect(mocks.deletePlan.mutate).toHaveBeenCalledWith({ planId: 2 });
     confirmSpy.mockRestore();
   });
+
+  it("cho phép xóa cả gói mặc định từ vùng quản trị chung", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<MembershipGroupPermissionsPanel />);
+    await user.click(screen.getByRole("button", { name: "Gói đăng ký" }));
+    const deleteSelect = screen.getAllByRole("combobox").find(element => Array.from((element as HTMLSelectElement).options).some(option => option.text === "Chọn gói cần xóa"))!;
+    await user.selectOptions(deleteSelect, "1");
+    await user.click(screen.getByRole("button", { name: "Xóa gói" }));
+    expect(mocks.deletePlan.mutate).toHaveBeenCalledWith({ planId: 1 });
+    confirmSpy.mockRestore();
+  });
 });

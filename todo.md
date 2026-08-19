@@ -204,3 +204,5 @@
 - [x] Sửa lỗi lưu chỉnh sửa Nhóm người dùng tạo bản ghi mới thay vì cập nhật đúng nhóm hiện tại.
 - [x] Hoàn thiện thao tác sửa và xóa Gói đăng ký, gồm phản hồi và kiểm thử các điều kiện bảo vệ.
 - [x] Cho phép thêm, sửa và xóa tất cả nhóm người dùng, kể cả nhóm mặc định, với xử lý dữ liệu liên kết an toàn.
+- [x] Cho phép tạo, sửa và xóa tất cả gói đăng ký, kể cả gói hiện có, với xử lý dữ liệu liên kết an toàn.
+- [x] Đồng bộ thông tin Gói đăng ký do quản trị thay đổi sang các trang hiển thị gói cho người dùng.
