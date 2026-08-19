@@ -765,21 +765,52 @@ export const appRouter = router({
         await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.approved ? "report.approved" : "report.rejected", entityType: "bug_report", entityId: report.id, metadata: { rewardPoints } });
         return { success: true };
       }),
-    users: adminProcedure.input(z.object({ search: z.string().trim().max(120).optional(), tier: z.enum(["basic", "pro", "premium"]).optional(), status: z.enum(["active", "banned"]).optional() }).optional())
+    users: adminProcedure.input(z.object({ search: z.string().trim().max(120).optional(), tier: z.enum(["basic", "pro", "premium"]).optional(), status: z.enum(["active", "banned"]).optional(), page: z.number().int().min(1).default(1), pageSize: z.number().int().min(5).max(50).default(12) }).optional())
       .query(async ({ input }) => {
         const db = await getDb();
-        if (!db) return [];
+        if (!db) return { items: [], total: 0, page: 1, pageSize: input?.pageSize ?? 12, totalPages: 0 };
+        const page = input?.page ?? 1;
+        const pageSize = input?.pageSize ?? 12;
+        const where = and(
+          input?.tier ? eq(learnerProfiles.tier, input.tier) : undefined,
+          input?.status ? eq(learnerProfiles.isBanned, input.status === "banned") : undefined,
+          input?.search ? sql`(lower(coalesce(${users.name}, '')) like ${`%${input.search.toLowerCase()}%`} or lower(coalesce(${users.email}, '')) like ${`%${input.search.toLowerCase()}%`})` : undefined,
+        );
         const rows = await db.select({ user: users, profile: learnerProfiles })
           .from(users).leftJoin(learnerProfiles, eq(users.id, learnerProfiles.userId))
-          .where(and(
-            input?.tier ? eq(learnerProfiles.tier, input.tier) : undefined,
-            input?.status ? eq(learnerProfiles.isBanned, input.status === "banned") : undefined,
-            input?.search ? sql`(lower(coalesce(${users.name}, '')) like ${`%${input.search.toLowerCase()}%`} or lower(coalesce(${users.email}, '')) like ${`%${input.search.toLowerCase()}%`})` : undefined,
-          )).orderBy(desc(users.createdAt)).limit(100);
+          .where(where).orderBy(desc(users.createdAt)).limit(pageSize).offset((page - 1) * pageSize);
+        const totalRow = await db.select({ total: sql<number>`count(*)` }).from(users).leftJoin(learnerProfiles, eq(users.id, learnerProfiles.userId)).where(where);
         const counts = await db.select({ userId: attempts.userId, completed: sql<number>`count(*)` })
           .from(attempts).where(eq(attempts.status, "submitted")).groupBy(attempts.userId);
         const countByUser = new Map(counts.map(row => [row.userId, Number(row.completed)]));
-        return rows.map(row => ({ ...row, completedCount: countByUser.get(row.user.id) ?? 0 }));
+        const total = Number(totalRow[0]?.total ?? 0);
+        return { items: rows.map(row => ({ ...row, completedCount: countByUser.get(row.user.id) ?? 0 })), total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+      }),
+    userDetail: adminProcedure.input(z.object({ userId: z.number().int().positive() })).query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập người dùng." });
+      const account = (await db.select({ user: users, profile: learnerProfiles }).from(users).leftJoin(learnerProfiles, eq(users.id, learnerProfiles.userId)).where(eq(users.id, input.userId)).limit(1))[0];
+      if (!account) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy người dùng." });
+      const [activity, recentAttempts, recentTransactions] = await Promise.all([
+        db.select().from(auditLogs).where(and(eq(auditLogs.entityType, "user"), eq(auditLogs.entityId, input.userId))).orderBy(desc(auditLogs.createdAt)).limit(12),
+        db.select({ attempt: attempts, quizTitle: quizzes.title }).from(attempts).leftJoin(quizzes, eq(attempts.quizId, quizzes.id)).where(eq(attempts.userId, input.userId)).orderBy(desc(attempts.startedAt)).limit(8),
+        db.select().from(walletTransactions).where(eq(walletTransactions.userId, input.userId)).orderBy(desc(walletTransactions.createdAt)).limit(8),
+      ]);
+      return { ...account, activity, recentAttempts, recentTransactions };
+    }),
+    bulkUpdateUsers: adminProcedure.input(z.object({ userIds: z.array(z.number().int().positive()).min(1).max(50), tier: z.enum(["basic", "pro", "premium"]).optional(), isBanned: z.boolean().optional() }).refine(input => input.tier !== undefined || input.isBanned !== undefined, { message: "Cần chọn thay đổi hạng hoặc trạng thái." }))
+      .mutation(async ({ ctx, input }) => {
+        const uniqueUserIds = Array.from(new Set(input.userIds));
+        if (uniqueUserIds.includes(ctx.user.id)) throw new TRPCError({ code: "BAD_REQUEST", message: "Không thể thay đổi hàng loạt tài khoản quản trị đang sử dụng." });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật người dùng." });
+        for (const userId of uniqueUserIds) {
+          const profile = await ensureLearnerProfile(userId);
+          if (!profile) continue;
+          await db.update(learnerProfiles).set({ ...(input.tier ? { tier: input.tier } : {}), ...(input.isBanned !== undefined ? { isBanned: input.isBanned } : {}) }).where(eq(learnerProfiles.id, profile.id));
+        }
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "users.bulk_updated", entityType: "user_batch", metadata: { userIds: uniqueUserIds, tier: input.tier, isBanned: input.isBanned } });
+        return { success: true, updatedCount: uniqueUserIds.length };
       }),
     groupPermissions: adminProcedure.query(async () => {
       const db = await getDb();

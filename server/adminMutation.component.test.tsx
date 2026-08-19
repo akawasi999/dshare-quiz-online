@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  users: { data: [{ user: { id: 4, name: "Học viên", email: "hocvien@example.com", openId: "user-4" }, profile: { tier: "basic", pointBalance: 0, isBanned: false }, completedCount: 0 }], isLoading: false, refetch: vi.fn() },
+  users: { data: { items: [{ user: { id: 4, name: "Học viên", email: "hocvien@example.com", openId: "user-4", createdAt: new Date() }, profile: { tier: "basic", pointBalance: 0, isBanned: false }, completedCount: 0 }], total: 1, page: 1, pageSize: 12, totalPages: 1 }, isLoading: false, refetch: vi.fn() },
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
@@ -19,7 +19,7 @@ vi.mock("@/components/LiveMonitoringPanel", () => ({ default: () => null }));
 vi.mock("@/components/QuestionEditorPanel", () => ({ default: () => null }));
 vi.mock("@/components/QuestionTransferPanel", () => ({ default: () => null }));
 vi.mock("@/components/RandomQuizBuilder", () => ({ default: () => null }));
-vi.mock("@/lib/trpc", () => ({ trpc: { admin: { users: { useQuery: () => mocks.users }, updateUserTier: { useMutation: (options: { onError?: (error: Error) => void }) => ({ isPending: false, mutate: () => options.onError?.(new Error("Không thể cập nhật dữ liệu")) }) }, updateUserStatus: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, adjustPoints: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { admin: { users: { useQuery: () => mocks.users }, userDetail: { useQuery: () => ({ data: undefined, isLoading: false }) }, updateUserTier: { useMutation: (options: { onError?: (error: Error) => void }) => ({ isPending: false, mutate: () => options.onError?.(new Error("Không thể cập nhật dữ liệu")) }) }, updateUserStatus: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, adjustPoints: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, bulkUpdateUsers: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } } } }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("wouter", () => ({ useLocation: () => ["/quan-tri/nguoi-dung", vi.fn()] }));
 

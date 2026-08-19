@@ -195,3 +195,6 @@
 - [x] Thêm tạo, sửa và xóa nhóm người dùng cùng các quyền trong gói.
 - [x] Thêm tạo, sửa và xóa thành viên trong quản trị với bảo vệ dữ liệu đang sử dụng.
 - [x] Thiết kế lại mô-đun quản trị Người dùng theo danh sách trực quan có tìm kiếm, lọc, sắp xếp, xuất dữ liệu và thao tác nhanh.
+- [x] Thêm phân trang phía máy chủ cho danh sách quản trị Người dùng.
+- [x] Thêm panel trượt hiển thị hồ sơ chi tiết và lịch sử hoạt động của người dùng.
+- [x] Thêm chọn nhiều người dùng và thao tác hàng loạt đổi gói, khóa hoặc mở khóa tài khoản.

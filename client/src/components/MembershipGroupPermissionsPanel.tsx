@@ -31,7 +31,8 @@ const tierPresentation = {
 
 export default function MembershipGroupPermissionsPanel() {
   const management = trpc.admin.membershipManagement.useQuery();
-  const users = trpc.admin.users.useQuery({});
+  const usersQuery = trpc.admin.users.useQuery({ page: 1, pageSize: 50 });
+  const users = { data: usersQuery.data?.items ?? [] };
   const utils = trpc.useUtils();
   const [planOpen, setPlanOpen] = useState(false);
   const [groupOpen, setGroupOpen] = useState(false);
