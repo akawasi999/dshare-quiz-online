@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   attempts,
@@ -72,9 +72,11 @@ const membershipGroupPermissionInput = z.object({
   canViewAdvancedReports: z.boolean(),
   canReceivePrioritySupport: z.boolean(),
 });
-const subscriptionPlanInput = z.object({ id: z.number().int().positive().optional(), code: z.string().trim().toLowerCase().regex(/^[a-z0-9-]+$/).min(3).max(80), name: z.string().trim().min(2).max(120), tier: z.enum(["basic", "pro", "premium"]), description: z.string().trim().max(500).nullable().optional(), monthlyPrice: z.number().int().min(0).max(100_000_000), isActive: z.boolean() });
-const userGroupInput = z.object({ id: z.number().int().positive().optional(), planId: z.number().int().positive().nullable().optional(), name: z.string().trim().min(2).max(120), description: z.string().trim().max(500).nullable().optional() });
-const customGroupPermissionsInput = z.object({ groupId: z.number().int().positive(), permissions: z.array(z.object({ permissionKey: z.enum(membershipPermissionKeys), isAllowed: z.boolean() })).length(membershipPermissionKeys.length) });
+const subscriptionPlanInput = z.object({ id: z.number().int().positive().optional(), code: z.string().trim().toLowerCase().regex(/^[a-z0-9-]+$/).min(3).max(80), name: z.string().trim().min(2).max(120), tier: z.enum(["basic", "pro", "premium"]), description: z.string().trim().max(500).nullable().optional(), monthlyPrice: z.number().int().min(0).max(100_000_000), promoPrice: z.number().int().min(0).max(100_000_000).nullable().optional(), displayOrder: z.number().int().min(0).max(100_000).default(0), isActive: z.boolean() });
+const userGroupInput = z.object({ id: z.number().int().positive().optional(), planId: z.number().int().positive().nullable().optional(), name: z.string().trim().min(2).max(120), description: z.string().trim().max(500).nullable().optional(), displayOrder: z.number().int().min(0).max(100_000).default(0) });
+const groupPermissionInput = z.object({ permissionKey: z.string().trim().min(2).max(80).regex(/^[A-Za-z][A-Za-z0-9_-]*$/), isAllowed: z.boolean() });
+const customGroupPermissionsInput = z.object({ groupId: z.number().int().positive(), permissions: z.array(groupPermissionInput).min(1).max(30).refine(items => new Set(items.map(item => item.permissionKey)).size === items.length, { message: "Không được trùng mã quyền." }) });
+const planLinkedPermissionsInput = z.object({ planId: z.number().int().positive(), permissions: z.array(groupPermissionInput).min(1).max(30).refine(items => new Set(items.map(item => item.permissionKey)).size === items.length, { message: "Không được trùng mã quyền." }) });
 const defaultSubscriptionPlans = [
   { code: "basic", name: "Basic", tier: "basic" as const, description: "Gói cơ bản", monthlyPrice: 0 },
   { code: "pro-monthly", name: "PRO", tier: "pro" as const, description: "Gói thành viên PRO theo tháng", monthlyPrice: 50_000 },
@@ -836,16 +838,18 @@ export const appRouter = router({
     membershipManagement: adminProcedure.query(async () => {
       const db = await ensureMembershipManagementDefaults();
       const [plans, groups, permissions, memberships, membershipCounts] = await Promise.all([
-        db.select().from(subscriptionPlans).orderBy(desc(subscriptionPlans.isSystem), subscriptionPlans.name),
-        db.select().from(userGroups).orderBy(desc(userGroups.isSystem), userGroups.name),
+        db.select().from(subscriptionPlans).orderBy(desc(subscriptionPlans.isSystem), asc(subscriptionPlans.displayOrder), subscriptionPlans.name),
+        db.select().from(userGroups).orderBy(desc(userGroups.isSystem), asc(userGroups.displayOrder), userGroups.name),
         db.select().from(userGroupPermissions),
         db.select({ membership: userGroupMembers, user: users, profile: learnerProfiles }).from(userGroupMembers).innerJoin(users, eq(userGroupMembers.userId, users.id)).leftJoin(learnerProfiles, eq(learnerProfiles.userId, users.id)).orderBy(desc(userGroupMembers.updatedAt)),
         db.select({ groupId: userGroupMembers.groupId, count: sql<number>`count(*)` }).from(userGroupMembers).groupBy(userGroupMembers.groupId),
       ]);
       const countByGroup = new Map(membershipCounts.map(item => [item.groupId, Number(item.count)]));
+      const permissionCatalog = Array.from(new Set([...membershipPermissionKeys, ...permissions.map(permission => permission.permissionKey)]));
       return {
         plans,
-        groups: groups.map(group => ({ ...group, memberCount: countByGroup.get(group.id) ?? 0, permissions: membershipPermissionKeys.map(permissionKey => ({ permissionKey, isAllowed: permissions.find(item => item.groupId === group.id && item.permissionKey === permissionKey)?.isAllowed ?? false })) })),
+        permissionCatalog,
+        groups: groups.map(group => ({ ...group, memberCount: countByGroup.get(group.id) ?? 0, permissions: permissionCatalog.map(permissionKey => ({ permissionKey, isAllowed: permissions.find(item => item.groupId === group.id && item.permissionKey === permissionKey)?.isAllowed ?? false })) })),
         memberships,
       };
     }),
@@ -853,12 +857,18 @@ export const appRouter = router({
       const db = await ensureMembershipManagementDefaults();
       const existing = input.id ? (await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, input.id)).limit(1))[0] : undefined;
       if (input.id && !existing) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy gói đăng ký." });
-      if (existing?.isSystem && (existing.code !== input.code || existing.tier !== input.tier || existing.monthlyPrice !== input.monthlyPrice)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Không thể thay đổi mã, hạng hoặc giá của gói hệ thống đang liên kết thanh toán." });
-      const data = { code: input.code, name: input.name, tier: input.tier, description: input.description ?? null, monthlyPrice: input.monthlyPrice, isActive: input.isActive };
+      if (input.promoPrice !== null && input.promoPrice !== undefined && input.promoPrice > input.monthlyPrice) throw new TRPCError({ code: "BAD_REQUEST", message: "Giá khuyến mãi không được lớn hơn giá gốc." });
+      if (existing?.isSystem && (existing.code !== input.code || existing.tier !== input.tier || existing.monthlyPrice !== input.monthlyPrice || existing.promoPrice !== (input.promoPrice ?? null))) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Không thể thay đổi mã, hạng hoặc giá của gói hệ thống đang liên kết thanh toán." });
+      const data = { code: input.code, name: input.name, tier: input.tier, description: input.description ?? null, monthlyPrice: input.monthlyPrice, promoPrice: input.promoPrice ?? null, displayOrder: input.displayOrder, isActive: input.isActive };
       if (existing) await db.update(subscriptionPlans).set(data).where(eq(subscriptionPlans.id, existing.id));
-      else await db.insert(subscriptionPlans).values({ ...data, isSystem: false });
+      else {
+        const result = await db.insert(subscriptionPlans).values({ ...data, isSystem: false });
+        const planId = Number(result[0].insertId);
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "subscription_plan.created", entityType: "subscription_plan", entityId: planId, metadata: { code: input.code, tier: input.tier } });
+        return { success: true, planId };
+      }
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: existing ? "subscription_plan.updated" : "subscription_plan.created", entityType: "subscription_plan", entityId: existing?.id, metadata: { code: input.code, tier: input.tier } });
-      return { success: true };
+      return { success: true, planId: existing.id };
     }),
     deleteSubscriptionPlan: adminProcedure.input(z.object({ planId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const db = await ensureMembershipManagementDefaults();
@@ -879,7 +889,7 @@ export const appRouter = router({
         const plan = (await db.select({ id: subscriptionPlans.id }).from(subscriptionPlans).where(eq(subscriptionPlans.id, input.planId)).limit(1))[0];
         if (!plan) throw new TRPCError({ code: "NOT_FOUND", message: "Gói đăng ký được chọn không tồn tại." });
       }
-      const data = { planId: input.planId ?? null, name: input.name, description: input.description ?? null };
+      const data = { planId: input.planId ?? null, name: input.name, description: input.description ?? null, displayOrder: input.displayOrder };
       let groupId = existing?.id;
       if (existing) await db.update(userGroups).set(data).where(eq(userGroups.id, existing.id));
       else { const result = await db.insert(userGroups).values({ ...data, isSystem: false }); groupId = Number(result[0].insertId); }
@@ -905,6 +915,13 @@ export const appRouter = router({
       for (const permission of input.permissions) await db.insert(userGroupPermissions).values({ groupId: input.groupId, ...permission }).onDuplicateKeyUpdate({ set: { isAllowed: permission.isAllowed } });
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user_group.permissions_updated", entityType: "user_group", entityId: input.groupId, metadata: { permissions: input.permissions } });
       return { success: true };
+    }),
+    savePlanLinkedGroupPermissions: adminProcedure.input(planLinkedPermissionsInput).mutation(async ({ ctx, input }) => {
+      const db = await ensureMembershipManagementDefaults();
+      const groups = await db.select({ id: userGroups.id }).from(userGroups).where(eq(userGroups.planId, input.planId));
+      for (const group of groups) for (const permission of input.permissions) await db.insert(userGroupPermissions).values({ groupId: group.id, ...permission }).onDuplicateKeyUpdate({ set: { isAllowed: permission.isAllowed } });
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "subscription_plan.linked_group_permissions_updated", entityType: "subscription_plan", entityId: input.planId, metadata: { groupCount: groups.length, permissions: input.permissions } });
+      return { success: true, groupCount: groups.length };
     }),
     assignUserGroupMember: adminProcedure.input(z.object({ userId: z.number().int().positive(), groupId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const db = await ensureMembershipManagementDefaults();

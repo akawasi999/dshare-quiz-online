@@ -198,3 +198,6 @@
 - [x] Thêm phân trang phía máy chủ cho danh sách quản trị Người dùng.
 - [x] Thêm panel trượt hiển thị hồ sơ chi tiết và lịch sử hoạt động của người dùng.
 - [x] Thêm chọn nhiều người dùng và thao tác hàng loạt đổi gói, khóa hoặc mở khóa tài khoản.
+- [x] Thiết kế lại Nhóm người dùng với menu Tạo nhóm người dùng và danh sách/bộ lọc/nút tạo mới.
+- [x] Thêm popup cấu hình nhóm: tên, thứ tự hiển thị, quyền có sẵn/quyền mới và gói đăng ký liên kết.
+- [x] Thêm menu Gói đăng ký với danh sách/bộ lọc/nút tạo mới và popup tên, thứ tự, giá, khuyến mãi, mô tả, quyền liên kết.
