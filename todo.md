@@ -187,3 +187,5 @@
 - [x] Đồng bộ nền banner quota với nội dung Làm Quiz và bỏ đường kẻ phân cách bên dưới.
 - [x] Thu gọn khoảng trống phía dưới banner quota trên trang Làm Quiz.
 - [x] Hiển thị thanh tiến độ nhỏ gọn cho lượt làm đã dùng trong banner quota.
+- [x] Thêm nút Nâng cấp ngay nổi bật trong banner khi quota lượt làm sắp hết.
+- [x] Bỏ nhãn Tiến độ và câu mô tả cập nhật dữ liệu máy chủ trong banner quota.

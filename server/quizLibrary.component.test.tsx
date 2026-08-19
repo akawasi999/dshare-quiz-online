@@ -8,13 +8,14 @@ const mocks = vi.hoisted(() => ({
   categories: { data: [] as unknown[], isLoading: false, error: null as Error | null, refetch: vi.fn() },
   catalog: { data: [] as unknown[], isLoading: false, error: null as Error | null, refetch: vi.fn() },
   learner: { data: undefined, isLoading: false, error: null as Error | null, refetch: vi.fn() },
+  quota: { data: undefined as unknown, isLoading: false, error: null as Error | null, refetch: vi.fn() },
 }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/lib/trpc", () => ({
   trpc: {
-    learner: { summary: { useQuery: () => mocks.learner } },
+    learner: { summary: { useQuery: () => mocks.learner }, quota: { useQuery: () => mocks.quota } },
     catalog: {
       categories: { useQuery: () => mocks.categories },
       list: { useQuery: () => mocks.catalog },
@@ -32,6 +33,7 @@ describe("QuizLibrary component", () => {
     mocks.catalog.error = null;
     mocks.catalog.refetch.mockReset();
     mocks.categories.data = [];
+    mocks.quota.data = undefined;
   });
 
   afterEach(cleanup);
@@ -52,5 +54,12 @@ describe("QuizLibrary component", () => {
     expect(screen.queryByText(/^\d+ bộ đề phù hợp$/)).toBeNull();
     expect(screen.getByText("Chủ đề")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Tất cả" }).every(button => button.getAttribute("aria-pressed") === "true")).toBe(true);
+  });
+
+  it("hiển thị CTA nâng cấp khi quota lượt làm sắp hết", () => {
+    mocks.quota.data = { limits: { attemptsPerMonth: 20 }, usage: { attempts: 18 }, remaining: { attempts: 2 }, tier: "basic" };
+    render(<QuizLibrary />);
+    expect(screen.getByRole("link", { name: /nâng cấp ngay/i }).getAttribute("href")).toBe("/bang-gia");
+    expect(screen.queryByText("Tiến độ")).toBeNull();
   });
 });
