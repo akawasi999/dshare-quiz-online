@@ -29,6 +29,7 @@ import { getReferralValidationError, normalizeReferralCode } from "./referralUti
 import { allocateQuestionCounts } from "./randomQuiz";
 import { validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
+import { storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
@@ -342,6 +343,7 @@ export const appRouter = router({
   }),
 
   creator: router({
+    uploadCover: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) })).mutation(async ({ ctx, input }) => { const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64"); const uploaded = await storagePut(`quiz-covers/${ctx.user.id}/${input.fileName}`, bytes, input.mimeType); return { url: uploaded.url }; }),
     myQuizzes: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
