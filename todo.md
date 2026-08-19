@@ -194,3 +194,4 @@
 - [x] Thêm tạo, sửa và xóa gói đăng ký trong khu vực quản trị.
 - [x] Thêm tạo, sửa và xóa nhóm người dùng cùng các quyền trong gói.
 - [x] Thêm tạo, sửa và xóa thành viên trong quản trị với bảo vệ dữ liệu đang sử dụng.
+- [x] Thiết kế lại mô-đun quản trị Người dùng theo danh sách trực quan có tìm kiếm, lọc, sắp xếp, xuất dữ liệu và thao tác nhanh.

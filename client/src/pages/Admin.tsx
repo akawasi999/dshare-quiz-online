@@ -13,6 +13,7 @@ import QuestionEditorPanel from "@/components/QuestionEditorPanel";
 import QuestionTransferPanel from "@/components/QuestionTransferPanel";
 import RandomQuizBuilder from "@/components/RandomQuizBuilder";
 import MembershipGroupPermissionsPanel from "@/components/MembershipGroupPermissionsPanel";
+import UserManagementPanel from "@/components/UserManagementPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +35,7 @@ export default function Admin() {
   if (location === "/quan-tri/tao-de-ngau-nhien") content = <RandomQuizBuilder />;
   if (location === "/quan-tri/cau-hoi") content = <><AIQuestionGeneratorPanel /><QuestionEditorPanel /></>;
   if (location === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;
-  if (location === "/quan-tri/nguoi-dung") content = <UserManager />;
+  if (location === "/quan-tri/nguoi-dung") content = <UserManagementPanel />;
   if (location === "/quan-tri/nhom-nguoi-dung") content = <MembershipGroupPermissionsPanel />;
   if (location === "/quan-tri/bao-cao") content = <><OperationalCharts /><AnalyticsDashboard /></>;
   if (location === "/quan-tri/live-monitoring") content = <LiveMonitoringPanel />;
