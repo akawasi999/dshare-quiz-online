@@ -109,6 +109,7 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
     entryPointCost: quizzes.entryPointCost,
     completionReward: quizzes.completionReward,
     questionCount: quizzes.questionCount,
+    createdAt: quizzes.createdAt,
     coverImageUrl: sql<string | null>`coalesce(${quizzes.coverImageUrl}, ${categories.coverImageUrl})`,
     attemptCount: sql<number>`count(${attempts.id})`,
     categoryId: categories.id,

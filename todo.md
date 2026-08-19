@@ -171,3 +171,6 @@
 - [x] Thiết kế lại trang Làm Quiz: tìm kiếm gọn bên trái và danh sách chủ đề bên phải.
 - [x] Hiển thị số lượng bộ đề bên cạnh từng chủ đề trong danh sách Làm Quiz.
 - [x] Thêm bộ lọc quyền truy cập Basic, PRO và Premium cho thư viện bộ đề.
+- [x] Hiển thị số lượng bộ đề khả dụng cạnh từng tùy chọn quyền truy cập Basic, PRO và Premium.
+- [x] Thêm sắp xếp bộ đề theo mới nhất, lượt làm nhiều nhất và phần thưởng cao nhất.
+- [x] Lưu và tự động áp dụng các tùy chọn lọc cuối cùng của người học khi quay lại thư viện.
