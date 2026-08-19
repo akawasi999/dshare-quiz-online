@@ -1,0 +1,4 @@
+const swatches = [
+  ["Primary", "#065BE5", "bg-[#065be5]"], ["Accent", "#3762D2", "bg-[#3762d2]"], ["Thành công", "#007453", "bg-[#007453]"], ["Cần chú ý", "#DE1264", "bg-[#de1264]"], ["Nền trang", "#EBF4FF", "bg-[#ebf4ff]"], ["Surface", "#FFFFFF", "bg-white"],
+] as const;
+export default function ColorPalettePreview() { return <section className="mx-auto mb-6 max-w-6xl rounded-[24px] border border-[#172554]/10 bg-white p-5"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#3762d2]">Hệ màu Dshare</p><div className="mt-4 grid gap-3 sm:grid-cols-3 xl:grid-cols-6">{swatches.map(([label, code, color]) => <div key={label} className="rounded-2xl border border-[#172554]/10 p-3"><span className={`block h-9 rounded-xl ${color}`} /><p className="mt-3 text-xs font-bold text-[#141432]">{label}</p><p className="mt-1 font-mono text-[10px] text-[#6c6c7a]">{code}</p></div>)}</div></section>; }

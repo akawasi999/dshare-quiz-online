@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
+import ColorPalettePreview from "@/components/ColorPalettePreview";
 import AdminOperationsDashboard from "@/components/AdminOperationsDashboard";
 import AdminBugReportsPanel from "@/components/AdminBugReportsPanel";
 import AdminPointLedgerPanel from "@/components/AdminPointLedgerPanel";
@@ -24,7 +25,7 @@ export default function Admin() {
   const [location] = useLocation();
   if (loading) return <main className="grid min-h-screen place-items-center bg-[#ebf8ff] p-6"><p role="status" aria-live="polite" className="text-sm font-medium text-[#617786]">Đang kiểm tra quyền truy cập quản trị…</p></main>;
   if (user?.role !== "admin") return <main className="grid min-h-screen place-items-center bg-[#f4f7ff] p-6"><div className="max-w-md rounded-[28px] bg-white p-8 text-center shadow-sm"><ShieldAlert className="mx-auto text-[#b66b59]" size={30} /><h1 className="mt-4 font-serif text-3xl font-semibold text-[#172554]">Khu vực hạn chế</h1><p className="mt-3 text-sm leading-6 text-[#617786]">Chỉ tài khoản quản trị có quyền truy cập vào trung tâm điều hành Dshare.</p></div></main>;
-  let content = <AdminOperationsDashboard />;
+  let content = <><ColorPalettePreview /><AdminOperationsDashboard /></>;
   if (location === "/quan-tri/noi-dung") content = <ContentManager />;
   if (location === "/quan-tri/tao-de-ngau-nhien") content = <RandomQuizBuilder />;
   if (location === "/quan-tri/cau-hoi") content = <><AIQuestionGeneratorPanel /><QuestionEditorPanel /></>;
