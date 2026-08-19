@@ -181,3 +181,6 @@
 - [x] Hiển thị nhãn Thịnh hành cho các bộ đề có lượt làm cao trong 24 giờ qua.
 - [x] Bỏ phần thời gian hiển thị trên nhãn Mới theo yêu cầu.
 - [x] Tinh giản trang Làm Quiz: bỏ tìm kiếm, bộ lọc quyền truy cập và Mới công bố; chuyển chủ đề thành hàng cuộn ngang.
+- [x] Thêm biểu tượng nhỏ bên cạnh tên từng chủ đề trong hàng cuộn ngang.
+- [x] Thêm hiệu ứng mép mờ và nút mũi tên trái/phải để điều hướng hàng chủ đề trên máy tính.
+- [x] Loại bỏ khu vực Sắp xếp và số lượng bộ đề phù hợp trên trang Làm Quiz.

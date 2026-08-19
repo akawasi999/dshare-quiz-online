@@ -48,6 +48,8 @@ describe("QuizLibrary component", () => {
   it("hiển thị hàng chủ đề và trạng thái được chọn cho bộ lọc mặc định", () => {
     render(<QuizLibrary />);
     expect(screen.queryByLabelText("Tìm kiếm bộ đề")).toBeNull();
+    expect(screen.queryByLabelText("Sắp xếp bộ đề")).toBeNull();
+    expect(screen.queryByText(/^\d+ bộ đề phù hợp$/)).toBeNull();
     expect(screen.getByText("Chủ đề")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Tất cả" }).every(button => button.getAttribute("aria-pressed") === "true")).toBe(true);
   });
