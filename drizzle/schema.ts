@@ -73,6 +73,46 @@ export const membershipGroupPermissions = mysqlTable("membershipGroupPermissions
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => [uniqueIndex("membership_group_permissions_tier_unique").on(table.tier)]);
 
+export const subscriptionPlans = mysqlTable("subscriptionPlans", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 80 }).notNull(),
+  name: varchar("name", { length: 120 }).notNull(),
+  tier: mysqlEnum("tier", accountTierValues).notNull(),
+  description: varchar("description", { length: 500 }),
+  monthlyPrice: int("monthlyPrice").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  isSystem: boolean("isSystem").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("subscription_plans_code_unique").on(table.code)]);
+
+export const userGroups = mysqlTable("userGroups", {
+  id: int("id").autoincrement().primaryKey(),
+  planId: int("planId"),
+  name: varchar("name", { length: 120 }).notNull(),
+  description: varchar("description", { length: 500 }),
+  isSystem: boolean("isSystem").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("user_groups_name_unique").on(table.name), index("user_groups_plan_idx").on(table.planId)]);
+
+export const userGroupPermissions = mysqlTable("userGroupPermissions", {
+  id: int("id").autoincrement().primaryKey(),
+  groupId: int("groupId").notNull(),
+  permissionKey: varchar("permissionKey", { length: 80 }).notNull(),
+  isAllowed: boolean("isAllowed").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("user_group_permissions_unique").on(table.groupId, table.permissionKey), index("user_group_permissions_group_idx").on(table.groupId)]);
+
+export const userGroupMembers = mysqlTable("userGroupMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  groupId: int("groupId").notNull(),
+  userId: int("userId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("user_group_members_user_unique").on(table.userId), uniqueIndex("user_group_members_group_user_unique").on(table.groupId, table.userId), index("user_group_members_group_idx").on(table.groupId)]);
+
 export const categories = mysqlTable("categories", {
   id: int("id").autoincrement().primaryKey(),
   title: varchar("title", { length: 180 }).notNull(),

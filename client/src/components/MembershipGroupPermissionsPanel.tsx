@@ -1,68 +1,85 @@
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { CheckCircle2, Crown, LockKeyhole, Save, Sparkles, UsersRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CheckCircle2, Crown, Edit3, LockKeyhole, Plus, Save, Sparkles, Trash2, UserPlus, UsersRound } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const tiers = {
-  basic: { label: "Basic", description: "Nhóm thành viên miễn phí", accent: "#617786", icon: UsersRound },
-  pro: { label: "PRO", description: "Nhóm thành viên nâng cao", accent: "#065BE5", icon: Sparkles },
-  premium: { label: "PREMIUM", description: "Nhóm thành viên đầy đủ", accent: "#007453", icon: Crown },
-} as const;
-
-const permissions = [
-  { key: "canCreateQuiz", label: "Tạo Quiz riêng", description: "Cho phép mở công cụ tạo Quiz và lưu bộ đề cá nhân." },
-  { key: "canUseAi", label: "Trợ lý AI", description: "Cho phép dùng AI giải thích và hỗ trợ học tập trong quota." },
-  { key: "canExportData", label: "Xuất dữ liệu", description: "Cho phép xuất dữ liệu học tập và báo cáo cá nhân." },
-  { key: "canViewAdvancedReports", label: "Báo cáo nâng cao", description: "Cho phép xem các báo cáo học tập nâng cao." },
-  { key: "canReceivePrioritySupport", label: "Hỗ trợ ưu tiên", description: "Cho phép sử dụng luồng hỗ trợ ưu tiên." },
+const permissionOptions = [
+  { key: "canCreateQuiz", label: "Tạo Quiz riêng", description: "Mở công cụ tạo Quiz và lưu bộ đề cá nhân." },
+  { key: "canUseAi", label: "Trợ lý AI", description: "Dùng AI giải thích và hỗ trợ học tập trong quota." },
+  { key: "canExportData", label: "Xuất dữ liệu", description: "Xuất dữ liệu học tập và báo cáo cá nhân." },
+  { key: "canViewAdvancedReports", label: "Báo cáo nâng cao", description: "Xem các báo cáo học tập nâng cao." },
+  { key: "canReceivePrioritySupport", label: "Hỗ trợ ưu tiên", description: "Sử dụng luồng hỗ trợ ưu tiên." },
 ] as const;
 
-type GroupPermission = {
-  id?: number;
-  tier: "basic" | "pro" | "premium";
-  canCreateQuiz: boolean;
-  canUseAi: boolean;
-  canExportData: boolean;
-  canViewAdvancedReports: boolean;
-  canReceivePrioritySupport: boolean;
-  memberCount: number;
-};
+type PermissionKey = typeof permissionOptions[number]["key"];
+type PlanForm = { id?: number; code: string; name: string; tier: "basic" | "pro" | "premium"; description: string; monthlyPrice: number; isActive: boolean; isSystem?: boolean };
+type GroupForm = { id?: number; planId: string; name: string; description: string; isSystem?: boolean };
+const emptyPlan: PlanForm = { code: "", name: "", tier: "basic", description: "", monthlyPrice: 0, isActive: true };
+const emptyGroup: GroupForm = { planId: "", name: "", description: "" };
+
+const tierPresentation = {
+  basic: { label: "Basic", color: "#617786", icon: UsersRound },
+  pro: { label: "PRO", color: "#065BE5", icon: Sparkles },
+  premium: { label: "PREMIUM", color: "#007453", icon: Crown },
+} as const;
 
 export default function MembershipGroupPermissionsPanel() {
-  const groups = trpc.admin.groupPermissions.useQuery();
+  const management = trpc.admin.membershipManagement.useQuery();
+  const users = trpc.admin.users.useQuery({});
   const utils = trpc.useUtils();
-  const [drafts, setDrafts] = useState<Record<string, GroupPermission>>({});
-  const save = trpc.admin.saveGroupPermissions.useMutation({
-    onSuccess: async () => {
-      await utils.admin.groupPermissions.invalidate();
-      toast.success("Đã lưu quyền cho nhóm người dùng.");
-    },
-    onError: error => toast.error("Không thể lưu quyền nhóm", { description: error.message }),
-  });
+  const [planOpen, setPlanOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
+  const [planForm, setPlanForm] = useState<PlanForm>(emptyPlan);
+  const [groupForm, setGroupForm] = useState<GroupForm>(emptyGroup);
+  const [permissionDrafts, setPermissionDrafts] = useState<Record<number, Record<PermissionKey, boolean>>>({});
+  const [memberUserId, setMemberUserId] = useState("");
+  const [memberGroupId, setMemberGroupId] = useState("");
+
+  const refresh = async () => {
+    await Promise.all([utils.admin.membershipManagement.invalidate(), utils.admin.users.invalidate()]);
+  };
+  const planSave = trpc.admin.saveSubscriptionPlan.useMutation({ onSuccess: async () => { await refresh(); setPlanOpen(false); toast.success("Đã lưu gói đăng ký."); }, onError: error => toast.error("Không thể lưu gói", { description: error.message }) });
+  const planDelete = trpc.admin.deleteSubscriptionPlan.useMutation({ onSuccess: async () => { await refresh(); toast.success("Đã xóa gói đăng ký."); }, onError: error => toast.error("Không thể xóa gói", { description: error.message }) });
+  const groupSave = trpc.admin.saveUserGroup.useMutation({ onSuccess: async () => { await refresh(); setGroupOpen(false); toast.success("Đã lưu nhóm người dùng."); }, onError: error => toast.error("Không thể lưu nhóm", { description: error.message }) });
+  const groupDelete = trpc.admin.deleteUserGroup.useMutation({ onSuccess: async () => { await refresh(); toast.success("Đã xóa nhóm người dùng."); }, onError: error => toast.error("Không thể xóa nhóm", { description: error.message }) });
+  const permissionSave = trpc.admin.saveCustomGroupPermissions.useMutation({ onSuccess: async () => { await refresh(); toast.success("Đã lưu quyền nhóm."); }, onError: error => toast.error("Không thể lưu quyền", { description: error.message }) });
+  const memberAssign = trpc.admin.assignUserGroupMember.useMutation({ onSuccess: async () => { await refresh(); setMemberUserId(""); toast.success("Đã thêm hoặc cập nhật thành viên trong nhóm."); }, onError: error => toast.error("Không thể cập nhật thành viên", { description: error.message }) });
+  const memberRemove = trpc.admin.removeUserGroupMember.useMutation({ onSuccess: async () => { await refresh(); toast.success("Đã xóa thành viên khỏi nhóm."); }, onError: error => toast.error("Không thể xóa thành viên", { description: error.message }) });
 
   useEffect(() => {
-    if (!groups.data) return;
-    setDrafts(Object.fromEntries(groups.data.map(group => [group.tier, group])));
-  }, [groups.data]);
+    if (!management.data) return;
+    setPermissionDrafts(Object.fromEntries(management.data.groups.map(group => [group.id, Object.fromEntries(group.permissions.map(permission => [permission.permissionKey, permission.isAllowed]))])) as Record<number, Record<PermissionKey, boolean>>);
+    if (!memberGroupId && management.data.groups[0]) setMemberGroupId(String(management.data.groups[0].id));
+  }, [management.data, memberGroupId]);
 
-  const updatePermission = (tier: GroupPermission["tier"], key: typeof permissions[number]["key"], checked: boolean) => {
-    setDrafts(current => ({ ...current, [tier]: { ...current[tier]!, [key]: checked } }));
-  };
+  const updatePermission = (groupId: number, key: PermissionKey, isAllowed: boolean) => setPermissionDrafts(current => ({ ...current, [groupId]: { ...current[groupId], [key]: isAllowed } }));
+  const openPlanEditor = (plan?: PlanForm) => { setPlanForm(plan ?? emptyPlan); setPlanOpen(true); };
+  const openGroupEditor = (group?: GroupForm) => { setGroupForm(group ?? emptyGroup); setGroupOpen(true); };
+  const submitPlan = (event: FormEvent) => { event.preventDefault(); planSave.mutate({ id: planForm.id, code: planForm.code, name: planForm.name, tier: planForm.tier, description: planForm.description || null, monthlyPrice: Number(planForm.monthlyPrice), isActive: planForm.isActive }); };
+  const submitGroup = (event: FormEvent) => { event.preventDefault(); groupSave.mutate({ id: groupForm.id, planId: groupForm.planId ? Number(groupForm.planId) : null, name: groupForm.name, description: groupForm.description || null }); };
 
-  if (groups.isLoading) return <div className="rounded-[26px] bg-white p-8 text-sm text-[#617786]">Đang tải nhóm người dùng…</div>;
-  if (groups.error) return <div role="alert" className="rounded-[26px] bg-[#fff0f6] p-8 text-sm text-[#de1264]">Không thể tải cấu hình nhóm: {groups.error.message}</div>;
+  if (management.isLoading) return <div className="rounded-[26px] bg-white p-8 text-sm text-[#617786]">Đang tải quản trị thành viên…</div>;
+  if (management.error) return <div role="alert" className="rounded-[26px] bg-[#fff0f6] p-8 text-sm text-[#de1264]">Không thể tải quản trị thành viên: {management.error.message}</div>;
+  const data = management.data;
+  if (!data) return null;
 
-  return <div className="mx-auto max-w-6xl">
+  return <div className="mx-auto max-w-7xl">
     <p className="text-[10px] font-bold uppercase tracking-[.17em] text-[#065be5]">Dshare / Quản trị / Nhóm người dùng</p>
-    <h1 className="mt-2 font-serif text-[36px] font-semibold tracking-[-.045em] text-[#172554]">Nhóm người dùng & phân quyền</h1>
-    <p className="mt-2 max-w-3xl text-sm leading-6 text-[#617786]">Mỗi học viên được xếp tự động vào nhóm Basic, PRO hoặc PREMIUM theo gói thành viên. Quyền thay đổi tại đây được kiểm tra tại máy chủ cho các luồng tạo Quiz và Trợ lý AI.</p>
-    <div className="mt-7 grid gap-5 xl:grid-cols-3">{groups.data?.map(group => {
-      const draft = drafts[group.tier] ?? group;
-      const tier = tiers[group.tier];
-      const TierIcon = tier.icon;
-      return <section key={group.tier} className="overflow-hidden rounded-[26px] border border-[#172554]/9 bg-white shadow-sm"><div className="border-b border-[#172554]/8 p-5" style={{ background: `${tier.accent}0d` }}><div className="flex items-start justify-between gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl text-white" style={{ backgroundColor: tier.accent }}><TierIcon size={20} /></span><span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-[#172554]">{group.memberCount} thành viên</span></div><h2 className="mt-4 font-serif text-2xl font-semibold text-[#172554]">{tier.label}</h2><p className="mt-1 text-xs text-[#617786]">{tier.description}</p></div><div className="divide-y divide-[#172554]/8">{permissions.map(permission => <div key={permission.key} className="flex items-start gap-3 px-5 py-4"><span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#eef4ff] text-[#065be5]"><CheckCircle2 size={14} /></span><div className="min-w-0 flex-1"><label htmlFor={`${group.tier}-${permission.key}`} className="text-xs font-bold text-[#172554]">{permission.label}</label><p className="mt-1 text-[11px] leading-4 text-[#71838d]">{permission.description}</p></div><Switch id={`${group.tier}-${permission.key}`} checked={draft[permission.key]} onCheckedChange={checked => updatePermission(group.tier, permission.key, checked)} aria-label={`${permission.label} cho nhóm ${tier.label}`} /></div>)}</div><div className="flex items-center justify-between bg-[#fff7e6] px-5 py-4"><span className="flex items-center gap-1.5 text-[10px] font-bold text-[#617786]"><LockKeyhole size={12} /> Áp dụng ở máy chủ</span><Button size="sm" disabled={save.isPending} onClick={() => save.mutate({ tier: draft.tier, canCreateQuiz: draft.canCreateQuiz, canUseAi: draft.canUseAi, canExportData: draft.canExportData, canViewAdvancedReports: draft.canViewAdvancedReports, canReceivePrioritySupport: draft.canReceivePrioritySupport })} className="h-8 rounded-full bg-[#172554] px-3 text-[10px]"><Save size={13} /> Lưu quyền</Button></div></section>;
-    })}</div>
+    <div className="mt-2 flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><h1 className="font-serif text-[36px] font-semibold tracking-[-.045em] text-[#172554]">Gói, nhóm & phân quyền</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-[#617786]">Quản lý gói đăng ký, tạo nhóm tùy chỉnh, cấp quyền và phân thành viên theo nhóm. Gói hệ thống đang liên kết thanh toán chỉ được chỉnh sửa thông tin hiển thị để tránh ảnh hưởng giao dịch.</p></div><div className="flex flex-wrap gap-2"><Button onClick={() => openPlanEditor()} className="rounded-full bg-[#065be5]"><Plus size={15} /> Tạo gói</Button><Button onClick={() => openGroupEditor()} variant="outline" className="rounded-full border-[#065be5]/20 bg-white text-[#065be5]"><UsersRound size={15} /> Tạo nhóm</Button></div></div>
+
+    <section className="mt-7"><div className="mb-3 flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#065be5]">Gói đăng ký</p><h2 className="mt-1 font-serif text-2xl font-semibold text-[#172554]">Danh mục gói</h2></div><span className="rounded-full bg-[#eef4ff] px-3 py-1.5 text-[10px] font-bold text-[#617786]">{data.plans.length} gói</span></div><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{data.plans.map(plan => { const tone = tierPresentation[plan.tier]; const Icon = tone.icon; return <article key={plan.id} className="rounded-[22px] border border-[#172554]/9 bg-white p-5"><div className="flex items-start justify-between gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={{ backgroundColor: tone.color }}><Icon size={18} /></span><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${plan.isActive ? "bg-[#e8f6fd] text-[#007453]" : "bg-[#fff0f6] text-[#de1264]"}`}>{plan.isActive ? "Đang bật" : "Đã tắt"}</span></div><p className="mt-4 text-[10px] font-bold uppercase tracking-[.14em] text-[#71838d]">{plan.code}</p><h3 className="mt-1 text-lg font-bold text-[#172554]">{plan.name}</h3><p className="mt-2 min-h-10 text-xs leading-5 text-[#617786]">{plan.description || "Chưa có mô tả."}</p><p className="mt-4 font-mono text-sm font-bold text-[#172554]">{plan.monthlyPrice.toLocaleString("vi-VN")}đ/tháng</p><div className="mt-4 flex gap-2"><Button onClick={() => openPlanEditor({ id: plan.id, code: plan.code, name: plan.name, tier: plan.tier, description: plan.description ?? "", monthlyPrice: plan.monthlyPrice, isActive: plan.isActive, isSystem: plan.isSystem })} variant="outline" className="h-8 flex-1 rounded-full px-3 text-[10px]"><Edit3 size={13} /> Sửa</Button>{!plan.isSystem ? <Button onClick={() => window.confirm(`Xóa gói ${plan.name}?`) && planDelete.mutate({ planId: plan.id })} variant="outline" className="h-8 rounded-full px-3 text-[#de1264]"><Trash2 size={13} /></Button> : null}</div></article>; })}</div></section>
+
+    <section className="mt-9"><div className="mb-3"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#065be5]">Nhóm người dùng & quyền</p><h2 className="mt-1 font-serif text-2xl font-semibold text-[#172554]">Ma trận quyền theo nhóm</h2></div><div className="grid gap-5 xl:grid-cols-2">{data.groups.map(group => <article key={group.id} className="overflow-hidden rounded-[24px] border border-[#172554]/9 bg-white"><div className="flex flex-col justify-between gap-3 border-b border-[#172554]/8 bg-[#eef4ff] p-5 sm:flex-row sm:items-start"><div><div className="flex items-center gap-2"><h3 className="text-lg font-bold text-[#172554]">{group.name}</h3>{group.isSystem ? <span className="rounded-full bg-white px-2 py-1 text-[9px] font-bold text-[#617786]">Hệ thống</span> : null}</div><p className="mt-1 text-xs text-[#617786]">{group.description || "Chưa có mô tả."}</p><p className="mt-2 text-[10px] font-bold uppercase tracking-[.12em] text-[#065be5]">{data.plans.find(plan => plan.id === group.planId)?.name ?? "Không gắn gói"} · {group.memberCount} thành viên</p></div><div className="flex gap-2"><Button onClick={() => openGroupEditor({ id: group.id, planId: group.planId ? String(group.planId) : "", name: group.name, description: group.description ?? "", isSystem: group.isSystem })} variant="outline" className="h-8 rounded-full bg-white px-3 text-[10px]"><Edit3 size={12} /> Sửa</Button>{!group.isSystem ? <Button onClick={() => window.confirm(`Xóa nhóm ${group.name}?`) && groupDelete.mutate({ groupId: group.id })} variant="outline" className="h-8 rounded-full bg-white px-3 text-[#de1264]"><Trash2 size={12} /></Button> : null}</div></div><div className="divide-y divide-[#172554]/8">{permissionOptions.map(permission => <div key={permission.key} className="flex items-start gap-3 px-5 py-3.5"><span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#eef4ff] text-[#065be5]"><CheckCircle2 size={14} /></span><div className="min-w-0 flex-1"><label htmlFor={`${group.id}-${permission.key}`} className="text-xs font-bold text-[#172554]">{permission.label}</label><p className="mt-1 text-[11px] leading-4 text-[#71838d]">{permission.description}</p></div><Switch id={`${group.id}-${permission.key}`} checked={permissionDrafts[group.id]?.[permission.key] ?? false} onCheckedChange={checked => updatePermission(group.id, permission.key, checked)} aria-label={`${permission.label} cho nhóm ${group.name}`} /></div>)}</div><div className="flex items-center justify-between bg-[#fff7e6] px-5 py-3.5"><span className="flex items-center gap-1.5 text-[10px] font-bold text-[#617786]"><LockKeyhole size={12} /> Áp dụng ở máy chủ</span><Button disabled={permissionSave.isPending} onClick={() => permissionSave.mutate({ groupId: group.id, permissions: permissionOptions.map(permission => ({ permissionKey: permission.key, isAllowed: permissionDrafts[group.id]?.[permission.key] ?? false })) })} className="h-8 rounded-full bg-[#172554] px-3 text-[10px]"><Save size={13} /> Lưu quyền</Button></div></article>)}</div></section>
+
+    <section className="mt-9"><div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]"><form onSubmit={event => { event.preventDefault(); if (memberUserId && memberGroupId) memberAssign.mutate({ userId: Number(memberUserId), groupId: Number(memberGroupId) }); }} className="rounded-[24px] bg-[#172554] p-6 text-white"><UserPlus size={21} className="text-[#f4c95d]" /><p className="mt-4 text-[10px] font-bold uppercase tracking-[.15em] text-[#f4c95d]">Thêm / sửa thành viên</p><h2 className="mt-2 font-serif text-2xl font-semibold">Gán thành viên vào nhóm</h2><p className="mt-2 text-xs leading-5 text-[#dbeafe]">Chọn thành viên và nhóm. Nếu thành viên đã thuộc nhóm khác, thao tác sẽ chuyển họ sang nhóm mới.</p><Label className="mt-5 block text-[#dbeafe]">Thành viên</Label><select value={memberUserId} onChange={event => setMemberUserId(event.target.value)} required className="mt-2 h-10 w-full rounded-md border border-white/15 bg-white/10 px-3 text-xs text-white outline-none"><option value="" className="text-[#172554]">Chọn thành viên</option>{users.data?.filter(row => row.user.role !== "admin").map(row => <option key={row.user.id} value={row.user.id} className="text-[#172554]">{row.user.name ?? row.user.email ?? `Thành viên #${row.user.id}`}</option>)}</select><Label className="mt-4 block text-[#dbeafe]">Nhóm</Label><select value={memberGroupId} onChange={event => setMemberGroupId(event.target.value)} required className="mt-2 h-10 w-full rounded-md border border-white/15 bg-white/10 px-3 text-xs text-white outline-none">{data.groups.map(group => <option key={group.id} value={group.id} className="text-[#172554]">{group.name}</option>)}</select><Button type="submit" disabled={memberAssign.isPending || !memberUserId || !memberGroupId} className="mt-5 w-full rounded-full bg-[#f4c95d] text-[#172554] hover:bg-[#fde68a]"><UserPlus size={15} /> Lưu thành viên</Button></form><div className="overflow-hidden rounded-[24px] border border-[#172554]/9 bg-white"><div className="flex items-center justify-between border-b border-[#172554]/9 bg-[#eef4ff] px-5 py-4"><div><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#065be5]">Thành viên nhóm</p><h2 className="mt-1 font-serif text-xl font-semibold text-[#172554]">Danh sách đã phân nhóm</h2></div><span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-[#617786]">{data.memberships.length} thành viên</span></div>{data.memberships.length ? <div className="divide-y divide-[#172554]/8">{data.memberships.map(row => <div key={row.membership.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-[#172554]">{row.user.name ?? "Chưa đặt tên"}</p><p className="mt-1 truncate text-[10px] text-[#71838d]">{row.user.email ?? row.user.openId}</p></div><span className="rounded-full bg-[#eef4ff] px-3 py-1.5 text-[10px] font-bold text-[#065be5]">{data.groups.find(group => group.id === row.membership.groupId)?.name ?? "Nhóm không xác định"}</span><div className="flex gap-2"><select defaultValue={row.membership.groupId} onChange={event => memberAssign.mutate({ userId: row.user.id, groupId: Number(event.target.value) })} className="h-8 rounded-full border border-[#172554]/10 bg-white px-2 text-[10px] text-[#617786]"><option value={row.membership.groupId}>Chuyển nhóm…</option>{data.groups.filter(group => group.id !== row.membership.groupId).map(group => <option key={group.id} value={group.id}>{group.name}</option>)}</select><Button onClick={() => window.confirm(`Xóa ${row.user.name ?? "thành viên"} khỏi nhóm?`) && memberRemove.mutate({ userId: row.user.id, groupId: row.membership.groupId })} variant="outline" className="h-8 rounded-full px-2 text-[#de1264]"><Trash2 size={13} /></Button></div></div>)}</div> : <p className="p-8 text-sm text-[#71838d]">Chưa có thành viên nào được gán vào nhóm.</p>}</div></div></section>
+
+    <Dialog open={planOpen} onOpenChange={setPlanOpen}><DialogContent><DialogHeader><DialogTitle>{planForm.id ? "Sửa gói đăng ký" : "Tạo gói đăng ký"}</DialogTitle><DialogDescription>Gói hệ thống vẫn dùng cấu hình PayOS hiện có; chỉ sửa thông tin hiển thị và trạng thái kích hoạt.</DialogDescription></DialogHeader><form onSubmit={submitPlan} className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div><Label>Mã gói</Label><Input value={planForm.code} disabled={planForm.isSystem} onChange={event => setPlanForm(current => ({ ...current, code: event.target.value }))} required className="mt-2" placeholder="starter-monthly" /></div><div><Label>Tên gói</Label><Input value={planForm.name} onChange={event => setPlanForm(current => ({ ...current, name: event.target.value }))} required className="mt-2" placeholder="Starter" /></div></div><div className="grid gap-4 sm:grid-cols-2"><div><Label>Hạng thành viên</Label><select value={planForm.tier} disabled={planForm.isSystem} onChange={event => setPlanForm(current => ({ ...current, tier: event.target.value as PlanForm["tier"] }))} className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="basic">Basic</option><option value="pro">PRO</option><option value="premium">PREMIUM</option></select></div><div><Label>Giá/tháng (đ)</Label><Input type="number" min="0" disabled={planForm.isSystem} value={planForm.monthlyPrice} onChange={event => setPlanForm(current => ({ ...current, monthlyPrice: Number(event.target.value) }))} required className="mt-2" /></div></div><div><Label>Mô tả</Label><Textarea value={planForm.description} onChange={event => setPlanForm(current => ({ ...current, description: event.target.value }))} className="mt-2" /></div><div className="flex items-center justify-between rounded-xl bg-[#eef4ff] p-3"><Label htmlFor="plan-active">Kích hoạt gói</Label><Switch id="plan-active" checked={planForm.isActive} onCheckedChange={checked => setPlanForm(current => ({ ...current, isActive: checked }))} /></div><Button disabled={planSave.isPending} className="w-full rounded-full bg-[#065be5]"><Save size={15} /> Lưu gói</Button></form></DialogContent></Dialog>
+    <Dialog open={groupOpen} onOpenChange={setGroupOpen}><DialogContent><DialogHeader><DialogTitle>{groupForm.id ? "Sửa nhóm người dùng" : "Tạo nhóm người dùng"}</DialogTitle><DialogDescription>Nhóm mới có thể gắn với một gói hoặc hoạt động độc lập. Hãy lưu quyền sau khi tạo nhóm.</DialogDescription></DialogHeader><form onSubmit={submitGroup} className="space-y-4"><div><Label>Tên nhóm</Label><Input value={groupForm.name} onChange={event => setGroupForm(current => ({ ...current, name: event.target.value }))} required className="mt-2" placeholder="Nhóm luyện thi nội bộ" /></div><div><Label>Gói đăng ký liên kết</Label><select value={groupForm.planId} onChange={event => setGroupForm(current => ({ ...current, planId: event.target.value }))} className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Không gắn gói</option>{data.plans.map(plan => <option key={plan.id} value={plan.id}>{plan.name}</option>)}</select></div><div><Label>Mô tả</Label><Textarea value={groupForm.description} onChange={event => setGroupForm(current => ({ ...current, description: event.target.value }))} className="mt-2" /></div><Button disabled={groupSave.isPending} className="w-full rounded-full bg-[#065be5]"><Save size={15} /> Lưu nhóm</Button></form></DialogContent></Dialog>
   </div>;
 }

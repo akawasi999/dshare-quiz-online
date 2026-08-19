@@ -191,3 +191,6 @@
 - [x] Bỏ nhãn Tiến độ và câu mô tả cập nhật dữ liệu máy chủ trong banner quota.
 - [x] Thêm quản lý nhóm người dùng theo gói trong khu vực quản trị.
 - [x] Thêm ma trận phân quyền và kiểm soát quyền truy cập theo nhóm người dùng.
+- [x] Thêm tạo, sửa và xóa gói đăng ký trong khu vực quản trị.
+- [x] Thêm tạo, sửa và xóa nhóm người dùng cùng các quyền trong gói.
+- [x] Thêm tạo, sửa và xóa thành viên trong quản trị với bảo vệ dữ liệu đang sử dụng.
