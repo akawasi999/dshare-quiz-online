@@ -32,7 +32,7 @@
 }
 
 :root {
-  --background: #ebf8ff;
+  --background: #fff7e6;
   --foreground: #172554;
   --card: #ffffff;
   --card-foreground: #172554;
@@ -40,9 +40,9 @@
   --popover-foreground: #172554;
   --primary: #2563eb;
   --primary-foreground: #ffffff;
-  --secondary: #eef2ff;
+  --secondary: #fffaf0;
   --secondary-foreground: #172554;
-  --muted: #f1f5ff;
+  --muted: #fffaf0;
   --muted-foreground: #61719a;
   --accent: #f59e0b;
   --accent-foreground: #172554;
@@ -75,10 +75,11 @@
 
 * { border-color: var(--border); }
 html { scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; background: #ebf8ff; color: #172554; font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; min-width: 320px; background: #fff7e6; color: #172554; font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif; }
 .dark body { background: #0b1224; color: #e6efff; }
-.min-h-screen { background-color: #ebf8ff !important; }
+.min-h-screen { background-color: #fff7e6 !important; }
 .dark .min-h-screen { background-color: #0b1224 !important; }
+.min-h-screen [class*="bg-[#ebf8ff"], .min-h-screen [class*="bg-[#eef4ff"], .min-h-screen [class*="bg-[#f4f7ff"] { background-color: #fff7e6 !important; }
 .dark [class*="bg-[#fff7e6"], .dark [class*="bg-[#f4f7ff"], .dark [class*="bg-[#eef4ff"], .dark [class*="bg-[#ebf8ff"] { background-color: #0b1224 !important; }
 .dark [class*="bg-white"] { background-color: #111c36 !important; }
 .dark [class*="text-[#172554"] { color: #e6efff !important; }
@@ -86,7 +87,7 @@ body { margin: 0; min-width: 320px; background: #ebf8ff; color: #172554; font-fa
 .dark [class*="border-[#172554"] { border-color: rgba(191, 219, 254, .18) !important; }
 .dark .field { background: #111c36; border-color: rgba(191, 219, 254, .2); color: #e6efff; }
 h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif; }
-.field { width: 100%; border-radius: .75rem; border: 1px solid rgba(30, 58, 138, .15); background: #ebf8ff; padding: .625rem .75rem; font-size: .75rem; font-weight: 400; color: #172554; outline: none; }
+.field { width: 100%; border-radius: .75rem; border: 1px solid rgba(30, 58, 138, .15); background: #fffaf0; padding: .625rem .75rem; font-size: .75rem; font-weight: 400; color: #172554; outline: none; }
 .field:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, .2); }
 .account-embedded > div > header { display: none; }
 .account-embedded > div { min-height: calc(100vh - 76px); }

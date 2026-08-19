@@ -27,10 +27,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#ebf8ff]">
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#ebf8ff] via-[#f9fdff] to-white">
-        <div className="pointer-events-none absolute -left-24 top-20 h-80 w-80 rounded-full bg-[#60a5fa]/15 blur-3xl" />
-        <div className="pointer-events-none absolute right-[-4rem] top-24 h-72 w-72 rounded-full bg-[#7c3aed]/10 blur-3xl" />
+    <div className="min-h-screen overflow-hidden bg-[#fff7e6]">
+      <section className="relative overflow-hidden bg-[#fff7e6]">
         <SiteHeader />
         <div className="container relative flex min-h-[620px] items-center py-20 lg:min-h-[650px] lg:py-28">
           <div className="rise-in max-w-4xl">
