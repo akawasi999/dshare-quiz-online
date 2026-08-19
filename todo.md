@@ -169,3 +169,5 @@
 - [x] Thêm công cụ cắt ảnh bìa theo tỷ lệ 16:9 trước khi tải lên.
 - [x] Cho phép quản trị viên đặt ảnh bìa mặc định theo từng chủ đề.
 - [x] Thiết kế lại trang Làm Quiz: tìm kiếm gọn bên trái và danh sách chủ đề bên phải.
+- [x] Hiển thị số lượng bộ đề bên cạnh từng chủ đề trong danh sách Làm Quiz.
+- [x] Thêm bộ lọc quyền truy cập Basic, PRO và Premium cho thư viện bộ đề.
