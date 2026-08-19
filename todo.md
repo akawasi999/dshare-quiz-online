@@ -206,3 +206,6 @@
 - [x] Cho phép thêm, sửa và xóa tất cả nhóm người dùng, kể cả nhóm mặc định, với xử lý dữ liệu liên kết an toàn.
 - [x] Cho phép tạo, sửa và xóa tất cả gói đăng ký, kể cả gói hiện có, với xử lý dữ liệu liên kết an toàn.
 - [x] Đồng bộ thông tin Gói đăng ký do quản trị thay đổi sang các trang hiển thị gói cho người dùng.
+- [x] Đồng bộ cấu hình gói đăng ký do quản trị quản lý sang catalog PayOS để tạo thanh toán đúng giá và hạng.
+- [x] Thêm danh sách quyền lợi tùy chỉnh chi tiết cho từng gói trên trang bảng giá.
+- [x] Hiển thị gói đăng ký hiện tại và các ưu đãi nâng cấp phù hợp trong hồ sơ người dùng.

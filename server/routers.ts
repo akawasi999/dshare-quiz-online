@@ -72,7 +72,7 @@ const membershipGroupPermissionInput = z.object({
   canViewAdvancedReports: z.boolean(),
   canReceivePrioritySupport: z.boolean(),
 });
-const subscriptionPlanInput = z.object({ id: z.number().int().positive().optional(), code: z.string().trim().toLowerCase().regex(/^[a-z0-9-]+$/).min(3).max(80), name: z.string().trim().min(2).max(120), tier: z.enum(["basic", "pro", "premium"]), description: z.string().trim().max(500).nullable().optional(), monthlyPrice: z.number().int().min(0).max(100_000_000), promoPrice: z.number().int().min(0).max(100_000_000).nullable().optional(), displayOrder: z.number().int().min(0).max(100_000).default(0), isActive: z.boolean() });
+const subscriptionPlanInput = z.object({ id: z.number().int().positive().optional(), code: z.string().trim().toLowerCase().regex(/^[a-z0-9-]+$/).min(3).max(80), name: z.string().trim().min(2).max(120), tier: z.enum(["basic", "pro", "premium"]), description: z.string().trim().max(500).nullable().optional(), benefits: z.array(z.string().trim().min(2).max(180)).max(12).refine(items => new Set(items).size === items.length, { message: "Không được trùng quyền lợi." }).default([]), monthlyPrice: z.number().int().min(0).max(100_000_000), promoPrice: z.number().int().min(0).max(100_000_000).nullable().optional(), payosEnabled: z.boolean().default(false), payosRewardPoints: z.number().int().min(0).max(1_000_000).default(0), membershipMonths: z.number().int().min(1).max(24).default(1), displayOrder: z.number().int().min(0).max(100_000).default(0), isActive: z.boolean() });
 const userGroupInput = z.object({ id: z.number().int().positive().optional(), planId: z.number().int().positive().nullable().optional(), name: z.string().trim().min(2).max(120), description: z.string().trim().max(500).nullable().optional(), displayOrder: z.number().int().min(0).max(100_000).default(0) });
 const groupPermissionInput = z.object({ permissionKey: z.string().trim().min(2).max(80).regex(/^[A-Za-z][A-Za-z0-9_-]*$/), isAllowed: z.boolean() });
 const customGroupPermissionsInput = z.object({ groupId: z.number().int().positive(), permissions: z.array(groupPermissionInput).min(1).max(30).refine(items => new Set(items.map(item => item.permissionKey)).size === items.length, { message: "Không được trùng mã quyền." }) });
@@ -238,10 +238,12 @@ export const appRouter = router({
       const records = await db.select({ itemCode: paymentRecords.itemCode })
         .from(paymentRecords)
         .where(and(eq(paymentRecords.userId, ctx.user.id), eq(paymentRecords.status, "paid")));
-      return Object.values(paymentPackages).map(pkg => buildPaymentOffer(pkg, records.filter(record => record.itemCode === pkg.code).length));
+      const pointOffers = Object.values(paymentPackages).filter(pkg => pkg.itemType === "points").map(pkg => ({ ...buildPaymentOffer(pkg, records.filter(record => record.itemCode === pkg.code).length), benefits: [] as string[] }));
+      const membershipPlans = (await db.select().from(subscriptionPlans).where(and(eq(subscriptionPlans.isActive, true), eq(subscriptionPlans.payosEnabled, true)))).sort((left, right) => left.displayOrder - right.displayOrder || left.name.localeCompare(right.name, "vi"));
+      const membershipOffers = membershipPlans.map(plan => ({ code: `membership-${plan.id}`, itemType: "membership" as const, label: plan.name, regularAmount: plan.monthlyPrice, amount: plan.promoPrice ?? plan.monthlyPrice, discounted: plan.promoPrice !== null, discountLabel: plan.promoPrice !== null ? "Giá ưu đãi" : null, pointAmount: plan.payosRewardPoints, targetTier: plan.tier, membershipMonths: plan.membershipMonths, planId: plan.id, benefits: plan.benefits ?? [] }));
+      return [...pointOffers, ...membershipOffers];
     }),
     createLink: protectedProcedure.input(z.object({ packageCode: z.string().trim() })).mutation(async ({ ctx, input }) => {
-      if (!isPaymentPackageCode(input.packageCode)) throw new TRPCError({ code: "BAD_REQUEST", message: "Gói thanh toán không hợp lệ." });
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể kết nối hệ thống thanh toán." });
       const clientId = process.env.PAYOS_CLIENT_ID;
@@ -249,14 +251,18 @@ export const appRouter = router({
       const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
       if (!clientId || !apiKey || !checksumKey) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "PayOS chưa được cấu hình đầy đủ." });
 
-      const pkg = getPaymentPackage(input.packageCode);
+      const staticPackage = isPaymentPackageCode(input.packageCode) ? getPaymentPackage(input.packageCode) : undefined;
+      const planMatch = /^membership-(\d+)$/.exec(input.packageCode);
+      const plan = planMatch ? (await db.select().from(subscriptionPlans).where(and(eq(subscriptionPlans.id, Number(planMatch[1])), eq(subscriptionPlans.isActive, true), eq(subscriptionPlans.payosEnabled, true))).limit(1))[0] : undefined;
+      if (!staticPackage && !plan) throw new TRPCError({ code: "BAD_REQUEST", message: "Gói thanh toán không hợp lệ hoặc chưa bật PayOS." });
+      const pkg = staticPackage ?? { code: input.packageCode, itemType: "membership" as const, pointAmount: plan!.payosRewardPoints, targetTier: plan!.tier, membershipMonths: plan!.membershipMonths };
       const priorPurchases = await db.select({ id: paymentRecords.id }).from(paymentRecords)
         .where(and(eq(paymentRecords.userId, ctx.user.id), eq(paymentRecords.itemCode, pkg.code), eq(paymentRecords.status, "paid")));
-      const amount = getPaymentAmount(pkg, priorPurchases.length);
+      const amount = plan ? (plan.promoPrice ?? plan.monthlyPrice) : getPaymentAmount(staticPackage!, priorPurchases.length);
       const orderCode = createPayosOrderCode();
       const origin = `${ctx.req.protocol}://${ctx.req.get("host")}`;
       const callbacks = buildPayosCallbackUrls(origin, orderCode);
-      const description = `DS ${pkg.code}`.slice(0, 25);
+      const description = `DS ${plan?.code ?? pkg.code}`.slice(0, 25);
       const created = await db.insert(paymentRecords).values({
         userId: ctx.user.id,
         itemType: pkg.itemType,
@@ -272,7 +278,7 @@ export const appRouter = router({
       try {
         const link = await createPayosPaymentLink({ clientId, apiKey, checksumKey, orderCode, amount, description, ...callbacks });
         await db.update(paymentRecords).set({ payosPaymentLinkId: link.paymentLinkId }).where(eq(paymentRecords.id, recordId));
-        return { recordId, orderCode, amount, checkoutUrl: link.checkoutUrl, discounted: isFirstPurchaseDiscountEligible(pkg, priorPurchases.length) };
+        return { recordId, orderCode, amount, checkoutUrl: link.checkoutUrl, discounted: plan ? plan.promoPrice !== null : isFirstPurchaseDiscountEligible(staticPackage!, priorPurchases.length) };
       } catch (error) {
         await db.update(paymentRecords).set({ status: "failed" }).where(eq(paymentRecords.id, recordId));
         throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? error.message : "Không thể tạo liên kết PayOS." });
@@ -852,7 +858,7 @@ export const appRouter = router({
       const existing = input.id ? (await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, input.id)).limit(1))[0] : undefined;
       if (input.id && !existing) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy gói đăng ký." });
       if (input.promoPrice !== null && input.promoPrice !== undefined && input.promoPrice > input.monthlyPrice) throw new TRPCError({ code: "BAD_REQUEST", message: "Giá khuyến mãi không được lớn hơn giá gốc." });
-      const data = { code: input.code, name: input.name, tier: input.tier, description: input.description ?? null, monthlyPrice: input.monthlyPrice, promoPrice: input.promoPrice ?? null, displayOrder: input.displayOrder, isActive: input.isActive };
+      const data = { code: input.code, name: input.name, tier: input.tier, description: input.description ?? null, benefits: input.benefits, monthlyPrice: input.monthlyPrice, promoPrice: input.promoPrice ?? null, payosEnabled: input.payosEnabled, payosRewardPoints: input.payosRewardPoints, membershipMonths: input.membershipMonths, displayOrder: input.displayOrder, isActive: input.isActive };
       if (existing) await db.update(subscriptionPlans).set(data).where(eq(subscriptionPlans.id, existing.id));
       else {
         const result = await db.insert(subscriptionPlans).values({ ...data, isSystem: false });

@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  summary: { data: { profile: { tier: "basic", pointBalance: 0, avatarUrl: "", bio: "", learningGoal: "", notificationPreferences: { studyReminders: true, resultUpdates: true, platformUpdates: true } }, stats: { completed: 0, averageScore: 0, passedCount: 0 } }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
+  summary: { data: { profile: { tier: "basic", pointBalance: 0, avatarUrl: "", bio: "", learningGoal: "", notificationPreferences: { studyReminders: true, resultUpdates: true, platformUpdates: true } }, stats: { completed: 0, averageScore: 0, passedCount: 0 }, currentPlan: null as null | { name: string; tier: string; monthlyPrice: number; promoPrice: number | null; benefits: string[] | null }, upgradePlans: [] as Array<{ name: string; tier: "pro" | "premium"; description: string | null; payosEnabled: boolean }> }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
   history: { data: [], isLoading: false, error: null as Error | null },
   quota: { data: null },
   update: { isPending: false },
@@ -21,7 +21,7 @@ vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: 
 import Profile from "../client/src/pages/Profile";
 
 describe("Profile mutation feedback", () => {
-  beforeEach(() => mocks.toast.error.mockReset());
+  beforeEach(() => { mocks.toast.error.mockReset(); mocks.summary.data.currentPlan = null; mocks.summary.data.upgradePlans = []; });
   afterEach(cleanup);
 
   it("công bố lỗi khi không thể lưu thiết lập hồ sơ", async () => {
@@ -32,5 +32,15 @@ describe("Profile mutation feedback", () => {
     await user.click(screen.getByRole("button", { name: "Lưu thiết lập" }));
 
     expect(mocks.toast.error).toHaveBeenCalledWith("Không thể lưu hồ sơ", { description: "Không thể kết nối" });
+  });
+
+  it("hiển thị gói hiện tại, quyền lợi và đề xuất nâng cấp từ cấu hình quản trị", () => {
+    mocks.summary.data.currentPlan = { name: "Basic học chủ động", tier: "basic", monthlyPrice: 0, promoPrice: null, benefits: ["20 lượt làm/tháng"] };
+    mocks.summary.data.upgradePlans = [{ name: "PRO tăng tốc", tier: "pro", description: "Thêm quyền lợi chuyên sâu", payosEnabled: true }];
+    render(<Profile />);
+    expect(screen.getByLabelText("Gói đăng ký hiện tại").textContent).toContain("Basic học chủ động");
+    expect(screen.getByText("20 lượt làm/tháng")).toBeTruthy();
+    expect(screen.getByText("Nâng cấp lên PRO tăng tốc")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /xem ưu đãi/i }).getAttribute("href")).toBe("/nap-point?planTier=pro");
   });
 });

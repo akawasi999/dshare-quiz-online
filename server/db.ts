@@ -10,10 +10,11 @@ import {
   learnerProfiles,
   lessons,
   questionOptions,
-  questions,
-  quizzes,
-  quizQuestions,
-  subjects,
+	questions,
+	quizzes,
+	quizQuestions,
+	subscriptionPlans,
+	subjects,
   users,
   walletTransactions,
 } from "../drizzle/schema";
@@ -90,7 +91,12 @@ export async function getLearnerSummary(userId: number) {
     averageScore: sql<number>`coalesce(round(avg(${attempts.score})), 0)`,
     passedCount: sql<number>`sum(case when ${attempts.passed} = true then 1 else 0 end)`,
   }).from(attempts).where(and(eq(attempts.userId, userId), eq(attempts.status, "submitted")));
-  return { profile, stats: stats[0] ?? { completed: 0, averageScore: 0, passedCount: 0 } };
+  const plans = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, true)).orderBy(subscriptionPlans.displayOrder, subscriptionPlans.name);
+  const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
+  const currentPlan = plans.find(plan => plan.tier === profile.tier) ?? null;
+  const profileTier = profile.tier as keyof typeof tierRank;
+  const upgradePlans = plans.filter(plan => tierRank[plan.tier as keyof typeof tierRank] > tierRank[profileTier]);
+  return { profile, stats: stats[0] ?? { completed: 0, averageScore: 0, passedCount: 0 }, currentPlan, upgradePlans };
 }
 
 export async function listPublishedCatalog(search?: string, categoryId?: number) {

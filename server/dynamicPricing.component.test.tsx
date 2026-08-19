@@ -4,7 +4,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  plans: { data: [] as Array<{ id: number; code: string; name: string; tier: "basic" | "pro" | "premium"; description: string | null; monthlyPrice: number; promoPrice: number | null; displayOrder: number; isActive: boolean }>, isLoading: false, error: null as Error | null },
+  plans: { data: [] as Array<{ id: number; code: string; name: string; tier: "basic" | "pro" | "premium"; description: string | null; benefits: string[] | null; monthlyPrice: number; promoPrice: number | null; payosEnabled: boolean; displayOrder: number; isActive: boolean }>, isLoading: false, error: null as Error | null },
 }));
 
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
@@ -21,14 +21,16 @@ describe("Pricing dynamic plans", () => {
   });
   afterEach(cleanup);
 
-  it("hiển thị tên, mô tả và giá khuyến mãi do quản trị cấu hình", () => {
-    mocks.plans.data = [{ id: 7, code: "practice-plus", name: "Luyện thi Plus", tier: "pro", description: "Gói được quản trị cập nhật", monthlyPrice: 89000, promoPrice: 49000, displayOrder: 1, isActive: true }];
+  it("hiển thị tên, mô tả, quyền lợi, giá khuyến mãi và CTA PayOS do quản trị cấu hình", () => {
+    mocks.plans.data = [{ id: 7, code: "practice-plus", name: "Luyện thi Plus", tier: "pro", description: "Gói được quản trị cập nhật", benefits: ["Tặng 300 Point", "Hỗ trợ ưu tiên"], monthlyPrice: 89000, promoPrice: 49000, payosEnabled: true, displayOrder: 1, isActive: true }];
     render(<Pricing />);
     expect(screen.getByText("Luyện thi Plus")).toBeTruthy();
     expect(screen.getByText("Gói được quản trị cập nhật")).toBeTruthy();
     expect(screen.getByText("49.000đ")).toBeTruthy();
     expect(screen.getByText("Giá gốc 89.000đ")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Nâng cấp ngay" }).getAttribute("href")).toBe("/nap-point?planTier=pro");
+    expect(screen.getByText("Tặng 300 Point")).toBeTruthy();
+    expect(screen.getByText("Hỗ trợ ưu tiên")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Nâng cấp qua PayOS" }).getAttribute("href")).toBe("/nap-point?planTier=pro");
   });
 
   it("hiển thị trạng thái trống khi quản trị chưa kích hoạt gói nào", () => {
