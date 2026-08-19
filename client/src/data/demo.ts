@@ -12,6 +12,8 @@ export type ShowcaseQuiz = {
   points: number;
   reward: number;
   attemptCount?: number;
+  recentAttemptCount?: number;
+  isTrending?: boolean;
   createdAt?: Date;
   coverImage?: string;
   tier: "Basic" | "Pro" | "Premium";

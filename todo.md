@@ -178,3 +178,5 @@
 - [x] Thêm tooltip ngày và giờ công bố khi rê chuột vào nhãn Mới.
 - [x] Hiển thị thời gian công bố tương đối trên từng thẻ bộ đề.
 - [x] Thêm bộ lọc Mới công bố cho thư viện bộ đề.
+- [x] Hiển thị nhãn Thịnh hành cho các bộ đề có lượt làm cao trong 24 giờ qua.
+- [x] Bỏ phần thời gian hiển thị trên nhãn Mới theo yêu cầu.

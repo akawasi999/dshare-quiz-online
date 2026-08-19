@@ -6,6 +6,7 @@ import type { ShowcaseQuiz } from "@/data/demo";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { isQuizNew } from "@shared/quizFreshness";
+import { withTrendingStatus } from "@shared/quizTrending";
 import { ArrowRight, CheckCircle2, Clock3, Filter, Search, SlidersHorizontal, Sparkles, Target } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
@@ -40,7 +41,7 @@ export default function QuizLibrary() {
   const [hasStartedExploring, setHasStartedExploring] = useState(Boolean(initialSearch || savedPreferences.search || savedPreferences.category !== "Tất cả" || savedPreferences.difficulty !== "Tất cả" || savedPreferences.tier !== "Tất cả" || savedPreferences.onlyNew));
   const suggestedCategory = categories.data?.find(item => item.id === learner.data?.profile.lastPracticeCategoryId);
   const categoryFilters = ["Tất cả", ...(categories.data ?? []).map(item => item.title)];
-  const liveQuizzes = useMemo<ShowcaseQuiz[]>(() => (catalog.data ?? []).map(quiz => ({
+  const liveQuizzes = useMemo<ShowcaseQuiz[]>(() => withTrendingStatus((catalog.data ?? []).map(quiz => ({
     id: quiz.quizId,
     title: quiz.title,
     category: quiz.categoryTitle,
@@ -55,10 +56,11 @@ export default function QuizLibrary() {
     points: quiz.entryPointCost,
     reward: quiz.completionReward,
     attemptCount: Number(quiz.attemptCount ?? 0),
+    recentAttemptCount: Number(quiz.recentAttemptCount ?? 0),
     createdAt: quiz.createdAt,
     coverImage: quiz.coverImageUrl ?? undefined,
     tier: tierLabels[quiz.accessTier],
-  })), [catalog.data]);
+  }))), [catalog.data]);
   const categoryCounts = useMemo(() => liveQuizzes.reduce<Record<string, number>>((counts, quiz) => ({ ...counts, [quiz.category]: (counts[quiz.category] ?? 0) + 1 }), { "Tất cả": liveQuizzes.length }), [liveQuizzes]);
   const tierCounts = useMemo(() => liveQuizzes.reduce<Record<string, number>>((counts, quiz) => ({ ...counts, [quiz.tier]: (counts[quiz.tier] ?? 0) + 1 }), { "Tất cả": liveQuizzes.length, Basic: 0, Pro: 0, Premium: 0 }), [liveQuizzes]);
   const filtered = useMemo(() => liveQuizzes.filter(quiz => {

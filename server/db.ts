@@ -112,6 +112,7 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
     createdAt: quizzes.createdAt,
     coverImageUrl: sql<string | null>`coalesce(${quizzes.coverImageUrl}, ${categories.coverImageUrl})`,
     attemptCount: sql<number>`count(${attempts.id})`,
+    recentAttemptCount: sql<number>`sum(case when ${attempts.completedAt} >= date_sub(now(), interval 24 hour) then 1 else 0 end)`,
     categoryId: categories.id,
     categoryTitle: categories.title,
     subjectTitle: subjects.title,
