@@ -13,6 +13,7 @@ import {
   learnerProfiles,
   lessons,
   membershipGroupPermissions,
+  paymentEmailDeliveries,
   questionOptions,
   paymentRecords,
   questions,
@@ -57,7 +58,7 @@ import {
 } from "./db";
 import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
-import { encryptEmailApiKey } from "./paymentConfirmationEmail";
+import { encryptEmailApiKey, sendTestEmail } from "./paymentConfirmationEmail";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
@@ -566,6 +567,23 @@ export const appRouter = router({
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "email_delivery.settings_updated", entityType: "email_delivery_settings", metadata: { provider: input.provider, fromEmail: input.fromEmail ?? null, isEnabled: input.isEnabled, apiKeyUpdated: Boolean(input.apiKey) } });
       return { success: true, hasApiKey: Boolean(input.apiKey || current?.apiKeyCiphertext) };
     }),
+    sendTestEmail: adminProcedure.input(z.object({ recipient: z.string().trim().email().max(320) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cấu hình email." });
+      const settings = (await db.select().from(emailDeliverySettings).limit(1))[0];
+      if (!settings?.apiKeyCiphertext || !settings.fromEmail) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Hãy lưu API email và địa chỉ gửi trước khi gửi thử." });
+      try {
+        const result = await sendTestEmail(settings, input.recipient);
+        if (!result.sent) throw new Error("Chưa thể gửi email thử.");
+        await db.insert(paymentEmailDeliveries).values({ paymentRecordId: null, recipient: input.recipient, kind: "test", status: "sent", subject: result.subject, providerMessageId: result.providerMessageId });
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "email_delivery.test_sent", entityType: "email_delivery", metadata: { recipient: input.recipient } });
+        return { success: true };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Không thể gửi email thử.";
+        await db.insert(paymentEmailDeliveries).values({ paymentRecordId: null, recipient: input.recipient, kind: "test", status: "failed", subject: "Email thử nghiệm · Dshare Quiz Online", errorMessage: message });
+        throw new TRPCError({ code: "BAD_GATEWAY", message });
+      }
+    }),
     overview: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return { users: 0, quizzes: 0, submitted: 0, pendingReports: 0 };
@@ -813,12 +831,16 @@ export const appRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập người dùng." });
       const account = (await db.select({ user: users, profile: learnerProfiles }).from(users).leftJoin(learnerProfiles, eq(users.id, learnerProfiles.userId)).where(eq(users.id, input.userId)).limit(1))[0];
       if (!account) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy người dùng." });
-      const [activity, recentAttempts, recentTransactions] = await Promise.all([
+      const [activity, recentAttempts, recentTransactions, paymentOrders, emailDeliveries] = await Promise.all([
         db.select().from(auditLogs).where(and(eq(auditLogs.entityType, "user"), eq(auditLogs.entityId, input.userId))).orderBy(desc(auditLogs.createdAt)).limit(12),
         db.select({ attempt: attempts, quizTitle: quizzes.title }).from(attempts).leftJoin(quizzes, eq(attempts.quizId, quizzes.id)).where(eq(attempts.userId, input.userId)).orderBy(desc(attempts.startedAt)).limit(8),
         db.select().from(walletTransactions).where(eq(walletTransactions.userId, input.userId)).orderBy(desc(walletTransactions.createdAt)).limit(8),
+        db.select().from(paymentRecords).where(eq(paymentRecords.userId, input.userId)).orderBy(desc(paymentRecords.createdAt)).limit(12),
+        db.select().from(paymentEmailDeliveries).orderBy(desc(paymentEmailDeliveries.createdAt)).limit(60),
       ]);
-      return { ...account, activity, recentAttempts, recentTransactions };
+      const emailsByPayment = new Map<number, typeof emailDeliveries>();
+      emailDeliveries.forEach(delivery => { if (delivery.paymentRecordId) emailsByPayment.set(delivery.paymentRecordId, [...(emailsByPayment.get(delivery.paymentRecordId) ?? []), delivery]); });
+      return { ...account, activity, recentAttempts, recentTransactions, paymentOrders: paymentOrders.map(order => ({ order, emailDeliveries: emailsByPayment.get(order.id) ?? [] })) };
     }),
     bulkUpdateUsers: adminProcedure.input(z.object({ userIds: z.array(z.number().int().positive()).min(1).max(50), tier: z.enum(["basic", "pro", "premium"]).optional(), isBanned: z.boolean().optional() }).refine(input => input.tier !== undefined || input.isBanned !== undefined, { message: "Cần chọn thay đổi hạng hoặc trạng thái." }))
       .mutation(async ({ ctx, input }) => {

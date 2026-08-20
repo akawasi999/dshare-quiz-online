@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   users: { data: { items: [] }, isLoading: false, error: null },
   emailSettings: { data: { provider: "resend", fromEmail: null, isEnabled: false, hasApiKey: false, updatedAt: null }, isLoading: false, error: null },
   saveEmailSettings: { mutate: vi.fn(), isPending: false },
+  sendTestEmail: { mutate: vi.fn(), isPending: false },
   savePlan: { mutate: vi.fn(), mutateAsync: vi.fn().mockResolvedValue({ success: true, planId: 1 }), isPending: false },
   deletePlan: { mutate: vi.fn(), isPending: false },
   saveGroup: { mutate: vi.fn(), mutateAsync: vi.fn().mockResolvedValue({ success: true, groupId: 10 }), isPending: false },
@@ -42,6 +43,7 @@ vi.mock("@/lib/trpc", () => ({
       membershipManagement: { useQuery: () => mocks.management },
       emailDeliverySettings: { useQuery: () => mocks.emailSettings },
       saveEmailDeliverySettings: { useMutation: (options: { onSuccess?: () => void }) => ({ ...mocks.saveEmailSettings, mutate: (...args: unknown[]) => { mocks.saveEmailSettings.mutate(...args); options.onSuccess?.(); } }) },
+      sendTestEmail: { useMutation: (options: { onSuccess?: () => void }) => ({ ...mocks.sendTestEmail, mutate: (...args: unknown[]) => { mocks.sendTestEmail.mutate(...args); options.onSuccess?.(); } }) },
       users: { useQuery: () => mocks.users },
       saveSubscriptionPlan: { useMutation: () => mocks.savePlan },
       deleteSubscriptionPlan: { useMutation: () => mocks.deletePlan },
@@ -68,6 +70,7 @@ describe("MembershipGroupPermissionsPanel", () => {
     mocks.deleteGroup.mutate.mockClear();
     mocks.savePermissions.mutateAsync.mockClear();
     mocks.savePlanPermissions.mutateAsync.mockClear();
+    mocks.sendTestEmail.mutate.mockClear();
   });
   afterEach(cleanup);
 
@@ -170,5 +173,15 @@ describe("MembershipGroupPermissionsPanel", () => {
     expect(within(dialog).getByText("Tặng 150 Point")).toBeTruthy();
     expect(within(dialog).getByText("Có PayOS")).toBeTruthy();
     expect(within(dialog).getByText("Chưa bật PayOS")).toBeTruthy();
+  });
+
+  it("cho phép gửi email thử nghiệm từ cấu hình quản trị", async () => {
+    const user = userEvent.setup();
+    render(<MembershipGroupPermissionsPanel />);
+    await user.click(screen.getByRole("button", { name: "Gói đăng ký" }));
+    const recipient = screen.getByLabelText("Gửi email thử tới");
+    await user.type(recipient, "admin@example.com");
+    await user.click(screen.getByRole("button", { name: "Gửi email thử" }));
+    expect(mocks.sendTestEmail.mutate).toHaveBeenCalledWith({ recipient: "admin@example.com" });
   });
 });

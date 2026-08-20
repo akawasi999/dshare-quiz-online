@@ -1,23 +1,12 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
-type EmailDeliveryConfig = {
-  apiKeyCiphertext: string | null;
-  fromEmail: string | null;
-  isEnabled: boolean;
-};
-
-type PaymentConfirmationInput = {
-  recipient: string | null;
-  learnerName: string | null;
-  planName: string;
-  amount: number;
-  pointAmount: number;
-  membershipMonths: number;
-  orderCode: number | null;
-};
+export type EmailDeliveryConfig = { apiKeyCiphertext: string | null; fromEmail: string | null; isEnabled: boolean };
+export type PaymentConfirmationInput = { recipient: string | null; learnerName: string | null; planName: string; amount: number; pointAmount: number; membershipMonths: number; orderCode: number | null };
+type PreparedEmail = { subject: string; html: string };
 
 const key = () => createHash("sha256").update(process.env.JWT_SECRET || "dshare-email-config").digest();
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character] ?? character);
+const formatVnd = (amount: number) => `${amount.toLocaleString("vi-VN")}đ`;
 
 export function encryptEmailApiKey(apiKey: string) {
   const iv = randomBytes(12);
@@ -35,19 +24,31 @@ export function decryptEmailApiKey(ciphertext: string) {
   return Buffer.concat([decipher.update(Buffer.from(encryptedValue, "base64url")), decipher.final()]).toString("utf8");
 }
 
-export function isEmailDeliveryConfigured(config: EmailDeliveryConfig) {
-  return Boolean(config.isEnabled && config.apiKeyCiphertext && config.fromEmail);
+export function isEmailDeliveryConfigured(config: EmailDeliveryConfig) { return Boolean(config.isEnabled && config.apiKeyCiphertext && config.fromEmail); }
+
+function emailLayout({ eyebrow, title, body, card, footer }: { eyebrow: string; title: string; body: string; card: string; footer: string }) {
+  return `<!doctype html><html><body style="margin:0;background:#edf5ff;color:#172554;font-family:Arial,Helvetica,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 16px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 14px 38px rgba(23,37,84,.12)"><tr><td style="background:linear-gradient(135deg,#065BE5,#3762D2);padding:28px 32px"><table role="presentation" cellspacing="0" cellpadding="0"><tr><td style="width:42px;height:42px;border-radius:12px;background:#ffffff;color:#065BE5;text-align:center;font-size:22px;font-weight:800">D</td><td style="padding-left:12px;color:#ffffff"><div style="font-size:16px;font-weight:800">Dshare</div><div style="margin-top:2px;font-size:10px;letter-spacing:1.5px;font-weight:700;opacity:.82">QUIZ ONLINE</div></td></tr></table></td></tr><tr><td style="padding:32px"><p style="margin:0 0 10px;color:#065BE5;font-size:11px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase">${eyebrow}</p><h1 style="margin:0;font-size:28px;line-height:1.25;color:#172554">${title}</h1><div style="margin-top:16px;font-size:15px;line-height:1.65;color:#526775">${body}</div><div style="margin-top:24px;background:#EBF4FF;border:1px solid #d7e8ff;border-radius:16px;padding:20px">${card}</div><p style="margin:26px 0 0;color:#71838d;font-size:12px;line-height:1.55">${footer}</p></td></tr><tr><td style="padding:18px 32px;background:#f7faff;color:#71838d;font-size:11px;text-align:center">Dshare Quiz Online · Học chủ động, tiến bộ rõ ràng</td></tr></table></td></tr></table></body></html>`;
 }
 
-export async function sendPaymentConfirmationEmail(config: EmailDeliveryConfig, input: PaymentConfirmationInput) {
-  if (!isEmailDeliveryConfigured(config) || !input.recipient) return { attempted: false, sent: false, reason: "not_configured" as const };
-  const amount = input.amount.toLocaleString("vi-VN");
+export function buildPaymentConfirmationEmail(input: PaymentConfirmationInput): PreparedEmail {
   const name = escapeHtml(input.learnerName?.trim() || "bạn");
   const planName = escapeHtml(input.planName);
-  const orderCode = input.orderCode ? `<p style="margin:0 0 8px">Mã đơn: <strong>${input.orderCode}</strong></p>` : "";
-  const points = input.pointAmount > 0 ? `<p style="margin:0 0 8px">Point thưởng: <strong>${input.pointAmount.toLocaleString("vi-VN")} Point</strong></p>` : "";
-  const html = `<main style="font-family:Arial,sans-serif;color:#172554;max-width:560px;margin:auto"><h1 style="font-size:24px">Thanh toán thành công</h1><p>Chào ${name}, gói <strong>${planName}</strong> của bạn đã được kích hoạt.</p><div style="background:#EBF4FF;padding:18px;border-radius:12px"><p style="margin:0 0 8px">Số tiền: <strong>${amount}đ</strong></p><p style="margin:0 0 8px">Thời hạn: <strong>${input.membershipMonths} tháng</strong></p>${points}${orderCode}</div><p style="margin-top:20px">Cảm ơn bạn đã đồng hành cùng Dshare Quiz Online.</p></main>`;
-  const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${decryptEmailApiKey(config.apiKeyCiphertext!)}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: config.fromEmail, to: [input.recipient], subject: `Xác nhận kích hoạt ${input.planName}`, html }) });
-  if (!response.ok) throw new Error(`Email provider trả về lỗi ${response.status}.`);
-  return { attempted: true, sent: true };
+  const pointRow = input.pointAmount > 0 ? `<tr><td style="padding:8px 0;color:#617786">Point thưởng</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#007453">+${input.pointAmount.toLocaleString("vi-VN")} Point</td></tr>` : "";
+  const orderRow = input.orderCode ? `<tr><td style="padding:8px 0;color:#617786">Mã đơn</td><td style="padding:8px 0;text-align:right;font-family:monospace;font-weight:700">${input.orderCode}</td></tr>` : "";
+  return { subject: `Xác nhận kích hoạt ${input.planName} · Dshare Quiz Online`, html: emailLayout({ eyebrow: "Thanh toán thành công", title: "Gói học của bạn đã sẵn sàng", body: `Chào <strong>${name}</strong>, Dshare đã xác nhận thanh toán và kích hoạt gói <strong>${planName}</strong> cho tài khoản của bạn.`, card: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:0 0 12px;font-size:16px;font-weight:800;color:#172554" colspan="2">${planName}</td></tr><tr><td style="padding:8px 0;color:#617786">Số tiền thanh toán</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#172554">${formatVnd(input.amount)}</td></tr><tr><td style="padding:8px 0;color:#617786">Thời hạn gói</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#172554">${input.membershipMonths} tháng</td></tr>${pointRow}${orderRow}</table>`, footer: "Bạn có thể bắt đầu học, làm Quiz hoặc xem quyền lợi gói ngay trong không gian học tập. Nếu bạn không thực hiện giao dịch này, vui lòng liên hệ bộ phận hỗ trợ Dshare." }) };
 }
+
+export function buildTestEmail(recipient: string): PreparedEmail {
+  return { subject: "Email thử nghiệm · Dshare Quiz Online", html: emailLayout({ eyebrow: "Kiểm tra kết nối", title: "Kết nối email đã sẵn sàng", body: `Email thử nghiệm này được gửi tới <strong>${escapeHtml(recipient)}</strong> từ cấu hình Quản trị Dshare.`, card: `<p style="margin:0;color:#172554;font-size:14px;line-height:1.6">Nếu bạn nhận được email này, địa chỉ gửi và kết nối API email đang hoạt động. Bạn có thể bật email xác nhận thanh toán khi sẵn sàng.</p>`, footer: "Đây là email kiểm tra, không liên quan đến bất kỳ đơn thanh toán nào." }) };
+}
+
+async function sendPreparedEmail(config: EmailDeliveryConfig, recipient: string | null, email: PreparedEmail) {
+  if (!isEmailDeliveryConfigured(config) || !recipient) return { attempted: false, sent: false, reason: "not_configured" as const, subject: email.subject, recipient: recipient ?? "" };
+  const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${decryptEmailApiKey(config.apiKeyCiphertext!)}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: config.fromEmail, to: [recipient], subject: email.subject, html: email.html }) });
+  const payload = await response.json().catch(() => ({})) as { id?: string; message?: string };
+  if (!response.ok) throw new Error(payload.message || `Email provider trả về lỗi ${response.status}.`);
+  return { attempted: true, sent: true, subject: email.subject, recipient, providerMessageId: payload.id ?? null };
+}
+
+export async function sendPaymentConfirmationEmail(config: EmailDeliveryConfig, input: PaymentConfirmationInput) { return sendPreparedEmail(config, input.recipient, buildPaymentConfirmationEmail(input)); }
+export async function sendTestEmail(config: EmailDeliveryConfig, recipient: string) { return sendPreparedEmail({ ...config, isEnabled: true }, recipient, buildTestEmail(recipient)); }

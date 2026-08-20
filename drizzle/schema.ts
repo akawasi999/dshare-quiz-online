@@ -321,6 +321,21 @@ export const paymentRecords = mysqlTable("paymentRecords", {
   index("payment_records_status_idx").on(table.status),
 ]);
 
+export const paymentEmailDeliveries = mysqlTable("paymentEmailDeliveries", {
+  id: int("id").autoincrement().primaryKey(),
+  paymentRecordId: int("paymentRecordId"),
+  recipient: varchar("recipient", { length: 320 }).notNull(),
+  kind: mysqlEnum("kind", ["payment_confirmation", "test"]).notNull(),
+  status: mysqlEnum("status", ["sent", "failed"]).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  providerMessageId: varchar("providerMessageId", { length: 255 }),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [
+  index("payment_email_deliveries_payment_idx").on(table.paymentRecordId),
+  index("payment_email_deliveries_created_idx").on(table.createdAt),
+]);
+
 export const bugReports = mysqlTable("bugReports", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),

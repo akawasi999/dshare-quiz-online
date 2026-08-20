@@ -212,3 +212,6 @@
 - [x] Gửi email xác nhận tự động một lần sau khi thanh toán gói đăng ký thành công.
 - [x] Thêm màn hình quản trị để nhập, kiểm tra và lưu cấu hình API email cùng địa chỉ gửi trước khi kích hoạt gửi xác nhận.
 - [x] Thêm chế độ xem trước bảng giá và catalog PayOS cho quản trị viên trước khi kích hoạt thanh toán.
+- [x] Thêm nút gửi email thử nghiệm để quản trị viên kiểm tra kết nối API email.
+- [x] Thiết kế lại mẫu email xác nhận thanh toán với logo Dshare và chi tiết gói đăng ký chuyên nghiệp.
+- [x] Ghi nhận và hiển thị lịch sử gửi email thành công/thất bại trong chi tiết từng đơn hàng quản trị.
