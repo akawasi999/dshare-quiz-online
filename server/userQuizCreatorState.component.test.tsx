@@ -29,6 +29,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     expect(screen.getByText("Tạo nhanh với")).toBeTruthy();
+    expect(screen.getByTestId("studio-composer")).toBeTruthy();
     expect(screen.getByTestId("live-question-preview").className).toContain("live-question-preview--headerless");
     expect(screen.queryByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeNull();
     await user.click(screen.getByRole("tab", { name: "Cài đặt" }));
