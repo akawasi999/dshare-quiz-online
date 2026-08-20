@@ -240,3 +240,4 @@
 - [x] Thêm tìm kiếm theo tên và sắp xếp danh sách Quiz của tôi.
 - [x] Thêm thao tác sao chép và xóa Quiz an toàn từ từng thẻ Quiz.
 - [x] Cho phép mở Quiz đã lưu trong studio để chỉnh sửa và lưu cập nhật.
+- [x] Gộp tiêu đề và mô tả tại khu vực đầu studio Tạo Quiz; giữ chủ đề và ảnh bìa trong phần cài đặt.

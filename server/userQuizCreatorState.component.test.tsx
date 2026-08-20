@@ -28,6 +28,9 @@ describe("UserQuizCreator thiết kế lại", () => {
     render(<UserQuizCreator />);
     expect(screen.getByText("Tạo nhanh với")).toBeTruthy();
     expect(screen.getByText("Câu hỏi đã tạo")).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: "Mô tả Quiz trong studio" })).toBeTruthy();
+    expect(screen.queryByText("Mô tả ngắn")).toBeNull();
     expect(screen.queryByText("ID Bài học")).toBeNull();
   });
 
