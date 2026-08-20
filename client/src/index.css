@@ -114,6 +114,8 @@ h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Montserrat", ui-sans-serif, 
 .field:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, .2); }
 .account-embedded > div > header { display: none; }
 .account-embedded > div { min-height: calc(100vh - 76px); }
+.live-question-preview--headerless > aside > div:first-child { display: none; }
+.live-question-preview--headerless > aside > div:first-child + div { margin-top: 0; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease, color 160ms ease, border-color 160ms ease; }
 button:active { transform: scale(.97); }

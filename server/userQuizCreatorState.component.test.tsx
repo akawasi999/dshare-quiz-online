@@ -29,7 +29,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     expect(screen.getByText("Tạo nhanh với")).toBeTruthy();
-    expect(screen.getByText("Câu hỏi đã tạo")).toBeTruthy();
+    expect(screen.getByTestId("live-question-preview").className).toContain("live-question-preview--headerless");
     expect(screen.queryByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeNull();
     await user.click(screen.getByRole("tab", { name: "Cài đặt" }));
     expect(screen.getByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeTruthy();
@@ -105,7 +105,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     render(<UserQuizCreator />);
     await user.click(screen.getAllByRole("button", { name: "Dùng Quiz AI" })[0]!);
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
-    expect(screen.getByText("Câu hỏi đã tạo")).toBeTruthy();
+    expect(screen.getByTestId("live-question-preview").className).toContain("live-question-preview--headerless");
     expect(screen.getByText("AI sẽ tự làm rõ yêu cầu trước khi tạo câu hỏi.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Đính kèm tệp vào chat AI" })).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("true");
