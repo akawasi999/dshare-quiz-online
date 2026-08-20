@@ -60,6 +60,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
     expect(screen.getByText("Câu hỏi đã tạo")).toBeTruthy();
     expect(screen.getByText("AI sẽ tự làm rõ yêu cầu trước khi tạo câu hỏi.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Đính kèm tệp vào chat AI" })).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("true");
     await user.click(screen.getByRole("button", { name: "Thu gọn" }));
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("false");

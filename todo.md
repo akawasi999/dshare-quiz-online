@@ -256,3 +256,5 @@
 - [x] Thêm AI nhận diện yêu cầu, hỏi bổ sung khi thiếu dữ liệu và tự sinh câu hỏi/đáp án vào bản nháp Quiz.
 - [x] Ẩn sidebar menu khi mở chat AI trong Studio và khôi phục khi đóng hội thoại.
 - [x] Mở rộng bố cục Studio hai cột trong chế độ AI để ưu tiên không gian soạn Quiz và chat.
+- [x] Cho phép tải Excel, Word hoặc PDF trực tiếp trong chat Studio AI để phân tích và tạo câu hỏi.
+- [x] Hiển thị tiến trình phân tích tệp, cảnh báo quota và thêm câu hỏi trích xuất vào bản nháp từ chat Studio.
