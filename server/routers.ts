@@ -66,6 +66,7 @@ import { decryptAiAssistantApiKey, discoverGeminiChatModel, encryptAiAssistantAp
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
+import { buildQuizStudioChatMessages, parseQuizStudioChatResponse, quizStudioChatInputSchema } from "./quizStudioChat";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
 import { importManualQuizFile, ocrPdfWithVision } from "./manualQuizImport";
 import { extractRemoteQuizSource } from "./remoteQuizExtraction";
@@ -613,6 +614,20 @@ export const appRouter = router({
       const response = await invokeLLM({ messages: [{ role: "system", content: "Bạn là chuyên gia biên soạn câu hỏi bằng tiếng Việt. Chỉ trả về JSON hợp lệ, không có markdown." }, { role: "user", content: `Tạo một câu hỏi loại ${input.type}, độ khó ${input.difficulty}, chủ đề ${input.topic}. Ngữ cảnh: ${input.context ?? "Không có"}. Trả JSON gồm prompt, explanation, options và answerConfig. Với fill_blank dùng answerConfig.acceptedAnswers; matching dùng pairs {left,right}; true_false dùng Đúng/Sai; essay cần answerConfig.sampleOutline.` }], maxTokens: 1200, response_format: { type: "json_schema", json_schema: { name: "creator_question_draft", strict: true, schema: { type: "object", properties: { prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["prompt", "explanation", "options", "answerConfig"], additionalProperties: false } } } });
       try { const draft = parseAiQuestionDraft(response.choices[0]?.message.content, input.type); await recordAiUsage(ctx.user.id, "generate_question"); return { ...input, ...draft, quota: { used: quota.used + 1, limit: quota.limit } }; }
       catch (error) { throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI tạo câu hỏi không hợp lệ: ${error.message}` : "AI tạo câu hỏi không hợp lệ." }); }
+    }),
+    studioAiChat: protectedProcedure.input(quizStudioChatInputSchema).mutation(async ({ ctx, input }) => {
+      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng chat AI trong Studio");
+      const response = await invokeLLM({ messages: buildQuizStudioChatMessages(input), maxTokens: 2_400, response_format: { type: "json_schema", json_schema: { name: "quiz_studio_chat", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["clarify", "generate"] }, reply: { type: "string" }, detected: { type: "object", properties: { topic: { type: ["string", "null"] }, type: { type: ["string", "null"] }, difficulty: { type: ["string", "null"] }, count: { type: ["integer", "null"] } }, required: ["topic", "type", "difficulty", "count"], additionalProperties: false }, questions: { type: "array", items: { type: "object", properties: { type: { type: "string" }, difficulty: { type: "string" }, prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "prompt", "explanation", "options", "answerConfig"], additionalProperties: false } }, suggestedPrompts: { type: "array", items: { type: "string" } } }, required: ["action", "reply", "detected", "questions", "suggestedPrompts"], additionalProperties: false } } } });
+      try {
+        const result = parseQuizStudioChatResponse(response.choices[0]?.message.content);
+        if (result.action === "generate") {
+          const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+          if (quota.limit !== null && quota.used + result.questions.length > quota.limit) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn cần ${result.questions.length} AI Credits nhưng chỉ còn ${Math.max(0, quota.limit - quota.used)} Credit.` });
+          for (const _question of result.questions) await recordAiUsage(ctx.user.id, "generate_question");
+          return { ...result, quota: { used: quota.used + result.questions.length, limit: quota.limit } };
+        }
+        return { ...result, quota: null };
+      } catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI Studio chưa thể xử lý yêu cầu: ${error.message}` : "AI Studio chưa thể xử lý yêu cầu." }); }
     }),
     generateQuestionsFromDocument: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]), base64: z.string().min(80).max(22_000_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi từ tài liệu bằng AI");

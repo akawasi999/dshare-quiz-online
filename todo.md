@@ -252,3 +252,5 @@
 - [x] Tự động truy xuất và chọn mô hình Gemini khả dụng từ API key, không yêu cầu nhập model thủ công.
 - [x] Thêm nút kiểm tra kết nối Gemini API key an toàn trong phần quản trị AI Assistant.
 - [x] Tự động gợi ý câu hỏi tiếp theo dựa trên phản hồi mới nhất của AI Assistant.
+- [x] Thiết kế lại Studio Tạo Quiz theo hai cột với khung chat AI mở khi dùng thao tác AI.
+- [x] Thêm AI nhận diện yêu cầu, hỏi bổ sung khi thiếu dữ liệu và tự sinh câu hỏi/đáp án vào bản nháp Quiz.
