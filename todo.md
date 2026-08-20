@@ -234,3 +234,6 @@
 - [x] Bỏ màn chọn Tạo Quiz thủ công/AI để người dùng vào thẳng studio Quiz.
 - [x] Cho phép sửa trực tiếp từng câu hỏi trong Live Preview.
 - [x] Lưu lịch sử nguồn URL và cho phép tái tạo câu hỏi nhanh từ nguồn đã dùng.
+- [x] Đổi mục menu hồ sơ từ Tạo Quiz thành Quiz của tôi.
+- [x] Xây dựng trang Quiz của tôi hiển thị danh sách Quiz do người dùng tạo.
+- [x] Thêm nút Tạo Quiz mới nổi bật ở góc phải và kết nối tới studio Quiz.

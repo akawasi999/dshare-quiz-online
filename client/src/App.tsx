@@ -15,6 +15,7 @@ import Referral from "@/pages/Referral";
 import TopUp from "@/pages/TopUp";
 import PaymentStatus from "@/pages/PaymentStatus";
 import UserQuizCreator from "@/pages/UserQuizCreator";
+import MyQuizzes from "@/pages/MyQuizzes";
 import AccountLayout from "@/components/AccountLayout";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -37,6 +38,7 @@ function Router() {
     <Route path="/thanh-toan" component={PaymentStatus} />
     <Route path="/luyen-tap" component={Practice} />
     <Route path="/tao-quiz" component={UserQuizCreator} />
+    <Route path="/quiz-cua-toi" component={MyQuizzes} />
     <Route path="/quan-tri" component={Admin} />
     <Route path="/quan-tri/noi-dung" component={Admin} />
     <Route path="/quan-tri/tao-de-ngau-nhien" component={Admin} />
