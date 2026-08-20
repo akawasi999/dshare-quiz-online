@@ -250,3 +250,5 @@
 - [x] Hoàn thiện khu vực xem lại lịch sử hội thoại AI Assistant cho người học.
 - [x] Hiển thị prompt gợi ý theo môn học hoặc Quiz người học đã chọn trong AI Assistant.
 - [x] Tự động truy xuất và chọn mô hình Gemini khả dụng từ API key, không yêu cầu nhập model thủ công.
+- [x] Thêm nút kiểm tra kết nối Gemini API key an toàn trong phần quản trị AI Assistant.
+- [x] Tự động gợi ý câu hỏi tiếp theo dựa trên phản hồi mới nhất của AI Assistant.

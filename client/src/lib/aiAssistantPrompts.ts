@@ -19,3 +19,13 @@ export function buildAiAssistantPrompts(input: { subject?: string; quiz?: QuizPr
   ];
   return defaultAiAssistantPrompts;
 }
+
+export function buildAiAssistantFollowUpPrompts(answer: string) {
+  const topic = answer.replace(/[#*_`>[\]]/g, " ").replace(/\s+/g, " ").trim().slice(0, 96);
+  if (topic.length < 12) return [];
+  return [
+    `Bạn có thể giải thích sâu hơn phần: “${topic}” không?`,
+    `Hãy cho tôi một ví dụ thực hành liên quan đến nội dung trên.`,
+    `Tạo 3 câu hỏi tự kiểm tra từ nội dung vừa giải thích.`,
+  ];
+}

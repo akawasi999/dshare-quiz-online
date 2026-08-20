@@ -233,6 +233,12 @@ export const appRouter = router({
       const models = await listLLMModels();
       return models.data.map(model => model.id);
     }),
+    testGeminiConnection: adminProcedure.input(z.object({ apiKey: z.string().trim().min(10).max(500) })).mutation(async ({ ctx, input }) => {
+      const model = await discoverGeminiChatModel(input.apiKey);
+      const database = await getDb();
+      if (database) await database.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "ai_assistant.gemini_connection_tested", entityType: "ai_assistant_settings", entityId: null, metadata: { model, success: true } });
+      return { success: true as const, model };
+    }),
     saveConfig: adminProcedure.input(z.object({ provider: z.enum(["manus", "gemini"]), model: z.string().trim().min(2).max(120).optional(), apiKey: z.string().max(500).optional(), isEnabled: z.boolean(), welcomeMessage: z.string().trim().min(10).max(500) })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
