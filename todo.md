@@ -275,3 +275,5 @@
 - [x] Gộp tạo nhanh vào tab Câu hỏi và đặt nút Dùng Quiz AI cạnh biểu tượng robot.
 - [x] Đặt khối Tạo nhanh với Quiz AI bên trong nội dung tab Câu hỏi của Studio.
 - [x] Chia thanh điều khiển Studio thành ba vùng và đưa tab Câu hỏi/Cài đặt vào chính giữa.
+- [x] Gộp Word/PDF vào menu tải xuống và thu gọn các thao tác phụ trong thanh Studio.
+- [x] Đổi Lưu Quiz thành Xuất bản với hộp xác nhận, lưu Quiz và điều hướng về Quiz của tôi.

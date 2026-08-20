@@ -103,12 +103,12 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByRole("button", { name: "Làm lại" }).hasAttribute("disabled")).toBe(false);
     await user.click(screen.getByRole("button", { name: "Làm lại" }));
 
-    const pdfButton = screen.getByRole("button", { name: "Xuất PDF" });
-    const wordButton = screen.getByRole("button", { name: "Xuất Word" });
-    expect(pdfButton.hasAttribute("disabled")).toBe(false);
-    expect(wordButton.hasAttribute("disabled")).toBe(false);
-    await user.click(pdfButton);
-    await user.click(wordButton);
+    const downloadButton = screen.getByRole("button", { name: "Tải xuống Quiz" });
+    expect(downloadButton.hasAttribute("disabled")).toBe(false);
+    await user.click(downloadButton);
+    await user.click(screen.getByRole("menuitem", { name: "Tải PDF" }));
+    await user.click(downloadButton);
+    await user.click(screen.getByRole("menuitem", { name: "Tải Word" }));
     expect(mocks.exportPdf).toHaveBeenCalledTimes(1);
     expect(mocks.exportWord).toHaveBeenCalledTimes(1);
 
