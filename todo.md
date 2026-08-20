@@ -262,3 +262,5 @@
 - [x] Bổ sung chế độ Socratic, chấm bài tự luận theo rubric và lộ trình ôn tập trong AI Assistant.
 - [x] Hỗ trợ đầu vào ảnh và giọng nói cho AI Assistant với kiểm soát quyền, kích thước và quota.
 - [x] Bổ sung công cụ AI giải thích, biến đổi câu hỏi và rà soát định dạng LaTeX trong Studio Tạo Quiz.
+- [x] Loại bỏ các khu vực tạo AI và nhập tài liệu trùng lặp trong Studio Tạo Quiz.
+- [x] Rà soát và tinh gọn các điều khiển Studio không còn cần thiết hoặc bị lặp.
