@@ -278,3 +278,5 @@
 - [x] Gộp Word/PDF vào menu tải xuống và thu gọn các thao tác phụ trong thanh Studio.
 - [x] Đổi Lưu Quiz thành Xuất bản với hộp xác nhận, lưu Quiz và điều hướng về Quiz của tôi.
 - [x] Thêm cấu hình Style quản trị cho kích thước hiển thị nội dung tab Câu hỏi và Cài đặt của Studio.
+- [x] Cho phép đổi tên Quiz trực tiếp trên thanh Studio và đồng bộ hai chiều với tab Cài đặt.
+- [x] Hiển thị dấu sao đỏ cho trường bắt buộc và chặn Xuất bản đến khi Quiz có đủ dữ liệu cần thiết.

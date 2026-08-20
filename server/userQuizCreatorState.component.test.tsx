@@ -76,6 +76,26 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByTestId("studio-content-panel").style.maxWidth).toBe("840px");
   });
 
+  it("đồng bộ tên Quiz từ thanh Studio sang Cài đặt và chỉ mở Xuất bản khi đủ dữ liệu bắt buộc", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    const publishButton = screen.getByRole("button", { name: "Xuất bản" });
+    expect(publishButton.hasAttribute("disabled")).toBe(true);
+    expect(screen.getByText(/Cần tên Quiz và ít nhất 1 câu hỏi/)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Đổi tên Quiz" }));
+    const headerTitle = screen.getByLabelText("Đổi tên Quiz trên thanh Studio");
+    await user.type(headerTitle, "Quiz trực tiếp");
+    await user.click(screen.getByRole("tab", { name: "Cài đặt" }));
+    expect((screen.getByLabelText("Tiêu đề Quiz trong studio") as HTMLInputElement).value).toBe("Quiz trực tiếp");
+    expect(screen.getAllByText("*").length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("tab", { name: "Câu hỏi" }));
+    await user.type(screen.getByPlaceholderText("Vui lòng nhập câu hỏi."), "Câu hỏi bắt buộc để xuất bản");
+    await user.type(screen.getByPlaceholderText("Tùy chọn 1"), "Đáp án đúng");
+    await user.type(screen.getByPlaceholderText("Tùy chọn 2"), "Đáp án sai");
+    await user.click(screen.getByRole("button", { name: "Thêm vào Quiz" }));
+    expect(publishButton.hasAttribute("disabled")).toBe(false);
+  });
+
   it("mở khung chat AI và phần xem trước câu hỏi", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
