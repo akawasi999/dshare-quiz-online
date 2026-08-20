@@ -2,6 +2,8 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
+  aiAssistantConversations,
+  aiAssistantSettings,
   attempts,
   attemptAnswers,
   auditLogs,
@@ -60,6 +62,7 @@ import {
 import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
 import { encryptEmailApiKey, sendTestEmail } from "./paymentConfirmationEmail";
+import { encryptAiAssistantApiKey, generateAiAssistantReply } from "./aiAssistantService";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
@@ -69,6 +72,8 @@ import { extractRemoteQuizSource } from "./remoteQuizExtraction";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
+const defaultAiAssistantConfig = { provider: "manus" as const, model: "gpt-5-mini", isEnabled: false, welcomeMessage: "Chào bạn, tôi là Dshare AI Assistant. Tôi có thể giúp bạn lập kế hoạch ôn tập, giải thích khái niệm và gợi ý cách học hiệu quả." };
+const publicAiAssistantConfig = (config: typeof aiAssistantSettings.$inferSelect | undefined) => ({ provider: config?.provider ?? defaultAiAssistantConfig.provider, model: config?.model ?? defaultAiAssistantConfig.model, isEnabled: config?.isEnabled ?? defaultAiAssistantConfig.isEnabled, welcomeMessage: config?.welcomeMessage ?? defaultAiAssistantConfig.welcomeMessage, hasApiKey: Boolean(config?.apiKeyCiphertext), updatedAt: config?.updatedAt ?? null });
 const quizIdInput = z.object({ quizId: z.number().int().positive() });
 const csvEscape = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
 const membershipGroupPermissionInput = z.object({
@@ -169,6 +174,66 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+  }),
+
+  aiAssistant: router({
+    config: protectedProcedure.query(async () => {
+      const db = await getDb();
+      const config = db ? (await db.select().from(aiAssistantSettings).limit(1))[0] : undefined;
+      const safeConfig = publicAiAssistantConfig(config);
+      return { isEnabled: safeConfig.isEnabled, welcomeMessage: safeConfig.welcomeMessage, provider: safeConfig.provider };
+    }),
+    history: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select({ id: aiAssistantConversations.id, role: aiAssistantConversations.role, content: aiAssistantConversations.content, createdAt: aiAssistantConversations.createdAt }).from(aiAssistantConversations).where(eq(aiAssistantConversations.userId, ctx.user.id)).orderBy(desc(aiAssistantConversations.createdAt)).limit(20);
+      return rows.reverse();
+    }),
+    clearHistory: protectedProcedure.mutation(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+      await db.delete(aiAssistantConversations).where(eq(aiAssistantConversations.userId, ctx.user.id));
+      return { success: true };
+    }),
+    chat: protectedProcedure.input(z.object({ message: z.string().trim().min(2).max(4_000) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+      const config = (await db.select().from(aiAssistantSettings).limit(1))[0];
+      const safeConfig = publicAiAssistantConfig(config);
+      if (!config || !safeConfig.isEnabled) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "AI Assistant chưa được quản trị viên kích hoạt." });
+      if (config.provider === "gemini" && !config.apiKeyCiphertext) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "AI Assistant Gemini chưa có API key hợp lệ." });
+      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng AI Assistant");
+      const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+      const priorRows = await db.select({ role: aiAssistantConversations.role, content: aiAssistantConversations.content }).from(aiAssistantConversations).where(eq(aiAssistantConversations.userId, ctx.user.id)).orderBy(desc(aiAssistantConversations.createdAt)).limit(12);
+      const reply = await generateAiAssistantReply({ provider: config.provider, model: config.model, apiKeyCiphertext: config.apiKeyCiphertext, messages: [...priorRows.reverse(), { role: "user", content: input.message }] });
+      await db.insert(aiAssistantConversations).values([{ userId: ctx.user.id, role: "user", content: input.message }, { userId: ctx.user.id, role: "assistant", content: reply }]);
+      await recordAiUsage(ctx.user.id, "assist");
+      return { content: reply, quota: { used: quota.used + 1, limit: quota.limit } };
+    }),
+  }),
+
+  aiAssistantAdmin: router({
+    config: adminProcedure.query(async () => {
+      const db = await getDb();
+      const config = db ? (await db.select().from(aiAssistantSettings).limit(1))[0] : undefined;
+      return publicAiAssistantConfig(config);
+    }),
+    manusModels: adminProcedure.query(async () => {
+      const models = await listLLMModels();
+      return models.data.map(model => model.id);
+    }),
+    saveConfig: adminProcedure.input(z.object({ provider: z.enum(["manus", "gemini"]), model: z.string().trim().min(2).max(120), apiKey: z.string().max(500).optional(), isEnabled: z.boolean(), welcomeMessage: z.string().trim().min(10).max(500) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+      const existing = (await db.select().from(aiAssistantSettings).limit(1))[0];
+      const apiKeyCiphertext = input.apiKey?.trim() ? encryptAiAssistantApiKey(input.apiKey.trim()) : existing?.apiKeyCiphertext ?? null;
+      if (input.provider === "gemini" && !apiKeyCiphertext) throw new TRPCError({ code: "BAD_REQUEST", message: "Vui lòng nhập Gemini API key trước khi kích hoạt Gemini." });
+      const values = { provider: input.provider, model: input.model, apiKeyCiphertext, isEnabled: input.isEnabled, welcomeMessage: input.welcomeMessage };
+      if (existing) await db.update(aiAssistantSettings).set(values).where(eq(aiAssistantSettings.id, existing.id)); else await db.insert(aiAssistantSettings).values(values);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "ai_assistant.config_updated", entityType: "ai_assistant_settings", entityId: existing?.id ?? null, metadata: { provider: input.provider, model: input.model, isEnabled: input.isEnabled, apiKeyUpdated: Boolean(input.apiKey?.trim()) } });
+      const saved = (await db.select().from(aiAssistantSettings).limit(1))[0];
+      return publicAiAssistantConfig(saved);
     }),
   }),
 

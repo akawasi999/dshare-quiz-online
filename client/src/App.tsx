@@ -16,6 +16,7 @@ import TopUp from "@/pages/TopUp";
 import PaymentStatus from "@/pages/PaymentStatus";
 import UserQuizCreator from "@/pages/UserQuizCreator";
 import MyQuizzes from "@/pages/MyQuizzes";
+import AIStudyAssistant from "@/pages/AIStudyAssistant";
 import AccountLayout from "@/components/AccountLayout";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -39,6 +40,7 @@ function Router() {
     <Route path="/luyen-tap" component={Practice} />
     <Route path="/tao-quiz" component={UserQuizCreator} />
     <Route path="/quiz-cua-toi" component={MyQuizzes} />
+    <Route path="/tro-ly-ai">{() => <LearnerAccountPage Page={AIStudyAssistant} />}</Route>
     <Route path="/quan-tri" component={Admin} />
     <Route path="/quan-tri/noi-dung" component={Admin} />
     <Route path="/quan-tri/tao-de-ngau-nhien" component={Admin} />
@@ -52,6 +54,7 @@ function Router() {
     <Route path="/quan-tri/bao-loi" component={Admin} />
     <Route path="/quan-tri/nhat-ky" component={Admin} />
     <Route path="/quan-tri/thuong-hieu" component={Admin} />
+    <Route path="/quan-tri/ai-assistant" component={Admin} />
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>;

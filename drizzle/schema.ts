@@ -310,6 +310,26 @@ export const aiUsageEvents = mysqlTable("aiUsageEvents", {
   index("ai_usage_events_user_created_idx").on(table.userId, table.createdAt),
 ]);
 
+export const aiAssistantSettings = mysqlTable("aiAssistantSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  provider: mysqlEnum("provider", ["manus", "gemini"]).default("manus").notNull(),
+  model: varchar("model", { length: 120 }).default("gpt-5-mini").notNull(),
+  apiKeyCiphertext: text("apiKeyCiphertext"),
+  isEnabled: boolean("isEnabled").default(false).notNull(),
+  welcomeMessage: varchar("welcomeMessage", { length: 500 }).default("Chào bạn, tôi là Dshare AI Assistant. Tôi có thể giúp bạn lập kế hoạch ôn tập, giải thích khái niệm và gợi ý cách học hiệu quả.").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const aiAssistantConversations = mysqlTable("aiAssistantConversations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [
+  index("ai_assistant_conversations_user_created_idx").on(table.userId, table.createdAt),
+]);
+
 export const paymentRecords = mysqlTable("paymentRecords", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),

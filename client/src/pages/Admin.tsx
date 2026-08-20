@@ -14,6 +14,7 @@ import QuestionTransferPanel from "@/components/QuestionTransferPanel";
 import RandomQuizBuilder from "@/components/RandomQuizBuilder";
 import MembershipGroupPermissionsPanel from "@/components/MembershipGroupPermissionsPanel";
 import UserManagementPanel from "@/components/UserManagementPanel";
+import AdminAiAssistantPanel from "@/components/AdminAiAssistantPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,7 @@ export default function Admin() {
   if (location === "/quan-tri/point") content = <AdminPointLedgerPanel />;
   if (location === "/quan-tri/nhat-ky") content = <AuditTrail />;
   if (location === "/quan-tri/thuong-hieu") content = <BrandSettingsPanel />;
+  if (location === "/quan-tri/ai-assistant") content = <AdminAiAssistantPanel />;
   return <DashboardLayout>{content}</DashboardLayout>;
 }
 
