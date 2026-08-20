@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, myQuizzes: { useQuery: () => mocks.mine }, uploadCover: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, createQuiz: { useMutation: () => mocks.create }, generateQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromDocument: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, importManualQuizFile: { useMutation: () => ({ isPending: false, data: undefined, mutate: vi.fn(), mutateAsync: vi.fn() }) } }, learner: { quota: { useQuery: () => mocks.quota } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, myQuizzes: { useQuery: () => mocks.mine }, uploadCover: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, createQuiz: { useMutation: () => mocks.create }, generateQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromDocument: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, importManualQuizFile: { useMutation: () => ({ isPending: false, data: undefined, mutate: vi.fn(), mutateAsync: vi.fn() }) } }, learner: { quota: { useQuery: () => mocks.quota } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/lib/quizDocumentExport", () => ({ exportQuizToPdf: mocks.exportPdf, exportQuizToWord: mocks.exportWord }));
 
@@ -53,6 +53,17 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByText("Tạo từ tài liệu PDF hoặc Word")).toBeTruthy();
   });
 
+  it("mở biểu mẫu trích xuất YouTube và trang web từ các thao tác nhanh", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Bắt đầu tạo thủ công" }));
+    await user.click(screen.getByRole("button", { name: "Trích xuất từ YouTube" }));
+    expect(screen.getByLabelText("URL YouTube")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Đóng trích xuất nguồn" }));
+    await user.click(screen.getByRole("button", { name: "Trích từ trang web" }));
+    expect(screen.getByLabelText("URL trang web")).toBeTruthy();
+  });
+
   it("cho phép chỉnh sửa câu hỏi ngay trong xem trước và xuất bản nháp sang PDF/Word", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
@@ -61,6 +72,11 @@ describe("UserQuizCreator thiết kế lại", () => {
     await user.type(screen.getByPlaceholderText("Tùy chọn 1"), "Hà Nội");
     await user.type(screen.getByPlaceholderText("Tùy chọn 2"), "Huế");
     await user.click(screen.getByRole("button", { name: "Thêm vào Quiz" }));
+    const undoButton = screen.getByRole("button", { name: "Hoàn tác" });
+    expect(undoButton.hasAttribute("disabled")).toBe(false);
+    await user.click(undoButton);
+    expect(screen.getByRole("button", { name: "Làm lại" }).hasAttribute("disabled")).toBe(false);
+    await user.click(screen.getByRole("button", { name: "Làm lại" }));
 
     const pdfButton = screen.getByRole("button", { name: "Xuất PDF" });
     const wordButton = screen.getByRole("button", { name: "Xuất Word" });

@@ -228,3 +228,6 @@
 - [x] Cho phép xem trước và chọn/bỏ chọn từng câu hỏi trước khi thêm từ tệp vào bản nháp Quiz.
 - [x] Hỗ trợ OCR dự phòng cho PDF dạng ảnh không có lớp chữ khi nhập Quiz thủ công.
 - [x] Thiết kế lại trang Tạo Quiz theo UX/UI dạng ứng dụng: thao tác nhanh AI, trình soạn tập trung, thanh công cụ và loại câu hỏi trực quan.
+- [x] Cho phép kéo-thả sắp xếp câu hỏi trực tiếp trong danh sách xem trước Quiz.
+- [x] Thêm lịch sử hoàn tác/làm lại khi chỉnh sửa bản nháp Quiz.
+- [x] Trích xuất nội dung YouTube và trang web để AI tạo câu hỏi trong studio Quiz.

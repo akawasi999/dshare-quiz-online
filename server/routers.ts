@@ -64,6 +64,7 @@ import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from ".
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
 import { importManualQuizFile, ocrPdfWithVision } from "./manualQuizImport";
+import { extractRemoteQuizSource } from "./remoteQuizExtraction";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
@@ -498,6 +499,20 @@ export const appRouter = router({
         };
       } catch (error) {
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể đọc tài liệu để tạo câu hỏi." });
+      }
+    }),
+    generateQuestionsFromRemoteSource: protectedProcedure.input(z.object({ url: z.string().trim().url().max(2_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
+      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi từ YouTube hoặc trang web");
+      const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+      if (quota.limit !== null && quota.used + input.questionCount > quota.limit) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn cần ${input.questionCount} AI Credits nhưng chỉ còn ${Math.max(0, quota.limit - quota.used)} Credit.` });
+      try {
+        const source = await extractRemoteQuizSource(input.url);
+        const generated = await generateMultipleChoiceFromDocument({ text: source.text, count: input.questionCount, difficulty: input.difficulty });
+        for (let index = 0; index < generated.length; index += 1) await recordAiUsage(ctx.user.id, "generate_question");
+        const sourceTextLimit = 6_000;
+        return { sourceName: source.sourceName, sourceUrl: source.sourceUrl, sourceType: source.sourceType, sourceText: source.text.slice(0, sourceTextLimit), sourceTextTruncated: source.text.length > sourceTextLimit, sourceCharacterCount: source.text.length, questions: generated, quota: { used: quota.used + generated.length, limit: quota.limit } };
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể trích xuất nguồn để tạo câu hỏi." });
       }
     }),
     importManualQuizFile: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"]), base64: z.string().min(80).max(22_000_000) })).mutation(async ({ ctx, input }) => {
