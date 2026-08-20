@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
   exportWord: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideSidebar }: { children: React.ReactNode; hideSidebar?: boolean }) => <div data-testid="account-layout" data-hide-sidebar={hideSidebar ? "true" : "false"}>{children}</div> }));
+vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideSidebar, hideHeader }: { children: React.ReactNode; hideSidebar?: boolean; hideHeader?: boolean }) => <div data-testid="account-layout" data-hide-sidebar={hideSidebar ? "true" : "false"} data-hide-header={hideHeader ? "true" : "false"}>{children}</div> }));
 vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, myQuizzes: { useQuery: () => mocks.mine }, sourceHistory: { useQuery: () => mocks.sourceHistory }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, uploadCover: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromDocument: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, importManualQuizFile: { useMutation: () => ({ isPending: false, data: undefined, mutate: vi.fn(), mutateAsync: vi.fn() }) }, studioAiChat: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, enhanceQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, learner: { quota: { useQuery: () => mocks.quota } }, branding: { get: { useQuery: () => mocks.branding } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() }, sourceHistory: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/lib/quizDocumentExport", () => ({ exportQuizToPdf: mocks.exportPdf, exportQuizToWord: mocks.exportWord }));
@@ -107,12 +107,16 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
     expect(screen.getByTestId("studio-workspace").className).toContain("xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]");
     expect(screen.getByTestId("studio-workspace").className).toContain("studio-workspace--with-chat");
-    expect(screen.getByTestId("live-question-preview").className).toContain("live-question-preview--headerless");
+    expect(screen.getByTestId("studio-focused-question-list")).toBeTruthy();
+    expect(screen.getByTestId("studio-toolbar").className).toContain("hidden");
     expect(screen.getByText("AI sẽ tự làm rõ yêu cầu trước khi tạo câu hỏi.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Đính kèm tệp vào chat AI" })).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("true");
+    expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
     await user.click(screen.getByRole("button", { name: "Thu gọn" }));
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("true");
+    expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("false");
+    expect(screen.getByTestId("studio-toolbar").className).not.toContain("hidden");
   });
 
   it("mở biểu mẫu trích xuất YouTube và trang web từ các thao tác nhanh", async () => {

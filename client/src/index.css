@@ -116,8 +116,9 @@ h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Montserrat", ui-sans-serif, 
 .account-embedded > div { min-height: calc(100vh - 76px); }
 .live-question-preview--headerless > aside > div:first-child { display: none; }
 .live-question-preview--headerless > aside > div:first-child + div { margin-top: 0; }
+[data-focus-mode="true"] > [data-testid="studio-content-panel"] { display: none; }
 @media (min-width: 1280px) {
-  .studio-workspace--with-chat > aside { position: sticky; top: 0; height: calc(100vh - 76px); }
+  .studio-workspace--with-chat > aside { position: sticky; top: 0; height: 100vh; }
   .studio-workspace--with-chat > aside > section { height: 100%; min-height: 0; border: 0; border-left: 1px solid rgba(20, 44, 91, .10); border-radius: 0; box-shadow: none; }
 }
 button, a { -webkit-tap-highlight-color: transparent; }
