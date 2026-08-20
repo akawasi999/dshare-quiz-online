@@ -57,7 +57,26 @@ export type AIChatBoxProps = {
    * Click to send directly
    */
   suggestedPrompts?: string[];
+
+  /** Animate the most recent AI response as it is revealed. */
+  animateLatestAssistant?: boolean;
 };
+
+function TypingAssistantMessage({ content, animate }: { content: string; animate: boolean }) {
+  const [visibleContent, setVisibleContent] = useState(animate ? "" : content);
+  useEffect(() => {
+    if (!animate) { setVisibleContent(content); return; }
+    setVisibleContent("");
+    let offset = 0;
+    const timer = window.setInterval(() => {
+      offset = Math.min(content.length, offset + Math.max(2, Math.ceil(content.length / 70)));
+      setVisibleContent(content.slice(0, offset));
+      if (offset >= content.length) window.clearInterval(timer);
+    }, 18);
+    return () => window.clearInterval(timer);
+  }, [animate, content]);
+  return <div className="prose prose-sm dark:prose-invert max-w-none"><Streamdown>{visibleContent}</Streamdown>{animate && visibleContent.length < content.length ? <span aria-label="AI đang gõ" className="ml-0.5 inline-block h-4 w-1 animate-pulse rounded-full bg-primary align-middle" /> : null}</div>;
+}
 
 /**
  * A ready-to-use AI chat box component that integrates with the LLM system.
@@ -119,6 +138,7 @@ export function AIChatBox({
   height = "600px",
   emptyStateMessage = "Start a conversation with AI",
   suggestedPrompts,
+  animateLatestAssistant = true,
 }: AIChatBoxProps) {
   const [input, setInput] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -164,6 +184,10 @@ export function AIChatBox({
       });
     }
   };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [displayMessages.length, isLoading, displayMessages.at(-1)?.content]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,9 +285,7 @@ export function AIChatBox({
                       )}
                     >
                       {message.role === "assistant" ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                          <Streamdown>{message.content}</Streamdown>
-                        </div>
+                        <TypingAssistantMessage content={message.content} animate={animateLatestAssistant && isLastMessage} />
                       ) : (
                         <p className="whitespace-pre-wrap text-sm">
                           {message.content}
@@ -293,7 +315,7 @@ export function AIChatBox({
                     <Sparkles className="size-4 text-primary" />
                   </div>
                   <div className="rounded-lg bg-muted px-4 py-2.5">
-                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><Loader2 className="size-4 animate-spin" /><span>AI đang soạn câu trả lời</span><span className="flex gap-0.5" aria-hidden="true"><i className="size-1 animate-bounce rounded-full bg-primary [animation-delay:-.25s]" /><i className="size-1 animate-bounce rounded-full bg-primary [animation-delay:-.12s]" /><i className="size-1 animate-bounce rounded-full bg-primary" /></span></div>
                   </div>
                 </div>
               )}

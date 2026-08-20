@@ -246,3 +246,6 @@
 - [x] Hoàn thiện quy trình kích hoạt Gemini từ trang quản trị và hiển thị trạng thái cấu hình an toàn.
 - [x] Rà soát, hiển thị và kiểm thử quyền canUseAi theo nhóm người dùng cho AI Assistant.
 - [x] Bổ sung ngữ cảnh môn học và Quiz đang làm cho cuộc hội thoại AI Assistant.
+- [x] Thêm hiệu ứng gõ chữ và trạng thái loading rõ ràng khi AI Assistant tạo câu trả lời.
+- [x] Hoàn thiện khu vực xem lại lịch sử hội thoại AI Assistant cho người học.
+- [x] Hiển thị prompt gợi ý theo môn học hoặc Quiz người học đã chọn trong AI Assistant.
