@@ -274,3 +274,4 @@
 - [x] Chuyển tiêu đề và mô tả Quiz vào nội dung tab Cài đặt.
 - [x] Gộp tạo nhanh vào tab Câu hỏi và đặt nút Dùng Quiz AI cạnh biểu tượng robot.
 - [x] Đặt khối Tạo nhanh với Quiz AI bên trong nội dung tab Câu hỏi của Studio.
+- [x] Chia thanh điều khiển Studio thành ba vùng và đưa tab Câu hỏi/Cài đặt vào chính giữa.
