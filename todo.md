@@ -209,3 +209,6 @@
 - [x] Đồng bộ cấu hình gói đăng ký do quản trị quản lý sang catalog PayOS để tạo thanh toán đúng giá và hạng.
 - [x] Thêm danh sách quyền lợi tùy chỉnh chi tiết cho từng gói trên trang bảng giá.
 - [x] Hiển thị gói đăng ký hiện tại và các ưu đãi nâng cấp phù hợp trong hồ sơ người dùng.
+- [x] Gửi email xác nhận tự động một lần sau khi thanh toán gói đăng ký thành công.
+- [x] Thêm màn hình quản trị để nhập, kiểm tra và lưu cấu hình API email cùng địa chỉ gửi trước khi kích hoạt gửi xác nhận.
+- [x] Thêm chế độ xem trước bảng giá và catalog PayOS cho quản trị viên trước khi kích hoạt thanh toán.

@@ -35,6 +35,15 @@ export const brandSettings = mysqlTable("brandSettings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const emailDeliverySettings = mysqlTable("emailDeliverySettings", {
+  id: int("id").autoincrement().primaryKey(),
+  provider: varchar("provider", { length: 40 }).default("resend").notNull(),
+  apiKeyCiphertext: text("apiKeyCiphertext"),
+  fromEmail: varchar("fromEmail", { length: 320 }),
+  isEnabled: boolean("isEnabled").default(false).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export const accountTierValues = ["basic", "pro", "premium"] as const;
 export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "expired"] as const;
 export const quizModeValues = ["training", "testing"] as const;
@@ -301,6 +310,7 @@ export const paymentRecords = mysqlTable("paymentRecords", {
   description: varchar("description", { length: 500 }),
   webhookReference: varchar("webhookReference", { length: 255 }),
   webhookPayload: json("webhookPayload").$type<Record<string, unknown>>(),
+  confirmationEmailSentAt: timestamp("confirmationEmailSentAt"),
   paidAt: timestamp("paidAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, table => [

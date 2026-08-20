@@ -1,12 +1,13 @@
 import type { Express, Request, Response } from "express";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { auditLogs, learnerProfiles, paymentRecords, walletTransactions } from "../drizzle/schema";
+import { auditLogs, emailDeliverySettings, learnerProfiles, paymentRecords, subscriptionPlans, users, walletTransactions } from "../drizzle/schema";
 import { ensureLearnerProfile, getDb } from "./db";
 import { verifyPayosSignature } from "./payosUtils";
 import { getPayosFulfillmentDecision, getPayosWebhookValidationError, isSuccessfulPayosWebhook, type PayosWebhookData } from "./payosWebhookUtils";
 import { getMembershipFulfillment } from "./membershipUtils";
 import { buildPayosFulfillmentEffects } from "./payosFulfillmentUtils";
+import { sendPaymentConfirmationEmail } from "./paymentConfirmationEmail";
 
 const webhookSchema = z.object({
   code: z.string(),
@@ -46,7 +47,7 @@ export async function processPayosWebhook(payload: z.infer<typeof webhookSchema>
   }
 
   await ensureLearnerProfile(record.userId);
-  return db.transaction(async tx => {
+  const fulfillment = await db.transaction(async tx => {
     const latestRows = await tx.select().from(paymentRecords).where(eq(paymentRecords.id, record.id)).limit(1);
     const latest = latestRows[0];
     if (!latest) throw new Error("Không tìm thấy đơn PayOS tương ứng.");
@@ -77,8 +78,26 @@ export async function processPayosWebhook(payload: z.infer<typeof webhookSchema>
       });
     }
     await tx.insert(auditLogs).values({ actorUserId: latest.userId, action: "payos.payment_paid", entityType: "payment_record", entityId: latest.id, metadata: { orderCode: latest.payosOrderCode, amount: latest.amount, itemCode: latest.itemCode } });
-    return { idempotent: false, recordId: latest.id, status: "paid" as const };
+    return { idempotent: false, recordId: latest.id, status: "paid" as const, itemType: latest.itemType, itemCode: latest.itemCode, userId: latest.userId, amount: latest.amount ?? 0, pointAmount: latest.pointAmount ?? 0, membershipMonths: latest.membershipMonths ?? 1, confirmationEmailSentAt: latest.confirmationEmailSentAt };
   });
+  if (fulfillment.idempotent || fulfillment.status !== "paid" || fulfillment.itemType !== "membership" || fulfillment.confirmationEmailSentAt) return fulfillment;
+  try {
+    const [settings, account, plan] = await Promise.all([
+      db.select().from(emailDeliverySettings).limit(1).then(rows => rows[0]),
+      db.select({ email: users.email, name: users.name }).from(users).where(eq(users.id, fulfillment.userId)).limit(1).then(rows => rows[0]),
+      /^membership-(\d+)$/.test(fulfillment.itemCode) ? db.select({ name: subscriptionPlans.name }).from(subscriptionPlans).where(eq(subscriptionPlans.id, Number(fulfillment.itemCode.slice("membership-".length)))).limit(1).then(rows => rows[0]) : Promise.resolve(undefined),
+    ]);
+    if (!settings) return fulfillment;
+    const delivery = await sendPaymentConfirmationEmail(settings, { recipient: account?.email ?? null, learnerName: account?.name ?? null, planName: plan?.name ?? "Gói đăng ký Dshare", amount: fulfillment.amount, pointAmount: fulfillment.pointAmount, membershipMonths: fulfillment.membershipMonths, orderCode: record.payosOrderCode });
+    if (delivery.sent) {
+      await db.update(paymentRecords).set({ confirmationEmailSentAt: new Date() }).where(and(eq(paymentRecords.id, fulfillment.recordId), sql`${paymentRecords.confirmationEmailSentAt} is null`));
+      await db.insert(auditLogs).values({ actorUserId: fulfillment.userId, action: "payment.confirmation_email_sent", entityType: "payment_record", entityId: fulfillment.recordId, metadata: { orderCode: record.payosOrderCode } });
+    }
+  } catch (error) {
+    console.error("[Payment Email] Confirmation email failed:", error);
+    await db.insert(auditLogs).values({ actorUserId: fulfillment.userId, action: "payment.confirmation_email_failed", entityType: "payment_record", entityId: fulfillment.recordId, metadata: { message: error instanceof Error ? error.message : "Unknown error" } });
+  }
+  return fulfillment;
 }
 
 export function registerPayosWebhook(app: Express) {

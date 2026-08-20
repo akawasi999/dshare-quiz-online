@@ -9,6 +9,7 @@ import {
   bugReports,
   categories,
   discussionPosts,
+  emailDeliverySettings,
   learnerProfiles,
   lessons,
   membershipGroupPermissions,
@@ -56,6 +57,7 @@ import {
 } from "./db";
 import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
+import { encryptEmailApiKey } from "./paymentConfirmationEmail";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
@@ -77,6 +79,7 @@ const userGroupInput = z.object({ id: z.number().int().positive().optional(), pl
 const groupPermissionInput = z.object({ permissionKey: z.string().trim().min(2).max(80).regex(/^[A-Za-z][A-Za-z0-9_-]*$/), isAllowed: z.boolean() });
 const customGroupPermissionsInput = z.object({ groupId: z.number().int().positive(), permissions: z.array(groupPermissionInput).min(1).max(30).refine(items => new Set(items.map(item => item.permissionKey)).size === items.length, { message: "Không được trùng mã quyền." }) });
 const planLinkedPermissionsInput = z.object({ planId: z.number().int().positive(), permissions: z.array(groupPermissionInput).min(1).max(30).refine(items => new Set(items.map(item => item.permissionKey)).size === items.length, { message: "Không được trùng mã quyền." }) });
+const emailDeliverySettingsInput = z.object({ provider: z.literal("resend").default("resend"), fromEmail: z.string().trim().email().max(320).nullable().optional(), apiKey: z.string().trim().min(10).max(500).optional(), isEnabled: z.boolean() });
 const defaultSubscriptionPlans = [
   { code: "basic", name: "Basic", tier: "basic" as const, description: "Gói cơ bản", monthlyPrice: 0 },
   { code: "pro-monthly", name: "PRO", tier: "pro" as const, description: "Gói thành viên PRO theo tháng", monthlyPrice: 50_000 },
@@ -546,6 +549,23 @@ export const appRouter = router({
     save: adminProcedure.input(z.object({ primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), successColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), attentionColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), pageColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), surfaceColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/) })).mutation(async ({ input }) => { const db = await getDb(); if (!db) throw new Error("Database unavailable"); const existing = (await db.select().from(brandSettings).limit(1))[0]; if (existing) await db.update(brandSettings).set(input).where(eq(brandSettings.id, existing.id)); else await db.insert(brandSettings).values(input); return input; }),
   }),
   admin: router({
+    emailDeliverySettings: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cấu hình email." });
+      const settings = (await db.select().from(emailDeliverySettings).limit(1))[0];
+      return settings ? { provider: settings.provider, fromEmail: settings.fromEmail, isEnabled: settings.isEnabled, hasApiKey: Boolean(settings.apiKeyCiphertext), updatedAt: settings.updatedAt } : { provider: "resend" as const, fromEmail: null, isEnabled: false, hasApiKey: false, updatedAt: null };
+    }),
+    saveEmailDeliverySettings: adminProcedure.input(emailDeliverySettingsInput).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu cấu hình email." });
+      const current = (await db.select().from(emailDeliverySettings).limit(1))[0];
+      if (input.isEnabled && (!input.fromEmail || !(input.apiKey || current?.apiKeyCiphertext))) throw new TRPCError({ code: "BAD_REQUEST", message: "Cần nhập địa chỉ gửi và khóa API trước khi bật gửi email." });
+      const payload = { provider: input.provider, fromEmail: input.fromEmail ?? null, isEnabled: input.isEnabled, ...(input.apiKey ? { apiKeyCiphertext: encryptEmailApiKey(input.apiKey) } : {}) };
+      if (current) await db.update(emailDeliverySettings).set(payload).where(eq(emailDeliverySettings.id, current.id));
+      else await db.insert(emailDeliverySettings).values(payload);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "email_delivery.settings_updated", entityType: "email_delivery_settings", metadata: { provider: input.provider, fromEmail: input.fromEmail ?? null, isEnabled: input.isEnabled, apiKeyUpdated: Boolean(input.apiKey) } });
+      return { success: true, hasApiKey: Boolean(input.apiKey || current?.apiKeyCiphertext) };
+    }),
     overview: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return { users: 0, quizzes: 0, submitted: 0, pendingReports: 0 };

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { BadgeCheck, CheckCircle2, ChevronRight, CircleDollarSign, Crown, Edit3, Filter, Layers3, ListFilter, LockKeyhole, Plus, Save, Search, Sparkles, Trash2, UserPlus, UsersRound, X } from "lucide-react";
+import { BadgeCheck, CheckCircle2, ChevronRight, CircleDollarSign, Crown, Edit3, Eye, Filter, Layers3, ListFilter, LockKeyhole, Mail, Plus, Save, Search, Sparkles, Trash2, UserPlus, UsersRound, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -35,6 +35,7 @@ const formatPrice = (value: number | null) => value === null ? null : `${value.t
 
 export default function MembershipGroupPermissionsPanel() {
   const management = trpc.admin.membershipManagement.useQuery();
+  const emailSettings = trpc.admin.emailDeliverySettings.useQuery();
   const usersQuery = trpc.admin.users.useQuery({ page: 1, pageSize: 50 });
   const users = usersQuery.data?.items ?? [];
   const utils = trpc.useUtils();
@@ -53,6 +54,10 @@ export default function MembershipGroupPermissionsPanel() {
   const [memberGroupId, setMemberGroupId] = useState("");
   const [deleteGroupId, setDeleteGroupId] = useState("");
   const [deletePlanId, setDeletePlanId] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [emailApiKey, setEmailApiKey] = useState("");
+  const [emailFrom, setEmailFrom] = useState("");
+  const [emailEnabled, setEmailEnabled] = useState(false);
 
   const refresh = async () => { await Promise.all([utils.admin.membershipManagement.invalidate(), utils.admin.users.invalidate()]); };
   const planSave = trpc.admin.saveSubscriptionPlan.useMutation();
@@ -61,6 +66,10 @@ export default function MembershipGroupPermissionsPanel() {
   const groupDelete = trpc.admin.deleteUserGroup.useMutation({ onSuccess: async () => { await refresh(); toast.success("Đã xóa nhóm người dùng."); }, onError: error => toast.error("Không thể xóa nhóm", { description: error.message }) });
   const permissionSave = trpc.admin.saveCustomGroupPermissions.useMutation();
   const planPermissionSave = trpc.admin.savePlanLinkedGroupPermissions.useMutation();
+  const emailSettingsSave = trpc.admin.saveEmailDeliverySettings.useMutation({
+    onSuccess: async () => { setEmailApiKey(""); await utils.admin.emailDeliverySettings.invalidate(); toast.success("Đã lưu cấu hình email giao dịch."); },
+    onError: error => toast.error("Không thể lưu cấu hình email", { description: error.message }),
+  });
   const memberAssign = trpc.admin.assignUserGroupMember.useMutation({ onSuccess: async () => { await refresh(); setMemberUserId(""); toast.success("Đã cập nhật thành viên trong nhóm."); }, onError: error => toast.error("Không thể cập nhật thành viên", { description: error.message }) });
   const memberRemove = trpc.admin.removeUserGroupMember.useMutation({ onSuccess: async () => { await refresh(); toast.success("Đã xóa thành viên khỏi nhóm."); }, onError: error => toast.error("Không thể xóa thành viên", { description: error.message }) });
 
@@ -73,6 +82,11 @@ export default function MembershipGroupPermissionsPanel() {
     if (!data || memberGroupId || !data.groups[0]) return;
     setMemberGroupId(String(data.groups[0].id));
   }, [data, memberGroupId]);
+  useEffect(() => {
+    if (!emailSettings.data) return;
+    setEmailFrom(emailSettings.data.fromEmail ?? "");
+    setEmailEnabled(emailSettings.data.isEnabled);
+  }, [emailSettings.data?.fromEmail, emailSettings.data?.isEnabled]);
 
   const normalizePermissions = (permissions: PermissionDraft[]) => permissionCatalog.map(permissionKey => ({ permissionKey, isAllowed: permissions.find(item => item.permissionKey === permissionKey)?.isAllowed ?? false }));
   const toggleGroupPermission = (permissionKey: string, isAllowed: boolean) => setGroupForm(current => ({ ...current, permissions: current.permissions.some(item => item.permissionKey === permissionKey) ? current.permissions.map(item => item.permissionKey === permissionKey ? { ...item, isAllowed } : item) : [...current.permissions, { permissionKey, isAllowed }] }));
@@ -181,5 +195,15 @@ export default function MembershipGroupPermissionsPanel() {
         </form>
       </DialogContent>
     </Dialog>
+    {activeView === "plans" ? <section className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
+      <form onSubmit={event => { event.preventDefault(); emailSettingsSave.mutate({ provider: "resend", fromEmail: emailFrom || null, apiKey: emailApiKey || undefined, isEnabled: emailEnabled }); }} className="rounded-[22px] border border-[#172554]/10 bg-[#f7faff] p-5">
+        <div className="flex items-start justify-between gap-4"><div><div className="flex items-center gap-2"><Mail size={17} className="text-[#065be5]" /><p className="text-sm font-bold text-[#172554]">Email xác nhận thanh toán</p></div><p className="mt-1 text-[11px] leading-5 text-[#71838d]">Nhập API Resend và địa chỉ gửi tại đây khi sẵn sàng. Khóa được mã hóa ở máy chủ và không hiển thị lại.</p></div><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${emailSettings.data?.hasApiKey ? "bg-[#e7f7ef] text-[#007453]" : "bg-[#fff7e6] text-[#9a5d00]"}`}>{emailSettings.data?.hasApiKey ? "API đã lưu" : "Chưa có API"}</span></div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2"><div><Label>Địa chỉ gửi</Label><Input type="email" value={emailFrom} onChange={event => setEmailFrom(event.target.value)} placeholder="Dshare Quiz <no-reply@domain.vn>" className="mt-2" /></div><div><Label>Resend API Key</Label><Input type="password" value={emailApiKey} onChange={event => setEmailApiKey(event.target.value)} placeholder={emailSettings.data?.hasApiKey ? "Để trống để giữ khóa hiện tại" : "re_..."} className="mt-2" /></div></div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-3"><div><p className="text-xs font-bold text-[#172554]">Bật gửi email sau thanh toán</p><p className="mt-0.5 text-[10px] text-[#71838d]">Chỉ gửi sau webhook PayOS thành công và tối đa một lần mỗi đơn.</p></div><Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} aria-label="Bật gửi email xác nhận" /></div>
+        <Button type="submit" disabled={emailSettingsSave.isPending || emailSettings.isLoading} className="mt-4 rounded-full bg-[#065be5]"><Save size={15} />{emailSettingsSave.isPending ? "Đang lưu…" : "Lưu cấu hình email"}</Button>
+      </form>
+      <div className="rounded-[22px] bg-[#172554] p-5 text-white"><Eye size={20} className="text-[#f4c95d]" /><p className="mt-3 text-[10px] font-bold uppercase tracking-[.15em] text-[#f4c95d]">Kiểm tra trước khi bật</p><h3 className="mt-1 font-serif text-xl font-semibold">Xem trước bảng giá và PayOS</h3><p className="mt-2 text-xs leading-5 text-[#dbeafe]">Mô phỏng chính xác các gói đang kích hoạt: giá, ưu đãi, quyền lợi và trạng thái xuất hiện trong catalog PayOS.</p><div className="mt-5 grid grid-cols-2 gap-3 text-center"><div className="rounded-xl bg-white/10 p-3"><p className="font-serif text-2xl font-semibold">{data.plans.filter(plan => plan.isActive).length}</p><p className="mt-1 text-[10px] text-[#bfdbfe]">gói hiển thị</p></div><div className="rounded-xl bg-white/10 p-3"><p className="font-serif text-2xl font-semibold">{data.plans.filter(plan => plan.isActive && plan.payosEnabled).length}</p><p className="mt-1 text-[10px] text-[#bfdbfe]">gói PayOS</p></div></div><Button type="button" onClick={() => setPreviewOpen(true)} className="mt-5 w-full rounded-full bg-[#f4c95d] text-[#172554] hover:bg-[#fde68a]"><Eye size={15} />Mở bản xem trước</Button></div>
+    </section> : null}
+    <Dialog open={previewOpen} onOpenChange={setPreviewOpen}><DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto"><DialogHeader><DialogTitle>Xem trước bảng giá và catalog PayOS</DialogTitle><DialogDescription>Bản mô phỏng chỉ dành cho quản trị viên. Thay đổi chỉ xuất hiện công khai khi gói được kích hoạt; catalog PayOS cần bật riêng ở từng gói.</DialogDescription></DialogHeader><div className="grid gap-4 md:grid-cols-3">{data.plans.filter(plan => plan.isActive).map(plan => { const tone = tierPresentation[plan.tier]; const payosReady = plan.payosEnabled; const price = plan.promoPrice ?? plan.monthlyPrice; return <article key={plan.id} className={`rounded-2xl border p-5 ${plan.tier === "pro" ? "border-[#065be5] bg-[#eef4ff]" : "border-[#172554]/10 bg-white"}`}><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.15em]" style={{ color: tone.color }}>{tone.label}</p><h3 className="mt-2 text-lg font-bold text-[#172554]">{plan.name}</h3></div><span className={`rounded-full px-2 py-1 text-[9px] font-bold ${payosReady ? "bg-[#e7f7ef] text-[#007453]" : "bg-[#fff7e6] text-[#9a5d00]"}`}>{payosReady ? "Có PayOS" : "Chưa bật PayOS"}</span></div><p className="mt-2 min-h-9 text-[11px] leading-4 text-[#71838d]">{plan.description || "Chưa có mô tả gói."}</p><div className="mt-4"><span className="font-serif text-3xl font-semibold text-[#172554]">{formatPrice(price)}</span>{plan.tier !== "basic" ? <span className="ml-1 text-xs text-[#617786]">/ tháng</span> : null}{plan.promoPrice !== null ? <p className="mt-1 text-[10px] text-[#71838d] line-through">Giá gốc {formatPrice(plan.monthlyPrice)}</p> : null}</div><ul className="mt-4 space-y-2">{(plan.benefits ?? []).slice(0, 4).map(benefit => <li key={benefit} className="flex gap-2 text-[11px] text-[#172554]"><CheckCircle2 size={13} className="mt-0.5 shrink-0 text-[#007453]" />{benefit}</li>)}</ul>{payosReady ? <div className="mt-4 rounded-xl bg-[#172554] p-3 text-[10px] text-white"><p className="font-bold">Catalog PayOS</p><p className="mt-1 text-[#dbeafe]">Tặng {plan.payosRewardPoints.toLocaleString("vi-VN")} Point · {plan.membershipMonths} tháng</p></div> : <div className="mt-4 rounded-xl bg-[#fff7e6] p-3 text-[10px] text-[#9a5d00]">Gói chỉ xuất hiện trên bảng giá, chưa thể thanh toán qua PayOS.</div>}</article>; })}</div>{!data.plans.some(plan => plan.isActive) ? <p className="rounded-xl bg-[#fff7e6] p-5 text-sm text-[#9a5d00]">Chưa có gói nào được kích hoạt để xem trước.</p> : null}</DialogContent></Dialog>
   </div>;
 }

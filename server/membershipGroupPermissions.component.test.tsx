@@ -17,8 +17,8 @@ const mocks = vi.hoisted(() => ({
   management: { data: {
     permissionCatalog: ["canCreateQuiz", "canUseAi", "canExportData", "canViewAdvancedReports", "canReceivePrioritySupport"],
     plans: [
-      { id: 1, code: "basic", name: "Basic", tier: "basic", description: "Gói cơ bản", monthlyPrice: 0, promoPrice: null, displayOrder: 1, isActive: true, isSystem: true },
-      { id: 2, code: "practice-plus", name: "Luyện thi Plus", tier: "pro", description: "Gói tùy chỉnh", monthlyPrice: 89000, promoPrice: null, displayOrder: 2, isActive: true, isSystem: false },
+      { id: 1, code: "basic", name: "Basic", tier: "basic", description: "Gói cơ bản", benefits: ["20 lượt làm/tháng"], monthlyPrice: 0, promoPrice: null, payosEnabled: false, payosRewardPoints: 0, membershipMonths: 1, displayOrder: 1, isActive: true, isSystem: true },
+      { id: 2, code: "practice-plus", name: "Luyện thi Plus", tier: "pro", description: "Gói tùy chỉnh", benefits: ["Tặng 150 Point"], monthlyPrice: 89000, promoPrice: null, payosEnabled: true, payosRewardPoints: 150, membershipMonths: 1, displayOrder: 2, isActive: true, isSystem: false },
     ],
     groups: [{ id: 10, planId: 1, name: "Basic mặc định", description: "Nhóm mặc định", displayOrder: 1, isSystem: true, memberCount: 4, permissions: [
       { permissionKey: "canCreateQuiz", isAllowed: true }, { permissionKey: "canUseAi", isAllowed: true }, { permissionKey: "canExportData", isAllowed: false }, { permissionKey: "canViewAdvancedReports", isAllowed: false }, { permissionKey: "canReceivePrioritySupport", isAllowed: false },
@@ -26,6 +26,8 @@ const mocks = vi.hoisted(() => ({
     memberships: [],
   }, isLoading: false, error: null },
   users: { data: { items: [] }, isLoading: false, error: null },
+  emailSettings: { data: { provider: "resend", fromEmail: null, isEnabled: false, hasApiKey: false, updatedAt: null }, isLoading: false, error: null },
+  saveEmailSettings: { mutate: vi.fn(), isPending: false },
   savePlan: { mutate: vi.fn(), mutateAsync: vi.fn().mockResolvedValue({ success: true, planId: 1 }), isPending: false },
   deletePlan: { mutate: vi.fn(), isPending: false },
   saveGroup: { mutate: vi.fn(), mutateAsync: vi.fn().mockResolvedValue({ success: true, groupId: 10 }), isPending: false },
@@ -38,6 +40,8 @@ vi.mock("@/lib/trpc", () => ({
   trpc: {
     admin: {
       membershipManagement: { useQuery: () => mocks.management },
+      emailDeliverySettings: { useQuery: () => mocks.emailSettings },
+      saveEmailDeliverySettings: { useMutation: (options: { onSuccess?: () => void }) => ({ ...mocks.saveEmailSettings, mutate: (...args: unknown[]) => { mocks.saveEmailSettings.mutate(...args); options.onSuccess?.(); } }) },
       users: { useQuery: () => mocks.users },
       saveSubscriptionPlan: { useMutation: () => mocks.savePlan },
       deleteSubscriptionPlan: { useMutation: () => mocks.deletePlan },
@@ -48,7 +52,7 @@ vi.mock("@/lib/trpc", () => ({
       assignUserGroupMember: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
       removeUserGroupMember: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
     },
-    useUtils: () => ({ admin: { membershipManagement: { invalidate: mocks.invalidate }, users: { invalidate: mocks.invalidate } } }),
+    useUtils: () => ({ admin: { membershipManagement: { invalidate: mocks.invalidate }, users: { invalidate: mocks.invalidate }, emailDeliverySettings: { invalidate: mocks.invalidate } } }),
   },
 }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
@@ -154,5 +158,17 @@ describe("MembershipGroupPermissionsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Xóa gói" }));
     expect(mocks.deletePlan.mutate).toHaveBeenCalledWith({ planId: 1 });
     confirmSpy.mockRestore();
+  });
+
+  it("mở bản xem trước bảng giá và chỉ rõ trạng thái catalog PayOS", async () => {
+    const user = userEvent.setup();
+    render(<MembershipGroupPermissionsPanel />);
+    await user.click(screen.getByRole("button", { name: "Gói đăng ký" }));
+    await user.click(screen.getByRole("button", { name: "Mở bản xem trước" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Xem trước bảng giá và catalog PayOS")).toBeTruthy();
+    expect(within(dialog).getByText("Tặng 150 Point")).toBeTruthy();
+    expect(within(dialog).getByText("Có PayOS")).toBeTruthy();
+    expect(within(dialog).getByText("Chưa bật PayOS")).toBeTruthy();
   });
 });
