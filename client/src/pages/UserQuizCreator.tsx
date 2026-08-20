@@ -179,7 +179,7 @@ function QuestionPreview({ questions, draggedId, onDragStart, onDrop, onRemove, 
 function LiveQuestionPreview({ questions, draggedId, onDragStart, onDrop, onRemove, onUpdate, quota }: any) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<DraftQuestion | null>(null);
-  const beginEdit = (question: DraftQuestion) => { setEditingId(question.localId); setEditing(JSON.parse(JSON.stringify(question))); };
+  const beginEdit = (question: DraftQuestion) => { if (!window.confirm("Nếu bạn chỉnh sửa câu hỏi, câu hỏi sẽ được làm mới. Bạn có muốn chỉnh sửa lại ngay bây giờ không?")) return; setEditingId(question.localId); setEditing(JSON.parse(JSON.stringify(question))); };
   const updateOption = (index: number, body: string) => setEditing(current => current ? { ...current, options: current.options.map((option, optionIndex) => optionIndex === index ? { ...option, body } : option) } : current);
   const updatePair = (index: number, key: "left" | "right", value: string) => setEditing(current => current ? { ...current, pairs: current.pairs.map((pair, pairIndex) => pairIndex === index ? { ...pair, [key]: value } : pair) } : current);
   const saveEdit = () => { if (!editing) return; if (!editing.prompt.trim()) return toast.error("Nội dung câu hỏi không được để trống."); onUpdate(editing); setEditingId(null); setEditing(null); toast.success("Đã cập nhật câu hỏi trong Live Preview."); };
