@@ -31,18 +31,24 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeTruthy();
     expect(screen.getByRole("textbox", { name: "Mô tả Quiz trong studio" })).toBeTruthy();
     expect(screen.queryByText("Mô tả ngắn")).toBeNull();
+    expect(screen.queryByText("Thông tin Quiz")).toBeNull();
+    expect(screen.getByText("Nhập phụ đề")).toBeTruthy();
+    expect(screen.getByText("Nhập nội dung mô tả bài học")).toBeTruthy();
+    expect(screen.getByText("Excel, Word, PDF")).toBeTruthy();
+    expect(screen.getByText("Video dưới 2 giờ có phụ đề")).toBeTruthy();
+    expect(screen.getByText("Địa chỉ trang web có nội dung")).toBeTruthy();
     expect(screen.queryByText("ID Bài học")).toBeNull();
   });
 
   it("mở trình soạn thủ công với metadata, bảo mật và sáu loại câu hỏi", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
-    expect(screen.getByText("Thông tin Quiz")).toBeTruthy();
+    expect(screen.queryByText("Thông tin Quiz")).toBeNull();
     expect(screen.getByText("Cấu hình làm bài & bảo mật")).toBeTruthy();
     expect(screen.getByText("Tạo nhanh với")).toBeTruthy();
-    expect(screen.getByText("Nhập câu hỏi từ tệp")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Xem trước câu hỏi" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Tải mẫu Excel" })).toBeTruthy();
+    expect(screen.queryByText("Nhập câu hỏi từ tệp")).toBeNull();
+    expect(screen.getByRole("button", { name: "Xem như học viên" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Tải mẫu Excel" })).toBeNull();
     expect(screen.queryByText("ID Bài học")).toBeNull();
     expect(screen.getByRole("option", { name: "✎ Bài luận" })).toBeTruthy();
   });
@@ -59,10 +65,10 @@ describe("UserQuizCreator thiết kế lại", () => {
   it("mở biểu mẫu trích xuất YouTube và trang web từ các thao tác nhanh", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
-    await user.click(screen.getByRole("button", { name: "Trích xuất từ YouTube" }));
+    await user.click(screen.getByRole("button", { name: /Trích xuất từ YouTube/ }));
     expect(screen.getByLabelText("URL YouTube")).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Đóng trích xuất nguồn" }));
-    await user.click(screen.getByRole("button", { name: "Trích từ trang web" }));
+    await user.click(screen.getByRole("button", { name: /Trích từ trang web/ }));
     expect(screen.getByLabelText("URL trang web")).toBeTruthy();
   });
 

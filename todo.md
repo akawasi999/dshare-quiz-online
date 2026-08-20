@@ -241,3 +241,4 @@
 - [x] Thêm thao tác sao chép và xóa Quiz an toàn từ từng thẻ Quiz.
 - [x] Cho phép mở Quiz đã lưu trong studio để chỉnh sửa và lưu cập nhật.
 - [x] Gộp tiêu đề và mô tả tại khu vực đầu studio Tạo Quiz; giữ chủ đề và ảnh bìa trong phần cài đặt.
+- [x] Bỏ nhãn Thông tin Quiz, loại bỏ nhập tệp trùng lặp và thêm mô tả cho các thao tác tạo nhanh AI.
