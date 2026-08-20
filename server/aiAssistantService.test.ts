@@ -21,4 +21,16 @@ describe("aiAssistantService", () => {
     expect(messages[0].content).toContain("Không hỗ trợ gian lận");
     expect(messages[1]).toEqual({ role: "user", content: "Giúp tôi làm bài" });
   });
+
+  it("thêm môn học và Quiz đã xác nhận như ngữ cảnh hệ thống, không như đáp án để làm bài", () => {
+    const messages = buildDshareAssistantMessages(
+      [{ role: "user", content: "Giúp tôi lập kế hoạch ôn tập" }],
+      { categoryTitle: "Tin học", subject: "IC3", lessonTitle: "Bảng tính", quizTitle: "Ôn tập Excel", difficulty: "medium" },
+    );
+
+    expect(messages[1].role).toBe("system");
+    expect(messages[1].content).toContain("Môn học: IC3");
+    expect(messages[1].content).toContain("Bộ đề đang ôn: Ôn tập Excel");
+    expect(messages[1].content).toContain("Không suy diễn hoặc tiết lộ đáp án");
+  });
 });

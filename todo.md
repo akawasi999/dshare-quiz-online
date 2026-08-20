@@ -243,3 +243,6 @@
 - [x] Gộp tiêu đề và mô tả tại khu vực đầu studio Tạo Quiz; giữ chủ đề và ảnh bìa trong phần cài đặt.
 - [x] Bỏ nhãn Thông tin Quiz, loại bỏ nhập tệp trùng lặp và thêm mô tả cho các thao tác tạo nhanh AI.
 - [x] Xây dựng AI Assistant với cấu hình API key Manus/Gemini được nhập và quản lý an toàn trong trang quản trị.
+- [x] Hoàn thiện quy trình kích hoạt Gemini từ trang quản trị và hiển thị trạng thái cấu hình an toàn.
+- [x] Rà soát, hiển thị và kiểm thử quyền canUseAi theo nhóm người dùng cho AI Assistant.
+- [x] Bổ sung ngữ cảnh môn học và Quiz đang làm cho cuộc hội thoại AI Assistant.

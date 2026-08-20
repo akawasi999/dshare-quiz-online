@@ -196,7 +196,7 @@ export const appRouter = router({
       await db.delete(aiAssistantConversations).where(eq(aiAssistantConversations.userId, ctx.user.id));
       return { success: true };
     }),
-    chat: protectedProcedure.input(z.object({ message: z.string().trim().min(2).max(4_000) })).mutation(async ({ ctx, input }) => {
+    chat: protectedProcedure.input(z.object({ message: z.string().trim().min(2).max(4_000), context: z.object({ subject: z.string().trim().min(2).max(120).optional(), quizId: z.number().int().positive().optional() }).optional() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
       const config = (await db.select().from(aiAssistantSettings).limit(1))[0];
@@ -206,7 +206,17 @@ export const appRouter = router({
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng AI Assistant");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       const priorRows = await db.select({ role: aiAssistantConversations.role, content: aiAssistantConversations.content }).from(aiAssistantConversations).where(eq(aiAssistantConversations.userId, ctx.user.id)).orderBy(desc(aiAssistantConversations.createdAt)).limit(12);
-      const reply = await generateAiAssistantReply({ provider: config.provider, model: config.model, apiKeyCiphertext: config.apiKeyCiphertext, messages: [...priorRows.reverse(), { role: "user", content: input.message }] });
+      const selectedQuiz = input.context?.quizId ? await getQuizDetail(input.context.quizId) : undefined;
+      if (input.context?.quizId && (!selectedQuiz || !selectedQuiz.quiz.isPublished)) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy bộ đề công khai để đặt làm ngữ cảnh." });
+      const studyContext = input.context?.subject || selectedQuiz ? {
+        subject: selectedQuiz?.subject.title ?? input.context?.subject ?? null,
+        categoryTitle: selectedQuiz?.category.title ?? null,
+        lessonTitle: selectedQuiz?.lesson.title ?? null,
+        quizTitle: selectedQuiz?.quiz.title ?? null,
+        quizSummary: selectedQuiz?.quiz.summary ?? null,
+        difficulty: selectedQuiz?.quiz.difficulty ?? null,
+      } : undefined;
+      const reply = await generateAiAssistantReply({ provider: config.provider, model: config.model, apiKeyCiphertext: config.apiKeyCiphertext, messages: [...priorRows.reverse(), { role: "user", content: input.message }], studyContext });
       await db.insert(aiAssistantConversations).values([{ userId: ctx.user.id, role: "user", content: input.message }, { userId: ctx.user.id, role: "assistant", content: reply }]);
       await recordAiUsage(ctx.user.id, "assist");
       return { content: reply, quota: { used: quota.used + 1, limit: quota.limit } };
