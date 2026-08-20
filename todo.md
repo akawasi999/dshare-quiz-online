@@ -220,3 +220,6 @@
 - [x] Thêm kéo-thả để thay đổi thứ tự câu hỏi trong bản nháp Quiz.
 - [x] Tải PDF/Word, trích xuất nội dung và tạo danh sách câu hỏi trắc nghiệm bằng AI.
 - [x] Thêm chế độ xem trước toàn bộ Quiz theo góc nhìn học viên trước khi xuất bản.
+- [x] Cho phép chỉnh sửa trực tiếp nội dung câu hỏi trong chế độ xem trước học viên.
+- [x] Hiển thị văn bản nguồn AI trích xuất để đối chiếu độ chính xác của các câu hỏi sinh từ tài liệu.
+- [x] Xuất Quiz đã tạo thành tệp PDF hoặc Word phục vụ in ấn ngoại tuyến.

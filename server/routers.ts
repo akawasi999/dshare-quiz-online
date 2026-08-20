@@ -485,7 +485,16 @@ export const appRouter = router({
         const document = await extractQuizDocumentText({ userId: ctx.user.id, fileName: input.fileName, mimeType: input.mimeType, base64: input.base64 });
         const generated = await generateMultipleChoiceFromDocument({ text: document.text, count: input.questionCount, difficulty: input.difficulty });
         for (let index = 0; index < generated.length; index += 1) await recordAiUsage(ctx.user.id, "generate_question");
-        return { sourceName: document.sourceName, sourceUrl: document.sourceUrl, questions: generated, quota: { used: quota.used + generated.length, limit: quota.limit } };
+        const sourceTextLimit = 6_000;
+        return {
+          sourceName: document.sourceName,
+          sourceUrl: document.sourceUrl,
+          sourceText: document.text.slice(0, sourceTextLimit),
+          sourceTextTruncated: document.text.length > sourceTextLimit,
+          sourceCharacterCount: document.text.length,
+          questions: generated,
+          quota: { used: quota.used + generated.length, limit: quota.limit },
+        };
       } catch (error) {
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể đọc tài liệu để tạo câu hỏi." });
       }
