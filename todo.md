@@ -237,3 +237,6 @@
 - [x] Đổi mục menu hồ sơ từ Tạo Quiz thành Quiz của tôi.
 - [x] Xây dựng trang Quiz của tôi hiển thị danh sách Quiz do người dùng tạo.
 - [x] Thêm nút Tạo Quiz mới nổi bật ở góc phải và kết nối tới studio Quiz.
+- [x] Thêm tìm kiếm theo tên và sắp xếp danh sách Quiz của tôi.
+- [x] Thêm thao tác sao chép và xóa Quiz an toàn từ từng thẻ Quiz.
+- [x] Cho phép mở Quiz đã lưu trong studio để chỉnh sửa và lưu cập nhật.

@@ -138,6 +138,23 @@ async function assertQuotaAvailable(userId: number, resource: "attemptsPerMonth"
   }
   return { tier, limit, used };
 }
+
+async function getOwnedQuizDraft(userId: number, quizId: number) {
+  const db = await getDb();
+  if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập Quiz lúc này." });
+  const rows = await db.select().from(quizzes).where(and(eq(quizzes.id, quizId), eq(quizzes.creatorUserId, userId))).limit(1);
+  const quiz = rows[0];
+  if (!quiz) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy Quiz riêng của bạn." });
+  const linked = await db.select({ question: questions, sortOrder: quizQuestions.sortOrder, points: quizQuestions.points }).from(quizQuestions).innerJoin(questions, eq(quizQuestions.questionId, questions.id)).where(eq(quizQuestions.quizId, quizId)).orderBy(asc(quizQuestions.sortOrder));
+  const draftQuestions = await Promise.all(linked.map(async item => ({ ...item.question, points: item.points, options: await db.select().from(questionOptions).where(eq(questionOptions.questionId, item.question.id)).orderBy(asc(questionOptions.sortOrder)) })));
+  return { db, quiz, questions: draftQuestions };
+}
+
+async function removeOwnedQuizQuestions(db: any, quizId: number, items: Array<{ id: number }>) {
+  for (const item of items) await db.delete(questionOptions).where(eq(questionOptions.questionId, item.id));
+  await db.delete(quizQuestions).where(eq(quizQuestions.quizId, quizId));
+  for (const item of items) await db.delete(questions).where(eq(questions.id, item.id));
+}
 export const parseCsv = (text: string) => text.trim().split(/\r?\n/).map(line => {
   const values: string[] = []; let value = ""; let quoted = false;
   for (let index = 0; index < line.length; index += 1) { const char = line[index]; const next = line[index + 1]; if (char === '"' && quoted && next === '"') { value += '"'; index += 1; } else if (char === '"') quoted = !quoted; else if (char === ',' && !quoted) { values.push(value); value = ""; } else value += char; }
@@ -435,6 +452,26 @@ export const appRouter = router({
       if (!db) return [];
       return db.select().from(quizzes).where(eq(quizzes.creatorUserId, ctx.user.id)).orderBy(desc(quizzes.updatedAt));
     }),
+    getQuizForEdit: protectedProcedure.input(quizIdInput).query(async ({ ctx, input }) => {
+      const draft = await getOwnedQuizDraft(ctx.user.id, input.quizId);
+      return { quiz: draft.quiz, questions: draft.questions };
+    }),
+    duplicateQuiz: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
+      await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
+      await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "sao chép Quiz");
+      const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
+      const title = `${source.quiz.title.slice(0, 200)} (Bản sao)`;
+      const copy = await source.db.insert(quizzes).values({ lessonId: source.quiz.lessonId, creatorUserId: ctx.user.id, title, slug: `${source.quiz.slug}-copy-${Date.now().toString(36)}`.slice(0, 240), summary: source.quiz.summary, coverImageUrl: source.quiz.coverImageUrl, mode: source.quiz.mode, difficulty: source.quiz.difficulty, accessTier: source.quiz.accessTier, durationSeconds: source.quiz.durationSeconds, passingScore: source.quiz.passingScore, entryPointCost: source.quiz.entryPointCost, completionReward: source.quiz.completionReward, questionCount: source.questions.length, randomizeQuestions: source.quiz.randomizeQuestions, randomizeOptions: source.quiz.randomizeOptions, creatorSettings: source.quiz.creatorSettings, isPublished: false });
+      const quizId = Number(copy[0].insertId);
+      for (let index = 0; index < source.questions.length; index += 1) { const item = source.questions[index]!; const copiedQuestion = await source.db.insert(questions).values({ lessonId: source.quiz.lessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(copiedQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option: any, optionIndex: number) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: item.points }); }
+      return { quizId, title };
+    }),
+    deleteQuiz: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
+      const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
+      await removeOwnedQuizQuestions(source.db, source.quiz.id, source.questions);
+      await source.db.delete(quizzes).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
+      return { success: true };
+    }),
     updateCover: protectedProcedure.input(z.object({ quizId: z.number().int().positive(), coverImageUrl: z.string().url().max(1024).nullable() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật ảnh bìa lúc này." });
@@ -472,6 +509,19 @@ export const appRouter = router({
         await db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: item.points });
       }
       return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: false };
+    }),
+    updateQuiz: protectedProcedure.input(z.object({
+      quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(),
+      settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean() }),
+      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: z.string().url().max(1024).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
+    })).mutation(async ({ ctx, input }) => {
+      const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
+      for (const item of input.questions) { const error = validateQuestionConfiguration({ type: item.type, options: item.options, answerConfig: item.answerConfig, imageUrl: item.imageUrl ?? null }); if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` }); }
+      const lessonId = input.lessonId ?? source.quiz.lessonId;
+      await removeOwnedQuizQuestions(source.db, source.quiz.id, source.questions);
+      await source.db.update(quizzes).set({ lessonId, title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl, durationSeconds: input.settings.durationMinutes * 60, questionCount: input.questions.length, creatorSettings: input.settings }).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
+      for (let index = 0; index < input.questions.length; index += 1) { const item = input.questions[index]!; const createdQuestion = await source.db.insert(questions).values({ lessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(createdQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option, optionIndex) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId: source.quiz.id, questionId, sortOrder: index, points: item.points }); }
+      return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length };
     }),
     generateQuestionAI: protectedProcedure.input(aiQuestionInputSchema.omit({ lessonId: true })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi bằng AI");
