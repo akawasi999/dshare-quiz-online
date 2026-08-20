@@ -2,6 +2,7 @@ import mammoth from "mammoth";
 import { PDFParse } from "pdf-parse";
 import * as XLSX from "xlsx";
 import { validateQuestionConfiguration } from "../shared/questionValidation";
+import { invokeLLM, listLLMModels } from "./_core/llm";
 import { storagePut } from "./storage";
 
 export type ManualImportMimeType = "application/pdf" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-excel";
@@ -97,7 +98,25 @@ export function parseManualQuizSpreadsheetRows(rows: Array<Record<string, unknow
   return { questions: parsed.flatMap(result => result.question ? [result.question] : []), warnings: parsed.flatMap(result => result.warning ? [result.warning] : []) };
 }
 
-export async function importManualQuizFile(input: { userId: number; fileName: string; mimeType: ManualImportMimeType; base64: string }) {
+export async function ocrPdfWithVision(dataUrl: string) {
+  const catalog = await listLLMModels();
+  const model = catalog.data.find(item => item.id === "gemini-3-flash-preview")?.id ?? catalog.data.find(item => item.id.includes("gemini"))?.id;
+  if (!model) throw new Error("Hiện chưa có mô hình OCR đa phương thức sẵn sàng. Hãy thử lại sau.");
+  const response = await invokeLLM({
+    model,
+    maxTokens: 8_000,
+    messages: [
+      { role: "system", content: "Bạn là hệ thống OCR chính xác cho tài liệu học tập tiếng Việt. Chỉ chép lại chữ nhìn thấy trong PDF, không suy diễn hoặc tạo nội dung mới. Giữ rõ cấu trúc câu hỏi theo dạng: Câu n: ..., A. ..., B. ..., Đáp án: ..., Lời giải: ... khi tài liệu có các thành phần đó." },
+      { role: "user", content: [{ type: "text", text: "PDF này có thể là bản quét ảnh. Hãy OCR toàn bộ các trang có chứa câu hỏi và đáp án, tối đa 50 câu, bằng tiếng Việt." }, { type: "file_url", file_url: { url: dataUrl, mime_type: "application/pdf" } }] },
+    ],
+  });
+  const content = response.choices[0]?.message.content;
+  const text = typeof content === "string" ? content : content?.filter(part => part.type === "text").map(part => part.text).join("\n");
+  if (!text || text.trim().length < 60) throw new Error("OCR chưa đọc được đủ nội dung từ PDF dạng ảnh. Hãy dùng bản quét rõ nét hơn hoặc nhập bằng Excel/Word.");
+  return text.trim();
+}
+
+export async function importManualQuizFile(input: { userId: number; fileName: string; mimeType: ManualImportMimeType; base64: string; ocrFallback?: (dataUrl: string) => Promise<string> }) {
   const bytes = decodeBase64(input.base64);
   if (!bytes.length || bytes.length > maxFileBytes) throw new Error("Tệp nhập phải có dung lượng từ 1 byte đến tối đa 15 MB.");
   const stored = await storagePut(`manual-quiz-imports/${input.userId}/${Date.now()}-${safeName(input.fileName)}`, bytes, input.mimeType);
@@ -111,13 +130,19 @@ export async function importManualQuizFile(input: { userId: number; fileName: st
     return { sourceName: input.fileName, sourceUrl: stored.url, sourceCharacterCount: rows.length, questions, warnings, isSpreadsheet: true };
   }
   let text = "";
+  let usedOcr = false;
   if (input.mimeType === "application/pdf") {
     const parser = new PDFParse({ data: bytes });
-    try { text = (await parser.getText()).text; } finally { await parser.destroy(); }
+    try { text = (await parser.getText()).text; } catch { text = ""; } finally { await parser.destroy(); }
+    if (text.replace(/\s/g, "").length < 60) {
+      if (!input.ocrFallback) throw new Error("PDF không có lớp chữ để trích xuất. Hãy dùng PDF có thể chọn văn bản, hoặc bật OCR để đọc bản quét ảnh.");
+      text = await input.ocrFallback(input.base64);
+      usedOcr = true;
+    }
   } else {
     text = (await mammoth.extractRawText({ buffer: bytes })).value;
   }
   const parsed = parseManualQuizText(text.slice(0, 45_000));
   if (!parsed.questions.length) throw new Error(parsed.warnings[0] ?? "Không tìm thấy câu hỏi hợp lệ trong tài liệu.");
-  return { sourceName: input.fileName, sourceUrl: stored.url, sourceCharacterCount: text.length, questions: parsed.questions.slice(0, maxImportedQuestions), warnings: parsed.warnings, isSpreadsheet: false };
+  return { sourceName: input.fileName, sourceUrl: stored.url, sourceCharacterCount: text.length, questions: parsed.questions.slice(0, maxImportedQuestions), warnings: parsed.warnings, isSpreadsheet: false, usedOcr };
 }
