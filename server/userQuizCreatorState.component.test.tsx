@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, myQuizzes: { useQuery: () => mocks.mine }, uploadCover: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, createQuiz: { useMutation: () => mocks.create }, generateQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromDocument: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, learner: { quota: { useQuery: () => mocks.quota } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, myQuizzes: { useQuery: () => mocks.mine }, uploadCover: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, createQuiz: { useMutation: () => mocks.create }, generateQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromDocument: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, importManualQuizFile: { useMutation: () => ({ isPending: false, data: undefined, mutate: vi.fn() }) } }, learner: { quota: { useQuery: () => mocks.quota } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/lib/quizDocumentExport", () => ({ exportQuizToPdf: mocks.exportPdf, exportQuizToWord: mocks.exportWord }));
 
@@ -37,6 +37,8 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByText("Thông tin Quiz")).toBeTruthy();
     expect(screen.getByText("Cấu hình làm bài & bảo mật")).toBeTruthy();
     expect(screen.getByText("Trình soạn câu hỏi")).toBeTruthy();
+    expect(screen.getByText("Nhập câu hỏi từ tệp")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Nhập vào Quiz" })).toBeTruthy();
     expect(screen.queryByText("ID Bài học")).toBeNull();
     expect(screen.getByRole("option", { name: "Tự luận" })).toBeTruthy();
   });

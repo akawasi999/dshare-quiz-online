@@ -223,3 +223,4 @@
 - [x] Cho phép chỉnh sửa trực tiếp nội dung câu hỏi trong chế độ xem trước học viên.
 - [x] Hiển thị văn bản nguồn AI trích xuất để đối chiếu độ chính xác của các câu hỏi sinh từ tài liệu.
 - [x] Xuất Quiz đã tạo thành tệp PDF hoặc Word phục vụ in ấn ngoại tuyến.
+- [x] Nhập câu hỏi từ Excel, Word và PDF ngay trong chế độ Tạo Quiz thủ công.

@@ -63,6 +63,7 @@ import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPa
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
+import { importManualQuizFile } from "./manualQuizImport";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
@@ -497,6 +498,14 @@ export const appRouter = router({
         };
       } catch (error) {
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể đọc tài liệu để tạo câu hỏi." });
+      }
+    }),
+    importManualQuizFile: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"]), base64: z.string().min(80).max(22_000_000) })).mutation(async ({ ctx, input }) => {
+      await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "tạo Quiz");
+      try {
+        return await importManualQuizFile({ userId: ctx.user.id, ...input });
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể nhập tệp vào Quiz thủ công." });
       }
     }),
   }),
