@@ -53,6 +53,16 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByRole("option", { name: "✎ Bài luận" })).toBeTruthy();
   });
 
+  it("chuyển Cài đặt trong cùng khối Studio và ẩn vùng soạn Câu hỏi", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("tab", { name: "Cài đặt" }));
+    expect(screen.getByText("Cài đặt Quiz")).toBeTruthy();
+    expect(screen.queryByPlaceholderText("Vui lòng nhập câu hỏi.")).toBeNull();
+    await user.click(screen.getByRole("tab", { name: "Câu hỏi" }));
+    expect(screen.getByPlaceholderText("Vui lòng nhập câu hỏi.")).toBeTruthy();
+  });
+
   it("mở khung chat AI và phần xem trước câu hỏi", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);

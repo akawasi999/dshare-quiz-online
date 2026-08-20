@@ -269,3 +269,4 @@
 - [x] Thêm hiệu ứng tải và thông báo tiến trình khi AI trích xuất YouTube hoặc trang web trong chat Studio.
 - [x] Thiết kế lại Cài đặt Quiz thành tab cạnh Câu hỏi theo bố cục Studio tham chiếu.
 - [x] Hiển thị Cài đặt trong vùng Studio và ẩn phần Câu hỏi khi chọn tab Cài đặt.
+- [x] Gộp nội dung Câu hỏi và Cài đặt trong cùng khối Studio, chuyển tab liền mạch theo UX/UI.
