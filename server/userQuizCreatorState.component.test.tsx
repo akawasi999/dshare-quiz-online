@@ -44,7 +44,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     expect(screen.queryByText("Thông tin Quiz")).toBeNull();
-    expect(screen.getByText("Cấu hình làm bài & bảo mật")).toBeTruthy();
+    expect(screen.getByText("Cài đặt Quiz")).toBeTruthy();
     expect(screen.getByText("Tạo nhanh với")).toBeTruthy();
     expect(screen.queryByText("Nhập câu hỏi từ tệp")).toBeNull();
     expect(screen.getByRole("button", { name: "Xem như học viên" })).toBeTruthy();
@@ -70,10 +70,10 @@ describe("UserQuizCreator thiết kế lại", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: /Trích xuất từ YouTube/ }));
-    expect(screen.getByLabelText("URL YouTube")).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Đóng trích xuất nguồn" }));
+    expect(screen.getByLabelText("URL YouTube trong chat AI")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Thu gọn" }));
     await user.click(screen.getByRole("button", { name: /Trích từ trang web/ }));
-    expect(screen.getByLabelText("URL trang web")).toBeTruthy();
+    expect(screen.getByLabelText("URL trang web trong chat AI")).toBeTruthy();
   });
 
   it("cho phép chỉnh sửa câu hỏi ngay trong xem trước và xuất bản nháp sang PDF/Word", async () => {

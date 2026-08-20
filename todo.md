@@ -264,3 +264,5 @@
 - [x] Bổ sung công cụ AI giải thích, biến đổi câu hỏi và rà soát định dạng LaTeX trong Studio Tạo Quiz.
 - [x] Loại bỏ các khu vực tạo AI và nhập tài liệu trùng lặp trong Studio Tạo Quiz.
 - [x] Rà soát và tinh gọn các điều khiển Studio không còn cần thiết hoặc bị lặp.
+- [x] Chuyển Cài đặt Quiz sang panel trượt bên cạnh Studio để tối ưu không gian hiển thị.
+- [x] Đưa nguồn tệp, YouTube và trang web vào chat AI; mở hộp chọn tệp ngay từ thao tác Trích xuất từ tệp.
