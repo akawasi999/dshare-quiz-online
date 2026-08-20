@@ -9,13 +9,14 @@ const mocks = vi.hoisted(() => ({
   quota: { data: { tier: "basic", limits: { quizzesPerMonth: 2 }, usage: { quizzes: 0 } }, isLoading: false, error: null, refetch: vi.fn() },
   content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }] }, isLoading: false, error: null },
   sourceHistory: { data: [], isLoading: false, error: null },
+  branding: { data: { questionTabContentWidth: 960, settingsTabContentWidth: 840 }, isLoading: false, error: null },
   create: { mutate: vi.fn(), isPending: false },
   exportPdf: vi.fn(() => Promise.resolve()),
   exportWord: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideSidebar }: { children: React.ReactNode; hideSidebar?: boolean }) => <div data-testid="account-layout" data-hide-sidebar={hideSidebar ? "true" : "false"}>{children}</div> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, myQuizzes: { useQuery: () => mocks.mine }, sourceHistory: { useQuery: () => mocks.sourceHistory }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, uploadCover: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromDocument: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, importManualQuizFile: { useMutation: () => ({ isPending: false, data: undefined, mutate: vi.fn(), mutateAsync: vi.fn() }) }, studioAiChat: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, enhanceQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, learner: { quota: { useQuery: () => mocks.quota } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() }, sourceHistory: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, myQuizzes: { useQuery: () => mocks.mine }, sourceHistory: { useQuery: () => mocks.sourceHistory }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, uploadCover: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromDocument: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, importManualQuizFile: { useMutation: () => ({ isPending: false, data: undefined, mutate: vi.fn(), mutateAsync: vi.fn() }) }, studioAiChat: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, enhanceQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, learner: { quota: { useQuery: () => mocks.quota } }, branding: { get: { useQuery: () => mocks.branding } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() }, sourceHistory: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/lib/quizDocumentExport", () => ({ exportQuizToPdf: mocks.exportPdf, exportQuizToWord: mocks.exportWord }));
 
@@ -65,6 +66,14 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.queryByPlaceholderText("Vui lòng nhập câu hỏi.")).toBeNull();
     await user.click(screen.getByRole("tab", { name: "Câu hỏi" }));
     expect(screen.getByPlaceholderText("Vui lòng nhập câu hỏi.")).toBeTruthy();
+  });
+
+  it("áp dụng chiều rộng nội dung theo cấu hình Style cho từng tab Studio", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    expect(screen.getByTestId("studio-content-panel").style.maxWidth).toBe("960px");
+    await user.click(screen.getByRole("tab", { name: "Cài đặt" }));
+    expect(screen.getByTestId("studio-content-panel").style.maxWidth).toBe("840px");
   });
 
   it("mở khung chat AI và phần xem trước câu hỏi", async () => {
