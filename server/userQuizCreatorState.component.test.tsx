@@ -24,12 +24,16 @@ import UserQuizCreator from "../client/src/pages/UserQuizCreator";
 describe("UserQuizCreator thiết kế lại", () => {
   afterEach(cleanup);
 
-  it("mở thẳng studio Quiz mà không yêu cầu chọn phương thức hoặc nhập ID", () => {
+  it("mở thẳng studio Quiz mà không yêu cầu chọn phương thức hoặc nhập ID", async () => {
+    const user = userEvent.setup();
     render(<UserQuizCreator />);
     expect(screen.getByText("Tạo nhanh với")).toBeTruthy();
     expect(screen.getByText("Câu hỏi đã tạo")).toBeTruthy();
+    expect(screen.queryByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeNull();
+    await user.click(screen.getByRole("tab", { name: "Cài đặt" }));
     expect(screen.getByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeTruthy();
     expect(screen.getByRole("textbox", { name: "Mô tả Quiz trong studio" })).toBeTruthy();
+    await user.click(screen.getByRole("tab", { name: "Câu hỏi" }));
     expect(screen.queryByText("Mô tả ngắn")).toBeNull();
     expect(screen.queryByText("Thông tin Quiz")).toBeNull();
     expect(screen.getByText("Nhập phụ đề")).toBeTruthy();
@@ -73,7 +77,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByRole("button", { name: "Đính kèm tệp vào chat AI" })).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("true");
     await user.click(screen.getByRole("button", { name: "Thu gọn" }));
-    expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("false");
+    expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("true");
   });
 
   it("mở biểu mẫu trích xuất YouTube và trang web từ các thao tác nhanh", async () => {

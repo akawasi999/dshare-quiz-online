@@ -270,3 +270,6 @@
 - [x] Thiết kế lại Cài đặt Quiz thành tab cạnh Câu hỏi theo bố cục Studio tham chiếu.
 - [x] Hiển thị Cài đặt trong vùng Studio và ẩn phần Câu hỏi khi chọn tab Cài đặt.
 - [x] Gộp nội dung Câu hỏi và Cài đặt trong cùng khối Studio, chuyển tab liền mạch theo UX/UI.
+- [x] Ẩn sidebar menu tài khoản ở trang Studio Tạo Quiz.
+- [x] Chuyển tiêu đề và mô tả Quiz vào nội dung tab Cài đặt.
+- [x] Gộp tạo nhanh vào tab Câu hỏi và đặt nút Dùng Quiz AI cạnh biểu tượng robot.
