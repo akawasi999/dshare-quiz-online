@@ -62,7 +62,7 @@ import {
 import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
 import { encryptEmailApiKey, sendTestEmail } from "./paymentConfirmationEmail";
-import { encryptAiAssistantApiKey, generateAiAssistantReply } from "./aiAssistantService";
+import { decryptAiAssistantApiKey, discoverGeminiChatModel, encryptAiAssistantApiKey, generateAiAssistantReply } from "./aiAssistantService";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
@@ -233,15 +233,18 @@ export const appRouter = router({
       const models = await listLLMModels();
       return models.data.map(model => model.id);
     }),
-    saveConfig: adminProcedure.input(z.object({ provider: z.enum(["manus", "gemini"]), model: z.string().trim().min(2).max(120), apiKey: z.string().max(500).optional(), isEnabled: z.boolean(), welcomeMessage: z.string().trim().min(10).max(500) })).mutation(async ({ ctx, input }) => {
+    saveConfig: adminProcedure.input(z.object({ provider: z.enum(["manus", "gemini"]), model: z.string().trim().min(2).max(120).optional(), apiKey: z.string().max(500).optional(), isEnabled: z.boolean(), welcomeMessage: z.string().trim().min(10).max(500) })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
       const existing = (await db.select().from(aiAssistantSettings).limit(1))[0];
       const apiKeyCiphertext = input.apiKey?.trim() ? encryptAiAssistantApiKey(input.apiKey.trim()) : existing?.apiKeyCiphertext ?? null;
       if (input.provider === "gemini" && !apiKeyCiphertext) throw new TRPCError({ code: "BAD_REQUEST", message: "Vui lòng nhập Gemini API key trước khi kích hoạt Gemini." });
-      const values = { provider: input.provider, model: input.model, apiKeyCiphertext, isEnabled: input.isEnabled, welcomeMessage: input.welcomeMessage };
+      const model = input.provider === "gemini"
+        ? await discoverGeminiChatModel(input.apiKey?.trim() || decryptAiAssistantApiKey(apiKeyCiphertext || ""))
+        : input.model || existing?.model || defaultAiAssistantConfig.model;
+      const values = { provider: input.provider, model, apiKeyCiphertext, isEnabled: input.isEnabled, welcomeMessage: input.welcomeMessage };
       if (existing) await db.update(aiAssistantSettings).set(values).where(eq(aiAssistantSettings.id, existing.id)); else await db.insert(aiAssistantSettings).values(values);
-      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "ai_assistant.config_updated", entityType: "ai_assistant_settings", entityId: existing?.id ?? null, metadata: { provider: input.provider, model: input.model, isEnabled: input.isEnabled, apiKeyUpdated: Boolean(input.apiKey?.trim()) } });
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "ai_assistant.config_updated", entityType: "ai_assistant_settings", entityId: existing?.id ?? null, metadata: { provider: input.provider, model, isEnabled: input.isEnabled, apiKeyUpdated: Boolean(input.apiKey?.trim()), modelAutoSelected: input.provider === "gemini" } });
       const saved = (await db.select().from(aiAssistantSettings).limit(1))[0];
       return publicAiAssistantConfig(saved);
     }),

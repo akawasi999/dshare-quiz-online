@@ -4,6 +4,7 @@ import { invokeLLM, listLLMModels } from "./_core/llm";
 export type AiAssistantProvider = "manus" | "gemini";
 export type AssistantMessage = { role: "user" | "assistant"; content: string };
 export type StudyContext = { subject?: string | null; categoryTitle?: string | null; lessonTitle?: string | null; quizTitle?: string | null; quizSummary?: string | null; difficulty?: string | null };
+type GeminiModel = { name?: string; baseModelId?: string; supportedGenerationMethods?: string[] };
 
 const encryptionKey = () => createHash("sha256").update(process.env.JWT_SECRET || "dshare-ai-assistant-config").digest();
 
@@ -48,6 +49,25 @@ function textFromResponse(content: unknown) {
   return "";
 }
 
+export function selectGeminiChatModel(models: GeminiModel[]) {
+  const candidates = models
+    .filter(model => model.supportedGenerationMethods?.includes("generateContent"))
+    .map(model => model.baseModelId || model.name?.replace(/^models\//, ""))
+    .filter((model): model is string => typeof model === "string" && /^gemini-/i.test(model))
+    .filter(model => !/(?:image|tts|live|audio|embedding|computer-use|deep-research|omni)/i.test(model));
+  const preferred = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
+  return preferred.find(model => candidates.includes(model)) ?? candidates.find(model => /flash/i.test(model) && !/preview/i.test(model)) ?? candidates.find(model => !/preview/i.test(model)) ?? candidates[0] ?? null;
+}
+
+export async function discoverGeminiChatModel(apiKey: string) {
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", { headers: { "x-goog-api-key": apiKey } });
+  const payload = await response.json().catch(() => ({})) as { models?: GeminiModel[]; error?: { message?: string } };
+  if (!response.ok) throw new Error(payload.error?.message || "Không thể xác thực Gemini API key hoặc lấy danh sách model.");
+  const model = selectGeminiChatModel(payload.models ?? []);
+  if (!model) throw new Error("Gemini API key này không có model generateContent phù hợp.");
+  return model;
+}
+
 async function callManus(model: string, messages: AssistantMessage[], studyContext?: StudyContext) {
   const catalog = await listLLMModels();
   const resolvedModel = catalog.data.find(item => item.id === model)?.id ?? catalog.data.find(item => item.id === "gpt-5-mini")?.id ?? catalog.data[0]?.id;
@@ -63,9 +83,9 @@ async function callGemini(apiKey: string, model: string, messages: AssistantMess
     role: message.role === "assistant" ? "model" : "user",
     parts: [{ text: message.content }],
   }));
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
     body: JSON.stringify({ systemInstruction: { parts: [{ text: systemInstruction }] }, contents, generationConfig: { temperature: 0.55, maxOutputTokens: 900 } }),
   });
   const payload = await response.json().catch(() => ({})) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>; error?: { message?: string } };

@@ -249,3 +249,4 @@
 - [x] Thêm hiệu ứng gõ chữ và trạng thái loading rõ ràng khi AI Assistant tạo câu trả lời.
 - [x] Hoàn thiện khu vực xem lại lịch sử hội thoại AI Assistant cho người học.
 - [x] Hiển thị prompt gợi ý theo môn học hoặc Quiz người học đã chọn trong AI Assistant.
+- [x] Tự động truy xuất và chọn mô hình Gemini khả dụng từ API key, không yêu cầu nhập model thủ công.
