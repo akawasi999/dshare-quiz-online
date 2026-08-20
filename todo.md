@@ -282,3 +282,5 @@
 - [x] Hiển thị dấu sao đỏ cho trường bắt buộc và chặn Xuất bản đến khi Quiz có đủ dữ liệu cần thiết.
 - [x] Rà soát chỉnh sửa trực quan Studio: ẩn chỉ dẫn thiếu dữ liệu và chú thích số lần làm tối đa, sau đó tạo checkpoint.
 - [x] Cập nhật nội dung popup xác nhận khi người dùng chỉnh sửa câu hỏi trong Studio.
+- [x] Bỏ popup xác nhận tại Live Preview để Lưu thay đổi cập nhật trực tiếp.
+- [x] Chuyển nội dung xác nhận chỉnh sửa sang Xuất bản và công khai Quiz sau khi xác nhận.

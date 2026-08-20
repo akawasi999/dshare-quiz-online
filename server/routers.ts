@@ -601,7 +601,7 @@ export const appRouter = router({
       return { success: true, coverImageUrl: input.coverImageUrl };
     }),
     createQuiz: protectedProcedure.input(z.object({
-      lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(),
+      lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440).default(15), maxAttempts: z.number().int().min(0).max(1000).default(0), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean().default(false), hideHintsAndExplanation: z.boolean().default(false), allowBackNavigation: z.boolean().default(true), requireRegistration: z.boolean().default(true), liveMonitoring: z.boolean().default(false), requireEmail: z.boolean().default(false) }).default({ durationMinutes: 15, maxAttempts: 0, antiCheatMonitor: false, hideHintsAndExplanation: false, allowBackNavigation: true, requireRegistration: true, liveMonitoring: false, requireEmail: false }),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: z.string().url().max(1024).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
@@ -619,7 +619,7 @@ export const appRouter = router({
       const requestedSlug = input.slug || autoSlug;
       const slugExists = await db.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.slug, requestedSlug)).limit(1);
       const quizSlug = slugExists.length ? `${requestedSlug}-${Date.now().toString(36)}` : requestedSlug;
-      const createdQuiz = await db.insert(quizzes).values({ lessonId: lesson[0]!.id, creatorUserId: ctx.user.id, title: input.title, slug: quizSlug, summary: input.summary, coverImageUrl: input.coverImageUrl, mode: "training", accessTier: "basic", durationSeconds: input.settings.durationMinutes * 60, passingScore: 70, questionCount: input.questions.length, creatorSettings: input.settings, isPublished: false });
+      const createdQuiz = await db.insert(quizzes).values({ lessonId: lesson[0]!.id, creatorUserId: ctx.user.id, title: input.title, slug: quizSlug, summary: input.summary, coverImageUrl: input.coverImageUrl, mode: "training", accessTier: "basic", durationSeconds: input.settings.durationMinutes * 60, passingScore: 70, questionCount: input.questions.length, creatorSettings: input.settings, isPublished: input.isPublished });
       const quizId = Number(createdQuiz[0].insertId);
       for (let index = 0; index < input.questions.length; index += 1) {
         const item = input.questions[index]!;
@@ -628,10 +628,10 @@ export const appRouter = router({
         if (item.options.length) await db.insert(questionOptions).values(item.options.map((option: { body: string; isCorrect: boolean }, optionIndex: number) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex })));
         await db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: item.points });
       }
-      return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: false };
+      return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: input.isPublished };
     }),
     updateQuiz: protectedProcedure.input(z.object({
-      quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(),
+      quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean() }),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: z.string().url().max(1024).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
@@ -639,9 +639,9 @@ export const appRouter = router({
       for (const item of input.questions) { const error = validateQuestionConfiguration({ type: item.type, options: item.options, answerConfig: item.answerConfig, imageUrl: item.imageUrl ?? null }); if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` }); }
       const lessonId = input.lessonId ?? source.quiz.lessonId;
       await removeOwnedQuizQuestions(source.db, source.quiz.id, source.questions);
-      await source.db.update(quizzes).set({ lessonId, title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl, durationSeconds: input.settings.durationMinutes * 60, questionCount: input.questions.length, creatorSettings: input.settings }).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
+      await source.db.update(quizzes).set({ lessonId, title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl, durationSeconds: input.settings.durationMinutes * 60, questionCount: input.questions.length, creatorSettings: input.settings, isPublished: input.isPublished }).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
       for (let index = 0; index < input.questions.length; index += 1) { const item = input.questions[index]!; const createdQuestion = await source.db.insert(questions).values({ lessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(createdQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option, optionIndex) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId: source.quiz.id, questionId, sortOrder: index, points: item.points }); }
-      return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length };
+      return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length, isPublished: input.isPublished };
     }),
     generateQuestionAI: protectedProcedure.input(aiQuestionInputSchema.omit({ lessonId: true })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi bằng AI");

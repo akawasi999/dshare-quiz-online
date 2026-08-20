@@ -93,6 +93,11 @@ describe("UserQuizCreator thiết kế lại", () => {
     await user.type(screen.getByPlaceholderText("Tùy chọn 2"), "Đáp án sai");
     await user.click(screen.getByRole("button", { name: "Thêm vào Quiz" }));
     expect(publishButton.hasAttribute("disabled")).toBe(false);
+    mocks.create.mutate.mockClear();
+    await user.click(publishButton);
+    expect(screen.getByText("Nếu bạn chỉnh sửa câu hỏi, câu hỏi sẽ được làm mới. Bạn có muốn chỉnh sửa lại ngay bây giờ không?")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Xác nhận" }));
+    expect(mocks.create.mutate).toHaveBeenLastCalledWith(expect.objectContaining({ isPublished: true }));
   });
 
   it("mở khung chat AI và phần xem trước câu hỏi", async () => {
@@ -120,7 +125,6 @@ describe("UserQuizCreator thiết kế lại", () => {
 
   it("cho phép chỉnh sửa câu hỏi ngay trong xem trước và xuất bản nháp sang PDF/Word", async () => {
     const user = userEvent.setup();
-    const confirmEdit = vi.spyOn(window, "confirm").mockReturnValue(true);
     render(<UserQuizCreator />);
     await user.type(screen.getByPlaceholderText("Vui lòng nhập câu hỏi."), "Thủ đô của Việt Nam là thành phố nào?");
     await user.type(screen.getByPlaceholderText("Tùy chọn 1"), "Hà Nội");
@@ -142,7 +146,6 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(mocks.exportWord).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByRole("button", { name: "Sửa câu hỏi trong Live Preview" }));
-    expect(confirmEdit).toHaveBeenCalledWith("Nếu bạn chỉnh sửa câu hỏi, câu hỏi sẽ được làm mới. Bạn có muốn chỉnh sửa lại ngay bây giờ không?");
     const promptEditor = screen.getByLabelText("Nội dung câu hỏi trong Live Preview");
     await user.clear(promptEditor);
     await user.type(promptEditor, "Thủ đô Việt Nam hiện nay là đâu?");
