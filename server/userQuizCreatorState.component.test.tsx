@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   exportWord: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
+vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideSidebar }: { children: React.ReactNode; hideSidebar?: boolean }) => <div data-testid="account-layout" data-hide-sidebar={hideSidebar ? "true" : "false"}>{children}</div> }));
 vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, myQuizzes: { useQuery: () => mocks.mine }, sourceHistory: { useQuery: () => mocks.sourceHistory }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, uploadCover: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionAI: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromDocument: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) }, importManualQuizFile: { useMutation: () => ({ isPending: false, data: undefined, mutate: vi.fn(), mutateAsync: vi.fn() }) }, studioAiChat: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, learner: { quota: { useQuery: () => mocks.quota } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() }, sourceHistory: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/lib/quizDocumentExport", () => ({ exportQuizToPdf: mocks.exportPdf, exportQuizToWord: mocks.exportWord }));
@@ -60,6 +60,9 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
     expect(screen.getByText("Câu hỏi đã tạo")).toBeTruthy();
     expect(screen.getByText("AI sẽ tự làm rõ yêu cầu trước khi tạo câu hỏi.")).toBeTruthy();
+    expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("true");
+    await user.click(screen.getByRole("button", { name: "Thu gọn" }));
+    expect(screen.getByTestId("account-layout").getAttribute("data-hide-sidebar")).toBe("false");
   });
 
   it("mở biểu mẫu trích xuất YouTube và trang web từ các thao tác nhanh", async () => {

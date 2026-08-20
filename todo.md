@@ -254,3 +254,5 @@
 - [x] Tự động gợi ý câu hỏi tiếp theo dựa trên phản hồi mới nhất của AI Assistant.
 - [x] Thiết kế lại Studio Tạo Quiz theo hai cột với khung chat AI mở khi dùng thao tác AI.
 - [x] Thêm AI nhận diện yêu cầu, hỏi bổ sung khi thiếu dữ liệu và tự sinh câu hỏi/đáp án vào bản nháp Quiz.
+- [x] Ẩn sidebar menu khi mở chat AI trong Studio và khôi phục khi đóng hội thoại.
+- [x] Mở rộng bố cục Studio hai cột trong chế độ AI để ưu tiên không gian soạn Quiz và chat.
