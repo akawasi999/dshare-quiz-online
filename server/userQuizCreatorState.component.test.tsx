@@ -105,6 +105,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     render(<UserQuizCreator />);
     await user.click(screen.getAllByRole("button", { name: "Dùng Quiz AI" })[0]!);
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
+    expect(screen.getByTestId("studio-workspace").className).toContain("xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]");
     expect(screen.getByTestId("live-question-preview").className).toContain("live-question-preview--headerless");
     expect(screen.getByText("AI sẽ tự làm rõ yêu cầu trước khi tạo câu hỏi.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Đính kèm tệp vào chat AI" })).toBeTruthy();

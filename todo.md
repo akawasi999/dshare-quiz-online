@@ -285,3 +285,4 @@
 - [x] Bỏ popup xác nhận tại Live Preview để Lưu thay đổi cập nhật trực tiếp.
 - [x] Chuyển nội dung xác nhận chỉnh sửa sang Xuất bản và công khai Quiz sau khi xác nhận.
 - [x] Loại bỏ khối tiêu đề Live Preview màu xanh, gồm tiêu đề, mô tả, bộ đếm và Quota Quiz.
+- [x] Khi mở chat AI, hiển thị danh sách câu hỏi bên trái 60% và khung chat bên phải 40%.
