@@ -273,3 +273,4 @@
 - [x] Ẩn sidebar menu tài khoản ở trang Studio Tạo Quiz.
 - [x] Chuyển tiêu đề và mô tả Quiz vào nội dung tab Cài đặt.
 - [x] Gộp tạo nhanh vào tab Câu hỏi và đặt nút Dùng Quiz AI cạnh biểu tượng robot.
+- [x] Đặt khối Tạo nhanh với Quiz AI bên trong nội dung tab Câu hỏi của Studio.
