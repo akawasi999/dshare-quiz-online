@@ -217,3 +217,6 @@
 - [x] Ghi nhận và hiển thị lịch sử gửi email thành công/thất bại trong chi tiết từng đơn hàng quản trị.
 - [x] Thiết kế lại luồng Tạo Quiz và Tạo câu hỏi theo tài liệu đặc tả được cung cấp.
 - [x] Loại bỏ trường nhập ID thủ công trong biểu mẫu tạo quiz/câu hỏi và dùng ID sinh tự động từ hệ thống.
+- [x] Thêm kéo-thả để thay đổi thứ tự câu hỏi trong bản nháp Quiz.
+- [x] Tải PDF/Word, trích xuất nội dung và tạo danh sách câu hỏi trắc nghiệm bằng AI.
+- [x] Thêm chế độ xem trước toàn bộ Quiz theo góc nhìn học viên trước khi xuất bản.
