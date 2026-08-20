@@ -36,12 +36,12 @@ describe("UserQuizCreator thiết kế lại", () => {
     await user.click(screen.getByRole("button", { name: "Bắt đầu tạo thủ công" }));
     expect(screen.getByText("Thông tin Quiz")).toBeTruthy();
     expect(screen.getByText("Cấu hình làm bài & bảo mật")).toBeTruthy();
-    expect(screen.getByText("Trình soạn câu hỏi")).toBeTruthy();
+    expect(screen.getByText("Tạo nhanh với")).toBeTruthy();
     expect(screen.getByText("Nhập câu hỏi từ tệp")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Xem trước câu hỏi" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Tải mẫu Excel" })).toBeTruthy();
     expect(screen.queryByText("ID Bài học")).toBeNull();
-    expect(screen.getByRole("option", { name: "Tự luận" })).toBeTruthy();
+    expect(screen.getByRole("option", { name: "✎ Bài luận" })).toBeTruthy();
   });
 
   it("mở khung chat AI và phần xem trước câu hỏi", async () => {
@@ -57,9 +57,9 @@ describe("UserQuizCreator thiết kế lại", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "Bắt đầu tạo thủ công" }));
-    await user.type(screen.getByPlaceholderText("Nhập nội dung câu hỏi…"), "Thủ đô của Việt Nam là thành phố nào?");
-    await user.type(screen.getByPlaceholderText("Phương án A"), "Hà Nội");
-    await user.type(screen.getByPlaceholderText("Phương án B"), "Huế");
+    await user.type(screen.getByPlaceholderText("Vui lòng nhập câu hỏi."), "Thủ đô của Việt Nam là thành phố nào?");
+    await user.type(screen.getByPlaceholderText("Tùy chọn 1"), "Hà Nội");
+    await user.type(screen.getByPlaceholderText("Tùy chọn 2"), "Huế");
     await user.click(screen.getByRole("button", { name: "Thêm vào Quiz" }));
 
     const pdfButton = screen.getByRole("button", { name: "Xuất PDF" });

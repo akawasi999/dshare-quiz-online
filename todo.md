@@ -227,3 +227,4 @@
 - [x] Thêm nút tải mẫu Excel trực tiếp tại màn Tạo Quiz thủ công.
 - [x] Cho phép xem trước và chọn/bỏ chọn từng câu hỏi trước khi thêm từ tệp vào bản nháp Quiz.
 - [x] Hỗ trợ OCR dự phòng cho PDF dạng ảnh không có lớp chữ khi nhập Quiz thủ công.
+- [x] Thiết kế lại trang Tạo Quiz theo UX/UI dạng ứng dụng: thao tác nhanh AI, trình soạn tập trung, thanh công cụ và loại câu hỏi trực quan.
