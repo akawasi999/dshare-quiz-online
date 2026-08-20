@@ -25,6 +25,7 @@ const typeLabels = {
   fill_blank: "Điền đáp án",
   image: "Quan sát hình ảnh",
   matching: "Ghép nối",
+  essay: "Tự luận",
 } as const;
 
 export default function Practice() {

@@ -1,0 +1,2 @@
+ALTER TABLE `questions` MODIFY COLUMN `type` enum('single','multiple','true_false','fill_blank','image','matching','essay') NOT NULL DEFAULT 'single';--> statement-breakpoint
+ALTER TABLE `quizzes` ADD `creatorSettings` json;

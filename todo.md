@@ -215,3 +215,5 @@
 - [x] Thêm nút gửi email thử nghiệm để quản trị viên kiểm tra kết nối API email.
 - [x] Thiết kế lại mẫu email xác nhận thanh toán với logo Dshare và chi tiết gói đăng ký chuyên nghiệp.
 - [x] Ghi nhận và hiển thị lịch sử gửi email thành công/thất bại trong chi tiết từng đơn hàng quản trị.
+- [x] Thiết kế lại luồng Tạo Quiz và Tạo câu hỏi theo tài liệu đặc tả được cung cấp.
+- [x] Loại bỏ trường nhập ID thủ công trong biểu mẫu tạo quiz/câu hỏi và dùng ID sinh tự động từ hệ thống.

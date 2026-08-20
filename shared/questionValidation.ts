@@ -1,4 +1,4 @@
-export type QuestionValidationType = "single" | "multiple" | "true_false" | "fill_blank" | "image" | "matching";
+export type QuestionValidationType = "single" | "multiple" | "true_false" | "fill_blank" | "image" | "matching" | "essay";
 
 export type EditableQuestionConfig = {
   type: QuestionValidationType;
@@ -27,6 +27,10 @@ export function validateQuestionConfiguration(input: EditableQuestionConfig) {
   if (input.type === "matching") {
     const pairs = input.answerConfig?.pairs;
     if (!Array.isArray(pairs) || pairs.length < 2 || pairs.some(pair => !pair || typeof pair !== "object" || typeof (pair as Record<string, unknown>).left !== "string" || !String((pair as Record<string, unknown>).left).trim() || typeof (pair as Record<string, unknown>).right !== "string" || !String((pair as Record<string, unknown>).right).trim())) return "Câu ghép nối cần tối thiểu hai cặp trái–phải hợp lệ.";
+  }
+  if (input.type === "essay") {
+    const sampleOutline = input.answerConfig?.sampleOutline;
+    if (typeof sampleOutline !== "string" || !sampleOutline.trim()) return "Câu tự luận cần có dàn ý hoặc đáp án mẫu.";
   }
   return undefined;
 }

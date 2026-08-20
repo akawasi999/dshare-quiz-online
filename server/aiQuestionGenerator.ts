@@ -3,7 +3,7 @@ import { validateQuestionConfiguration, type QuestionValidationType } from "../s
 
 export const aiQuestionInputSchema = z.object({
   lessonId: z.number().int().positive(),
-  type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching"]),
+  type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]),
   difficulty: z.enum(["easy", "medium", "hard"]),
   topic: z.string().trim().min(3).max(300),
   context: z.string().trim().max(3000).optional(),

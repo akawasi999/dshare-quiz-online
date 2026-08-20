@@ -47,7 +47,7 @@ export const emailDeliverySettings = mysqlTable("emailDeliverySettings", {
 export const accountTierValues = ["basic", "pro", "premium"] as const;
 export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "expired"] as const;
 export const quizModeValues = ["training", "testing"] as const;
-export const questionTypeValues = ["single", "multiple", "true_false", "fill_blank", "image", "matching"] as const;
+export const questionTypeValues = ["single", "multiple", "true_false", "fill_blank", "image", "matching", "essay"] as const;
 export const difficultyValues = ["easy", "medium", "hard"] as const;
 
 export const learnerProfiles = mysqlTable("learnerProfiles", {
@@ -190,6 +190,7 @@ export const quizzes = mysqlTable("quizzes", {
   questionCount: int("questionCount").default(0).notNull(),
   randomizeQuestions: boolean("randomizeQuestions").default(true).notNull(),
   randomizeOptions: boolean("randomizeOptions").default(true).notNull(),
+  creatorSettings: json("creatorSettings").$type<Record<string, unknown>>(),
   isPublished: boolean("isPublished").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

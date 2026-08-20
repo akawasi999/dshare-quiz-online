@@ -12,4 +12,9 @@ describe("question configuration validation", () => {
     expect(validateQuestionConfiguration({ type: "image", imageUrl: "", options: [{ body: "A", isCorrect: true }, { body: "B", isCorrect: false }] })).toContain("URL hình");
     expect(validateQuestionConfiguration({ type: "matching", options: [], answerConfig: { pairs: [{ left: "A", right: "1" }] } })).toContain("tối thiểu hai cặp");
   });
+
+  it("yêu cầu dàn ý đáp án mẫu cho câu tự luận", () => {
+    expect(validateQuestionConfiguration({ type: "essay", options: [], answerConfig: {} })).toContain("dàn ý");
+    expect(validateQuestionConfiguration({ type: "essay", options: [], answerConfig: { sampleOutline: "Nêu luận điểm, dẫn chứng và kết luận." } })).toBeUndefined();
+  });
 });
