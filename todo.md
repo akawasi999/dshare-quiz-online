@@ -267,3 +267,4 @@
 - [x] Chuyển Cài đặt Quiz sang panel trượt bên cạnh Studio để tối ưu không gian hiển thị.
 - [x] Đưa nguồn tệp, YouTube và trang web vào chat AI; mở hộp chọn tệp ngay từ thao tác Trích xuất từ tệp.
 - [x] Thêm hiệu ứng tải và thông báo tiến trình khi AI trích xuất YouTube hoặc trang web trong chat Studio.
+- [x] Thiết kế lại Cài đặt Quiz thành tab cạnh Câu hỏi theo bố cục Studio tham chiếu.

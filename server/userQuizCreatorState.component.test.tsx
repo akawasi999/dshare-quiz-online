@@ -44,7 +44,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     expect(screen.queryByText("Thông tin Quiz")).toBeNull();
-    expect(screen.getByText("Cài đặt Quiz")).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Cài đặt" })).toBeTruthy();
     expect(screen.getByText("Tạo nhanh với")).toBeTruthy();
     expect(screen.queryByText("Nhập câu hỏi từ tệp")).toBeNull();
     expect(screen.getByRole("button", { name: "Xem như học viên" })).toBeTruthy();
