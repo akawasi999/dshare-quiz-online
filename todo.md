@@ -280,3 +280,4 @@
 - [x] Thêm cấu hình Style quản trị cho kích thước hiển thị nội dung tab Câu hỏi và Cài đặt của Studio.
 - [x] Cho phép đổi tên Quiz trực tiếp trên thanh Studio và đồng bộ hai chiều với tab Cài đặt.
 - [x] Hiển thị dấu sao đỏ cho trường bắt buộc và chặn Xuất bản đến khi Quiz có đủ dữ liệu cần thiết.
+- [x] Rà soát chỉnh sửa trực quan Studio: ẩn chỉ dẫn thiếu dữ liệu và chú thích số lần làm tối đa, sau đó tạo checkpoint.

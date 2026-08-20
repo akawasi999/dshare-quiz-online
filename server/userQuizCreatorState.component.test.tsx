@@ -81,7 +81,6 @@ describe("UserQuizCreator thiết kế lại", () => {
     render(<UserQuizCreator />);
     const publishButton = screen.getByRole("button", { name: "Xuất bản" });
     expect(publishButton.hasAttribute("disabled")).toBe(true);
-    expect(screen.getByText(/Cần tên Quiz và ít nhất 1 câu hỏi/)).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Đổi tên Quiz" }));
     const headerTitle = screen.getByLabelText("Đổi tên Quiz trên thanh Studio");
     await user.type(headerTitle, "Quiz trực tiếp");
