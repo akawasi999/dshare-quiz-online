@@ -19,6 +19,7 @@ import {
   questions,
   quizzes,
   quizQuestions,
+  quizSourceHistories,
   subscriptionPlans,
   subjects,
   userGroupMembers,
@@ -509,11 +510,18 @@ export const appRouter = router({
         const source = await extractRemoteQuizSource(input.url);
         const generated = await generateMultipleChoiceFromDocument({ text: source.text, count: input.questionCount, difficulty: input.difficulty });
         for (let index = 0; index < generated.length; index += 1) await recordAiUsage(ctx.user.id, "generate_question");
+        const db = await getDb();
+        if (db) await db.insert(quizSourceHistories).values({ userId: ctx.user.id, sourceUrl: source.sourceUrl, sourceName: source.sourceName, sourceType: source.sourceType, sourceCharacterCount: source.text.length, lastQuestionCount: input.questionCount, lastDifficulty: input.difficulty }).onDuplicateKeyUpdate({ set: { sourceName: source.sourceName, sourceType: source.sourceType, sourceCharacterCount: source.text.length, lastQuestionCount: input.questionCount, lastDifficulty: input.difficulty, useCount: sql`${quizSourceHistories.useCount} + 1`, lastUsedAt: new Date() } });
         const sourceTextLimit = 6_000;
         return { sourceName: source.sourceName, sourceUrl: source.sourceUrl, sourceType: source.sourceType, sourceText: source.text.slice(0, sourceTextLimit), sourceTextTruncated: source.text.length > sourceTextLimit, sourceCharacterCount: source.text.length, questions: generated, quota: { used: quota.used + generated.length, limit: quota.limit } };
       } catch (error) {
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể trích xuất nguồn để tạo câu hỏi." });
       }
+    }),
+    sourceHistory: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select().from(quizSourceHistories).where(eq(quizSourceHistories.userId, ctx.user.id)).orderBy(desc(quizSourceHistories.lastUsedAt)).limit(8);
     }),
     importManualQuizFile: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"]), base64: z.string().min(80).max(22_000_000) })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "tạo Quiz");

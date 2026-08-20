@@ -201,6 +201,23 @@ export const quizzes = mysqlTable("quizzes", {
   index("quizzes_publish_idx").on(table.isPublished),
 ]);
 
+export const quizSourceHistories = mysqlTable("quizSourceHistories", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  sourceUrl: varchar("sourceUrl", { length: 2048 }).notNull(),
+  sourceName: varchar("sourceName", { length: 220 }).notNull(),
+  sourceType: mysqlEnum("sourceType", ["youtube", "web"]).notNull(),
+  sourceCharacterCount: int("sourceCharacterCount").default(0).notNull(),
+  lastQuestionCount: int("lastQuestionCount").default(5).notNull(),
+  lastDifficulty: mysqlEnum("lastDifficulty", difficultyValues).default("medium").notNull(),
+  useCount: int("useCount").default(1).notNull(),
+  lastUsedAt: timestamp("lastUsedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [
+  uniqueIndex("quiz_source_history_user_url_unique").on(table.userId, table.sourceUrl),
+  index("quiz_source_history_user_used_idx").on(table.userId, table.lastUsedAt),
+]);
+
 export const questions = mysqlTable("questions", {
   id: int("id").autoincrement().primaryKey(),
   lessonId: int("lessonId").notNull(),

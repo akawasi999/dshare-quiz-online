@@ -231,3 +231,6 @@
 - [x] Cho phép kéo-thả sắp xếp câu hỏi trực tiếp trong danh sách xem trước Quiz.
 - [x] Thêm lịch sử hoàn tác/làm lại khi chỉnh sửa bản nháp Quiz.
 - [x] Trích xuất nội dung YouTube và trang web để AI tạo câu hỏi trong studio Quiz.
+- [x] Bỏ màn chọn Tạo Quiz thủ công/AI để người dùng vào thẳng studio Quiz.
+- [x] Cho phép sửa trực tiếp từng câu hỏi trong Live Preview.
+- [x] Lưu lịch sử nguồn URL và cho phép tái tạo câu hỏi nhanh từ nguồn đã dùng.
