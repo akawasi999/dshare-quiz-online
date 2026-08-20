@@ -39,7 +39,7 @@ import { getReferralValidationError, normalizeReferralCode } from "./referralUti
 import { allocateQuestionCounts } from "./randomQuiz";
 import { validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
-import { storagePut } from "./storage";
+import { storageGetSignedUrl, storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
@@ -63,13 +63,15 @@ import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
 import { encryptEmailApiKey, sendTestEmail } from "./paymentConfirmationEmail";
 import { decryptAiAssistantApiKey, discoverGeminiChatModel, encryptAiAssistantApiKey, generateAiAssistantReply } from "./aiAssistantService";
+import { analyzeAiAssistantImage } from "./aiAssistantMultimodal";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
-import { buildQuizStudioChatMessages, parseQuizStudioChatResponse, quizStudioChatInputSchema } from "./quizStudioChat";
+import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse, questionEnhancementInputSchema, quizStudioChatInputSchema } from "./quizStudioChat";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
 import { importManualQuizFile, ocrPdfWithVision } from "./manualQuizImport";
 import { extractRemoteQuizSource } from "./remoteQuizExtraction";
+import { transcribeAudio } from "./_core/voiceTranscription";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
@@ -197,7 +199,7 @@ export const appRouter = router({
       await db.delete(aiAssistantConversations).where(eq(aiAssistantConversations.userId, ctx.user.id));
       return { success: true };
     }),
-    chat: protectedProcedure.input(z.object({ message: z.string().trim().min(2).max(4_000), context: z.object({ subject: z.string().trim().min(2).max(120).optional(), quizId: z.number().int().positive().optional() }).optional() })).mutation(async ({ ctx, input }) => {
+    chat: protectedProcedure.input(z.object({ message: z.string().trim().min(2).max(4_000), context: z.object({ subject: z.string().trim().min(2).max(120).optional(), quizId: z.number().int().positive().optional(), mode: z.enum(["socratic", "study_plan"]).optional() }).optional() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
       const config = (await db.select().from(aiAssistantSettings).limit(1))[0];
@@ -215,12 +217,45 @@ export const appRouter = router({
         lessonTitle: selectedQuiz?.lesson.title ?? null,
         quizTitle: selectedQuiz?.quiz.title ?? null,
         quizSummary: selectedQuiz?.quiz.summary ?? null,
-        difficulty: selectedQuiz?.quiz.difficulty ?? null,
+        difficulty: selectedQuiz?.quiz.difficulty ?? null, mode: input.context?.mode,
       } : undefined;
       const reply = await generateAiAssistantReply({ provider: config.provider, model: config.model, apiKeyCiphertext: config.apiKeyCiphertext, messages: [...priorRows.reverse(), { role: "user", content: input.message }], studyContext });
       await db.insert(aiAssistantConversations).values([{ userId: ctx.user.id, role: "user", content: input.message }, { userId: ctx.user.id, role: "assistant", content: reply }]);
       await recordAiUsage(ctx.user.id, "assist");
       return { content: reply, quota: { used: quota.used + 1, limit: quota.limit } };
+    }),
+    gradeEssay: protectedProcedure.input(z.object({ question: z.string().trim().min(8).max(5_000), answer: z.string().trim().min(10).max(12_000), rubric: z.string().trim().min(8).max(5_000).optional(), context: z.object({ subject: z.string().trim().min(2).max(120).optional() }).optional() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+      const config = (await db.select().from(aiAssistantSettings).limit(1))[0]; const safeConfig = publicAiAssistantConfig(config);
+      if (!config || !safeConfig.isEnabled) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "AI Assistant chưa được quản trị viên kích hoạt." });
+      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "nhận xét bài tự luận bằng AI"); const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+      const prompt = `Câu hỏi tự luận:\n${input.question}\n\nBài làm của người học:\n${input.answer}\n\nRubric/tiêu chí chấm:\n${input.rubric ?? "Đánh giá mức độ đúng kiến thức, lập luận, ví dụ và diễn đạt."}\n\nHãy phản hồi theo các phần: Nhận xét tổng quan, Điểm mạnh, Cần cải thiện, Gợi ý sửa từng bước, Bài luyện tiếp theo.`;
+      const content = await generateAiAssistantReply({ provider: config.provider, model: config.model, apiKeyCiphertext: config.apiKeyCiphertext, messages: [{ role: "user", content: prompt }], studyContext: { subject: input.context?.subject ?? null, mode: "essay_feedback" } });
+      await db.insert(aiAssistantConversations).values([{ userId: ctx.user.id, role: "user", content: "Đã gửi bài tự luận để nhận xét theo rubric." }, { userId: ctx.user.id, role: "assistant", content }]); await recordAiUsage(ctx.user.id, "assist"); return { content, quota: { used: quota.used + 1, limit: quota.limit } };
+    }),
+    analyzeImage: protectedProcedure.input(z.object({ fileName: z.string().trim().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(40).max(16_000_000), instruction: z.string().trim().min(2).max(2_000).default("Hãy giúp tôi hiểu bài tập trong ảnh."), context: z.object({ subject: z.string().trim().min(2).max(120).optional() }).optional() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+      const config = (await db.select().from(aiAssistantSettings).limit(1))[0]; const safeConfig = publicAiAssistantConfig(config);
+      if (!config || !safeConfig.isEnabled) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "AI Assistant chưa được quản trị viên kích hoạt." });
+      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "phân tích ảnh học tập"); const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+      const match = input.base64.match(/^data:([^;]+);base64,(.+)$/); if (!match || match[1] !== input.mimeType) throw new TRPCError({ code: "BAD_REQUEST", message: "Ảnh đính kèm không hợp lệ." });
+      const bytes = Buffer.from(match[2], "base64"); if (bytes.length > 10 * 1024 * 1024) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Ảnh tối đa 10 MB." });
+      await storagePut(`ai-assistant/${ctx.user.id}/images/${input.fileName}`, bytes, input.mimeType);
+      const content = await analyzeAiAssistantImage({ provider: config.provider, model: config.model, apiKeyCiphertext: config.apiKeyCiphertext, dataUrl: input.base64, instruction: input.instruction, studyContext: { subject: input.context?.subject ?? null } });
+      await db.insert(aiAssistantConversations).values([{ userId: ctx.user.id, role: "user", content: `Đã gửi ảnh: ${input.fileName}. ${input.instruction}` }, { userId: ctx.user.id, role: "assistant", content }]); await recordAiUsage(ctx.user.id, "assist");
+      return { content, quota: { used: quota.used + 1, limit: quota.limit } };
+    }),
+    transcribeVoice: protectedProcedure.input(z.object({ fileName: z.string().trim().min(1).max(160), mimeType: z.enum(["audio/webm", "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4"]), base64: z.string().min(40).max(23_000_000) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." }); const config = (await db.select().from(aiAssistantSettings).limit(1))[0];
+      if (!config || !publicAiAssistantConfig(config).isEnabled) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "AI Assistant chưa được quản trị viên kích hoạt." });
+      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "chuyển giọng nói thành văn bản"); const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+      const match = input.base64.match(/^data:([^;]+);base64,(.+)$/); if (!match || match[1] !== input.mimeType) throw new TRPCError({ code: "BAD_REQUEST", message: "Tệp âm thanh không hợp lệ." });
+      const bytes = Buffer.from(match[2], "base64"); if (bytes.length > 16 * 1024 * 1024) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Âm thanh tối đa 16 MB." });
+      const stored = await storagePut(`ai-assistant/${ctx.user.id}/audio/${input.fileName}`, bytes, input.mimeType); const audioUrl = await storageGetSignedUrl(stored.key);
+      const result = await transcribeAudio({ audioUrl, language: "vi", prompt: "Chuyển giọng nói tiếng Việt của người học thành văn bản rõ ràng." });
+      if ("error" in result) throw new TRPCError({ code: "BAD_GATEWAY", message: result.details || result.error });
+      await recordAiUsage(ctx.user.id, "assist"); return { text: result.text, quota: { used: quota.used + 1, limit: quota.limit } };
     }),
   }),
 
@@ -628,6 +663,13 @@ export const appRouter = router({
         }
         return { ...result, quota: null };
       } catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI Studio chưa thể xử lý yêu cầu: ${error.message}` : "AI Studio chưa thể xử lý yêu cầu." }); }
+    }),
+    enhanceQuestionAI: protectedProcedure.input(questionEnhancementInputSchema).mutation(async ({ ctx, input }) => {
+      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng công cụ AI cho câu hỏi");
+      const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+      const response = await invokeLLM({ messages: buildQuestionEnhancementMessages(input), maxTokens: 1_600, response_format: { type: "json_schema", json_schema: { name: "quiz_question_enhancement", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["explain", "rephrase", "latex"] }, prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["action", "prompt", "explanation", "options", "answerConfig"], additionalProperties: false } } } });
+      try { const result = parseQuestionEnhancement(response.choices[0]?.message.content, input.question.type); await recordAiUsage(ctx.user.id, "generate_question"); return { ...result, quota: { used: quota.used + 1, limit: quota.limit } }; }
+      catch (error) { throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI chưa thể nâng cấp câu hỏi: ${error.message}` : "AI chưa thể nâng cấp câu hỏi." }); }
     }),
     generateQuestionsFromDocument: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]), base64: z.string().min(80).max(22_000_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi từ tài liệu bằng AI");

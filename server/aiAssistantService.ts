@@ -3,7 +3,7 @@ import { invokeLLM, listLLMModels } from "./_core/llm";
 
 export type AiAssistantProvider = "manus" | "gemini";
 export type AssistantMessage = { role: "user" | "assistant"; content: string };
-export type StudyContext = { subject?: string | null; categoryTitle?: string | null; lessonTitle?: string | null; quizTitle?: string | null; quizSummary?: string | null; difficulty?: string | null };
+export type StudyContext = { subject?: string | null; categoryTitle?: string | null; lessonTitle?: string | null; quizTitle?: string | null; quizSummary?: string | null; difficulty?: string | null; mode?: "socratic" | "study_plan" | "essay_feedback" };
 type GeminiModel = { name?: string; baseModelId?: string; supportedGenerationMethods?: string[] };
 
 const encryptionKey = () => createHash("sha256").update(process.env.JWT_SECRET || "dshare-ai-assistant-config").digest();
@@ -33,11 +33,13 @@ export function buildDshareAssistantMessages(messages: AssistantMessage[], study
     studyContext?.difficulty ? `Độ khó: ${studyContext.difficulty}` : null,
     studyContext?.quizSummary ? `Mô tả bộ đề: ${studyContext.quizSummary}` : null,
   ].filter(Boolean);
+  const modeInstruction = studyContext?.mode === "socratic" ? "Chế độ Socratic: Không đưa đáp án trực tiếp. Hãy hỏi từng câu gợi mở, chia nhỏ cách suy luận, chỉ ra khái niệm còn thiếu và kết thúc bằng một bài tập tương tự ngắn." : studyContext?.mode === "study_plan" ? "Chế độ lộ trình ôn tập: Hãy tạo kế hoạch cụ thể theo thời gian, ưu tiên kiến thức nền, bài luyện ngắn và tiêu chí tự đánh giá." : studyContext?.mode === "essay_feedback" ? "Chế độ phản hồi tự luận: Đây không phải bài thi đang diễn ra. Hãy đánh giá theo rubric người dùng cung cấp, nêu điểm mạnh, điểm cần cải thiện, gợi ý sửa từng bước và một phiên bản trả lời tốt hơn. Không tuyên bố chấm điểm tuyệt đối." : "";
   return [
     {
       role: "system" as const,
       content: "Bạn là Dshare AI Assistant, trợ lý học tập tiếng Việt của Dshare Quiz Online. Hãy trả lời thân thiện, chính xác, cô đọng và có cấu trúc Markdown dễ đọc. Bạn có thể giải thích kiến thức, lập kế hoạch ôn tập, tạo ví dụ, gợi ý cách học và phản hồi về Quiz. Không bịa nguồn, số liệu hay liên kết. Không hỗ trợ gian lận trong bài kiểm tra đang diễn ra; thay vào đó hãy hướng dẫn phương pháp suy nghĩ. Nếu thiếu ngữ cảnh, hãy hỏi lại một câu làm rõ.",
     },
+    ...(modeInstruction ? [{ role: "system" as const, content: modeInstruction }] : []),
     ...(contextLines.length ? [{ role: "system" as const, content: `Ngữ cảnh học tập do Dshare xác nhận:\n${contextLines.map(line => `- ${line}`).join("\n")}\nChỉ dùng để cá nhân hóa việc giải thích và kế hoạch học. Không suy diễn hoặc tiết lộ đáp án của bài đang làm.` }] : []),
     ...messages.map(message => ({ role: message.role, content: message.content })),
   ];

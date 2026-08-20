@@ -37,3 +37,26 @@ export function parseQuizStudioChatResponse(content: unknown) {
   if (!questions.length) throw new Error("AI chưa trả về câu hỏi hợp lệ.");
   return { ...parsed, questions };
 }
+
+const enhancementSchema = z.object({
+  action: z.enum(["explain", "rephrase", "latex"]),
+  prompt: z.string().trim().min(8).max(5_000),
+  explanation: z.string().trim().max(5_000),
+  options: z.array(z.object({ body: z.string().trim().min(1).max(2_000), isCorrect: z.boolean() })).max(10),
+  answerConfig: z.record(z.string(), z.unknown()),
+});
+
+export const questionEnhancementInputSchema = z.object({
+  action: z.enum(["explain", "rephrase", "latex"]),
+  question: z.object({ type: questionTypeSchema, difficulty: difficultySchema, prompt: z.string().trim().min(8).max(5_000), explanation: z.string().max(5_000), options: z.array(z.object({ body: z.string().max(2_000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) }),
+});
+
+export function buildQuestionEnhancementMessages(input: z.infer<typeof questionEnhancementInputSchema>) {
+  const instruction = input.action === "explain" ? "Tạo lời giải chi tiết, rõ từng bước, dựa trên câu hỏi và đáp án đúng hiện có. Không thay đổi câu hỏi hoặc đáp án." : input.action === "rephrase" ? "Viết lại câu hỏi với ngữ cảnh hoặc số liệu khác nhưng giữ cùng mục tiêu kiến thức, dạng câu và đáp án đúng. Các phương án nhiễu phải hợp lý." : "Chỉ sửa lỗi chính tả, chuẩn hóa công thức toán/lý/hóa sang LaTeX trong dấu $...$ và giữ nguyên ý nghĩa, đáp án đúng.";
+  return [{ role: "system" as const, content: `Bạn là chuyên gia biên soạn Quiz tiếng Việt. ${instruction} Trả về JSON đúng schema. Không thêm thông tin không có căn cứ.` }, { role: "user" as const, content: JSON.stringify(input.question) }];
+}
+
+export function parseQuestionEnhancement(content: unknown, type: z.infer<typeof questionTypeSchema>) {
+  const result = enhancementSchema.parse(typeof content === "string" ? JSON.parse(content) : content);
+  return { ...parseAiQuestionDraft(result, type), action: result.action };
+}

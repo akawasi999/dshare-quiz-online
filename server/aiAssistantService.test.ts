@@ -34,6 +34,12 @@ describe("aiAssistantService", () => {
     expect(messages[1].content).toContain("Không suy diễn hoặc tiết lộ đáp án");
   });
 
+  it("áp dụng hướng dẫn Socratic để AI không trả đáp án trực tiếp", () => {
+    const messages = buildDshareAssistantMessages([{ role: "user", content: "Giúp tôi giải bài này" }], { mode: "socratic" });
+    expect(messages.some(message => message.role === "system" && message.content.includes("Chế độ Socratic"))).toBe(true);
+    expect(messages.some(message => message.role === "system" && message.content.includes("Không đưa đáp án trực tiếp"))).toBe(true);
+  });
+
   it("tự chọn Gemini Flash có generateContent và bỏ qua model chuyên biệt", () => {
     const model = selectGeminiChatModel([
       { name: "models/gemini-3.1-flash-image", supportedGenerationMethods: ["generateContent"] },

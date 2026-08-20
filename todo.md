@@ -258,3 +258,7 @@
 - [x] Mở rộng bố cục Studio hai cột trong chế độ AI để ưu tiên không gian soạn Quiz và chat.
 - [x] Cho phép tải Excel, Word hoặc PDF trực tiếp trong chat Studio AI để phân tích và tạo câu hỏi.
 - [x] Hiển thị tiến trình phân tích tệp, cảnh báo quota và thêm câu hỏi trích xuất vào bản nháp từ chat Studio.
+- [x] Đối chiếu tài liệu đặc tả AI Assistant và hoàn thiện các năng lực còn thiếu của hệ thống.
+- [x] Bổ sung chế độ Socratic, chấm bài tự luận theo rubric và lộ trình ôn tập trong AI Assistant.
+- [x] Hỗ trợ đầu vào ảnh và giọng nói cho AI Assistant với kiểm soát quyền, kích thước và quota.
+- [x] Bổ sung công cụ AI giải thích, biến đổi câu hỏi và rà soát định dạng LaTeX trong Studio Tạo Quiz.
