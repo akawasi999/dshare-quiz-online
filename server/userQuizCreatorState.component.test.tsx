@@ -108,6 +108,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByTestId("studio-workspace").className).toContain("xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]");
     expect(screen.getByTestId("studio-workspace").className).toContain("studio-workspace--with-chat");
     expect(screen.getByTestId("studio-focused-question-list")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thêm vào Quiz" })).toBeTruthy();
     expect(screen.getByTestId("studio-toolbar").className).toContain("hidden");
     expect(screen.getByText("AI sẽ tự làm rõ yêu cầu trước khi tạo câu hỏi.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Đính kèm tệp vào chat AI" })).toBeTruthy();

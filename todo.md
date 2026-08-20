@@ -288,3 +288,4 @@
 - [x] Khi mở chat AI, hiển thị danh sách câu hỏi bên trái 60% và khung chat bên phải 40%.
 - [x] Tinh chỉnh trạng thái mở chat AI thành workspace trái và panel chat đầy chiều cao bên phải theo bố cục tham chiếu.
 - [x] Khi mở chat AI, tự ẩn các phần Studio phụ và chỉ hiển thị danh sách câu hỏi bên trái cùng panel chat bên phải; khôi phục khi đóng chat.
+- [x] Khi mở chat AI, hiển thị trình soạn câu hỏi và Live Preview bên trái, chat AI bên phải trong bố cục hai cột ngang bằng.
