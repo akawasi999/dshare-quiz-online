@@ -154,6 +154,8 @@ h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Montserrat", ui-sans-serif, 
   .live-question-preview--headerless[data-ai-new-count]:not([data-ai-new-count="0"]) article { animation: none !important; box-shadow: 0 0 0 3px rgba(112, 87, 232, .13); }
 }
 @media (min-width: 1280px) {
+  .studio-quick-actions > section > div:first-child > button { display: none; }
+  .studio-ai-right-rail .live-question-preview--headerless > aside { position: static; }
   .studio-workspace--with-chat > aside { position: sticky; top: 0; height: 100vh; }
   .studio-workspace--with-chat > aside > section { height: 100%; min-height: 0; border: 0; border-left: 1px solid rgba(20, 44, 91, .10); border-radius: 0; box-shadow: none; }
 }

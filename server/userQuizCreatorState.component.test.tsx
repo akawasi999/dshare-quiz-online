@@ -54,6 +54,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.getByText("Tạo nhanh với")).toBeTruthy();
     expect(screen.queryByText("Nhập câu hỏi từ tệp")).toBeNull();
     expect(screen.getByRole("button", { name: "Xem như học viên" })).toBeTruthy();
+    expect(screen.getByTestId("studio-ai-right-tab")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Tải mẫu Excel" })).toBeNull();
     expect(screen.queryByText("ID Bài học")).toBeNull();
     expect(screen.getByRole("option", { name: "✎ Bài luận" })).toBeTruthy();
@@ -112,7 +113,7 @@ describe("UserQuizCreator thiết kế lại", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     expect(screen.getByTestId("studio-workspace").getAttribute("data-mode")).toBe("standard");
-    await user.click(screen.getAllByRole("button", { name: "Dùng Quiz AI" })[0]!);
+    await user.click(screen.getByTestId("studio-ai-right-tab"));
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
     expect(screen.getByTestId("studio-workspace").getAttribute("data-mode")).toBe("ai");
     expect(screen.getByTestId("studio-workspace").className).toContain("xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]");
