@@ -293,3 +293,4 @@
 - [x] Thêm hiệu ứng chuyển cảnh mượt khi chuyển giữa chế độ soạn thường và chế độ AI trong Studio.
 - [x] Thêm hiệu ứng nhấn nhẹ và highlight khi AI đưa câu hỏi mới vào Live Preview.
 - [x] Chuyển điểm truy cập và tab điều khiển khung Quiz AI sang thanh bên phải của workspace.
+- [x] Tái thiết kế giao diện Tạo Quiz theo bố cục mã tham khảo, tinh gọn thao tác và giữ chức năng Dshare hiện có.
