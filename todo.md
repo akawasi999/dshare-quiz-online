@@ -320,3 +320,11 @@
 - [x] Tách header, vùng danh sách câu hỏi và footer thành cấu trúc co giãn/cuộn nội bộ độc lập.
 - [x] Chuẩn hóa panel chat AI cuộn nội bộ và thêm scrollbar mỏng, hiện đại.
 - [x] Ẩn cụm thẻ thống kê Tổng Quiz, Bản nháp và Đã xuất bản trên giao diện điện thoại.
+- [x] Audit toàn bộ UI, event handler, API và dữ liệu của trang Tạo Quiz.
+- [x] Lập danh sách tính năng tạo câu hỏi, media, cấu hình, lưu nháp, xem trước và xuất bản chưa hoàn thiện hoặc chưa kết nối.
+- [ ] Hoàn thiện các hạng mục Tạo Quiz đã được xác nhận sau audit.
+- [x] Chuẩn hóa validation phía client cho mọi dạng câu hỏi và hoàn thiện kéo-thả/sửa/xóa/đáp án/điểm/thời lượng.
+- [x] Bổ sung upload Audio MP3/M4A tối đa 10 MB và Video MP4/WEBM tối đa 50 MB qua S3 cho câu hỏi.
+- [x] Bổ sung chế độ Private chỉ chủ sở hữu truy cập và thực thi quyền 403 ở các API/đường dẫn liên quan.
+- [x] Thêm Preview Sandbox dùng trải nghiệm Quiz Runner nhưng không tạo attempt, không lưu điểm hay thống kê.
+- [x] Đồng bộ Publish/Draft vào database, validation form và Toast trạng thái P0.

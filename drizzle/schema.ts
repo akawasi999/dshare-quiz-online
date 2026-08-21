@@ -192,6 +192,7 @@ export const quizzes = mysqlTable("quizzes", {
   questionCount: int("questionCount").default(0).notNull(),
   randomizeQuestions: boolean("randomizeQuestions").default(true).notNull(),
   randomizeOptions: boolean("randomizeOptions").default(true).notNull(),
+  visibility: mysqlEnum("visibility", ["public", "private"]).default("public").notNull(),
   creatorSettings: json("creatorSettings").$type<Record<string, unknown>>(),
   isPublished: boolean("isPublished").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -201,6 +202,7 @@ export const quizzes = mysqlTable("quizzes", {
   index("quizzes_lesson_idx").on(table.lessonId),
   index("quizzes_creator_idx").on(table.creatorUserId),
   index("quizzes_publish_idx").on(table.isPublished),
+  index("quizzes_visibility_idx").on(table.visibility),
 ]);
 
 export const quizCreatorDrafts = mysqlTable("quizCreatorDrafts", {

@@ -303,9 +303,10 @@ export const appRouter = router({
     }),
     list: publicProcedure.input(z.object({ search: z.string().trim().max(120).optional(), categoryId: z.number().int().positive().optional() }).optional())
       .query(({ input }) => listPublishedCatalog(input?.search, input?.categoryId)),
-    detail: publicProcedure.input(quizIdInput).query(async ({ input }) => {
+    detail: publicProcedure.input(quizIdInput).query(async ({ ctx, input }) => {
       const detail = await getQuizDetail(input.quizId);
       if (!detail || !detail.quiz.isPublished) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy bộ đề." });
+      if (detail.quiz.visibility === "private" && detail.quiz.creatorUserId !== ctx.user?.id) throw new TRPCError({ code: "FORBIDDEN", message: "Quiz riêng tư chỉ dành cho chủ sở hữu." });
       return detail;
     }),
   }),
@@ -492,8 +493,17 @@ export const appRouter = router({
     start: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
       const detail = await getQuizDetail(input.quizId);
       if (!detail || (!detail.quiz.isPublished && detail.quiz.creatorUserId !== ctx.user.id)) throw new TRPCError({ code: "NOT_FOUND", message: "Bộ đề chưa sẵn sàng." });
+      if (detail.quiz.visibility === "private" && detail.quiz.creatorUserId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Quiz riêng tư chỉ dành cho chủ sở hữu." });
       const profile = await ensureLearnerProfile(ctx.user.id);
       if (!profile || profile.isBanned) throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản hiện không thể tham gia bài thi." });
+      const runtimeSettings = (detail.quiz.creatorSettings ?? {}) as { maxAttempts?: number; expiresAt?: string };
+      if (runtimeSettings.expiresAt && new Date(runtimeSettings.expiresAt).getTime() <= Date.now()) throw new TRPCError({ code: "FORBIDDEN", message: "Quiz này đã hết thời hạn làm bài." });
+      if (runtimeSettings.maxAttempts && runtimeSettings.maxAttempts > 0) {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể kiểm tra số lượt làm bài." });
+        const rows = await db.select({ count: sql<number>`count(${attempts.id})` }).from(attempts).where(and(eq(attempts.quizId, detail.quiz.id), eq(attempts.userId, ctx.user.id), eq(attempts.status, "submitted")));
+        if (Number(rows[0]?.count ?? 0) >= runtimeSettings.maxAttempts) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn đã dùng hết ${runtimeSettings.maxAttempts} lượt làm Quiz này.` });
+      }
       await assertQuotaAvailable(ctx.user.id, "attemptsPerMonth");
       if (tierRank[profile.tier as keyof typeof tierRank] < tierRank[detail.quiz.accessTier]) {
         throw new TRPCError({ code: "FORBIDDEN", message: `Bộ đề này dành cho thành viên ${detail.quiz.accessTier.toUpperCase()} trở lên.` });
@@ -535,6 +545,7 @@ export const appRouter = router({
           type: item.question.type,
           difficulty: item.question.difficulty,
           tags: item.question.tags,
+          media: ((item.question.answerConfig as { media?: unknown } | null)?.media ?? null) as { url: string; kind: "audio" | "video"; fileName: string } | null,
           questionIndex,
           options: detail.quiz.randomizeOptions
             ? shuffledForAttempt(item.options, attemptId + item.question.id)
@@ -569,6 +580,15 @@ export const appRouter = router({
       return { categories: categoryRows, subjects: subjectRows, lessons: lessonRows };
     }),
     uploadCover: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) })).mutation(async ({ ctx, input }) => { const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64"); const uploaded = await storagePut(`quiz-covers/${ctx.user.id}/${input.fileName}`, bytes, input.mimeType); return { url: uploaded.url }; }),
+    uploadQuestionMedia: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), kind: z.enum(["audio", "video"]), mimeType: z.enum(["audio/mpeg", "audio/mp4", "audio/x-m4a", "video/mp4", "video/webm"]), base64: z.string().min(20).max(72_000_000) })).mutation(async ({ ctx, input }) => {
+      const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64");
+      const allowedMime = input.kind === "audio" ? ["audio/mpeg", "audio/mp4", "audio/x-m4a"] : ["video/mp4", "video/webm"];
+      const maxBytes = input.kind === "audio" ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+      if (!allowedMime.includes(input.mimeType)) throw new TRPCError({ code: "BAD_REQUEST", message: "Định dạng tệp không phù hợp với loại media đã chọn." });
+      if (bytes.length > maxBytes) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: input.kind === "audio" ? "Audio tối đa 10 MB." : "Video tối đa 50 MB." });
+      const uploaded = await storagePut(`quiz-media/${ctx.user.id}/${input.kind}/${input.fileName}`, bytes, input.mimeType);
+      return { url: uploaded.url, kind: input.kind, fileName: input.fileName };
+    }),
     myQuizzes: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
@@ -643,7 +663,7 @@ export const appRouter = router({
     }),
     createQuiz: protectedProcedure.input(z.object({
       lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(), isPublished: z.boolean().default(false),
-      settings: z.object({ durationMinutes: z.number().int().min(1).max(1440).default(15), maxAttempts: z.number().int().min(0).max(1000).default(0), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean().default(false), hideHintsAndExplanation: z.boolean().default(false), allowBackNavigation: z.boolean().default(true), requireRegistration: z.boolean().default(true), liveMonitoring: z.boolean().default(false), requireEmail: z.boolean().default(false) }).default({ durationMinutes: 15, maxAttempts: 0, antiCheatMonitor: false, hideHintsAndExplanation: false, allowBackNavigation: true, requireRegistration: true, liveMonitoring: false, requireEmail: false }),
+      settings: z.object({ durationMinutes: z.number().int().min(1).max(1440).default(15), maxAttempts: z.number().int().min(0).max(1000).default(0), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean().default(false), hideHintsAndExplanation: z.boolean().default(false), allowBackNavigation: z.boolean().default(true), requireRegistration: z.boolean().default(true), liveMonitoring: z.boolean().default(false), requireEmail: z.boolean().default(false), shuffleQuestions: z.boolean().default(false), shuffleAnswers: z.boolean().default(false), visibility: z.enum(["public", "private"]).default("public") }).default({ durationMinutes: 15, maxAttempts: 0, antiCheatMonitor: false, hideHintsAndExplanation: false, allowBackNavigation: true, requireRegistration: true, liveMonitoring: false, requireEmail: false, shuffleQuestions: false, shuffleAnswers: false, visibility: "public" }),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: z.string().url().max(1024).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -660,7 +680,7 @@ export const appRouter = router({
       const requestedSlug = input.slug || autoSlug;
       const slugExists = await db.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.slug, requestedSlug)).limit(1);
       const quizSlug = slugExists.length ? `${requestedSlug}-${Date.now().toString(36)}` : requestedSlug;
-      const createdQuiz = await db.insert(quizzes).values({ lessonId: lesson[0]!.id, creatorUserId: ctx.user.id, title: input.title, slug: quizSlug, summary: input.summary, coverImageUrl: input.coverImageUrl, mode: "training", accessTier: "basic", durationSeconds: input.settings.durationMinutes * 60, passingScore: 70, questionCount: input.questions.length, creatorSettings: input.settings, isPublished: input.isPublished });
+      const createdQuiz = await db.insert(quizzes).values({ lessonId: lesson[0]!.id, creatorUserId: ctx.user.id, title: input.title, slug: quizSlug, summary: input.summary, coverImageUrl: input.coverImageUrl, mode: "training", accessTier: "basic", durationSeconds: input.settings.durationMinutes * 60, passingScore: 70, questionCount: input.questions.length, randomizeQuestions: input.settings.shuffleQuestions, randomizeOptions: input.settings.shuffleAnswers, visibility: input.settings.visibility, creatorSettings: input.settings, isPublished: input.isPublished });
       const quizId = Number(createdQuiz[0].insertId);
       for (let index = 0; index < input.questions.length; index += 1) {
         const item = input.questions[index]!;
@@ -669,20 +689,20 @@ export const appRouter = router({
         if (item.options.length) await db.insert(questionOptions).values(item.options.map((option: { body: string; isCorrect: boolean }, optionIndex: number) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex })));
         await db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: item.points });
       }
-      return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: input.isPublished };
+      return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: input.isPublished, visibility: input.settings.visibility };
     }),
     updateQuiz: protectedProcedure.input(z.object({
       quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(), isPublished: z.boolean().default(false),
-      settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean() }),
+      settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean(), shuffleQuestions: z.boolean(), shuffleAnswers: z.boolean(), visibility: z.enum(["public", "private"]) }),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: z.string().url().max(1024).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       for (const item of input.questions) { const error = validateQuestionConfiguration({ type: item.type, options: item.options, answerConfig: item.answerConfig, imageUrl: item.imageUrl ?? null }); if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` }); }
       const lessonId = input.lessonId ?? source.quiz.lessonId;
       await removeOwnedQuizQuestions(source.db, source.quiz.id, source.questions);
-      await source.db.update(quizzes).set({ lessonId, title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl, durationSeconds: input.settings.durationMinutes * 60, questionCount: input.questions.length, creatorSettings: input.settings, isPublished: input.isPublished }).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
+      await source.db.update(quizzes).set({ lessonId, title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl, durationSeconds: input.settings.durationMinutes * 60, questionCount: input.questions.length, randomizeQuestions: input.settings.shuffleQuestions, randomizeOptions: input.settings.shuffleAnswers, visibility: input.settings.visibility, creatorSettings: input.settings, isPublished: input.isPublished }).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
       for (let index = 0; index < input.questions.length; index += 1) { const item = input.questions[index]!; const createdQuestion = await source.db.insert(questions).values({ lessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(createdQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option, optionIndex) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId: source.quiz.id, questionId, sortOrder: index, points: item.points }); }
-      return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length, isPublished: input.isPublished };
+      return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length, isPublished: input.isPublished, visibility: input.settings.visibility };
     }),
     generateQuestionAI: protectedProcedure.input(aiQuestionInputSchema.omit({ lessonId: true })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi bằng AI");

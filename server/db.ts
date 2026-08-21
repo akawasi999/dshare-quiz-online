@@ -130,6 +130,7 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
     .leftJoin(attempts, and(eq(attempts.quizId, quizzes.id), eq(attempts.status, "submitted")))
     .where(and(
       eq(quizzes.isPublished, true),
+      eq(quizzes.visibility, "public"),
       categoryId ? eq(categories.id, categoryId) : undefined,
       search ? sql`lower(${quizzes.title}) like ${`%${search.toLowerCase()}%`}` : undefined,
     ))

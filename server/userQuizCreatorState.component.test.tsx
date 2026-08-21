@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideHeader }: { children: React.ReactNode; hideHeader?: boolean }) => <div data-testid="account-layout" data-hide-header={hideHeader ? "true" : "false"}>{children}</div> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => ({ data: [], isLoading: false, refetch: vi.fn() }) }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => mocks.chat }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => ({ data: [], isLoading: false, refetch: vi.fn() }) }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionMedia: { useMutation: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => mocks.chat }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 import UserQuizCreator, { ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
@@ -133,5 +133,15 @@ describe("Quiz Creator theo đặc tả", () => {
     await user.click(screen.getByRole("button", { name: "+ Đúng / Sai" }));
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("option", { name: "⇄ Đúng / Sai" }).length).toBeGreaterThan(0);
+  });
+
+  it("hiển thị điều khiển media, điểm và Preview Sandbox trong luồng P0", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    expect(screen.getByRole("button", { name: /Đính kèm media/ })).toBeTruthy();
+    expect(screen.getByRole("spinbutton", { name: "Điểm câu hỏi 1" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Xem trước Sandbox/ })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Cài đặt" }));
+    expect(screen.getByText("Quiz riêng tư")).toBeTruthy();
   });
 });
