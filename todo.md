@@ -328,3 +328,7 @@
 - [x] Bổ sung chế độ Private chỉ chủ sở hữu truy cập và thực thi quyền 403 ở các API/đường dẫn liên quan.
 - [x] Thêm Preview Sandbox dùng trải nghiệm Quiz Runner nhưng không tạo attempt, không lưu điểm hay thống kê.
 - [x] Đồng bộ Publish/Draft vào database, validation form và Toast trạng thái P0.
+- [x] Triển khai upload, thay thế và quản lý ảnh bìa Quiz qua S3 trong Studio Tạo Quiz.
+- [x] Triển khai upload ảnh minh họa cho từng câu hỏi qua S3, có validation định dạng và dung lượng.
+- [x] Hiển thị đầy đủ ảnh, audio và video của câu hỏi trong Preview Sandbox, không tạo dữ liệu lượt làm.
+- [x] Bổ sung kiểm thử hồi quy và xác minh desktop/mobile cho các chức năng P1 Studio Tạo Quiz.

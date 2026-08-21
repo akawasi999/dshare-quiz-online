@@ -17,7 +17,7 @@ vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: 
 import QuizRunner from "../client/src/pages/QuizRunner";
 
 describe("QuizRunner data state", () => {
-  beforeEach(() => mocks.detail.refetch.mockReset());
+  beforeEach(() => { mocks.detail.refetch.mockReset(); sessionStorage.clear(); window.history.replaceState({}, "", "/quiz/999"); });
   afterEach(cleanup);
 
   it("công bố lỗi chi tiết bộ đề và cho phép thử lại", async () => {
@@ -27,5 +27,25 @@ describe("QuizRunner data state", () => {
     expect(screen.getByRole("alert").textContent).toContain("Catalog tạm thời không phản hồi");
     await user.click(screen.getByRole("button", { name: "Thử lại" }));
     expect(mocks.detail.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("hiển thị ảnh và audio đính kèm khi xem trước Sandbox", async () => {
+    const user = userEvent.setup();
+    sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox media", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Câu hỏi có tư liệu minh họa", type: "single", difficulty: "medium", tags: ["Sandbox"], imageUrl: "/manus-storage/question.png", media: { url: "/manus-storage/explain.mp3", kind: "audio", fileName: "explain.mp3" }, options: [{ id: 1, body: "Đúng" }, { id: 2, body: "Sai" }], correctOptionIds: [1] }] }));
+    window.history.replaceState({}, "", `${window.location.origin}/quiz/0?sandbox=1`);
+    expect(window.location.search).toBe("?sandbox=1");
+    const { container } = render(<QuizRunner />);
+    await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
+    expect(screen.getByRole("img", { name: "Hình minh họa câu hỏi" }).getAttribute("src")).toBe("/manus-storage/question.png");
+    expect(container.querySelector("audio")?.getAttribute("src")).toBe("/manus-storage/explain.mp3");
+  });
+
+  it("hiển thị video đính kèm khi xem trước Sandbox", async () => {
+    const user = userEvent.setup();
+    sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox video", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Câu hỏi có video minh họa", type: "single", difficulty: "medium", tags: ["Sandbox"], media: { url: "/manus-storage/explain.webm", kind: "video", fileName: "explain.webm" }, options: [{ id: 1, body: "Đúng" }, { id: 2, body: "Sai" }], correctOptionIds: [1] }] }));
+    window.history.replaceState({}, "", `${window.location.origin}/quiz/0?sandbox=1`);
+    const { container } = render(<QuizRunner />);
+    await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
+    expect(container.querySelector("video")?.getAttribute("src")).toBe("/manus-storage/explain.webm");
   });
 });

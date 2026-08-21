@@ -80,6 +80,19 @@ const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const defaultAiAssistantConfig = { provider: "manus" as const, model: "gpt-5-mini", isEnabled: false, welcomeMessage: "Chào bạn, tôi là Dshare AI Assistant. Tôi có thể giúp bạn lập kế hoạch ôn tập, giải thích khái niệm và gợi ý cách học hiệu quả." };
 const publicAiAssistantConfig = (config: typeof aiAssistantSettings.$inferSelect | undefined) => ({ provider: config?.provider ?? defaultAiAssistantConfig.provider, model: config?.model ?? defaultAiAssistantConfig.model, isEnabled: config?.isEnabled ?? defaultAiAssistantConfig.isEnabled, welcomeMessage: config?.welcomeMessage ?? defaultAiAssistantConfig.welcomeMessage, hasApiKey: Boolean(config?.apiKeyCiphertext), updatedAt: config?.updatedAt ?? null });
 const quizIdInput = z.object({ quizId: z.number().int().positive() });
+const quizImageUploadInput = z.object({ fileName: z.string().trim().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) });
+const quizImageMimeTypes = ["image/jpeg", "image/png", "image/webp"] as const;
+const maxQuizImageBytes = 5 * 1024 * 1024;
+const safeUploadFileName = (fileName: string) => fileName.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-").slice(0, 120) || "image";
+const quizAssetUrlInput = z.string().trim().max(1024).refine(value => value.startsWith("/manus-storage/") || /^https?:\/\//i.test(value), { message: "URL ảnh phải là liên kết HTTPS/HTTP hoặc đường dẫn lưu trữ hợp lệ." });
+const decodeQuizImageUpload = (input: z.infer<typeof quizImageUploadInput>) => {
+  const match = input.base64.match(/^data:([^;]+);base64,([A-Za-z0-9+/=\s]+)$/);
+  if (!match || match[1] !== input.mimeType || !quizImageMimeTypes.includes(input.mimeType)) throw new TRPCError({ code: "BAD_REQUEST", message: "Dữ liệu ảnh không hợp lệ." });
+  const bytes = Buffer.from(match[2]!, "base64");
+  if (!bytes.length) throw new TRPCError({ code: "BAD_REQUEST", message: "Tệp ảnh trống hoặc không đọc được." });
+  if (bytes.length > maxQuizImageBytes) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Ảnh tối đa 5 MB." });
+  return bytes;
+};
 const csvEscape = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
 const membershipGroupPermissionInput = z.object({
   tier: z.enum(["basic", "pro", "premium"]),
@@ -545,6 +558,7 @@ export const appRouter = router({
           type: item.question.type,
           difficulty: item.question.difficulty,
           tags: item.question.tags,
+          imageUrl: item.question.imageUrl,
           media: ((item.question.answerConfig as { media?: unknown } | null)?.media ?? null) as { url: string; kind: "audio" | "video"; fileName: string } | null,
           questionIndex,
           options: detail.quiz.randomizeOptions
@@ -579,7 +593,16 @@ export const appRouter = router({
       ]);
       return { categories: categoryRows, subjects: subjectRows, lessons: lessonRows };
     }),
-    uploadCover: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) })).mutation(async ({ ctx, input }) => { const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64"); const uploaded = await storagePut(`quiz-covers/${ctx.user.id}/${input.fileName}`, bytes, input.mimeType); return { url: uploaded.url }; }),
+    uploadCover: protectedProcedure.input(quizImageUploadInput).mutation(async ({ ctx, input }) => {
+      const bytes = decodeQuizImageUpload(input);
+      const uploaded = await storagePut(`quiz-covers/${ctx.user.id}/${Date.now()}-${safeUploadFileName(input.fileName)}`, bytes, input.mimeType);
+      return { url: uploaded.url };
+    }),
+    uploadQuestionImage: protectedProcedure.input(quizImageUploadInput).mutation(async ({ ctx, input }) => {
+      const bytes = decodeQuizImageUpload(input);
+      const uploaded = await storagePut(`quiz-question-images/${ctx.user.id}/${Date.now()}-${safeUploadFileName(input.fileName)}`, bytes, input.mimeType);
+      return { url: uploaded.url };
+    }),
     uploadQuestionMedia: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), kind: z.enum(["audio", "video"]), mimeType: z.enum(["audio/mpeg", "audio/mp4", "audio/x-m4a", "video/mp4", "video/webm"]), base64: z.string().min(20).max(72_000_000) })).mutation(async ({ ctx, input }) => {
       const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64");
       const allowedMime = input.kind === "audio" ? ["audio/mpeg", "audio/mp4", "audio/x-m4a"] : ["video/mp4", "video/webm"];
@@ -653,7 +676,7 @@ export const appRouter = router({
       await source.db.delete(quizzes).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
       return { success: true };
     }),
-    updateCover: protectedProcedure.input(z.object({ quizId: z.number().int().positive(), coverImageUrl: z.string().url().max(1024).nullable() })).mutation(async ({ ctx, input }) => {
+    updateCover: protectedProcedure.input(z.object({ quizId: z.number().int().positive(), coverImageUrl: quizAssetUrlInput.nullable() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật ảnh bìa lúc này." });
       const ownedQuiz = await db.select({ id: quizzes.id }).from(quizzes).where(and(eq(quizzes.id, input.quizId), eq(quizzes.creatorUserId, ctx.user.id))).limit(1);
@@ -662,9 +685,9 @@ export const appRouter = router({
       return { success: true, coverImageUrl: input.coverImageUrl };
     }),
     createQuiz: protectedProcedure.input(z.object({
-      lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(), isPublished: z.boolean().default(false),
+      lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440).default(15), maxAttempts: z.number().int().min(0).max(1000).default(0), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean().default(false), hideHintsAndExplanation: z.boolean().default(false), allowBackNavigation: z.boolean().default(true), requireRegistration: z.boolean().default(true), liveMonitoring: z.boolean().default(false), requireEmail: z.boolean().default(false), shuffleQuestions: z.boolean().default(false), shuffleAnswers: z.boolean().default(false), visibility: z.enum(["public", "private"]).default("public") }).default({ durationMinutes: 15, maxAttempts: 0, antiCheatMonitor: false, hideHintsAndExplanation: false, allowBackNavigation: true, requireRegistration: true, liveMonitoring: false, requireEmail: false, shuffleQuestions: false, shuffleAnswers: false, visibility: "public" }),
-      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: z.string().url().max(1024).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
+      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo quiz lúc này." });
@@ -692,9 +715,9 @@ export const appRouter = router({
       return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: input.isPublished, visibility: input.settings.visibility };
     }),
     updateQuiz: protectedProcedure.input(z.object({
-      quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: z.string().url().max(1024).optional(), isPublished: z.boolean().default(false),
+      quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean(), shuffleQuestions: z.boolean(), shuffleAnswers: z.boolean(), visibility: z.enum(["public", "private"]) }),
-      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: z.string().url().max(1024).optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
+      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       for (const item of input.questions) { const error = validateQuestionConfiguration({ type: item.type, options: item.options, answerConfig: item.answerConfig, imageUrl: item.imageUrl ?? null }); if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` }); }
