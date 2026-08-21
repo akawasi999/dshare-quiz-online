@@ -1,0 +1,40 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { TrpcContext } from "./_core/context";
+
+const mocks = vi.hoisted(() => ({ getDb: vi.fn(), insert: vi.fn(), values: vi.fn(), onDuplicate: vi.fn(), select: vi.fn(), from: vi.fn(), where: vi.fn(), limit: vi.fn(), delete: vi.fn() }));
+
+vi.mock("./db", async importOriginal => ({ ...(await importOriginal<typeof import("./db")>()), getDb: mocks.getDb }));
+
+import { appRouter } from "./routers";
+
+function caller() {
+  const ctx: TrpcContext = { user: { id: 41, openId: "draft-owner", name: "Draft Owner", email: "draft@example.com", loginMethod: "manus", role: "user", createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() }, req: {} as TrpcContext["req"], res: {} as TrpcContext["res"] };
+  return appRouter.createCaller(ctx);
+}
+
+describe("creator draft router", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.onDuplicate.mockResolvedValue(undefined);
+    mocks.values.mockReturnValue({ onDuplicateKeyUpdate: mocks.onDuplicate });
+    mocks.insert.mockReturnValue({ values: mocks.values });
+    mocks.limit.mockResolvedValue([{ id: 8, userId: 41, draftKey: "draft-owner-123", title: "Bản nháp", payload: { title: "Bản nháp", questions: [] } }]);
+    mocks.where.mockReturnValue({ limit: mocks.limit });
+    mocks.from.mockReturnValue({ where: mocks.where });
+    mocks.select.mockReturnValue({ from: mocks.from });
+    mocks.delete.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mocks.getDb.mockResolvedValue({ insert: mocks.insert, select: mocks.select, delete: mocks.delete });
+  });
+
+  it("lưu payload nháp với khóa thuộc người dùng hiện tại", async () => {
+    await expect(caller().creator.saveDraft({ draftKey: "draft-owner-123", title: "Bản nháp", payload: { title: "Bản nháp", questions: [] } })).resolves.toMatchObject({ savedAt: expect.any(Date) });
+    expect(mocks.values).toHaveBeenCalledWith(expect.objectContaining({ userId: 41, draftKey: "draft-owner-123", title: "Bản nháp" }));
+    expect(mocks.onDuplicate).toHaveBeenCalledTimes(1);
+  });
+
+  it("khôi phục và xóa nháp trong phạm vi người dùng gọi API", async () => {
+    await expect(caller().creator.getDraft({ draftKey: "draft-owner-123" })).resolves.toMatchObject({ userId: 41, title: "Bản nháp" });
+    await expect(caller().creator.deleteDraft({ draftKey: "draft-owner-123" })).resolves.toEqual({ success: true });
+    expect(mocks.delete).toHaveBeenCalledTimes(1);
+  });
+});

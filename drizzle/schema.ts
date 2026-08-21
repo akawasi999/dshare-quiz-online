@@ -203,6 +203,21 @@ export const quizzes = mysqlTable("quizzes", {
   index("quizzes_publish_idx").on(table.isPublished),
 ]);
 
+export const quizCreatorDrafts = mysqlTable("quizCreatorDrafts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  draftKey: varchar("draftKey", { length: 96 }).notNull(),
+  quizId: int("quizId"),
+  title: varchar("title", { length: 220 }).notNull().default(""),
+  payload: json("payload").$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [
+  uniqueIndex("quiz_creator_draft_user_key_unique").on(table.userId, table.draftKey),
+  index("quiz_creator_draft_user_updated_idx").on(table.userId, table.updatedAt),
+  index("quiz_creator_draft_quiz_idx").on(table.quizId),
+]);
+
 export const quizSourceHistories = mysqlTable("quizSourceHistories", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),

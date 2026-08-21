@@ -295,3 +295,6 @@
 - [x] Chuyển điểm truy cập và tab điều khiển khung Quiz AI sang thanh bên phải của workspace.
 - [x] Tái thiết kế giao diện Tạo Quiz theo bố cục mã tham khảo, tinh gọn thao tác và giữ chức năng Dshare hiện có.
 - [x] Xây dựng lại hoàn toàn trang Tạo Quiz theo tài liệu Quiz Creator Feature Specification, giữ tương thích với dữ liệu và API hiện có.
+- [x] Ẩn danh sách câu hỏi khi mở chế độ AI trong Studio Tạo Quiz.
+- [x] Hiển thị liên kết chia sẻ và mã QR ngay sau khi xuất bản Quiz thành công.
+- [x] Bổ sung tự động lưu nháp định kỳ lên máy chủ thay cho chỉ lưu cục bộ.

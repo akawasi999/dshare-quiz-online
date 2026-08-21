@@ -19,6 +19,7 @@ import {
   questionOptions,
   paymentRecords,
   questions,
+  quizCreatorDrafts,
   quizzes,
   quizQuestions,
   quizSourceHistories,
@@ -575,6 +576,25 @@ export const appRouter = router({
     getQuizForEdit: protectedProcedure.input(quizIdInput).query(async ({ ctx, input }) => {
       const draft = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       return { quiz: draft.quiz, questions: draft.questions };
+    }),
+    getDraft: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96) })).query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const [draft] = await db.select().from(quizCreatorDrafts).where(and(eq(quizCreatorDrafts.userId, ctx.user.id), eq(quizCreatorDrafts.draftKey, input.draftKey))).limit(1);
+      return draft ?? null;
+    }),
+    saveDraft: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96), quizId: z.number().int().positive().optional(), title: z.string().max(220).default(""), payload: z.record(z.string(), z.unknown()) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tự lưu nháp lúc này." });
+      const values = { userId: ctx.user.id, draftKey: input.draftKey, quizId: input.quizId ?? null, title: input.title.slice(0, 220), payload: input.payload };
+      await db.insert(quizCreatorDrafts).values(values).onDuplicateKeyUpdate({ set: { quizId: values.quizId, title: values.title, payload: values.payload, updatedAt: new Date() } });
+      return { savedAt: new Date() };
+    }),
+    deleteDraft: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return { success: true };
+      await db.delete(quizCreatorDrafts).where(and(eq(quizCreatorDrafts.userId, ctx.user.id), eq(quizCreatorDrafts.draftKey, input.draftKey)));
+      return { success: true };
     }),
     duplicateQuiz: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
       await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
