@@ -311,3 +311,4 @@
 - [x] Cho phép chỉnh sửa trực tiếp nội dung câu hỏi và đáp án trong tab Câu hỏi.
 - [x] Bảo đảm danh sách thẻ câu hỏi có vùng cuộn khi số lượng câu hỏi lớn.
 - [x] Mở rộng khung workspace AI theo đầy đủ chiều cao vùng nhìn thấy để loại bỏ khoảng trống phía dưới trên desktop.
+- [x] Tăng chiều cao tab Câu hỏi lên 100% để bằng panel AI trong workspace desktop.

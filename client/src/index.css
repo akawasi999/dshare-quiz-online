@@ -183,4 +183,5 @@ button:active { transform: scale(.97); }
   main:has(> [data-testid="spec-quiz-workspace"]) > [data-testid="spec-quiz-workspace"] { height: 100%; min-height: 100%; }
   main:has(> [data-testid="spec-quiz-workspace"]) [data-testid="quiz-ai-primary"] { height: 100%; min-height: 100%; }
   main:has(> [data-testid="spec-quiz-workspace"]) > [data-testid="spec-quiz-workspace"] > aside { height: 100%; }
+  main:has(> [data-testid="spec-quiz-workspace"]) > [data-testid="spec-quiz-workspace"] > aside > section { height: 100%; }
 }
