@@ -312,3 +312,5 @@
 - [x] Bảo đảm danh sách thẻ câu hỏi có vùng cuộn khi số lượng câu hỏi lớn.
 - [x] Mở rộng khung workspace AI theo đầy đủ chiều cao vùng nhìn thấy để loại bỏ khoảng trống phía dưới trên desktop.
 - [x] Tăng chiều cao tab Câu hỏi lên 100% để bằng panel AI trong workspace desktop.
+- [x] Hiển thị tổng số câu hỏi và số câu hoàn thành ở đầu tab Câu hỏi.
+- [x] Hiển thị và chỉnh sửa trực tiếp tiêu đề Quiz trong tab Câu hỏi, đồng bộ với tiêu đề trên thanh menu Studio.
