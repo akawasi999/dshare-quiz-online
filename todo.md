@@ -316,3 +316,6 @@
 - [x] Hiển thị và chỉnh sửa trực tiếp tiêu đề Quiz trong tab Câu hỏi, đồng bộ với tiêu đề trên thanh menu Studio.
 - [x] Đơn giản hóa header tab Câu hỏi: tiêu đề Quiz sửa tại chỗ ở góc trái, tự lưu khi hoàn tất và bỏ ô nhập/tiến độ/icon bên phải.
 - [x] Cân chỉnh lại vùng soạn thảo Studio thường và chuẩn hóa nền/kích thước của bốn nút công cụ bên phải.
+- [x] Refactor workspace AI theo viewport fit và hai cột Flexbox không tràn trang.
+- [x] Tách header, vùng danh sách câu hỏi và footer thành cấu trúc co giãn/cuộn nội bộ độc lập.
+- [x] Chuẩn hóa panel chat AI cuộn nội bộ và thêm scrollbar mỏng, hiện đại.

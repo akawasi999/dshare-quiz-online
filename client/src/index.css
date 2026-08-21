@@ -185,3 +185,78 @@ button:active { transform: scale(.97); }
   main:has(> [data-testid="spec-quiz-workspace"]) > [data-testid="spec-quiz-workspace"] > aside { height: 100%; }
   main:has(> [data-testid="spec-quiz-workspace"]) > [data-testid="spec-quiz-workspace"] > aside > section { height: 100%; }
 }
+
+html:has(main[data-ai-viewport="true"]),
+body:has(main[data-ai-viewport="true"]) {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body:has(main[data-ai-viewport="true"]) #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+@media (min-width: 1280px) {
+  main[data-ai-viewport="true"] [data-testid="spec-quiz-workspace"] {
+    height: 100%;
+    min-height: 0;
+  }
+
+  main[data-ai-viewport="true"] [data-testid="ai-questions-column"] {
+    width: 950px;
+    height: 100%;
+    min-height: 0;
+    flex: 0 0 950px;
+  }
+
+  main[data-ai-viewport="true"] [data-testid="quiz-ai-primary"] {
+    width: 450px;
+    height: 100% !important;
+    min-height: 0 !important;
+    flex: 0 0 450px;
+  }
+
+  main[data-ai-viewport="true"] [data-testid="quiz-ai-primary"] > header,
+  main[data-ai-viewport="true"] [data-testid="quiz-ai-primary"] > form,
+  main[data-ai-viewport="true"] [data-testid="quiz-ai-primary"] > footer {
+    flex-shrink: 0;
+  }
+
+  main[data-ai-viewport="true"] [data-testid="quiz-ai-primary"] > div[class*="min-h-0"][class*="flex-1"] {
+    min-height: 0;
+    flex: 1 1 0%;
+  }
+}
+
+@media (min-width: 1280px) and (max-width: 1450px) {
+  main[data-ai-viewport="true"] [data-testid="ai-questions-column"] {
+    width: auto;
+    flex: 1 1 0%;
+  }
+}
+
+.quiz-ai-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(112, 87, 232, .36) transparent;
+}
+
+.quiz-ai-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.quiz-ai-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.quiz-ai-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(112, 87, 232, .32);
+}
+
+.quiz-ai-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(112, 87, 232, .52);
+}

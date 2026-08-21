@@ -64,7 +64,10 @@ describe("Quiz Creator theo đặc tả", () => {
     await user.click(screen.getByRole("button", { name: "Mở Chat AI" }));
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
     expect(screen.getByTestId("quiz-ai-primary")).toBeTruthy();
-    expect(screen.getByTestId("spec-quiz-workspace").className).toContain("xl:grid-cols-[950px_450px]");
+    expect(screen.getByTestId("spec-quiz-workspace").className).toContain("xl:flex-row");
+    expect(screen.getByTestId("ai-questions-column").className).toContain("flex-col");
+    expect(screen.getByTestId("ai-questions-scroll").className).toContain("overflow-y-auto");
+    expect(screen.getByTestId("ai-chat-scroll").className).toContain("overflow-y-auto");
     expect(screen.getByText("Câu mới từ AI sẽ xuất hiện tại đây.")).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
     await user.click(screen.getByRole("button", { name: /Thu gọn/ }));
@@ -98,8 +101,8 @@ describe("Quiz Creator theo đặc tả", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "Mở Chat AI" }));
-    const questionPanel = screen.getByRole("button", { name: "Chỉnh sửa tiêu đề Quiz" }).closest("section");
-    expect(questionPanel?.className).toContain("xl:h-full");
+    const questionPanel = screen.getByTestId("ai-questions-column");
+    expect(questionPanel.className).toContain("overflow-hidden");
     const prompt = screen.getByRole("textbox", { name: "Nội dung câu hỏi 1 trong tab" }) as HTMLTextAreaElement;
     await user.clear(prompt);
     await user.type(prompt, "Câu hỏi đã chỉnh sửa");
