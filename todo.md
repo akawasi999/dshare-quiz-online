@@ -301,3 +301,4 @@
 - [x] Thêm nút chia sẻ nhanh Facebook, Zalo và Email trong hộp chia sẻ sau xuất bản.
 - [x] Làm rõ trạng thái tự động lưu Đang lưu/Đã lưu trên giao diện Studio.
 - [x] Lưu lịch sử phiên bản nháp và cho phép xem, khôi phục phiên bản trước đó.
+- [x] Cân bằng lại bố cục Studio ở chế độ AI trên desktop, giảm khoảng trống và cải thiện vùng làm việc theo ảnh tham chiếu.
