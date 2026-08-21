@@ -104,8 +104,10 @@ describe("UserQuizCreator thiết kế lại", () => {
   it("mở khung chat AI và phần xem trước câu hỏi", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
+    expect(screen.getByTestId("studio-workspace").getAttribute("data-mode")).toBe("standard");
     await user.click(screen.getAllByRole("button", { name: "Dùng Quiz AI" })[0]!);
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
+    expect(screen.getByTestId("studio-workspace").getAttribute("data-mode")).toBe("ai");
     expect(screen.getByTestId("studio-workspace").className).toContain("xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]");
     expect(screen.getByTestId("studio-workspace").className).toContain("studio-workspace--with-chat");
     expect(screen.getByTestId("studio-focused-question-list")).toBeTruthy();

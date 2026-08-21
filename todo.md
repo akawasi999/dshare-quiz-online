@@ -290,3 +290,4 @@
 - [x] Khi mở chat AI, tự ẩn các phần Studio phụ và chỉ hiển thị danh sách câu hỏi bên trái cùng panel chat bên phải; khôi phục khi đóng chat.
 - [x] Khi mở chat AI, hiển thị trình soạn câu hỏi và Live Preview bên trái, chat AI bên phải trong bố cục hai cột ngang bằng.
 - [x] Tái thiết kế toàn diện trang Tạo Quiz với workspace tối ưu UX/UI, tổ chức lại cột/hàng cho soạn, Live Preview, cài đặt và chat AI.
+- [x] Thêm hiệu ứng chuyển cảnh mượt khi chuyển giữa chế độ soạn thường và chế độ AI trong Studio.
