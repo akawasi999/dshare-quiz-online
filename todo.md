@@ -336,3 +336,7 @@
 - [x] Hiển thị bảng phân tích Quiz trực quan trong Studio, có trạng thái chưa đủ dữ liệu rõ ràng.
 - [x] Thêm đối chiếu trước khi khôi phục và ghim/bỏ ghim các phiên bản nháp quan trọng.
 - [x] Bổ sung kiểm thử hồi quy và xác minh desktop/mobile cho các chức năng P2 Studio Tạo Quiz.
+- [x] Đưa nút Preview Sandbox dạng biểu tượng vào sau nút Xuất bản trong thanh header Studio.
+- [x] Cố định header Studio khi cuộn, đồng thời để cột thao tác phải cuộn theo nội dung.
+- [x] Giữ ổn định sidebar Danh sách câu hỏi và chỉ cho phép cuộn nội bộ khi thao tác trong danh sách.
+- [x] Bổ sung kiểm thử và xác minh desktop/mobile cho hành vi cuộn Studio cập nhật.

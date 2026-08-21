@@ -24,12 +24,17 @@ describe("Quiz Creator theo đặc tả", () => {
 
   it("hiển thị header tự lưu và editor ba vùng", () => {
     render(<UserQuizCreator />);
-    expect(screen.getByTestId("spec-creator-header")).toBeTruthy();
+    expect(screen.getByTestId("spec-creator-header").className).toContain("sticky");
     expect(screen.getByTestId("autosave-indicator")).toBeTruthy();
     expect(screen.getByText("Danh sách câu hỏi")).toBeTruthy();
     expect(screen.getByText("Nhập chủ đề")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Mở Chat AI" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Lịch sử bản nháp" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Xem trước Sandbox" }).textContent).toBe("");
+    expect(screen.getByTestId("floating-toolbar").className).not.toContain("sticky");
+    expect(screen.getByTestId("question-navigator").className).toContain("sticky");
+    expect(screen.getByTestId("question-navigator-scroll").className).toContain("overflow-y-auto");
+    expect(screen.getByTestId("question-navigator-scroll").className).toContain("overscroll-contain");
   });
 
   it("mở hộp lịch sử bản nháp để khôi phục phiên bản", async () => {
