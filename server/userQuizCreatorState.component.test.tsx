@@ -62,7 +62,9 @@ describe("Quiz Creator theo đặc tả", () => {
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "Mở Chat AI" }));
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
-    expect(screen.getByTestId("spec-quiz-workspace").className).toContain("xl:grid-cols-[minmax(0,2fr)_minmax(420px,1fr)]");
+    expect(screen.getByTestId("quiz-ai-primary")).toBeTruthy();
+    expect(screen.getByTestId("spec-quiz-workspace").className).toContain("xl:grid-cols-[minmax(0,1fr)_280px]");
+    expect(screen.getByText("Câu mới từ AI sẽ xuất hiện tại đây.")).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
     await user.click(screen.getByRole("button", { name: /Thu gọn/ }));
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("false");

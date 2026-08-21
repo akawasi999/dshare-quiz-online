@@ -302,3 +302,4 @@
 - [x] Làm rõ trạng thái tự động lưu Đang lưu/Đã lưu trên giao diện Studio.
 - [x] Lưu lịch sử phiên bản nháp và cho phép xem, khôi phục phiên bản trước đó.
 - [x] Cân bằng lại bố cục Studio ở chế độ AI trên desktop, giảm khoảng trống và cải thiện vùng làm việc theo ảnh tham chiếu.
+- [x] Tái thiết kế chế độ Studio AI desktop: editor lớn bên trái, chat tối giản và tab danh sách câu hỏi thu gọn bên phải theo ảnh tham chiếu.
