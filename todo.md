@@ -319,3 +319,4 @@
 - [x] Refactor workspace AI theo viewport fit và hai cột Flexbox không tràn trang.
 - [x] Tách header, vùng danh sách câu hỏi và footer thành cấu trúc co giãn/cuộn nội bộ độc lập.
 - [x] Chuẩn hóa panel chat AI cuộn nội bộ và thêm scrollbar mỏng, hiện đại.
+- [x] Ẩn cụm thẻ thống kê Tổng Quiz, Bản nháp và Đã xuất bản trên giao diện điện thoại.

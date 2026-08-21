@@ -17,6 +17,9 @@ describe("MyQuizzes", () => {
     const user = userEvent.setup();
     render(<MyQuizzes />);
     expect(screen.getByRole("heading", { name: "Quiz của tôi" })).toBeTruthy();
+    const statsPanel = screen.getByText("Tổng Quiz").closest("section");
+    expect(statsPanel?.className).toContain("hidden");
+    expect(statsPanel?.className).toContain("sm:grid");
     expect(screen.getByText("Ôn tập Sinh học 10")).toBeTruthy();
     expect(screen.getByText("Lịch sử Việt Nam")).toBeTruthy();
     await user.type(screen.getByRole("textbox", { name: "Tìm kiếm Quiz của tôi" }), "lịch sử");
