@@ -7,10 +7,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }] }, isLoading: false },
   create: { mutate: vi.fn(), isPending: false },
+  chat: { mutate: vi.fn(), isPending: false },
 }));
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideHeader }: { children: React.ReactNode; hideHeader?: boolean }) => <div data-testid="account-layout" data-hide-header={hideHeader ? "true" : "false"}>{children}</div> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => ({ data: [], isLoading: false, refetch: vi.fn() }) }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => ({ data: [], isLoading: false, refetch: vi.fn() }) }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => mocks.chat }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 import UserQuizCreator, { ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
@@ -68,6 +69,29 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
     await user.click(screen.getByRole("button", { name: /Thu gọn/ }));
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("false");
+  });
+
+  it("gửi yêu cầu bằng Enter, có nút đính kèm và ẩn nguồn AI trong chế độ chat", async () => {
+    const user = userEvent.setup();
+    mocks.chat.mutate.mockClear();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Mở Chat AI" }));
+    expect(screen.getByRole("button", { name: "Đính kèm tệp vào chat AI" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Nhập chủ đề" })).toBeNull();
+    const input = screen.getByPlaceholderText("Hỏi AI hoặc mô tả Quiz bạn muốn tạo…");
+    await user.type(input, "Tạo câu hỏi Toán lớp 4");
+    await user.keyboard("{Enter}");
+    expect(mocks.chat.mutate).toHaveBeenCalledWith(expect.objectContaining({ messages: expect.arrayContaining([expect.objectContaining({ content: "Tạo câu hỏi Toán lớp 4" })]) }));
+  });
+
+  it("cho phép nhân bản và đổi loại câu hỏi ngay trong tab Câu hỏi", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Mở Chat AI" }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "Loại câu hỏi trong tab 1" }), "true_false");
+    expect((screen.getByRole("combobox", { name: "Loại câu hỏi trong tab 1" }) as HTMLSelectElement).value).toBe("true_false");
+    await user.click(screen.getByRole("button", { name: "Nhân bản câu hỏi 1 trong tab" }));
+    expect(screen.getByText("2 câu trong Quiz")).toBeTruthy();
   });
 
   it("bổ sung thẻ câu hỏi thủ công từ thanh cuối Editor", async () => {

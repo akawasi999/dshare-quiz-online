@@ -303,3 +303,6 @@
 - [x] Lưu lịch sử phiên bản nháp và cho phép xem, khôi phục phiên bản trước đó.
 - [x] Cân bằng lại bố cục Studio ở chế độ AI trên desktop, giảm khoảng trống và cải thiện vùng làm việc theo ảnh tham chiếu.
 - [x] Tái thiết kế chế độ Studio AI desktop: editor lớn bên trái, chat tối giản và tab danh sách câu hỏi thu gọn bên phải theo ảnh tham chiếu.
+- [x] Thêm Enter để gửi tin nhắn và làm rõ nút đính kèm trong ô chat AI.
+- [x] Ẩn toàn bộ bốn nút nguồn AI khi mở chế độ tạo Quiz bằng AI.
+- [x] Thiết kế lại tab Câu hỏi theo dạng thẻ có drag handle, loại câu hỏi và thao tác nhân bản/xóa theo đặc tả đính kèm.
