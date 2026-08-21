@@ -298,3 +298,6 @@
 - [x] Ẩn danh sách câu hỏi khi mở chế độ AI trong Studio Tạo Quiz.
 - [x] Hiển thị liên kết chia sẻ và mã QR ngay sau khi xuất bản Quiz thành công.
 - [x] Bổ sung tự động lưu nháp định kỳ lên máy chủ thay cho chỉ lưu cục bộ.
+- [x] Thêm nút chia sẻ nhanh Facebook, Zalo và Email trong hộp chia sẻ sau xuất bản.
+- [x] Làm rõ trạng thái tự động lưu Đang lưu/Đã lưu trên giao diện Studio.
+- [x] Lưu lịch sử phiên bản nháp và cho phép xem, khôi phục phiên bản trước đó.

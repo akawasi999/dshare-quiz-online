@@ -10,10 +10,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideHeader }: { children: React.ReactNode; hideHeader?: boolean }) => <div data-testid="account-layout" data-hide-header={hideHeader ? "true" : "false"}>{children}</div> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => ({ data: [], isLoading: false, refetch: vi.fn() }) }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
-import UserQuizCreator from "../client/src/pages/UserQuizCreator";
+import UserQuizCreator, { ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
 
 describe("Quiz Creator theo đặc tả", () => {
   afterEach(cleanup);
@@ -25,6 +25,26 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByText("Danh sách câu hỏi")).toBeTruthy();
     expect(screen.getByText("Nhập chủ đề")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Mở Chat AI" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Lịch sử bản nháp" })).toBeTruthy();
+  });
+
+  it("mở hộp lịch sử bản nháp để khôi phục phiên bản", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Lịch sử bản nháp" }));
+    expect(screen.getByText("Chưa có phiên bản nháp")).toBeTruthy();
+  });
+
+  it("hiển thị và mở liên kết chia sẻ nhanh Facebook, Zalo", async () => {
+    const user = userEvent.setup();
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    render(<ShareQuizDialog share={{ title: "Quiz Tin học", url: "https://example.test/exam/tin-hoc", qr: "" }} onClose={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Chia sẻ qua Email" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Chia sẻ lên Facebook" }));
+    expect(open).toHaveBeenCalledWith(expect.stringContaining("facebook.com/sharer"), "_blank", "noopener,noreferrer");
+    await user.click(screen.getByRole("button", { name: "Chia sẻ qua Zalo" }));
+    expect(open).toHaveBeenLastCalledWith(expect.stringContaining("zalo.me/share"), "_blank", "noopener,noreferrer");
+    open.mockRestore();
   });
 
   it("chuyển sang tab cài đặt với các nhóm theo đặc tả", async () => {

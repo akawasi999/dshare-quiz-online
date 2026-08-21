@@ -20,6 +20,7 @@ import {
   paymentRecords,
   questions,
   quizCreatorDrafts,
+  quizCreatorDraftVersions,
   quizzes,
   quizQuestions,
   quizSourceHistories,
@@ -586,14 +587,34 @@ export const appRouter = router({
     saveDraft: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96), quizId: z.number().int().positive().optional(), title: z.string().max(220).default(""), payload: z.record(z.string(), z.unknown()) })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tự lưu nháp lúc này." });
+      const savedAt = new Date();
       const values = { userId: ctx.user.id, draftKey: input.draftKey, quizId: input.quizId ?? null, title: input.title.slice(0, 220), payload: input.payload };
       await db.insert(quizCreatorDrafts).values(values).onDuplicateKeyUpdate({ set: { quizId: values.quizId, title: values.title, payload: values.payload, updatedAt: new Date() } });
-      return { savedAt: new Date() };
+      await db.insert(quizCreatorDraftVersions).values({ userId: ctx.user.id, draftKey: input.draftKey, title: values.title, payload: values.payload, savedAt });
+      const versions = await db.select({ id: quizCreatorDraftVersions.id }).from(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey))).orderBy(desc(quizCreatorDraftVersions.savedAt)).limit(21);
+      const staleIds = versions.slice(20).map(version => version.id);
+      if (staleIds.length) await db.delete(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey), sql`${quizCreatorDraftVersions.id} in (${sql.join(staleIds.map(id => sql`${id}`), sql`, `)})`));
+      return { savedAt };
+    }),
+    listDraftVersions: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96) })).query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select({ id: quizCreatorDraftVersions.id, title: quizCreatorDraftVersions.title, payload: quizCreatorDraftVersions.payload, savedAt: quizCreatorDraftVersions.savedAt }).from(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey))).orderBy(desc(quizCreatorDraftVersions.savedAt)).limit(20);
+    }),
+    restoreDraftVersion: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96), versionId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể khôi phục bản nháp lúc này." });
+      const [version] = await db.select().from(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.id, input.versionId), eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey))).limit(1);
+      if (!version) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy phiên bản nháp." });
+      const savedAt = new Date();
+      await db.insert(quizCreatorDrafts).values({ userId: ctx.user.id, draftKey: input.draftKey, title: version.title, payload: version.payload }).onDuplicateKeyUpdate({ set: { title: version.title, payload: version.payload, updatedAt: savedAt } });
+      return { title: version.title, payload: version.payload, savedAt };
     }),
     deleteDraft: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96) })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) return { success: true };
       await db.delete(quizCreatorDrafts).where(and(eq(quizCreatorDrafts.userId, ctx.user.id), eq(quizCreatorDrafts.draftKey, input.draftKey)));
+      await db.delete(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey)));
       return { success: true };
     }),
     duplicateQuiz: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {

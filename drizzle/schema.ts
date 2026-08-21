@@ -218,6 +218,17 @@ export const quizCreatorDrafts = mysqlTable("quizCreatorDrafts", {
   index("quiz_creator_draft_quiz_idx").on(table.quizId),
 ]);
 
+export const quizCreatorDraftVersions = mysqlTable("quizCreatorDraftVersions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  draftKey: varchar("draftKey", { length: 96 }).notNull(),
+  title: varchar("title", { length: 220 }).notNull().default(""),
+  payload: json("payload").$type<Record<string, unknown>>().notNull(),
+  savedAt: timestamp("savedAt").defaultNow().notNull(),
+}, table => [
+  index("quiz_creator_draft_version_user_key_saved_idx").on(table.userId, table.draftKey, table.savedAt),
+]);
+
 export const quizSourceHistories = mysqlTable("quizSourceHistories", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
