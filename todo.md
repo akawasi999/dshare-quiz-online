@@ -306,3 +306,4 @@
 - [x] Thêm Enter để gửi tin nhắn và làm rõ nút đính kèm trong ô chat AI.
 - [x] Ẩn toàn bộ bốn nút nguồn AI khi mở chế độ tạo Quiz bằng AI.
 - [x] Thiết kế lại tab Câu hỏi theo dạng thẻ có drag handle, loại câu hỏi và thao tác nhân bản/xóa theo đặc tả đính kèm.
+- [x] Đảo tab Câu hỏi sang trái và AI sang phải trong workspace AI; đặt cột trái 950px, card câu hỏi 650px và cột AI 450px trên desktop.
