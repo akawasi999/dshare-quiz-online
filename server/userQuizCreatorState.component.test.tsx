@@ -94,6 +94,22 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByText("2 câu trong Quiz")).toBeTruthy();
   });
 
+  it("cho phép chỉnh sửa trực tiếp nội dung và đáp án trong tab Câu hỏi có vùng cuộn", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Mở Chat AI" }));
+    const questionPanel = screen.getByText("Câu hỏi").closest("section");
+    expect(questionPanel?.className).toContain("xl:h-[80%]");
+    const prompt = screen.getByRole("textbox", { name: "Nội dung câu hỏi 1 trong tab" }) as HTMLTextAreaElement;
+    await user.clear(prompt);
+    await user.type(prompt, "Câu hỏi đã chỉnh sửa");
+    expect(prompt.value).toBe("Câu hỏi đã chỉnh sửa");
+    const answer = screen.getByRole("textbox", { name: "Đáp án 1 câu 1 trong tab" }) as HTMLInputElement;
+    await user.clear(answer);
+    await user.type(answer, "Đáp án mới");
+    expect(answer.value).toBe("Đáp án mới");
+  });
+
   it("bổ sung thẻ câu hỏi thủ công từ thanh cuối Editor", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
