@@ -20,7 +20,7 @@ vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: ()
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/lib/quizDocumentExport", () => ({ exportQuizToPdf: mocks.exportPdf, exportQuizToWord: mocks.exportWord }));
 
-import UserQuizCreator from "../client/src/pages/UserQuizCreator";
+import UserQuizCreator, { LiveQuestionPreview } from "../client/src/pages/UserQuizCreator";
 
 describe("UserQuizCreator thiết kế lại", () => {
   afterEach(cleanup);
@@ -57,6 +57,13 @@ describe("UserQuizCreator thiết kế lại", () => {
     expect(screen.queryByRole("button", { name: "Tải mẫu Excel" })).toBeNull();
     expect(screen.queryByText("ID Bài học")).toBeNull();
     expect(screen.getByRole("option", { name: "✎ Bài luận" })).toBeTruthy();
+  });
+
+  it("đánh dấu các câu hỏi vừa được AI đưa vào Live Preview", () => {
+    const aiQuestion = { localId: "ai-new-question", prompt: "AI vừa tạo câu hỏi này", explanation: "", imageUrl: "", type: "single", difficulty: "medium", points: 1, options: [{ body: "Đáp án", isCorrect: true }], accepted: "", pairs: [], outline: "", partialScore: false, wordLimit: 0, allowFileUpload: false };
+    render(<LiveQuestionPreview questions={[aiQuestion]} highlightedQuestionIds={[aiQuestion.localId]} draggedId={null} onDragStart={vi.fn()} onDrop={vi.fn()} onRemove={vi.fn()} onUpdate={vi.fn()} quota={mocks.quota.data} />);
+    expect(screen.getByTestId("live-question-preview").getAttribute("data-ai-new-count")).toBe("1");
+    expect(screen.getByText("1 câu hỏi mới do AI tạo đã được thêm vào Live Preview.")).toBeTruthy();
   });
 
   it("chuyển Cài đặt trong cùng khối Studio và ẩn vùng soạn Câu hỏi", async () => {

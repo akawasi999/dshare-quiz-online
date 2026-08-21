@@ -123,13 +123,35 @@ h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Montserrat", ui-sans-serif, 
 .studio-mode-shell[data-mode="standard"] > aside { animation: studio-side-enter 300ms cubic-bezier(.23, 1, .32, 1) 100ms both; }
 .studio-mode-shell[data-mode="ai"] > .studio-mode-primary { animation: studio-primary-enter 340ms cubic-bezier(.23, 1, .32, 1) 35ms both; }
 .studio-mode-shell[data-mode="ai"] > aside { animation: studio-ai-panel-enter 360ms cubic-bezier(.23, 1, .32, 1) 85ms both; }
+.live-question-preview--headerless[data-ai-new-count="1"] article:nth-last-child(-n + 1),
+.live-question-preview--headerless[data-ai-new-count="2"] article:nth-last-child(-n + 2),
+.live-question-preview--headerless[data-ai-new-count="3"] article:nth-last-child(-n + 3),
+.live-question-preview--headerless[data-ai-new-count="4"] article:nth-last-child(-n + 4),
+.live-question-preview--headerless[data-ai-new-count="5"] article:nth-last-child(-n + 5),
+.live-question-preview--headerless[data-ai-new-count="6"] article:nth-last-child(-n + 6),
+.live-question-preview--headerless[data-ai-new-count="7"] article:nth-last-child(-n + 7),
+.live-question-preview--headerless[data-ai-new-count="8"] article:nth-last-child(-n + 8),
+.live-question-preview--headerless[data-ai-new-count="9"] article:nth-last-child(-n + 9),
+.live-question-preview--headerless[data-ai-new-count="10"] article:nth-last-child(-n + 10),
+.live-question-preview--headerless[data-ai-new-count="11"] article:nth-last-child(-n + 11),
+.live-question-preview--headerless[data-ai-new-count="12"] article:nth-last-child(-n + 12),
+.live-question-preview--headerless[data-ai-new-count="13"] article:nth-last-child(-n + 13),
+.live-question-preview--headerless[data-ai-new-count="14"] article:nth-last-child(-n + 14),
+.live-question-preview--headerless[data-ai-new-count="15"] article:nth-last-child(-n + 15),
+.live-question-preview--headerless[data-ai-new-count="16"] article:nth-last-child(-n + 16),
+.live-question-preview--headerless[data-ai-new-count="17"] article:nth-last-child(-n + 17),
+.live-question-preview--headerless[data-ai-new-count="18"] article:nth-last-child(-n + 18),
+.live-question-preview--headerless[data-ai-new-count="19"] article:nth-last-child(-n + 19),
+.live-question-preview--headerless[data-ai-new-count="20"] article:nth-last-child(-n + 20) { position: relative; border-color: rgba(112, 87, 232, .52) !important; background: linear-gradient(112deg, #ffffff 0%, #fbfaff 58%, #edf4ff 100%); animation: ai-question-arrival 1.65s cubic-bezier(.23, 1, .32, 1) both; }
 @keyframes studio-toolbar-enter { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes studio-shell-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes studio-primary-enter { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes studio-side-enter { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes studio-ai-panel-enter { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes ai-question-arrival { 0% { opacity: .45; transform: translateY(-10px) scale(.985); box-shadow: 0 0 0 0 rgba(112, 87, 232, 0); } 42% { opacity: 1; transform: translateY(0) scale(1.008); box-shadow: 0 0 0 7px rgba(112, 87, 232, .14), 0 14px 30px rgba(62, 74, 135, .12); } 100% { opacity: 1; transform: translateY(0) scale(1); box-shadow: 0 6px 16px rgba(20, 44, 91, .08); } }
 @media (prefers-reduced-motion: reduce) {
   .studio-mode-toolbar, .studio-mode-shell, .studio-mode-shell[data-mode="standard"] > .studio-mode-primary, .studio-mode-shell[data-mode="standard"] > aside, .studio-mode-shell[data-mode="ai"] > .studio-mode-primary, .studio-mode-shell[data-mode="ai"] > aside { animation: none !important; }
+  .live-question-preview--headerless[data-ai-new-count]:not([data-ai-new-count="0"]) article { animation: none !important; box-shadow: 0 0 0 3px rgba(112, 87, 232, .13); }
 }
 @media (min-width: 1280px) {
   .studio-workspace--with-chat > aside { position: sticky; top: 0; height: 100vh; }
