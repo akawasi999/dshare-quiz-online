@@ -314,3 +314,4 @@
 - [x] Tăng chiều cao tab Câu hỏi lên 100% để bằng panel AI trong workspace desktop.
 - [x] Hiển thị tổng số câu hỏi và số câu hoàn thành ở đầu tab Câu hỏi.
 - [x] Hiển thị và chỉnh sửa trực tiếp tiêu đề Quiz trong tab Câu hỏi, đồng bộ với tiêu đề trên thanh menu Studio.
+- [x] Đơn giản hóa header tab Câu hỏi: tiêu đề Quiz sửa tại chỗ ở góc trái, tự lưu khi hoàn tất và bỏ ô nhập/tiến độ/icon bên phải.

@@ -91,14 +91,14 @@ describe("Quiz Creator theo đặc tả", () => {
     await user.selectOptions(screen.getByRole("combobox", { name: "Loại câu hỏi trong tab 1" }), "true_false");
     expect((screen.getByRole("combobox", { name: "Loại câu hỏi trong tab 1" }) as HTMLSelectElement).value).toBe("true_false");
     await user.click(screen.getByRole("button", { name: "Nhân bản câu hỏi 1 trong tab" }));
-    expect(screen.getByText((_, element) => element?.textContent === "Tổng 2 câu hỏi")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Chỉnh sửa tiêu đề Quiz" })).toBeTruthy();
   });
 
   it("cho phép chỉnh sửa trực tiếp nội dung và đáp án trong tab Câu hỏi có vùng cuộn", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "Mở Chat AI" }));
-    const questionPanel = screen.getByLabelText("Tiêu đề Quiz trong tab Câu hỏi").closest("section");
+    const questionPanel = screen.getByRole("button", { name: "Chỉnh sửa tiêu đề Quiz" }).closest("section");
     expect(questionPanel?.className).toContain("xl:h-full");
     const prompt = screen.getByRole("textbox", { name: "Nội dung câu hỏi 1 trong tab" }) as HTMLTextAreaElement;
     await user.clear(prompt);
@@ -114,11 +114,12 @@ describe("Quiz Creator theo đặc tả", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "Mở Chat AI" }));
-    expect(screen.getByText((_, element) => element?.textContent === "Tổng 1 câu hỏi")).toBeTruthy();
-    expect(screen.getByText("0/1 hoàn thành")).toBeTruthy();
-    const titleInQuestionTab = screen.getByRole("textbox", { name: "Tiêu đề Quiz trong tab Câu hỏi" }) as HTMLInputElement;
+    expect(screen.queryByText("0/1 hoàn thành")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Chỉnh sửa tiêu đề Quiz" }));
+    const titleInQuestionTab = screen.getByRole("textbox", { name: "Nhập tiêu đề Quiz trực tiếp" }) as HTMLInputElement;
     await user.clear(titleInQuestionTab);
     await user.type(titleInQuestionTab, "Ôn tập Toán lớp 4");
+    await user.keyboard("{Enter}");
     await user.click(screen.getByRole("button", { name: /Thu gọn/ }));
     expect((screen.getByRole("textbox", { name: "Tiêu đề Quiz ở thanh menu Studio" }) as HTMLInputElement).value).toBe("Ôn tập Toán lớp 4");
   });
