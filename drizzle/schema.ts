@@ -226,9 +226,11 @@ export const quizCreatorDraftVersions = mysqlTable("quizCreatorDraftVersions", {
   draftKey: varchar("draftKey", { length: 96 }).notNull(),
   title: varchar("title", { length: 220 }).notNull().default(""),
   payload: json("payload").$type<Record<string, unknown>>().notNull(),
+  isPinned: boolean("isPinned").default(false).notNull(),
   savedAt: timestamp("savedAt").defaultNow().notNull(),
 }, table => [
   index("quiz_creator_draft_version_user_key_saved_idx").on(table.userId, table.draftKey, table.savedAt),
+  index("quiz_creator_draft_version_user_key_pinned_idx").on(table.userId, table.draftKey, table.isPinned),
 ]);
 
 export const quizSourceHistories = mysqlTable("quizSourceHistories", {

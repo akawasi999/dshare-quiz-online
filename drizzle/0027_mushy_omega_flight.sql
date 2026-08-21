@@ -1,0 +1,2 @@
+ALTER TABLE `quizCreatorDraftVersions` ADD `isPinned` boolean DEFAULT false NOT NULL;--> statement-breakpoint
+CREATE INDEX `quiz_creator_draft_version_user_key_pinned_idx` ON `quizCreatorDraftVersions` (`userId`,`draftKey`,`isPinned`);

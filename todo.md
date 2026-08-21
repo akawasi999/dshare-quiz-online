@@ -332,3 +332,7 @@
 - [x] Triển khai upload ảnh minh họa cho từng câu hỏi qua S3, có validation định dạng và dung lượng.
 - [x] Hiển thị đầy đủ ảnh, audio và video của câu hỏi trong Preview Sandbox, không tạo dữ liệu lượt làm.
 - [x] Bổ sung kiểm thử hồi quy và xác minh desktop/mobile cho các chức năng P1 Studio Tạo Quiz.
+- [x] Xây dựng phân tích Quiz theo lượt làm, điểm trung bình và tỷ lệ đúng/sai theo từng câu hỏi cho chủ sở hữu.
+- [x] Hiển thị bảng phân tích Quiz trực quan trong Studio, có trạng thái chưa đủ dữ liệu rõ ràng.
+- [x] Thêm đối chiếu trước khi khôi phục và ghim/bỏ ghim các phiên bản nháp quan trọng.
+- [x] Bổ sung kiểm thử hồi quy và xác minh desktop/mobile cho các chức năng P2 Studio Tạo Quiz.

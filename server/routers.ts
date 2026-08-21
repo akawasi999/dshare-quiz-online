@@ -52,6 +52,7 @@ import {
   getLearnerSummary,
   getMonthlyQuotaUsage,
   getQuizDetail,
+  getOwnedQuizAnalytics,
   getQuizQuestionSet,
   getWalletTransactions,
   listCategories,
@@ -621,6 +622,11 @@ export const appRouter = router({
       const draft = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       return { quiz: draft.quiz, questions: draft.questions };
     }),
+    quizAnalytics: protectedProcedure.input(quizIdInput).query(async ({ ctx, input }) => {
+      const analytics = await getOwnedQuizAnalytics(ctx.user.id, input.quizId);
+      if (!analytics) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy Quiz thuộc quyền quản lý của bạn." });
+      return analytics;
+    }),
     getDraft: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96) })).query(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) return null;
@@ -634,15 +640,23 @@ export const appRouter = router({
       const values = { userId: ctx.user.id, draftKey: input.draftKey, quizId: input.quizId ?? null, title: input.title.slice(0, 220), payload: input.payload };
       await db.insert(quizCreatorDrafts).values(values).onDuplicateKeyUpdate({ set: { quizId: values.quizId, title: values.title, payload: values.payload, updatedAt: new Date() } });
       await db.insert(quizCreatorDraftVersions).values({ userId: ctx.user.id, draftKey: input.draftKey, title: values.title, payload: values.payload, savedAt });
-      const versions = await db.select({ id: quizCreatorDraftVersions.id }).from(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey))).orderBy(desc(quizCreatorDraftVersions.savedAt)).limit(21);
-      const staleIds = versions.slice(20).map(version => version.id);
+      const versions = await db.select({ id: quizCreatorDraftVersions.id, isPinned: quizCreatorDraftVersions.isPinned }).from(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey))).orderBy(desc(quizCreatorDraftVersions.isPinned), desc(quizCreatorDraftVersions.savedAt)).limit(41);
+      const staleIds = versions.filter(version => !version.isPinned).slice(20).map(version => version.id);
       if (staleIds.length) await db.delete(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey), sql`${quizCreatorDraftVersions.id} in (${sql.join(staleIds.map(id => sql`${id}`), sql`, `)})`));
       return { savedAt };
     }),
     listDraftVersions: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96) })).query(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) return [];
-      return db.select({ id: quizCreatorDraftVersions.id, title: quizCreatorDraftVersions.title, payload: quizCreatorDraftVersions.payload, savedAt: quizCreatorDraftVersions.savedAt }).from(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey))).orderBy(desc(quizCreatorDraftVersions.savedAt)).limit(20);
+      return db.select({ id: quizCreatorDraftVersions.id, title: quizCreatorDraftVersions.title, payload: quizCreatorDraftVersions.payload, isPinned: quizCreatorDraftVersions.isPinned, savedAt: quizCreatorDraftVersions.savedAt }).from(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey))).orderBy(desc(quizCreatorDraftVersions.isPinned), desc(quizCreatorDraftVersions.savedAt)).limit(40);
+    }),
+    toggleDraftVersionPin: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96), versionId: z.number().int().positive(), isPinned: z.boolean() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật phiên bản nháp lúc này." });
+      const [version] = await db.select({ id: quizCreatorDraftVersions.id }).from(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.id, input.versionId), eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey))).limit(1);
+      if (!version) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy phiên bản nháp." });
+      await db.update(quizCreatorDraftVersions).set({ isPinned: input.isPinned }).where(eq(quizCreatorDraftVersions.id, version.id));
+      return { id: version.id, isPinned: input.isPinned };
     }),
     restoreDraftVersion: protectedProcedure.input(z.object({ draftKey: z.string().min(8).max(96), versionId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();

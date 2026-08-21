@@ -8,16 +8,19 @@ const mocks = vi.hoisted(() => ({
   content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }] }, isLoading: false },
   create: { mutate: vi.fn(), isPending: false },
   chat: { mutate: vi.fn(), isPending: false },
+  pinVersion: vi.fn(),
+  versions: { data: [] as any[], isLoading: false, refetch: vi.fn() },
+  analytics: { data: { summary: { completedAttempts: 8, averageScore: 75, passRate: 63, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [{ questionId: 1, prompt: "Câu hỏi phân tích", points: 1, answerCount: 8, correctCount: 5, correctRate: 63 }] }, isLoading: false, isError: false, refetch: vi.fn() },
 }));
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideHeader }: { children: React.ReactNode; hideHeader?: boolean }) => <div data-testid="account-layout" data-hide-header={hideHeader ? "true" : "false"}>{children}</div> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => ({ data: [], isLoading: false, refetch: vi.fn() }) }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionMedia: { useMutation: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => mocks.chat }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionMedia: { useMutation: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => mocks.chat }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 import UserQuizCreator, { ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
 
 describe("Quiz Creator theo đặc tả", () => {
-  afterEach(cleanup);
+  afterEach(() => { cleanup(); mocks.versions.data = []; mocks.pinVersion.mockReset(); mocks.analytics.data = { summary: { completedAttempts: 8, averageScore: 75, passRate: 63, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [{ questionId: 1, prompt: "Câu hỏi phân tích", points: 1, answerCount: 8, correctCount: 5, correctRate: 63 }] }; window.history.replaceState({}, "", "/tao-quiz"); });
 
   it("hiển thị header tự lưu và editor ba vùng", () => {
     render(<UserQuizCreator />);
@@ -152,5 +155,37 @@ describe("Quiz Creator theo đặc tả", () => {
     await user.click(screen.getByRole("button", { name: "Cài đặt" }));
     expect(screen.getByRole("button", { name: "Tải ảnh đại diện Quiz" })).toBeTruthy();
     expect(screen.getByText(/JPG, PNG hoặc WEBP/)).toBeTruthy();
+  });
+
+  it("hiển thị phân tích lượt làm và tỷ lệ đúng/sai khi mở Quiz đã lưu", async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, "", "/tao-quiz?edit=5");
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Phân tích" }));
+    expect(screen.getByTestId("quiz-analytics-workspace")).toBeTruthy();
+    expect(screen.getByText("Hiệu quả làm bài của người học")).toBeTruthy();
+    expect(screen.getByText("Câu hỏi phân tích")).toBeTruthy();
+    expect(screen.getAllByText("63%")).toHaveLength(2);
+  });
+
+  it("hiển thị trạng thái chưa đủ dữ liệu trong tab phân tích", async () => {
+    const user = userEvent.setup();
+    mocks.analytics.data = { summary: { completedAttempts: 0, averageScore: 0, passRate: 0, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [] };
+    window.history.replaceState({}, "", "/tao-quiz?edit=5");
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Phân tích" }));
+    expect(screen.getByText("Chưa đủ dữ liệu để phân tích")).toBeTruthy();
+  });
+
+  it("cho phép ghim và đối chiếu phiên bản nháp trước khi khôi phục", async () => {
+    const user = userEvent.setup();
+    mocks.versions.data = [{ id: 9, title: "Phiên bản quan trọng", payload: { title: "Phiên bản quan trọng", description: "Mô tả cũ", questions: [{ id: "q1" }, { id: "q2" }] }, isPinned: false, savedAt: new Date("2026-08-21T00:00:00Z") }];
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Lịch sử bản nháp" }));
+    await user.click(screen.getByRole("button", { name: "Ghim phiên bản nháp 9" }));
+    expect(mocks.pinVersion).toHaveBeenCalledWith(expect.objectContaining({ versionId: 9, isPinned: true }));
+    await user.click(screen.getByRole("button", { name: "So sánh" }));
+    expect(screen.getByText("Đối chiếu trước khi khôi phục")).toBeTruthy();
+    expect(screen.getAllByText("Phiên bản quan trọng")).toHaveLength(2);
   });
 });

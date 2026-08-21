@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TrpcContext } from "./_core/context";
 
-const mocks = vi.hoisted(() => ({ getDb: vi.fn(), insert: vi.fn(), values: vi.fn(), onDuplicate: vi.fn(), select: vi.fn(), from: vi.fn(), where: vi.fn(), orderBy: vi.fn(), limit: vi.fn(), delete: vi.fn() }));
+const mocks = vi.hoisted(() => ({ getDb: vi.fn(), insert: vi.fn(), values: vi.fn(), onDuplicate: vi.fn(), select: vi.fn(), from: vi.fn(), where: vi.fn(), orderBy: vi.fn(), limit: vi.fn(), delete: vi.fn(), update: vi.fn(), set: vi.fn() }));
 
 vi.mock("./db", async importOriginal => ({ ...(await importOriginal<typeof import("./db")>()), getDb: mocks.getDb }));
 
@@ -24,7 +24,9 @@ describe("creator draft router", () => {
     mocks.from.mockReturnValue({ where: mocks.where });
     mocks.select.mockReturnValue({ from: mocks.from });
     mocks.delete.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
-    mocks.getDb.mockResolvedValue({ insert: mocks.insert, select: mocks.select, delete: mocks.delete });
+    mocks.set.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mocks.update.mockReturnValue({ set: mocks.set });
+    mocks.getDb.mockResolvedValue({ insert: mocks.insert, select: mocks.select, delete: mocks.delete, update: mocks.update });
   });
 
   it("lưu payload nháp với khóa thuộc người dùng hiện tại", async () => {
@@ -44,5 +46,11 @@ describe("creator draft router", () => {
     await expect(caller().creator.listDraftVersions({ draftKey: "draft-owner-123" })).resolves.toHaveLength(1);
     await expect(caller().creator.restoreDraftVersion({ draftKey: "draft-owner-123", versionId: 8 })).resolves.toMatchObject({ title: "Bản nháp", payload: { title: "Bản nháp" } });
     expect(mocks.insert).toHaveBeenCalledTimes(1);
+  });
+
+  it("ghim phiên bản nháp thuộc đúng người dùng", async () => {
+    await expect(caller().creator.toggleDraftVersionPin({ draftKey: "draft-owner-123", versionId: 8, isPinned: true })).resolves.toEqual({ id: 8, isPinned: true });
+    expect(mocks.update).toHaveBeenCalledTimes(1);
+    expect(mocks.set).toHaveBeenCalledWith({ isPinned: true });
   });
 });

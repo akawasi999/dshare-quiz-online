@@ -181,6 +181,54 @@ export async function getQuizDetail(quizId: number) {
   return quizRows[0];
 }
 
+export async function getOwnedQuizAnalytics(userId: number, quizId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [quiz] = await db.select({ id: quizzes.id, title: quizzes.title }).from(quizzes)
+    .where(and(eq(quizzes.id, quizId), eq(quizzes.creatorUserId, userId))).limit(1);
+  if (!quiz) return undefined;
+
+  const [summaryRow] = await db.select({
+    completedAttempts: sql<number>`count(${attempts.id})`,
+    averageScore: sql<number>`coalesce(round(avg(${attempts.score})), 0)`,
+    passedAttempts: sql<number>`coalesce(sum(case when ${attempts.passed} = true then 1 else 0 end), 0)`,
+    latestCompletedAt: sql<Date | null>`max(${attempts.completedAt})`,
+  }).from(attempts).where(and(eq(attempts.quizId, quizId), eq(attempts.status, "submitted")));
+
+  const questionRows = await db.select({
+    questionId: questions.id,
+    prompt: questions.prompt,
+    type: questions.type,
+    points: quizQuestions.points,
+    sortOrder: quizQuestions.sortOrder,
+    answerCount: sql<number>`count(${attemptAnswers.id})`,
+    correctCount: sql<number>`coalesce(sum(case when ${attemptAnswers.isCorrect} = true then 1 else 0 end), 0)`,
+  }).from(quizQuestions)
+    .innerJoin(questions, eq(quizQuestions.questionId, questions.id))
+    .leftJoin(attempts, and(eq(attempts.quizId, quizQuestions.quizId), eq(attempts.status, "submitted")))
+    .leftJoin(attemptAnswers, and(eq(attemptAnswers.attemptId, attempts.id), eq(attemptAnswers.questionId, questions.id)))
+    .where(eq(quizQuestions.quizId, quizId))
+    .groupBy(questions.id, questions.prompt, questions.type, quizQuestions.points, quizQuestions.sortOrder)
+    .orderBy(asc(quizQuestions.sortOrder));
+
+  const completedAttempts = Number(summaryRow?.completedAttempts ?? 0);
+  const passedAttempts = Number(summaryRow?.passedAttempts ?? 0);
+  return {
+    quiz,
+    summary: {
+      completedAttempts,
+      averageScore: Number(summaryRow?.averageScore ?? 0),
+      passRate: completedAttempts ? Math.round((passedAttempts / completedAttempts) * 100) : 0,
+      latestCompletedAt: summaryRow?.latestCompletedAt ?? null,
+    },
+    questions: questionRows.map(row => {
+      const answerCount = Number(row.answerCount ?? 0);
+      const correctCount = Number(row.correctCount ?? 0);
+      return { questionId: row.questionId, prompt: row.prompt, type: row.type, points: row.points, answerCount, correctCount, correctRate: answerCount ? Math.round((correctCount / answerCount) * 100) : null };
+    }),
+  };
+}
+
 export async function getQuizQuestionSet(quizId: number) {
   const db = await getDb();
   if (!db) return [];
