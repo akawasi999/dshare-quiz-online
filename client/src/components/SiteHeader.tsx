@@ -1,12 +1,12 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { startLogin } from "@/const";
 import { Button } from "@/components/ui/button";
 import BrandLogo from "@/components/BrandLogo";
+import { startLogin } from "@/const";
 import { cn } from "@/lib/utils";
 import { Menu, Moon, Sparkles, Sun, UserRound, X } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const links = [
   { href: "/kham-pha", label: "Quiz" },
@@ -20,46 +20,74 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const [location] = useLocation();
   const { user, loading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const isDark = variant === "dark" || theme === "dark";
+  const isDarkLogo = variant === "dark" || theme === "dark";
 
   return (
-    <header className={cn("relative z-40 border-b", isDark ? "border-white/10 bg-[#172554] text-white" : "border-[#172554]/10 bg-white text-[#172554]") }>
-      <div className="container flex h-[76px] items-center justify-between gap-5">
-        <Link href="/" className="group flex items-center" aria-label="Dshare Quiz Online">
-          <BrandLogo monochrome={isDark} className="h-9 max-w-[132px] transition-transform duration-200 group-hover:scale-[1.02] sm:h-10 sm:max-w-[155px]" />
+    <header className="relative z-40 border-b border-border bg-surface text-foreground" data-theme-variant={variant}>
+      <div className="container flex h-[76px] items-center justify-between gap-4">
+        <Link href="/" className="group flex shrink-0 items-center" aria-label="Dshare Quiz Online">
+          <BrandLogo monochrome={isDarkLogo} className="h-9 max-w-[132px] transition-transform duration-200 group-hover:scale-[1.02] sm:h-10 sm:max-w-[155px]" />
         </Link>
 
-        <nav className="hidden items-center gap-7 lg:flex" aria-label="Điều hướng chính">
+        <nav className="hidden items-center gap-6 lg:flex" aria-label="Điều hướng chính">
           {links.map(link => (
-            <Link key={link.href} href={link.href} className={cn("text-[13px] font-medium transition-colors hover:text-[#2563eb]", location === link.href && "text-[#2563eb]")}>{link.label}</Link>
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "rounded-md px-1 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20",
+                location === link.href ? "text-primary" : "text-muted-foreground hover:text-primary"
+              )}
+            >
+              {link.label}
+            </Link>
           ))}
-          <span className={cn("h-4 w-px", isDark ? "bg-white/20" : "bg-[#172554]/15")} />
-          <a href="#ve-dshare" className="text-[13px] font-medium transition-colors hover:text-[#2563eb]">Về Dshare</a>
+          <span className="h-4 w-px bg-border" aria-hidden="true" />
+          <a href="#ve-dshare" className="rounded-md px-1 py-2 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20">Về Dshare</a>
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <button type="button" onClick={toggleTheme} aria-label={theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"} aria-pressed={theme === "dark"} className={cn("grid h-10 w-10 place-items-center rounded-full transition-colors", isDark ? "bg-white/10 hover:bg-white/15" : "bg-[#eef4ff] text-[#2563eb] hover:bg-[#dbeafe]")}>{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button>
-          {loading ? <span className="text-xs opacity-70">Đang xác thực...</span> : user ? (
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+            aria-pressed={theme === "dark"}
+            className="grid size-11 place-items-center rounded-full bg-primary-light text-primary transition-colors hover:bg-primary-light/75 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20"
+          >
+            {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
+          {loading ? <span className="px-2 text-xs text-muted-foreground">Đang xác thực...</span> : user ? (
             <div className="flex items-center gap-2">
-              <Link href="/ho-so" className={cn("flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition-colors", isDark ? "bg-white/10 hover:bg-white/15" : "bg-[#eef4ff] hover:bg-[#eef4ff]")}><UserRound size={14} />{user.name?.split(" ")[0] ?? "Hồ sơ"}</Link>
-              <button onClick={() => logout()} className="rounded-full px-3 py-2 text-xs font-medium opacity-65 transition-opacity hover:opacity-100">Đăng xuất</button>
+              <Link href="/ho-so" className="flex min-h-11 items-center gap-2 rounded-full bg-muted px-3 text-xs font-semibold text-foreground transition-colors hover:bg-primary-light hover:text-primary"><UserRound size={14} />{user.name?.split(" ")[0] ?? "Hồ sơ"}</Link>
+              <button type="button" onClick={() => logout()} className="min-h-11 rounded-full px-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">Đăng xuất</button>
             </div>
           ) : (
             <>
-              <button onClick={() => startLogin()} className="px-3 py-2 text-xs font-semibold transition-colors hover:text-[#2563eb]">Đăng nhập</button>
-              <Button onClick={() => startLogin()} className="h-10 rounded-full bg-[#2563eb] px-5 text-xs font-bold text-white shadow-[0_10px_25px_rgba(37,99,235,.2)] hover:bg-[#1e3a8a]">Bắt đầu học</Button>
+              <button type="button" onClick={() => startLogin()} className="min-h-11 rounded-full px-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-primary">Đăng nhập</button>
+              <Button onClick={() => startLogin()} size="sm" className="rounded-full px-5">Bắt đầu học</Button>
             </>
           )}
         </div>
-        <button aria-label="Mở menu" onClick={() => setMenuOpen(value => !value)} className={cn("grid h-10 w-10 place-items-center rounded-xl lg:hidden", isDark ? "bg-white/10" : "bg-[#eef4ff]")}>{menuOpen ? <X size={18} /> : <Menu size={18} />}</button>
+
+        <button
+          type="button"
+          aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-navigation"
+          onClick={() => setMenuOpen(value => !value)}
+          className="grid size-11 place-items-center rounded-[var(--radius-md-token)] bg-primary-light text-primary transition-colors hover:bg-primary-light/75 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20 lg:hidden"
+        >
+          {menuOpen ? <X size={19} /> : <Menu size={19} />}
+        </button>
       </div>
-      {menuOpen && <div className={cn("absolute left-0 top-[76px] w-full border-b px-5 py-5 shadow-xl lg:hidden", isDark ? "border-white/10 bg-[#172554]" : "border-[#172554]/8 bg-[#fff7e6]") }>
+
+      {menuOpen ? <div id="mobile-navigation" className="absolute left-0 top-[76px] w-full border-b border-border bg-surface px-5 py-4 shadow-[var(--shadow-md)] lg:hidden">
         <div className="mx-auto flex max-w-md flex-col gap-1">
-          {links.map(link => <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className="rounded-xl px-4 py-3 text-sm font-medium hover:bg-black/5">{link.label}</Link>)}
-          <button type="button" onClick={toggleTheme} className="mt-3 flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium hover:bg-black/5"><span>{theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}</span>{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button>
-          <div className="mt-3 flex gap-2 px-2">{user ? <Button asChild className="w-full rounded-full bg-[#2563eb]"><Link href="/ho-so"><UserRound size={15} /> Hồ sơ học tập</Link></Button> : <Button className="w-full rounded-full bg-[#2563eb]" onClick={() => startLogin()}><Sparkles size={15} /> Đăng nhập để học</Button>}</div>
+          {links.map(link => <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center rounded-[var(--radius-md-token)] px-4 text-sm font-semibold text-foreground transition-colors hover:bg-primary-light hover:text-primary">{link.label}</Link>)}
+          <button type="button" onClick={toggleTheme} className="mt-2 flex min-h-11 w-full items-center justify-between rounded-[var(--radius-md-token)] px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"><span>{theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}</span>{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button>
+          <div className="mt-3 px-1">{user ? <Button asChild className="w-full"><Link href="/ho-so" onClick={() => setMenuOpen(false)}><UserRound size={15} /> Hồ sơ học tập</Link></Button> : <Button className="w-full" onClick={() => startLogin()}><Sparkles size={15} /> Đăng nhập để học</Button>}</div>
         </div>
-      </div>}
+      </div> : null}
     </header>
   );
 }

@@ -340,3 +340,8 @@
 - [x] Cố định header Studio khi cuộn, đồng thời để cột thao tác phải cuộn theo nội dung.
 - [x] Giữ ổn định sidebar Danh sách câu hỏi và chỉ cho phép cuộn nội bộ khi thao tác trong danh sách.
 - [x] Bổ sung kiểm thử và xác minh desktop/mobile cho hành vi cuộn Studio cập nhật.
+- [x] Đọc tài liệu thiết kế và lập inventory đầy đủ về page, component và stylesheet frontend hiện có.
+- [x] Chuẩn hóa design tokens, typography, spacing và semantic states theo tài liệu thiết kế.
+- [x] Refactor các component dùng chung theo state, accessibility và responsive mobile, không thay đổi backend/business logic.
+- [x] Áp dụng nâng cấp visual system cho các trang và luồng ưu tiên theo inventory.
+- [x] Chạy regression theo từng nhóm thay đổi, xác minh desktop/mobile và lập báo cáo bàn giao frontend.
