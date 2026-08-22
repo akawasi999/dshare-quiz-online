@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
+import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
 import { BookOpenCheck, CircleAlert, Clock3, Copy, FileQuestion, MoreVertical, PencilLine, Plus, Search, Sparkles, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -20,7 +21,7 @@ export default function MyQuizzes() {
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
-  const quizzes = trpc.creator.myQuizzes.useQuery();
+  const quizzes = trpc.creator.myQuizzes.useQuery(undefined, sharedDataQueryOptions);
   const utils = trpc.useUtils();
   const duplicate = trpc.creator.duplicateQuiz.useMutation({ onSuccess: result => { toast.success(`Đã sao chép ${result.title}.`); utils.creator.myQuizzes.invalidate(); }, onError: error => toast.error("Không thể sao chép Quiz", { description: error.message }) });
   const remove = trpc.creator.deleteQuiz.useMutation({ onSuccess: () => { toast.success("Đã xóa Quiz."); utils.creator.myQuizzes.invalidate(); }, onError: error => toast.error("Không thể xóa Quiz", { description: error.message }) });

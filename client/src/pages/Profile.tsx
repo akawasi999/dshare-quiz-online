@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import AccountLayout from "@/components/AccountLayout";
 import { progressPreview } from "@/data/demo";
 import { trpc } from "@/lib/trpc";
+import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
 import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { ArrowRight, BookOpenCheck, CalendarDays, ChartNoAxesCombined, CircleDollarSign, Clock3, Gift, LogIn, Target, Trophy } from "lucide-react";
@@ -11,7 +12,7 @@ import { toast } from "sonner";
 const preferenceLabels = [["studyReminders", "Nhắc học", "Gợi nhắc duy trì nhịp học"], ["resultUpdates", "Kết quả bài làm", "Điểm số và lời giải sau khi nộp"], ["platformUpdates", "Cập nhật nền tảng", "Tính năng và nội dung mới"]] as const;
 
 export default function Profile() {
-  const { user, loading } = useAuth(); const summary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user) }); const history = trpc.learner.history.useQuery(undefined, { enabled: Boolean(user) });
+  const { user, loading } = useAuth(); const summary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions }); const history = trpc.learner.history.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const updateProfile = trpc.learner.updateProfile.useMutation({ onSuccess: () => { summary.refetch(); toast.success("Đã cập nhật hồ sơ học tập."); }, onError: error => toast.error("Không thể lưu hồ sơ", { description: error.message }) });
   if (loading) return <ProfileShell><LoadingState label="Đang mở không gian học tập…" /></ProfileShell>;
   if (!user) return <ProfileShell><main className="container grid min-h-[calc(100vh-76px)] place-items-center py-12"><div className="max-w-md rounded-[var(--radius-xl-token)] border border-border bg-surface p-8 text-center shadow-[var(--shadow-md)]"><span className="mx-auto grid size-12 place-items-center rounded-[var(--radius-md-token)] bg-primary-light text-primary"><LogIn size={21} /></span><h1 className="mt-6 text-3xl font-bold tracking-[-.04em] text-foreground">Không gian học tập của bạn</h1><p className="mt-3 text-sm leading-6 text-text-secondary">Đăng nhập để lưu kết quả, theo dõi tiến độ và quản lý ví Point cá nhân.</p><Button onClick={() => startLogin()} className="mt-7 rounded-full">Đăng nhập để tiếp tục <ArrowRight size={15} /></Button></div></main></ProfileShell>;

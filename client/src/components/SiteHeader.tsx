@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { startLogin } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
+import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
 import { cn } from "@/lib/utils";
 import { BadgeAlert, Bell, BookOpen, ChevronDown, CircleHelp, Globe2, LayoutDashboard, LifeBuoy, LogOut, Megaphone, Menu, Moon, ShieldCheck, Sparkles, Sun, UserRound, WalletCards, X, type LucideIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
@@ -53,8 +54,8 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const { user, loading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const isDarkLogo = variant === "dark" || theme === "dark";
-  const publicTopics = trpc.catalog.topics.useQuery();
-  const accountSummary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), refetchOnWindowFocus: false, staleTime: 60_000 });
+  const publicTopics = trpc.catalog.topics.useQuery(undefined, sharedDataQueryOptions);
+  const accountSummary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).filter(topic => topic.parentId === null).map(topic => ({ label: topic.name, href: `/kham-pha?topic=${encodeURIComponent(topic.slug)}`, depth: 0 }));
   const navigationItems: NavItem[] = navigation.map(item => item.kind === "topics" ? { ...item, items: topicNavigationItems } : item);
   const isAdmin = user?.role === "admin";

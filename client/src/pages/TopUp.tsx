@@ -3,6 +3,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
+import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
 import { ArrowLeft, Check, CircleDollarSign, Clock3, Crown, Loader2, LockKeyhole, ShieldCheck, WalletCards } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
@@ -13,8 +14,8 @@ const formatVnd = (value: number) => new Intl.NumberFormat("vi-VN").format(value
 export default function TopUp() {
   const { user, loading } = useAuth();
   const [location] = useLocation();
-  const summary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user) });
-  const offers = trpc.payment.offers.useQuery(undefined, { enabled: Boolean(user) });
+  const summary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
+  const offers = trpc.payment.offers.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const createLink = trpc.payment.createLink.useMutation({
     onSuccess: result => window.location.assign(result.checkoutUrl),
     onError: error => toast.error(error.message || "Không thể tạo liên kết PayOS."),

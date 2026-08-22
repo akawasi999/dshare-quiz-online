@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import QuizSystemQuestionEditor, { type QuizSystemQuestion } from "@/components/QuizSystemQuestionEditor";
 import { trpc } from "@/lib/trpc";
+import { announceSharedDataChange } from "@/lib/sharedDataSync";
 import { Archive, CalendarClock, ChevronLeft, ChevronRight, CircleX, Eye, FileEdit, Layers3, Loader2, Lock, Plus, Search, ShieldCheck, UserRound, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -71,6 +72,7 @@ export default function QuizSystemPanel() {
     utils.admin.learning.quizzes.list.invalidate();
     utils.admin.learning.quizzes.detail.invalidate();
     utils.admin.learning.topics.tree.invalidate();
+    announceSharedDataChange("learning");
   };
   const createQuiz = trpc.admin.learning.quizzes.create.useMutation({
     onSuccess: result => {
@@ -105,7 +107,7 @@ export default function QuizSystemPanel() {
   const archive = trpc.admin.learning.quizzes.archive.useMutation({ onSuccess: () => { toast.success("Đã archive Quiz, lịch sử làm bài được bảo toàn."); refresh(); setAction(null); }, onError: error => toast.error("Không thể archive Quiz", { description: error.message }) });
   const changeAuthor = trpc.admin.learning.quizzes.changeAuthor.useMutation({ onSuccess: result => { toast.success("Đã đổi tác giả Quiz.", { description: result.author.name ?? result.author.email ?? "Tác giả mới" }); refresh(); setAction(null); }, onError: error => toast.error("Không thể đổi tác giả", { description: error.message }) });
   const changePublishDate = trpc.admin.learning.quizzes.changePublishDate.useMutation({ onSuccess: () => { toast.success("Đã cập nhật ngày đăng Quiz."); refresh(); setAction(null); }, onError: error => toast.error("Không thể đổi ngày đăng", { description: error.message }) });
-  const reorderQuestions = trpc.admin.learning.questions.reorder.useMutation({ onSuccess: () => { toast.success("Đã cập nhật thứ tự câu hỏi."); if (selectedQuizId) utils.admin.learning.quizzes.detail.invalidate({ quizId: selectedQuizId }); }, onError: error => toast.error("Không thể sắp xếp câu hỏi", { description: error.message }) });
+  const reorderQuestions = trpc.admin.learning.questions.reorder.useMutation({ onSuccess: () => { toast.success("Đã cập nhật thứ tự câu hỏi."); if (selectedQuizId) utils.admin.learning.quizzes.detail.invalidate({ quizId: selectedQuizId }); announceSharedDataChange("learning"); }, onError: error => toast.error("Không thể sắp xếp câu hỏi", { description: error.message }) });
 
   useEffect(() => {
     const params = new URLSearchParams();

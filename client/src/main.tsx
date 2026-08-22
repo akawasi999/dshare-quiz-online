@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import IconTooltipEnhancer from "./components/IconTooltipEnhancer";
+import SharedDataSyncBridge from "./components/SharedDataSyncBridge";
 import { startLogin } from "./const";
 import "./index.css";
 
@@ -77,6 +78,7 @@ createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
       <IconTooltipEnhancer />
+      <SharedDataSyncBridge />
       <App />
     </QueryClientProvider>
   </trpc.Provider>

@@ -157,3 +157,16 @@ Regression bổ sung cho lối tắt Dashboard, phần phản hồi trên **Quiz
 Menu **Khám phá** trong SiteHeader nay gọi contract công khai `catalog.topics`, chỉ nhận các Chủ đề active chưa soft-delete. Backend sắp xếp lại dữ liệu theo cây cha–con và frontend hiển thị đầy đủ danh sách trong dropdown có cuộn nội bộ, gồm thụt cấp cho Chủ đề con; mobile drawer dùng cùng nguồn dữ liệu. Các liên kết giữ URL theo slug Chủ đề.
 
 Vùng tương tác dropdown được mở rộng bằng vùng đệm 8px và menu được neo vào vùng đệm này. Khi con trỏ rời vùng, menu chỉ đóng sau 180ms và hủy lịch đóng ngay khi người dùng quay lại; nhờ đó khoảng di chuyển từ trigger xuống menu không còn làm dropdown biến mất sớm. Hồi quy mới xác nhận Chủ đề được render từ dữ liệu query và menu tồn tại xuyên suốt thời gian đệm hover. Toàn bộ suite đạt **76 tệp / 191 ca**, TypeScript sạch và build production hoàn tất trong **20,85 giây**; header desktop/mobile đã được xác minh.
+
+## Đồng bộ dữ liệu giữa người dùng và CPanel
+
+Dữ liệu vẫn dùng chung nguồn MySQL/TiDB hiện hữu; đợt này bổ sung lớp đồng bộ cache ở client để thay đổi từ CPanel xuất hiện nhất quán trên các bề mặt người dùng. `SharedDataSyncBridge` làm mới các contract hồ sơ, quota, ví Point, lịch sử, Quiz của tôi, catalog Quiz/Chủ đề/chi tiết, gói thành viên và offer thanh toán. Bridge nhận tín hiệu tức thì qua `CustomEvent` và `localStorage` giữa các tab cùng trình duyệt, đồng thời thực hiện reconciliation mỗi 20 giây và khi người dùng quay lại tab.
+
+| Thao tác CPanel | Dữ liệu người dùng được đồng bộ |
+|---|---|
+| Đổi gói, khóa/mở khóa, điều chỉnh Point, cập nhật hàng loạt | Hồ sơ, số dư Ví Point, quota, lịch sử và các quyền được kiểm tra lại. |
+| Đổi nhóm, gói hoặc permission | Hồ sơ/quota được làm mới; quyền server-side vẫn được kiểm tra tại mỗi procedure nhạy cảm. |
+| Tạo/sửa/archive Chủ đề; publish/lock/reject Quiz | Khám phá, header Chủ đề, catalog, Quiz của tôi và chi tiết Quiz đang mở được invalidation. |
+| Sửa thứ tự hoặc nội dung câu hỏi trong Quiz System | Catalog và chi tiết Quiz Runner được làm mới để tránh tiếp tục dùng cache cũ. |
+
+Regression `sharedDataSync.component.test.tsx` bảo vệ contract invalidation của bridge. Toàn bộ suite đạt **78 tệp / 194 ca**, TypeScript sạch và build production hoàn tất trong **20,72 giây**; Profile, Ví Point và Thư viện Quiz đã được xác minh ở desktop.

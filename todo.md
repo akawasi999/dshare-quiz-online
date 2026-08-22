@@ -442,3 +442,7 @@
 - [x] Hiển thị số dư thực trong mục Ví Point của dropdown tài khoản.
 - [x] Tinh chỉnh fade-in mượt khi mở dropdown tài khoản.
 - [x] Kiểm thử dữ liệu, interaction, responsive và lưu checkpoint cho menu tài khoản.
+- [x] Kiểm kê và chuẩn hóa contract dữ liệu dùng chung giữa người dùng và CPanel.
+- [x] Đồng bộ dữ liệu hồ sơ, gói/quyền, Point/XP và trạng thái Quiz giữa hai khu vực.
+- [x] Làm mới dữ liệu giao diện sau thay đổi quản trị hoặc người dùng.
+- [x] Kiểm thử các luồng đồng bộ và lưu checkpoint bàn giao.

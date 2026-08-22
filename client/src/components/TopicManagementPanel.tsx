@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
+import { announceSharedDataChange } from "@/lib/sharedDataSync";
 import { Archive, ChevronDown, ChevronRight, CircleDotDashed, Edit3, FolderPlus, FolderTree, Loader2, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -33,11 +34,11 @@ export default function TopicManagementPanel() {
   const [pendingDelete, setPendingDelete] = useState<TopicRow | null>(null);
   const [deleteReason, setDeleteReason] = useState("");
   const topics = trpc.admin.learning.topics.tree.useQuery({ status: statusFilter });
-  const createTopic = trpc.admin.learning.topics.create.useMutation({ onSuccess: result => { toast.success(`Đã tạo Chủ đề “${result.name}”.`); utils.admin.learning.topics.tree.invalidate(); setDialog(null); }, onError: error => toast.error("Không thể tạo Chủ đề", { description: error.message }) });
-  const updateTopic = trpc.admin.learning.topics.update.useMutation({ onSuccess: () => { toast.success("Đã cập nhật Chủ đề."); utils.admin.learning.topics.tree.invalidate(); setDialog(null); }, onError: error => toast.error("Không thể cập nhật Chủ đề", { description: error.message }) });
-  const archiveTopic = trpc.admin.learning.topics.archive.useMutation({ onSuccess: () => { toast.success("Đã archive Chủ đề."); utils.admin.learning.topics.tree.invalidate(); }, onError: error => toast.error("Không thể archive Chủ đề", { description: error.message }) });
-  const removeTopic = trpc.admin.learning.topics.remove.useMutation({ onSuccess: () => { toast.success("Đã chuyển Chủ đề vào lưu trữ mềm."); utils.admin.learning.topics.tree.invalidate(); setPendingDelete(null); setDeleteReason(""); }, onError: error => toast.error("Không thể xóa Chủ đề", { description: error.message }) });
-  const bulkUpdateQuizPolicies = trpc.admin.learning.topics.bulkUpdateQuizPolicies.useMutation({ onSuccess: result => { toast.success(`Đã cập nhật chính sách Quiz cho ${result.affected} Chủ đề.`); utils.admin.learning.topics.tree.invalidate(); setSelectedTopics(new Set()); }, onError: error => toast.error("Không thể cập nhật hàng loạt", { description: error.message }) });
+  const createTopic = trpc.admin.learning.topics.create.useMutation({ onSuccess: result => { toast.success(`Đã tạo Chủ đề “${result.name}”.`); utils.admin.learning.topics.tree.invalidate(); announceSharedDataChange("catalog"); setDialog(null); }, onError: error => toast.error("Không thể tạo Chủ đề", { description: error.message }) });
+  const updateTopic = trpc.admin.learning.topics.update.useMutation({ onSuccess: () => { toast.success("Đã cập nhật Chủ đề."); utils.admin.learning.topics.tree.invalidate(); announceSharedDataChange("catalog"); setDialog(null); }, onError: error => toast.error("Không thể cập nhật Chủ đề", { description: error.message }) });
+  const archiveTopic = trpc.admin.learning.topics.archive.useMutation({ onSuccess: () => { toast.success("Đã archive Chủ đề."); utils.admin.learning.topics.tree.invalidate(); announceSharedDataChange("catalog"); }, onError: error => toast.error("Không thể archive Chủ đề", { description: error.message }) });
+  const removeTopic = trpc.admin.learning.topics.remove.useMutation({ onSuccess: () => { toast.success("Đã chuyển Chủ đề vào lưu trữ mềm."); utils.admin.learning.topics.tree.invalidate(); announceSharedDataChange("catalog"); setPendingDelete(null); setDeleteReason(""); }, onError: error => toast.error("Không thể xóa Chủ đề", { description: error.message }) });
+  const bulkUpdateQuizPolicies = trpc.admin.learning.topics.bulkUpdateQuizPolicies.useMutation({ onSuccess: result => { toast.success(`Đã cập nhật chính sách Quiz cho ${result.affected} Chủ đề.`); utils.admin.learning.topics.tree.invalidate(); announceSharedDataChange("catalog"); setSelectedTopics(new Set()); }, onError: error => toast.error("Không thể cập nhật hàng loạt", { description: error.message }) });
 
   const proposedUrl = topicSlug(form.slug || form.name);
   const urlAvailability = trpc.admin.learning.topics.checkUrl.useQuery({ url: proposedUrl, excludeTopicId: dialog?.mode === "edit" ? dialog.topic?.id : undefined }, { enabled: Boolean(dialog && proposedUrl) });

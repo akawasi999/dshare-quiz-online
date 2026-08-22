@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
 import type { ShowcaseQuiz } from "@/data/demo";
 import { trpc } from "@/lib/trpc";
+import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
 import { cn } from "@/lib/utils";
 import { withTrendingStatus } from "@shared/quizTrending";
 import { ArrowLeft, ArrowRight, BookOpen, Code2, Filter, GraduationCap, Languages, Search, Sparkles, Target } from "lucide-react";
@@ -32,10 +33,10 @@ function loadLibraryPreferences() {
 export default function QuizLibrary() {
   const savedPreferences = loadLibraryPreferences();
   const { user } = useAuth();
-  const learner = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), retry: false });
-  const quota = trpc.learner.quota?.useQuery(undefined, { enabled: Boolean(user), retry: false }) ?? { data: undefined };
-  const categories = trpc.catalog.categories.useQuery();
-  const catalog = trpc.catalog.list.useQuery();
+  const learner = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), retry: false, ...sharedDataQueryOptions });
+  const quota = trpc.learner.quota?.useQuery(undefined, { enabled: Boolean(user), retry: false, ...sharedDataQueryOptions }) ?? { data: undefined };
+  const categories = trpc.catalog.categories.useQuery(undefined, sharedDataQueryOptions);
+  const catalog = trpc.catalog.list.useQuery(undefined, sharedDataQueryOptions);
   const [category, setCategory] = useState(savedPreferences.category);
   const [difficulty, setDifficulty] = useState(savedPreferences.difficulty);
   const [visibleCount, setVisibleCount] = useState(6);

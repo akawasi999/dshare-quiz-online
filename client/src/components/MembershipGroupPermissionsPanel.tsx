@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
+import { announceSharedDataChange } from "@/lib/sharedDataSync";
 import { BadgeCheck, CheckCircle2, ChevronRight, CircleDollarSign, Crown, Edit3, Eye, Filter, Layers3, ListFilter, LockKeyhole, Mail, Plus, Save, Search, Sparkles, Trash2, UserPlus, UsersRound, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -60,7 +61,7 @@ export default function MembershipGroupPermissionsPanel() {
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [testRecipient, setTestRecipient] = useState("");
 
-  const refresh = async () => { await Promise.all([utils.admin.membershipManagement.invalidate(), utils.admin.users.invalidate()]); };
+  const refresh = async () => { await Promise.all([utils.admin.membershipManagement.invalidate(), utils.admin.users.invalidate()]); announceSharedDataChange("account"); };
   const planSave = trpc.admin.saveSubscriptionPlan.useMutation();
   const planDelete = trpc.admin.deleteSubscriptionPlan.useMutation({ onSuccess: async () => { await refresh(); toast.success("Đã xóa gói đăng ký."); }, onError: error => toast.error("Không thể xóa gói", { description: error.message }) });
   const groupSave = trpc.admin.saveUserGroup.useMutation();

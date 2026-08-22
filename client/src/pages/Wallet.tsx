@@ -4,13 +4,14 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { getWalletTransactionMeta, type WalletTransactionKind } from "@/lib/walletUtils";
 import { trpc } from "@/lib/trpc";
+import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
 import { ArrowRight, CircleDollarSign, Clock3, Gift, History, Loader2, ReceiptText, Sparkles, WalletCards } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Wallet() {
   const { user, loading } = useAuth();
-  const summary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user) });
-  const ledger = trpc.learner.wallet.useQuery(undefined, { enabled: Boolean(user) });
+  const summary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
+  const ledger = trpc.learner.wallet.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   if (loading) return <div role="status" aria-live="polite" className="grid min-h-screen place-items-center bg-[#eef4ff]"><Loader2 aria-hidden="true" className="animate-spin text-[#2563eb]" /><span className="sr-only">Đang mở ví Point…</span></div>;
   if (!user) return <div className="min-h-screen bg-[#eef4ff]"><SiteHeader /><main className="container grid min-h-[calc(100vh-76px)] place-items-center py-12"><div className="max-w-md rounded-[28px] bg-white p-8 text-center shadow-sm"><WalletCards className="mx-auto text-[#2563eb]" size={30} /><h1 className="mt-5 font-serif text-3xl font-semibold text-[#172554]">Ví Point của bạn</h1><p className="mt-3 text-sm leading-6 text-[#617786]">Đăng nhập để theo dõi số dư, phần thưởng và chi phí các lượt kiểm tra.</p><Button onClick={() => startLogin()} className="mt-7 rounded-full bg-[#2563eb]">Đăng nhập để xem ví <ArrowRight size={15} /></Button></div></main></div>;
   const profile = summary.data?.profile;
