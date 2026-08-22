@@ -379,3 +379,6 @@
 - [x] Phân tích navigation tham chiếu và đối chiếu SiteHeader hiện có.
 - [x] Thiết kế lại navigation desktop với nhóm menu, dropdown, CTA, đăng nhập và chọn ngôn ngữ.
 - [x] Kiểm thử responsive, accessibility và cập nhật bàn giao cho navigation mới.
+- [x] Rà soát nhóm chủ đề, dropdown hỗ trợ và typography Bảng giá trước khi tinh chỉnh.
+- [x] Chuyển Giới thiệu/Blog thành liên kết trực tiếp; thay dropdown Khám phá bằng chủ đề và Hỗ trợ theo mẫu.
+- [x] Đồng bộ typography Bảng giá, thêm hover/dropdown motion và hoàn tất hồi quy responsive.

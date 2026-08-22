@@ -96,3 +96,9 @@ Regression cuối đạt **71 tệp / 180 ca kiểm thử**, TypeScript sạch v
 `SiteHeader` đã chuyển sang bố cục navigation công khai có năm nhóm: **Giới thiệu về chúng tôi**, **Khám phá**, **Bảng giá**, **Blog** và **Hỗ trợ khách hàng**. Các nhóm có menu thả xuống chứa mô tả ngắn, tương thích chuột, bàn phím và focus state; CTA “Bắt đầu”, đăng nhập, đổi giao diện và chỉ báo ngôn ngữ được đặt ở phía phải. Khi đã đăng nhập, CTA được thay bằng lối vào hồ sơ và đăng xuất để giữ luồng xác thực hiện hành.
 
 Trên mobile, menu được tổ chức thành drawer nhóm rõ ràng, các lối vào có chiều cao chạm phù hợp và không tràn ngang. Regression cuối tiếp tục đạt **71 tệp / 180 ca kiểm thử**, TypeScript sạch và build production hoàn tất; ảnh kiểm tra desktop 1440px và mobile 375px xác nhận bố cục header mới.
+
+## Tinh chỉnh cấu trúc menu và motion
+
+Theo phản hồi mới nhất, **Giới thiệu về chúng tôi** và **Blog** là liên kết trực tiếp; chỉ **Khám phá** và **Hỗ trợ khách hàng** có dropdown. Khám phá hiện liệt kê các chủ đề Công nghệ thông tin, Tin học văn phòng và Lập trình. Hỗ trợ mô phỏng đúng nhịp thông tin của mẫu với Câu hỏi thường gặp, Hướng dẫn sử dụng, Tin cập nhật và Thông báo, mỗi mục có biểu tượng màu riêng.
+
+Dropdown mở bằng hover, focus hoặc click; phần bảng được chuyển bằng opacity/transform 200ms, icon mũi tên xoay theo trạng thái và từng mục dịch nhẹ khi hover. Các motion được bọc `motion-safe` để tôn trọng reduced motion. Trang Bảng giá đã bỏ font serif tại hero, tên gói và giá để đồng bộ Inter/font-sans với navigation. Regression cuối đạt **71 tệp / 180 ca kiểm thử**, TypeScript sạch, build production hoàn tất và desktop/mobile đã được xác minh.
