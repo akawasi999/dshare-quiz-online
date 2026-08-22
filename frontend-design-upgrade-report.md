@@ -122,3 +122,17 @@ Hồi quy `siteHeaderNavigation.component.test.tsx` nay kiểm tra utility chung
 Ảnh tham chiếu 646 × 70px xác nhận năm nhãn navigation và hai chevron phải chia sẻ một baseline thị giác. `SiteHeader` nay bọc mọi liên kết, trigger dropdown, nhãn và chevron desktop trong một khung flex cao 40px: `.site-header-nav-item` căn giữa theo trục dọc, `.site-header-nav-label` duy trì line-height 20px, còn `.site-header-nav-chevron` không co và tự căn giữa. Cách này loại bỏ line-box độc lập khiến mục **Giới thiệu về chúng tôi** có thể thấp hơn các mục còn lại, đồng thời không thay đổi nội dung, URL hoặc hành vi dropdown.
 
 Hồi quy navigation và TypeScript đều đạt. Build production hoàn tất trong **21,17 giây**; ảnh desktop 1440px xác nhận các nhãn cùng chevron đã nằm trên một đường căn chỉnh ngang.
+
+## CPanel v2.0 — Triển khai đặc tả tổng hợp
+
+Đợt triển khai này chuyển CPanel sang mô hình Learning rút gọn còn **Chủ đề** và **Quiz System**. Các URL CPanel cũ dành cho Nội dung, Ngân hàng câu hỏi, Tạo đề ngẫu nhiên và Import/Export được redirect an toàn; dữ liệu legacy không bị xóa. `topics` là taxonomy cây cha–con có materialized path, chống vòng lặp, trạng thái active/archived, soft-delete và audit. Quiz được mở rộng với Topic taxonomy, tác giả, version, lifecycle Draft/Published/Locked/Archived, thời điểm publish/lock và soft-delete tương thích dữ liệu cũ.
+
+| Phân hệ | Kết quả chính |
+|---|---|
+| Chủ đề | Workspace cây phân cấp, CRUD, thay đổi cha, kiểm tra cycle, audit và trạng thái rỗng rõ ràng |
+| Quiz System | Danh sách 20 dòng/trang, URL state, search/filter/sort, create Draft, Quiz 360°, workflow publish/lock/archive, đổi tác giả/ngày đăng, audit và backend bulk status |
+| Câu hỏi trong Quiz | Câu hỏi được biên soạn ngay trong Quiz; hỗ trợ single/multiple, Đúng–Sai, nhận định Có/Không, điền từ, ghép nối, hình ảnh và tự luận; validation ở server |
+| User 360 | Nhóm hiệu lực, gói liên kết và permission thực tế hiển thị trong Access & Security, song song với Quiz history, Point, thanh toán và activity |
+| XP & Gamification | Schema/ledger XP độc lập Point, Level editor, Rule engine tạo Draft và timeline giao dịch; không suy diễn XP từ Point khi chưa có sự kiện thực |
+
+Migration `0029`, `0030` và `0031` đã được kiểm tra trước khi áp dụng; chúng chỉ mở rộng schema bằng Topic/lifecycle, quan hệ câu hỏi với Topic và ba bảng XP (`xpLevels`, `xpRules`, `xpTransactions`), không có thao tác xóa dữ liệu. Hồi quy đạt **73 tệp / 185 ca**, TypeScript sạch và build production thành công trong **21,34 giây**. Desktop cho XP cùng mobile cho Chủ đề và Quiz System đã được xác minh; log console mới nhất không còn tái hiện lỗi runtime validation trước đó.

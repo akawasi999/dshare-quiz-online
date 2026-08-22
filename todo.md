@@ -393,3 +393,14 @@
 - [x] Kiểm thử, xác minh trực quan và cập nhật bàn giao cho typography header hợp nhất.
 - [x] Đối chiếu ảnh tham chiếu và căn thẳng baseline của toàn bộ nhãn điều hướng công khai.
 - [x] Kiểm thử desktop/mobile, hồi quy và cập nhật bàn giao cho căn chỉnh navigation.
+- [x] Đọc toàn bộ đặc tả CPanel v2.0 và lập ma trận chênh lệch giữa yêu cầu mới với mã nguồn, schema và route hiện có.
+- [x] Chuẩn hóa sidebar/route CPanel: Learning chỉ gồm Chủ đề và Quiz System; gỡ lối vào CPanel cho Content, Question Bank, Random Generator và Import/Export.
+- [ ] Hoàn thiện shell CPanel gồm notification center, account menu, trạng thái kết nối, sidebar preference và command palette theo quyền.
+- [x] Xây dựng quản trị Chủ đề phân cấp có CRUD, thứ tự, trạng thái active/archived, kiểm tra liên kết, soft-delete và audit.
+- [x] Xây dựng Quiz System có danh sách 20 dòng/trang, URL state, tìm kiếm/lọc/sắp xếp, quản trị câu hỏi nội bộ, publish/lock/archive, bulk backend và audit thay đổi.
+- [x] Nâng cấp User 360, nhóm người dùng, ma trận quyền, bulk membership, quyền hiệu lực và audit thay đổi quyền.
+- [x] Hoàn thiện Point ledger, XP/gamification: schema độc lập, XP ledger, Level editor, Rule engine Draft và giới hạn rõ dữ liệu chưa có domain thực.
+- [x] Hoàn thiện moderation, analytics, export, drill-down, activity trail và các trạng thái vận hành bằng dữ liệu thực; nêu rõ domain chưa khởi tạo thay vì mô phỏng.
+- [x] Hoàn thiện Live Monitoring, Activity Logs, AI Assistant, Settings và Appearance theo đặc tả, giữ rõ giới hạn telemetry và dữ liệu thật.
+- [x] Bổ sung migration, API contract, permission, transaction, validation, concurrency và audit backend cho Topic, Quiz System, câu hỏi nội bộ và XP.
+- [x] Kiểm thử regression, responsive, accessibility, migration và cập nhật báo cáo bàn giao cho toàn bộ CPanel v2.0.

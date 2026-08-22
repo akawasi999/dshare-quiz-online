@@ -42,13 +42,16 @@ function Router() {
     <Route path="/quiz-cua-toi" component={MyQuizzes} />
     <Route path="/tro-ly-ai">{() => <LearnerAccountPage Page={AIStudyAssistant} />}</Route>
     <Route path="/quan-tri" component={Admin} />
+    <Route path="/quan-tri/chu-de" component={Admin} />
+    <Route path="/quan-tri/quiz-system" component={Admin} />
     <Route path="/quan-tri/noi-dung" component={Admin} />
-    <Route path="/quan-tri/tao-de-ngau-nhien" component={Admin} />
     <Route path="/quan-tri/cau-hoi" component={Admin} />
+    <Route path="/quan-tri/tao-de-ngau-nhien" component={Admin} />
     <Route path="/quan-tri/import-xuat" component={Admin} />
     <Route path="/quan-tri/nguoi-dung" component={Admin} />
     <Route path="/quan-tri/nhom-nguoi-dung" component={Admin} />
     <Route path="/quan-tri/point" component={Admin} />
+    <Route path="/quan-tri/xp" component={Admin} />
     <Route path="/quan-tri/bao-cao" component={Admin} />
     <Route path="/quan-tri/live-monitoring" component={Admin} />
     <Route path="/quan-tri/bao-loi" component={Admin} />
@@ -57,6 +60,8 @@ function Router() {
     <Route path="/quan-tri/ai-assistant" component={Admin} />
     <Route path="/admin" component={Admin} />
     <Route path="/admin/dashboard" component={Admin} />
+    <Route path="/admin/learning/topics" component={Admin} />
+    <Route path="/admin/learning/quizzes" component={Admin} />
     <Route path="/admin/learning/content" component={Admin} />
     <Route path="/admin/learning/questions" component={Admin} />
     <Route path="/admin/learning/random-generator" component={Admin} />

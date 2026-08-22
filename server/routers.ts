@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   aiAssistantConversations,
@@ -31,6 +31,9 @@ import {
   userGroups,
   users,
   walletTransactions,
+  xpLevels,
+  xpRules,
+  xpTransactions,
 } from "../drizzle/schema";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -73,6 +76,7 @@ import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerat
 import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse, questionEnhancementInputSchema, quizStudioChatInputSchema } from "./quizStudioChat";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
 import { importManualQuizFile, ocrPdfWithVision } from "./manualQuizImport";
+import { cpanelLearningRouter } from "./cpanelLearningRouter";
 import { extractRemoteQuizSource } from "./remoteQuizExtraction";
 import { transcribeAudio } from "./_core/voiceTranscription";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
@@ -679,10 +683,12 @@ export const appRouter = router({
       await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
       await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "sao chép Quiz");
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
+      const legacyLessonId = source.quiz.lessonId;
+      if (!legacyLessonId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Quiz thuộc mô hình Chủ đề mới không thể sao chép bằng luồng legacy." });
       const title = `${source.quiz.title.slice(0, 200)} (Bản sao)`;
-      const copy = await source.db.insert(quizzes).values({ lessonId: source.quiz.lessonId, creatorUserId: ctx.user.id, title, slug: `${source.quiz.slug}-copy-${Date.now().toString(36)}`.slice(0, 240), summary: source.quiz.summary, coverImageUrl: source.quiz.coverImageUrl, mode: source.quiz.mode, difficulty: source.quiz.difficulty, accessTier: source.quiz.accessTier, durationSeconds: source.quiz.durationSeconds, passingScore: source.quiz.passingScore, entryPointCost: source.quiz.entryPointCost, completionReward: source.quiz.completionReward, questionCount: source.questions.length, randomizeQuestions: source.quiz.randomizeQuestions, randomizeOptions: source.quiz.randomizeOptions, creatorSettings: source.quiz.creatorSettings, isPublished: false });
+      const copy = await source.db.insert(quizzes).values({ lessonId: legacyLessonId, creatorUserId: ctx.user.id, title, slug: `${source.quiz.slug}-copy-${Date.now().toString(36)}`.slice(0, 240), summary: source.quiz.summary, coverImageUrl: source.quiz.coverImageUrl, mode: source.quiz.mode, difficulty: source.quiz.difficulty, accessTier: source.quiz.accessTier, durationSeconds: source.quiz.durationSeconds, passingScore: source.quiz.passingScore, entryPointCost: source.quiz.entryPointCost, completionReward: source.quiz.completionReward, questionCount: source.questions.length, randomizeQuestions: source.quiz.randomizeQuestions, randomizeOptions: source.quiz.randomizeOptions, creatorSettings: source.quiz.creatorSettings, isPublished: false });
       const quizId = Number(copy[0].insertId);
-      for (let index = 0; index < source.questions.length; index += 1) { const item = source.questions[index]!; const copiedQuestion = await source.db.insert(questions).values({ lessonId: source.quiz.lessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(copiedQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option: any, optionIndex: number) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: item.points }); }
+      for (let index = 0; index < source.questions.length; index += 1) { const item = source.questions[index]!; const copiedQuestion = await source.db.insert(questions).values({ lessonId: legacyLessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(copiedQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option: any, optionIndex: number) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: item.points }); }
       return { quizId, title };
     }),
     deleteQuiz: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
@@ -737,6 +743,7 @@ export const appRouter = router({
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       for (const item of input.questions) { const error = validateQuestionConfiguration({ type: item.type, options: item.options, answerConfig: item.answerConfig, imageUrl: item.imageUrl ?? null }); if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` }); }
       const lessonId = input.lessonId ?? source.quiz.lessonId;
+      if (!lessonId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Quiz thuộc mô hình Chủ đề mới cần được chỉnh sửa trong Quiz System." });
       await removeOwnedQuizQuestions(source.db, source.quiz.id, source.questions);
       await source.db.update(quizzes).set({ lessonId, title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl, durationSeconds: input.settings.durationMinutes * 60, questionCount: input.questions.length, randomizeQuestions: input.settings.shuffleQuestions, randomizeOptions: input.settings.shuffleAnswers, visibility: input.settings.visibility, creatorSettings: input.settings, isPublished: input.isPublished }).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
       for (let index = 0; index < input.questions.length; index += 1) { const item = input.questions[index]!; const createdQuestion = await source.db.insert(questions).values({ lessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(createdQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option, optionIndex) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId: source.quiz.id, questionId, sortOrder: index, points: item.points }); }
@@ -922,6 +929,7 @@ export const appRouter = router({
     save: adminProcedure.input(z.object({ primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), successColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), attentionColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), pageColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), surfaceColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), questionTabContentWidth: z.number().int().min(760).max(1440), settingsTabContentWidth: z.number().int().min(760).max(1440) })).mutation(async ({ input }) => { const db = await getDb(); if (!db) throw new Error("Database unavailable"); const existing = (await db.select().from(brandSettings).limit(1))[0]; if (existing) await db.update(brandSettings).set(input).where(eq(brandSettings.id, existing.id)); else await db.insert(brandSettings).values(input); return input; }),
   }),
   admin: router({
+    learning: cpanelLearningRouter,
     emailDeliverySettings: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cấu hình email." });
@@ -1203,16 +1211,20 @@ export const appRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập người dùng." });
       const account = (await db.select({ user: users, profile: learnerProfiles }).from(users).leftJoin(learnerProfiles, eq(users.id, learnerProfiles.userId)).where(eq(users.id, input.userId)).limit(1))[0];
       if (!account) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy người dùng." });
-      const [activity, recentAttempts, recentTransactions, paymentOrders, emailDeliveries] = await Promise.all([
+      const [activity, recentAttempts, recentTransactions, paymentOrders, emailDeliveries, memberships] = await Promise.all([
         db.select().from(auditLogs).where(and(eq(auditLogs.entityType, "user"), eq(auditLogs.entityId, input.userId))).orderBy(desc(auditLogs.createdAt)).limit(12),
         db.select({ attempt: attempts, quizTitle: quizzes.title }).from(attempts).leftJoin(quizzes, eq(attempts.quizId, quizzes.id)).where(eq(attempts.userId, input.userId)).orderBy(desc(attempts.startedAt)).limit(8),
         db.select().from(walletTransactions).where(eq(walletTransactions.userId, input.userId)).orderBy(desc(walletTransactions.createdAt)).limit(8),
         db.select().from(paymentRecords).where(eq(paymentRecords.userId, input.userId)).orderBy(desc(paymentRecords.createdAt)).limit(12),
         db.select().from(paymentEmailDeliveries).orderBy(desc(paymentEmailDeliveries.createdAt)).limit(60),
+        db.select({ membership: userGroupMembers, group: userGroups, plan: subscriptionPlans }).from(userGroupMembers).innerJoin(userGroups, eq(userGroupMembers.groupId, userGroups.id)).leftJoin(subscriptionPlans, eq(userGroups.planId, subscriptionPlans.id)).where(eq(userGroupMembers.userId, input.userId)).limit(1),
       ]);
+      const membership = memberships[0] ?? null;
+      const permissionRows = membership ? await db.select().from(userGroupPermissions).where(eq(userGroupPermissions.groupId, membership.group.id)) : [];
+      const effectivePermissions = permissionRows.map(permission => ({ permissionKey: permission.permissionKey, isAllowed: permission.isAllowed }));
       const emailsByPayment = new Map<number, typeof emailDeliveries>();
       emailDeliveries.forEach(delivery => { if (delivery.paymentRecordId) emailsByPayment.set(delivery.paymentRecordId, [...(emailsByPayment.get(delivery.paymentRecordId) ?? []), delivery]); });
-      return { ...account, activity, recentAttempts, recentTransactions, paymentOrders: paymentOrders.map(order => ({ order, emailDeliveries: emailsByPayment.get(order.id) ?? [] })) };
+      return { ...account, activity, recentAttempts, recentTransactions, membership, effectivePermissions, paymentOrders: paymentOrders.map(order => ({ order, emailDeliveries: emailsByPayment.get(order.id) ?? [] })) };
     }),
     bulkUpdateUsers: adminProcedure.input(z.object({ userIds: z.array(z.number().int().positive()).min(1).max(50), tier: z.enum(["basic", "pro", "premium"]).optional(), isBanned: z.boolean().optional() }).refine(input => input.tier !== undefined || input.isBanned !== undefined, { message: "Cần chọn thay đổi hạng hoặc trạng thái." }))
       .mutation(async ({ ctx, input }) => {
@@ -1402,6 +1414,49 @@ export const appRouter = router({
           .where(and(input?.type ? eq(walletTransactions.type, input.type) : undefined, input?.search ? sql`(lower(coalesce(${users.name}, '')) like ${`%${input.search.toLowerCase()}%`} or lower(coalesce(${users.email}, '')) like ${`%${input.search.toLowerCase()}%`})` : undefined))
           .orderBy(desc(walletTransactions.createdAt)).limit(150);
       }),
+    xp: router({
+      overview: adminProcedure.query(async () => {
+        const db = await getDb();
+        if (!db) return { totalIssued: 0, activeLearners: 0, levels: [], rules: [], recent: [] };
+        const [totals, activeLearners, levels, rules, recent] = await Promise.all([
+          db.select({ total: sql<number>`coalesce(sum(${xpTransactions.amount}), 0)` }).from(xpTransactions),
+          db.select({ count: sql<number>`count(distinct ${xpTransactions.userId})` }).from(xpTransactions),
+          db.select().from(xpLevels).orderBy(asc(xpLevels.displayOrder), asc(xpLevels.minXp)),
+          db.select().from(xpRules).orderBy(desc(xpRules.updatedAt)).limit(40),
+          db.select({ transaction: xpTransactions, userName: users.name, userEmail: users.email }).from(xpTransactions).leftJoin(users, eq(xpTransactions.userId, users.id)).orderBy(desc(xpTransactions.createdAt)).limit(30),
+        ]);
+        return { totalIssued: Number(totals[0]?.total ?? 0), activeLearners: Number(activeLearners[0]?.count ?? 0), levels, rules, recent };
+      }),
+      saveLevel: adminProcedure.input(z.object({ id: z.number().int().positive().optional(), name: z.string().trim().min(2).max(120), minXp: z.number().int().min(0), icon: z.string().trim().max(80).nullable().optional(), rewardMetadata: z.record(z.string(), z.unknown()).optional(), displayOrder: z.number().int().min(0), isActive: z.boolean() })).mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu Level XP." });
+        const duplicate = await db.select({ id: xpLevels.id }).from(xpLevels).where(and(eq(xpLevels.minXp, input.minXp), input.id ? ne(xpLevels.id, input.id) : undefined)).limit(1);
+        if (duplicate.length) throw new TRPCError({ code: "CONFLICT", message: "Mốc XP này đã được sử dụng bởi một Level khác." });
+        const data = { name: input.name, minXp: input.minXp, icon: input.icon ?? null, rewardMetadata: input.rewardMetadata ?? null, displayOrder: input.displayOrder, isActive: input.isActive };
+        if (input.id) { await db.update(xpLevels).set(data).where(eq(xpLevels.id, input.id)); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "xp.level_updated", entityType: "xp_level", entityId: input.id, metadata: { after: data } }); return { id: input.id }; }
+        const created = await db.insert(xpLevels).values(data); const id = Number(created[0].insertId); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "xp.level_created", entityType: "xp_level", entityId: id, metadata: { after: data } }); return { id };
+      }),
+      saveRule: adminProcedure.input(z.object({ id: z.number().int().positive().optional(), code: z.string().trim().regex(/^[a-z][a-z0-9_.-]{2,99}$/), name: z.string().trim().min(2).max(160), trigger: z.string().trim().min(2).max(100), conditionConfig: z.record(z.string(), z.unknown()).optional(), xpAmount: z.number().int().min(1).max(100000), cooldownSeconds: z.number().int().min(0).max(31_536_000), dailyCap: z.number().int().positive().nullable().optional(), status: z.enum(["draft", "active", "paused", "archived"]), effectiveAt: z.date().nullable().optional(), expiresAt: z.date().nullable().optional() })).mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu Rule XP." });
+        if (input.expiresAt && input.effectiveAt && input.expiresAt <= input.effectiveAt) throw new TRPCError({ code: "BAD_REQUEST", message: "Ngày hết hiệu lực phải sau ngày bắt đầu." });
+        const duplicate = await db.select({ id: xpRules.id }).from(xpRules).where(and(eq(xpRules.code, input.code), input.id ? ne(xpRules.id, input.id) : undefined)).limit(1);
+        if (duplicate.length) throw new TRPCError({ code: "CONFLICT", message: "Mã Rule XP đã tồn tại." });
+        const data = { code: input.code, name: input.name, trigger: input.trigger, conditionConfig: input.conditionConfig ?? null, xpAmount: input.xpAmount, cooldownSeconds: input.cooldownSeconds, dailyCap: input.dailyCap ?? null, status: input.status, effectiveAt: input.effectiveAt ?? null, expiresAt: input.expiresAt ?? null, updatedByUserId: ctx.user.id };
+        if (input.id) { await db.update(xpRules).set(data).where(eq(xpRules.id, input.id)); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "xp.rule_updated", entityType: "xp_rule", entityId: input.id, metadata: { after: data } }); return { id: input.id }; }
+        const created = await db.insert(xpRules).values({ ...data, createdByUserId: ctx.user.id }); const id = Number(created[0].insertId); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "xp.rule_created", entityType: "xp_rule", entityId: id, metadata: { after: data } }); return { id };
+      }),
+      adjust: adminProcedure.input(z.object({ userId: z.number().int().positive(), amount: z.number().int().min(-100000).max(100000).refine(value => value !== 0), reason: z.string().trim().min(4).max(500) })).mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể điều chỉnh XP." });
+        const account = (await db.select({ id: users.id }).from(users).where(eq(users.id, input.userId)).limit(1))[0];
+        if (!account) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy người dùng." });
+        const balance = (await db.select({ total: sql<number>`coalesce(sum(${xpTransactions.amount}), 0)` }).from(xpTransactions).where(eq(xpTransactions.userId, input.userId)))[0];
+        if (Number(balance?.total ?? 0) + input.amount < 0) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Điều chỉnh này khiến tổng XP của người dùng âm." });
+        const created = await db.insert(xpTransactions).values({ userId: input.userId, amount: input.amount, sourceType: "admin_adjustment", reason: input.reason, actorUserId: ctx.user.id });
+        const id = Number(created[0].insertId); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "xp.adjusted", entityType: "user", entityId: input.userId, metadata: { amount: input.amount, reason: input.reason, xpTransactionId: id } }); return { id, balanceAfter: Number(balance?.total ?? 0) + input.amount };
+      }),
+    }),
     analytics: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return { users: 0, completed: 0, passRate: 0, pointsConsumed: 0, pointsRewarded: 0, pointsTopUp: 0, popularQuizzes: [] as Array<{ title: string; count: number; passRate: number }> };

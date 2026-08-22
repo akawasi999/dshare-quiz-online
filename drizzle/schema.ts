@@ -51,6 +51,9 @@ export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "e
 export const quizModeValues = ["training", "testing"] as const;
 export const questionTypeValues = ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "essay"] as const;
 export const difficultyValues = ["easy", "medium", "hard"] as const;
+export const topicStatusValues = ["active", "archived"] as const;
+export const quizLifecycleStatusValues = ["draft", "published", "locked", "archived"] as const;
+export const xpRuleStatusValues = ["draft", "active", "paused", "archived"] as const;
 
 export const learnerProfiles = mysqlTable("learnerProfiles", {
   id: int("id").autoincrement().primaryKey(),
@@ -71,6 +74,58 @@ export const learnerProfiles = mysqlTable("learnerProfiles", {
 }, table => [
   uniqueIndex("learner_profiles_user_unique").on(table.userId),
   uniqueIndex("learner_profiles_referral_unique").on(table.referralCode),
+]);
+
+export const xpLevels = mysqlTable("xpLevels", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 120 }).notNull(),
+  minXp: int("minXp").notNull(),
+  icon: varchar("icon", { length: 80 }),
+  rewardMetadata: json("rewardMetadata").$type<Record<string, unknown>>(),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [
+  uniqueIndex("xp_levels_min_xp_unique").on(table.minXp),
+  index("xp_levels_active_order_idx").on(table.isActive, table.displayOrder),
+]);
+
+export const xpRules = mysqlTable("xpRules", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 100 }).notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  trigger: varchar("trigger", { length: 100 }).notNull(),
+  conditionConfig: json("conditionConfig").$type<Record<string, unknown>>(),
+  xpAmount: int("xpAmount").notNull(),
+  cooldownSeconds: int("cooldownSeconds").default(0).notNull(),
+  dailyCap: int("dailyCap"),
+  effectiveAt: timestamp("effectiveAt"),
+  expiresAt: timestamp("expiresAt"),
+  status: mysqlEnum("status", xpRuleStatusValues).default("draft").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  updatedByUserId: int("updatedByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [
+  uniqueIndex("xp_rules_code_unique").on(table.code),
+  index("xp_rules_status_trigger_idx").on(table.status, table.trigger),
+]);
+
+export const xpTransactions = mysqlTable("xpTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  amount: int("amount").notNull(),
+  sourceType: varchar("sourceType", { length: 80 }).notNull(),
+  sourceId: varchar("sourceId", { length: 120 }),
+  ruleId: int("ruleId"),
+  reason: varchar("reason", { length: 500 }).notNull(),
+  actorUserId: int("actorUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [
+  index("xp_transactions_user_created_idx").on(table.userId, table.createdAt),
+  index("xp_transactions_rule_idx").on(table.ruleId),
+  index("xp_transactions_source_idx").on(table.sourceType, table.sourceId),
 ]);
 
 export const membershipGroupPermissions = mysqlTable("membershipGroupPermissions", {
@@ -174,10 +229,34 @@ export const lessons = mysqlTable("lessons", {
   index("lessons_subject_idx").on(table.subjectId),
 ]);
 
+export const topics = mysqlTable("topics", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 160 }).notNull(),
+  slug: varchar("slug", { length: 180 }).notNull(),
+  parentId: int("parentId"),
+  path: varchar("path", { length: 2000 }).notNull(),
+  depth: int("depth").default(0).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  status: mysqlEnum("status", topicStatusValues).default("active").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  updatedByUserId: int("updatedByUserId").notNull(),
+  deletedAt: timestamp("deletedAt"),
+  version: int("version").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [
+  uniqueIndex("topics_slug_unique").on(table.slug),
+  index("topics_parent_order_idx").on(table.parentId, table.sortOrder, table.name),
+  index("topics_status_deleted_idx").on(table.status, table.deletedAt),
+  index("topics_path_idx").on(table.path),
+]);
+
 export const quizzes = mysqlTable("quizzes", {
   id: int("id").autoincrement().primaryKey(),
-  lessonId: int("lessonId").notNull(),
+  lessonId: int("lessonId"),
+  topicId: int("topicId"),
   creatorUserId: int("creatorUserId"),
+  authorUserId: int("authorUserId"),
   title: varchar("title", { length: 220 }).notNull(),
   slug: varchar("slug", { length: 240 }).notNull(),
   summary: text("summary"),
@@ -195,12 +274,23 @@ export const quizzes = mysqlTable("quizzes", {
   visibility: mysqlEnum("visibility", ["public", "private"]).default("public").notNull(),
   creatorSettings: json("creatorSettings").$type<Record<string, unknown>>(),
   isPublished: boolean("isPublished").default(false).notNull(),
+  status: mysqlEnum("status", quizLifecycleStatusValues).default("draft").notNull(),
+  publishedAt: timestamp("publishedAt"),
+  lockedAt: timestamp("lockedAt"),
+  lockedByUserId: int("lockedByUserId"),
+  lockedFromStatus: mysqlEnum("lockedFromStatus", quizLifecycleStatusValues),
+  lockReason: varchar("lockReason", { length: 500 }),
+  deletedAt: timestamp("deletedAt"),
+  version: int("version").default(1).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => [
   uniqueIndex("quizzes_slug_unique").on(table.slug),
   index("quizzes_lesson_idx").on(table.lessonId),
   index("quizzes_creator_idx").on(table.creatorUserId),
+  index("quizzes_topic_status_idx").on(table.topicId, table.status, table.deletedAt),
+  index("quizzes_author_active_idx").on(table.authorUserId, table.deletedAt),
+  index("quizzes_published_active_idx").on(table.publishedAt, table.deletedAt),
   index("quizzes_publish_idx").on(table.isPublished),
   index("quizzes_visibility_idx").on(table.visibility),
 ]);
@@ -252,7 +342,8 @@ export const quizSourceHistories = mysqlTable("quizSourceHistories", {
 
 export const questions = mysqlTable("questions", {
   id: int("id").autoincrement().primaryKey(),
-  lessonId: int("lessonId").notNull(),
+  lessonId: int("lessonId"),
+  topicId: int("topicId"),
   creatorUserId: int("creatorUserId"),
   prompt: text("prompt").notNull(),
   type: mysqlEnum("type", questionTypeValues).default("single").notNull(),
@@ -266,6 +357,7 @@ export const questions = mysqlTable("questions", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => [
   index("questions_lesson_idx").on(table.lessonId),
+  index("questions_topic_idx").on(table.topicId),
   index("questions_creator_idx").on(table.creatorUserId),
   index("questions_difficulty_idx").on(table.difficulty),
 ]);

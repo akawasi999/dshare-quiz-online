@@ -7,6 +7,7 @@ import OperationalCharts from "@/components/OperationalCharts";
 import AdminOperationsDashboard from "@/components/AdminOperationsDashboard";
 import AdminBugReportsPanel from "@/components/AdminBugReportsPanel";
 import AdminPointLedgerPanel from "@/components/AdminPointLedgerPanel";
+import XpProgressionPanel from "@/components/XpProgressionPanel";
 import AIQuestionGeneratorPanel from "@/components/AIQuestionGeneratorPanel";
 import LiveMonitoringPanel from "@/components/LiveMonitoringPanel";
 import QuestionEditorPanel from "@/components/QuestionEditorPanel";
@@ -16,6 +17,8 @@ import MembershipGroupPermissionsPanel from "@/components/MembershipGroupPermiss
 import UserManagementPanel from "@/components/UserManagementPanel";
 import AdminAiAssistantPanel from "@/components/AdminAiAssistantPanel";
 import ContentManagementPanel from "@/components/ContentManagementPanel";
+import TopicManagementPanel from "@/components/TopicManagementPanel";
+import QuizSystemPanel from "@/components/QuizSystemPanel";
 import AnalyticsControlPanel from "@/components/AnalyticsControlPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,25 +31,39 @@ import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
+const legacyLearningRedirects: Record<string, string> = {
+  "/quan-tri/noi-dung": "/quan-tri/chu-de",
+  "/quan-tri/cau-hoi": "/quan-tri/quiz-system",
+  "/quan-tri/tao-de-ngau-nhien": "/quan-tri/quiz-system",
+  "/quan-tri/import-xuat": "/quan-tri/quiz-system",
+  "/admin/learning/content": "/quan-tri/chu-de",
+  "/admin/learning/questions": "/quan-tri/quiz-system",
+  "/admin/learning/random-generator": "/quan-tri/quiz-system",
+  "/admin/learning/import-export": "/quan-tri/quiz-system",
+};
+
 export default function Admin() {
   const { user, loading } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const legacyDestination = legacyLearningRedirects[location];
+  useEffect(() => {
+    if (legacyDestination) setLocation(legacyDestination, { replace: true });
+  }, [legacyDestination, setLocation]);
   if (loading) return <main className="grid min-h-screen place-items-center bg-[#ebf8ff] p-6"><p role="status" aria-live="polite" className="text-sm font-medium text-[#617786]">Đang kiểm tra quyền truy cập quản trị…</p></main>;
   if (user?.role !== "admin") return <main className="grid min-h-screen place-items-center bg-[#f4f7ff] p-6"><div className="max-w-md rounded-[28px] bg-white p-8 text-center shadow-sm"><ShieldAlert className="mx-auto text-[#b66b59]" size={30} /><h1 className="mt-4 font-serif text-3xl font-semibold text-[#172554]">Khu vực hạn chế</h1><p className="mt-3 text-sm leading-6 text-[#617786]">Chỉ tài khoản quản trị có quyền truy cập vào trung tâm điều hành Dshare.</p></div></main>;
   const canonicalLocation = {
-    "/admin": "/quan-tri", "/admin/dashboard": "/quan-tri", "/admin/learning/content": "/quan-tri/noi-dung", "/admin/learning/questions": "/quan-tri/cau-hoi", "/admin/learning/random-generator": "/quan-tri/tao-de-ngau-nhien", "/admin/learning/import-export": "/quan-tri/import-xuat", "/admin/gamification/points": "/quan-tri/point", "/admin/users": "/quan-tri/nguoi-dung", "/admin/users/groups": "/quan-tri/nhom-nguoi-dung", "/admin/moderation/errors": "/quan-tri/bao-loi", "/admin/analytics": "/quan-tri/bao-cao", "/admin/system/monitoring": "/quan-tri/live-monitoring", "/admin/system/logs": "/quan-tri/nhat-ky", "/admin/system/ai": "/quan-tri/ai-assistant", "/admin/appearance/theme": "/quan-tri/thuong-hieu",
+    "/admin": "/quan-tri", "/admin/dashboard": "/quan-tri", "/admin/learning/topics": "/quan-tri/chu-de", "/admin/learning/quizzes": "/quan-tri/quiz-system", "/admin/gamification/points": "/quan-tri/point", "/admin/gamification/xp": "/quan-tri/xp", "/admin/users": "/quan-tri/nguoi-dung", "/admin/users/groups": "/quan-tri/nhom-nguoi-dung", "/admin/moderation/errors": "/quan-tri/bao-loi", "/admin/analytics": "/quan-tri/bao-cao", "/admin/system/monitoring": "/quan-tri/live-monitoring", "/admin/system/logs": "/quan-tri/nhat-ky", "/admin/appearance/theme": "/quan-tri/thuong-hieu",
   }[location] ?? location;
   let content = <AdminOperationsDashboard />;
-  if (canonicalLocation === "/quan-tri/noi-dung") content = <ContentManagementPanel />;
-  if (canonicalLocation === "/quan-tri/tao-de-ngau-nhien") content = <RandomQuizBuilder />;
-  if (canonicalLocation === "/quan-tri/cau-hoi") content = <><AIQuestionGeneratorPanel /><QuestionEditorPanel /></>;
-  if (canonicalLocation === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;
+  if (canonicalLocation === "/quan-tri/chu-de") content = <TopicManagementPanel />;
+  if (canonicalLocation === "/quan-tri/quiz-system") content = <QuizSystemPanel />;
   if (canonicalLocation === "/quan-tri/nguoi-dung") content = <UserManagementPanel />;
   if (canonicalLocation === "/quan-tri/nhom-nguoi-dung") content = <MembershipGroupPermissionsPanel />;
   if (canonicalLocation === "/quan-tri/bao-cao") content = <AnalyticsControlPanel />;
   if (canonicalLocation === "/quan-tri/live-monitoring") content = <LiveMonitoringPanel />;
   if (canonicalLocation === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
   if (canonicalLocation === "/quan-tri/point") content = <AdminPointLedgerPanel />;
+  if (canonicalLocation === "/quan-tri/xp") content = <XpProgressionPanel />;
   if (canonicalLocation === "/quan-tri/nhat-ky") content = <AuditTrail />;
   if (canonicalLocation === "/quan-tri/thuong-hieu") content = <BrandSettingsPanel />;
   if (canonicalLocation === "/quan-tri/ai-assistant") content = <AdminAiAssistantPanel />;

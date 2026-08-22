@@ -31,7 +31,7 @@ import {
 import { startLogin } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Activity, ArrowDownToLine, BookOpenCheck, Bot, ChartNoAxesCombined, ChevronRight, CircleDollarSign, CircleHelp, Command, FileWarning, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, Search, ScrollText, Shuffle, Sun, Users, UsersRound } from "lucide-react";
+import { Activity, Award, BookOpenCheck, Bot, ChartNoAxesCombined, ChevronRight, CircleDollarSign, Command, FileWarning, FolderTree, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, Search, ScrollText, Sun, Users, UsersRound } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
@@ -44,12 +44,10 @@ type NavigationSection = { label: string; items: NavigationItem[] };
 const navigationSections: NavigationSection[] = [
   { label: "Tổng quan", items: [{ icon: LayoutDashboard, label: "Dashboard", path: "/quan-tri", aliases: ["/admin", "/admin/dashboard"], description: "Learning Control Center" }] },
   { label: "Learning", items: [
-    { icon: BookOpenCheck, label: "Nội dung", path: "/quan-tri/noi-dung", aliases: ["/admin/learning/content"], description: "Chủ đề, môn học, bài học và bộ đề" },
-    { icon: CircleHelp, label: "Ngân hàng câu hỏi", path: "/quan-tri/cau-hoi", aliases: ["/admin/learning/questions"], description: "Câu hỏi, đáp án và AI hỗ trợ" },
-    { icon: Shuffle, label: "Tạo đề ngẫu nhiên", path: "/quan-tri/tao-de-ngau-nhien", aliases: ["/admin/learning/random-generator"], description: "Tạo bộ đề theo ma trận" },
-    { icon: ArrowDownToLine, label: "Import / Export", path: "/quan-tri/import-xuat", aliases: ["/admin/learning/import-export"], description: "Trao đổi dữ liệu ngân hàng" },
+    { icon: FolderTree, label: "Chủ đề", path: "/quan-tri/chu-de", aliases: ["/admin/learning/topics"], description: "Cây phân cấp và taxonomy Quiz" },
+    { icon: BookOpenCheck, label: "Quiz System", path: "/quan-tri/quiz-system", aliases: ["/admin/learning/quizzes"], description: "Quản trị toàn bộ Quiz và vòng đời xuất bản" },
   ] },
-  { label: "Gamification", items: [{ icon: CircleDollarSign, label: "Point", path: "/quan-tri/point", aliases: ["/admin/gamification/points"], description: "Sổ cái và economy Point" }] },
+  { label: "Gamification", items: [{ icon: CircleDollarSign, label: "Point", path: "/quan-tri/point", aliases: ["/admin/gamification/points"], description: "Sổ cái và economy Point" }, { icon: Award, label: "XP & Gamification", path: "/quan-tri/xp", aliases: ["/admin/gamification/xp"], description: "Level, rule engine và XP ledger" }] },
   { label: "Users", items: [
     { icon: Users, label: "Người dùng", path: "/quan-tri/nguoi-dung", aliases: ["/admin/users"], description: "Người học và trạng thái tài khoản" },
     { icon: UsersRound, label: "Nhóm người dùng", path: "/quan-tri/nhom-nguoi-dung", aliases: ["/admin/users/groups"], description: "Nhóm, gói và quyền liên kết" },

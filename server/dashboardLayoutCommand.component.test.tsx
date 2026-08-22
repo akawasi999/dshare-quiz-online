@@ -32,5 +32,10 @@ describe("DashboardLayout CPanel v2", () => {
     expect(screen.getByPlaceholderText("Tìm dashboard, người dùng, Point, báo lỗi…")).toBeTruthy();
     expect(screen.getAllByText("Người dùng").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Live Monitoring").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("Chủ đề").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("Quiz System").length).toBeGreaterThan(1);
+    expect(screen.queryByText("Ngân hàng câu hỏi")).toBeNull();
+    expect(screen.queryByText("Tạo đề ngẫu nhiên")).toBeNull();
+    expect(screen.queryByText("Import / Export")).toBeNull();
   });
 });
