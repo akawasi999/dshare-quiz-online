@@ -110,3 +110,9 @@ Header nay dùng chung thang chữ **13px / semibold / leading-none / tracking -
 ## Hiệu chỉnh theo ảnh tham chiếu lần hai
 
 Sau khi đo lại ảnh 728 × 69px theo từng lát ngang, header được điều chỉnh từ 13px semibold sang **14px (`text-sm`) / medium / line-height 20px / tracking mặc định**. Navigation desktop dùng khoảng cách 32px tại breakpoint lớn và bỏ padding ngang thừa trên mỗi nhãn, nhờ đó Bảng giá, Blog, Khám phá, Hỗ trợ khách hàng cùng một cấp thị giác sát ảnh tham chiếu. Hồi quy header và TypeScript đạt; build production hoàn tất, desktop 1440px và mobile 375px đã xác minh.
+
+## Hợp nhất tuyệt đối typography header
+
+Sau lần rà soát cascade cuối, `index.css` bổ sung utility bắt buộc `.site-header-text` với **Inter / 14px / weight 500 / line-height 20px / letter-spacing 0** và thuộc tính `!important`. Utility này được gắn trực tiếp cho liên kết điều hướng, trigger dropdown, nhãn trong dropdown, chỉ báo ngôn ngữ, trạng thái xác thực, CTA **Bắt đầu**, hồ sơ và đăng xuất. Vì vậy, variant mặc định của Button hay các utility cũ không thể làm riêng font, cỡ hoặc weight của bất kỳ nhãn nào trong header.
+
+Hồi quy `siteHeaderNavigation.component.test.tsx` nay kiểm tra utility chung trên Bảng giá và CTA. `pnpm check` sạch, ca hồi quy header đạt, build production hoàn tất trong **21,35 giây**; ảnh desktop 1440px xác nhận các nhãn và điều khiển header ở cùng một cấp chữ. Tên thương hiệu trong logo vẫn là artwork độc lập, nên không bị áp typography của navigation.

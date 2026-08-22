@@ -388,3 +388,6 @@
 - [x] Đọc tỷ lệ chữ, spacing và căn giữa navigation trong ảnh tham chiếu mới.
 - [x] Điều chỉnh lại typography và khoảng cách navigation để đồng nhất sát ảnh.
 - [x] Xác minh trực quan, hồi quy và cập nhật bàn giao cho tinh chỉnh navigation.
+- [x] Rà soát toàn bộ nhãn header và cascade font-family/font-size/font-weight đang áp dụng.
+- [x] Áp dụng một typography utility dùng chung cho tất cả chữ trên header.
+- [x] Kiểm thử, xác minh trực quan và cập nhật bàn giao cho typography header hợp nhất.
