@@ -426,3 +426,5 @@
 - [x] Kiểm thử responsive, accessibility và lưu checkpoint cho dropdown Khám phá.
 - [x] Giới hạn dropdown Khám phá chỉ hiển thị các Chủ đề cha cấp cao nhất.
 - [x] Kiểm thử responsive và lưu checkpoint cho bộ lọc Chủ đề cha trong header.
+- [x] Loại bỏ tiêu đề nhóm và mô tả khỏi dropdown Khám phá.
+- [x] Kiểm thử dropdown Khám phá tối giản và lưu checkpoint.

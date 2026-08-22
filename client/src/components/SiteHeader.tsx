@@ -31,16 +31,14 @@ function NavDropdown({ item, open, onOpen, onClose, onToggle, onNavigate }: { it
   const isSupport = item.kind === "support";
   return <div className="relative -mx-2 px-2 pb-2" onMouseEnter={onOpen} onMouseLeave={onClose}>
     <button type="button" onFocus={onOpen} onClick={onToggle} aria-expanded={open} aria-controls={menuId} className={cn("site-header-text site-header-nav-item group gap-1 rounded-md px-0 transition-[color,background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20", isActive ? "text-primary" : "text-muted-foreground hover:text-foreground")}><span className="site-header-nav-label">{item.label}</span><ChevronDown size={14} className={cn("site-header-nav-chevron transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]", open && "rotate-180")} /></button>
-    {open ? <div id={menuId} role="menu" className={cn("absolute top-[calc(100%-0.25rem)] origin-top-left border border-border bg-surface p-2 shadow-[var(--shadow-lg)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:zoom-in-95 motion-safe:duration-200", isSupport ? "right-0 w-[230px] rounded-xl" : "left-0 max-h-[min(420px,calc(100vh-96px))] w-[320px] overflow-y-auto rounded-[var(--radius-lg-token)]")}>
-      {!isSupport ? <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[.14em] text-primary">Chủ đề</p> : null}
+    {open ? <div id={menuId} role="menu" className={cn("absolute top-[calc(100%-0.25rem)] origin-top-left border border-border bg-surface p-2 shadow-[var(--shadow-lg)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:zoom-in-95 motion-safe:duration-200", isSupport ? "right-0 w-[230px] rounded-xl" : "left-0 max-h-[min(420px,calc(100vh-96px))] w-[260px] overflow-y-auto rounded-[var(--radius-lg-token)]")}>
       {item.items?.length ? item.items.map(child => {
         const Icon = child.icon ?? BookOpen;
-        return <Link key={child.label} href={child.href} role="menuitem" onClick={onNavigate} className={cn("group/menu flex rounded-[var(--radius-sm-token)] transition-[transform,background-color,color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:translate-x-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", isSupport ? "items-center gap-3 px-3 py-2.5 hover:bg-muted" : "items-start gap-3 px-3 py-3 hover:bg-primary-light")}>
-          {isSupport ? <span className={cn("grid size-7 shrink-0 place-items-center rounded-full", child.iconClassName)}><Icon size={15} /></span> : <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-primary-light text-primary"><Icon size={14} /></span>}
-          <span className="min-w-0"><span className={cn("site-header-text block transition-colors", isSupport ? "text-foreground group-hover/menu:text-primary" : "text-foreground")}>{!isSupport && child.depth ? <span aria-hidden="true" className="mr-1 text-text-muted">{"— ".repeat(child.depth)}</span> : null}{child.label}</span>{child.description ? <span className="site-header-text mt-1 block text-text-secondary">{child.description}</span> : null}</span>
+        return <Link key={child.label} href={child.href} role="menuitem" onClick={onNavigate} className={cn("group/menu flex rounded-[var(--radius-sm-token)] transition-[transform,background-color,color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:translate-x-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", isSupport ? "items-center gap-3 px-3 py-2.5 hover:bg-muted" : "items-center px-3 py-2.5 hover:bg-primary-light")}>
+          {isSupport ? <span className={cn("grid size-7 shrink-0 place-items-center rounded-full", child.iconClassName)}><Icon size={15} /></span> : null}
+          <span className={cn("site-header-text min-w-0 transition-colors", isSupport ? "text-foreground group-hover/menu:text-primary" : "text-foreground")}>{child.label}</span>
         </Link>;
       }) : !isSupport ? <p className="px-3 py-4 text-sm leading-5 text-text-secondary">Chưa có Chủ đề đang hoạt động.</p> : null}
-      {!isSupport ? <Link href="/kham-pha" role="menuitem" onClick={onNavigate} className="site-header-text mt-1 flex items-center justify-between rounded-[var(--radius-sm-token)] px-3 py-2 text-primary transition-colors hover:bg-primary-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Xem tất cả chủ đề <ChevronDown size={14} className="-rotate-90" /></Link> : null}
     </div> : null}
   </div>;
 }
@@ -54,7 +52,7 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const { theme, toggleTheme } = useTheme();
   const isDarkLogo = variant === "dark" || theme === "dark";
   const publicTopics = trpc.catalog.topics.useQuery();
-  const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).filter(topic => topic.parentId === null).map(topic => ({ label: topic.name, href: `/kham-pha?topic=${encodeURIComponent(topic.slug)}`, description: "Khám phá Quiz theo Chủ đề", depth: 0 }));
+  const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).filter(topic => topic.parentId === null).map(topic => ({ label: topic.name, href: `/kham-pha?topic=${encodeURIComponent(topic.slug)}`, depth: 0 }));
   const navigationItems: NavItem[] = navigation.map(item => item.kind === "topics" ? { ...item, items: topicNavigationItems } : item);
   const clearMenuCloseTimer = () => { if (menuCloseTimer.current !== null) { window.clearTimeout(menuCloseTimer.current); menuCloseTimer.current = null; } };
   const openDropdown = (label: string) => { clearMenuCloseTimer(); setOpenMenu(label); };

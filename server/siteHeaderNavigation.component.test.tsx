@@ -37,6 +37,9 @@ describe("SiteHeader navigation", () => {
     await user.click(screen.getByRole("button", { name: "Khám phá" }));
     expect(screen.getByRole("menuitem", { name: /Tiểu học/ }).getAttribute("href")).toContain("topic=tieu-hoc");
     expect(screen.queryByRole("menuitem", { name: /Lớp 1/ })).toBeNull();
+    expect(screen.queryByText("Chủ đề", { selector: "p" })).toBeNull();
+    expect(screen.queryByText("Khám phá Quiz theo Chủ đề")).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /Xem tất cả chủ đề/ })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Hỗ trợ khách hàng" }));
     expect(screen.getByRole("menuitem", { name: "Câu hỏi thường gặp" })).toBeTruthy();
