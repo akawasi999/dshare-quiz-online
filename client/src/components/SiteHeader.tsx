@@ -10,9 +10,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const links = [
   { href: "/kham-pha", label: "Quiz" },
-  { href: "/bang-xep-hang", label: "Xếp hạng" },
   { href: "/bang-gia", label: "Gói phí" },
-  { href: "/gioi-thieu", label: "Giới thiệu" },
 ];
 
 export default function SiteHeader({ variant = "light" }: { variant?: "light" | "dark" }) {

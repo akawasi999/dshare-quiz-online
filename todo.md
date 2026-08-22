@@ -363,3 +363,7 @@
 - [x] Nâng cấp màn hình tổng kết Quiz với thống kê tỷ lệ đúng/sai và thời gian làm bài trực quan.
 - [x] Bổ sung chia sẻ kết quả lên mạng xã hội và tải báo cáo kết quả PDF.
 - [x] Chạy regression, xác minh desktop/mobile và cập nhật báo cáo bàn giao.
+- [x] Rà soát trang Xếp hạng, Giới thiệu và điều hướng đầu trang theo design tokens hiện hành.
+- [x] Làm mới giao diện màu, trạng thái tương tác và bố cục responsive cho trang Xếp hạng và Giới thiệu.
+- [x] Loại bỏ mục Xếp hạng và Giới thiệu khỏi menu đầu trang, giữ điểm truy cập trong không gian hồ sơ.
+- [x] Bổ sung hồi quy, xác minh desktop/mobile và cập nhật báo cáo bàn giao cho thay đổi điều hướng.

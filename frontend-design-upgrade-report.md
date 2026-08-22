@@ -51,3 +51,16 @@ Sau khi nộp bài, `QuizRunner` ghi nhận thời lượng thực làm bài và
 | Hồi quy mới | `themeToggle.component.test.tsx`, `quizResultMutations.component.test.tsx` | 1 ca Theme toggle và 4 ca kết quả Quiz, gồm tải PDF |
 
 Tuyến `/ket-qua/:id` cần dữ liệu kết quả từ phiên nộp bài trong `sessionStorage`, do đó kiểm tra ảnh tĩnh khi truy cập trực tiếp xác nhận trạng thái rỗng có chủ đích. Nội dung tổng kết có dữ liệu và thao tác tải PDF được xác nhận bằng hồi quy component. Build có cảnh báo kích thước bundle ở các dependency lớn có sẵn như Mermaid và pdfmake; báo cáo PDF được tải lười nên chỉ tải khi người học yêu cầu xuất file.
+
+## Làm mới Xếp hạng, Giới thiệu và điều hướng đầu trang
+
+Trang Xếp hạng và Giới thiệu đã được chuyển sang bố cục card/surface dùng semantic token. Cả hai có hero Primary–Accent nhất quán, trạng thái desktop/mobile rõ ràng, card số liệu dễ quét, focus state cho điều khiển và các trạng thái tải, lỗi, trống hiện có được giữ nguyên. Các hoạ tiết chỉ hiển thị từ breakpoint `sm` để không che nội dung trên điện thoại.
+
+| Hạng mục | Tệp chính | Kết quả |
+|---|---|---|
+| Xếp hạng | `Leaderboard.tsx` | Hero mới, chuyển phạm vi có ARIA, thứ hạng semantic, card hướng dẫn và xử lý dữ liệu không đổi |
+| Giới thiệu | `Referral.tsx` | Hero, thẻ mã giới thiệu, Point, form áp dụng mã và lịch sử thưởng đồng bộ semantic token |
+| Header công khai | `SiteHeader.tsx` | Gỡ **Xếp hạng** và **Giới thiệu** khỏi menu desktop/mobile; hai lối vào vẫn nằm trong menu hồ sơ |
+| Hồi quy | `siteHeaderNavigation.component.test.tsx` | Bổ sung test bảo vệ menu đầu trang không khôi phục hai mục trùng lặp |
+
+Regression sau thay đổi đạt **67 tệp / 172 ca kiểm thử**; `pnpm check` sạch và build production hoàn tất. Ảnh kiểm tra tại desktop 1440px và mobile 375px xác nhận bố cục hero, thẻ số liệu và nội dung không tràn ngang.
