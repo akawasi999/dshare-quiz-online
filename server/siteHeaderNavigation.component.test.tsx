@@ -30,7 +30,10 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByRole("button", { name: "Đăng nhập" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Bảng giá" }).className).toContain("site-header-text");
     expect(screen.getByRole("link", { name: "Giới thiệu về chúng tôi" }).className).toContain("site-header-nav-item");
-    expect(screen.getByRole("button", { name: "Khám phá" }).className).toContain("site-header-nav-item");
+    const exploreTrigger = screen.getByRole("button", { name: "Khám phá" });
+    expect(exploreTrigger.className).toContain("site-header-nav-item");
+    expect(exploreTrigger.querySelector(".site-header-nav-label")?.className).toContain("site-header-nav-label");
+    expect(exploreTrigger.querySelector(".site-header-nav-chevron")?.getAttribute("class")).toContain("site-header-nav-chevron");
     expect(screen.getByRole("button", { name: "Bắt đầu" }).className).toContain("site-header-text");
     expect(screen.queryByRole("link", { name: "Xếp hạng" })).toBeNull();
 
@@ -57,8 +60,9 @@ describe("SiteHeader navigation", () => {
     const trigger = screen.getByRole("button", { name: "Khám phá" });
     const dropdownZone = trigger.parentElement!;
     fireEvent.mouseEnter(dropdownZone);
-    expect(screen.getByRole("menu").className).toContain("top-[calc(100%-0.25rem)]");
-    expect(dropdownZone.className).toContain("pb-2");
+    expect(screen.getByRole("menu").className).toContain("top-[calc(100%+0.25rem)]");
+    expect(dropdownZone.className).toContain("h-10");
+    expect(dropdownZone.className).toContain("after:h-2");
     fireEvent.mouseLeave(dropdownZone);
     act(() => vi.advanceTimersByTime(179));
     expect(screen.getByRole("menu")).toBeTruthy();

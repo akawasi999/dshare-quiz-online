@@ -428,3 +428,5 @@
 - [x] Kiểm thử responsive và lưu checkpoint cho bộ lọc Chủ đề cha trong header.
 - [x] Loại bỏ tiêu đề nhóm và mô tả khỏi dropdown Khám phá.
 - [x] Kiểm thử dropdown Khám phá tối giản và lưu checkpoint.
+- [x] Căn chỉnh cùng baseline cho toàn bộ nhãn và chevron trên navigation desktop.
+- [x] Kiểm thử trực quan, regression và lưu checkpoint cho căn chỉnh navigation.

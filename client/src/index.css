@@ -51,7 +51,9 @@
 
 /* One 40px flex line prevents independent link line-boxes from drifting vertically. */
 .site-header-navigation {
+  display: flex;
   min-height: 40px;
+  align-items: center;
 }
 
 .site-header-nav-item {
@@ -70,9 +72,14 @@
 }
 
 .site-header-nav-chevron {
-  display: block;
+  display: inline-flex;
+  width: 14px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
   flex: none;
   align-self: center;
+  vertical-align: middle;
 }
 
 :root {
