@@ -3,6 +3,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { showcaseQuizzes } from "@/data/demo";
 import { trpc } from "@/lib/trpc";
+import { ROUTES } from "@/lib/routes";
 import { ArrowRight, BookMarked, BrainCircuit, CheckCircle2, ChevronRight, CircleHelp, Compass, Crown, Layers3, Search, ShieldCheck, SlidersHorizontal, Sparkles, TimerReset } from "lucide-react";
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -41,7 +42,7 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-surface/90 px-4 py-2 text-[11px] font-bold uppercase tracking-[.08em] text-primary shadow-[var(--shadow-sm)]"><span className="size-2 rounded-full bg-primary" />Quiz AI · Tạo · Chia sẻ · Học</div>
             <h1 className="mt-7 max-w-4xl font-serif text-[clamp(2.5rem,6vw,4.75rem)] font-extrabold leading-[1.08] tracking-[-.05em] text-foreground">Tạo Quiz để học tập <span className="bg-[linear-gradient(135deg,var(--primary)_0%,var(--accent)_100%)] bg-clip-text text-transparent">rõ ràng hơn</span>.</h1>
             <p className="mt-6 max-w-2xl text-[17px] leading-8 text-text-secondary sm:text-[19px]">Biến văn bản, PDF, URL hoặc chủ đề bất kỳ thành trải nghiệm học tập tương tác—từ tạo câu hỏi, hoàn thiện Quiz đến chia sẻ cho người học.</p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row"><Button asChild size="lg" className="cta-gradient rounded-full px-7"><Link href="/kham-pha">Khám phá miễn phí <ArrowRight size={18} /></Link></Button><Button asChild variant="outline" size="lg" className="rounded-full px-7"><Link href="/tao-quiz">Tạo Quiz mới</Link></Button></div>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row"><Button asChild size="lg" className="cta-gradient rounded-full px-7"><Link href={ROUTES.explore}>Khám phá miễn phí <ArrowRight size={18} /></Link></Button><Button asChild variant="outline" size="lg" className="rounded-full px-7"><Link href={ROUTES.quizBuilder}>Tạo Quiz mới</Link></Button></div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-text-secondary"><span className="flex items-center gap-2"><CheckCircle2 size={17} className="text-success" /> Tạo Quiz thủ công</span><span className="flex items-center gap-2"><CheckCircle2 size={17} className="text-success" /> Có AI hỗ trợ</span><span className="flex items-center gap-2"><CheckCircle2 size={17} className="text-success" /> Không cần thẻ thanh toán</span></div>
           </div>
           <div data-testid="hero-creation-preview" className="rise-in-delay relative hidden min-h-[420px] items-center justify-center lg:flex" aria-label="Xem trước luồng tạo Quiz">
@@ -62,7 +63,7 @@ export default function Home() {
               <p className="text-[11px] font-bold uppercase tracking-[.18em] text-primary">Quiz AI</p>
               <h2 id="quiz-ai-showcase-title" className="mt-3 max-w-2xl font-serif font-bold">Tạo câu hỏi từ nội dung bạn đã có.</h2>
             </div>
-            <Link href="/tao-quiz" className="group inline-flex min-h-11 w-fit items-center gap-2 text-sm font-bold text-primary">Bắt đầu tạo Quiz <span className="grid size-8 place-items-center rounded-full bg-primary-light transition-transform duration-200 group-hover:translate-x-1"><ArrowRight size={15} /></span></Link>
+            <Link href={ROUTES.quizBuilder} className="group inline-flex min-h-11 w-fit items-center gap-2 text-sm font-bold text-primary">Bắt đầu tạo Quiz <span className="grid size-8 place-items-center rounded-full bg-primary-light transition-transform duration-200 group-hover:translate-x-1"><ArrowRight size={15} /></span></Link>
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
             <ScrollReveal className="lg:col-span-2">
@@ -71,7 +72,7 @@ export default function Home() {
                 <span className="inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[.14em] text-[#087458] shadow-sm">Tạo nhanh với AI</span>
                 <h3 className="mt-5 text-[clamp(1.8rem,3vw,2.55rem)] font-extrabold leading-tight tracking-[-.035em] text-[#087458]">Tạo câu hỏi nhanh chóng, dễ dàng với QUIZ AI!</h3>
                 <p className="mt-4 max-w-md text-[15px] font-medium leading-7 text-[#285848]">Chỉ cần tải lên tệp hoặc nhập chủ đề, AI sẽ tìm điểm chính để tạo câu hỏi và tự điều chỉnh độ khó.</p>
-                <Button asChild className="mt-7 rounded-full bg-[#087458] px-6 text-white hover:bg-[#065f48]"><Link href="/tao-quiz">Tạo Quiz với AI <ArrowRight size={16} /></Link></Button>
+                <Button asChild className="mt-7 rounded-full bg-[#087458] px-6 text-white hover:bg-[#065f48]"><Link href={ROUTES.quizBuilder}>Tạo Quiz với AI <ArrowRight size={16} /></Link></Button>
               </div>
               <img src="/manus-storage/v3_2_1_image_en_2x_5b02546b.webp" alt="Minh họa AI biến tài liệu thành Quiz" className="pointer-events-none relative z-0 mx-auto mt-5 block w-full max-w-[510px] object-contain sm:absolute sm:-bottom-5 sm:right-5 sm:mt-0 sm:w-[51%]" />
             </article>
@@ -105,7 +106,7 @@ export default function Home() {
               <p className="text-[11px] font-bold uppercase tracking-[.18em] text-accent">Tạo và chia sẻ</p>
               <h2 id="quiz-journey-title" className="mt-3 max-w-2xl font-serif font-bold">Từ ý tưởng đến trải nghiệm học tập.</h2>
             </div>
-            <Link href="/tao-quiz" className="group inline-flex min-h-11 w-fit items-center gap-2 text-sm font-bold text-accent">Tạo Quiz trong 2 bước <span className="grid size-8 place-items-center rounded-full bg-accent/10 transition-transform duration-200 group-hover:translate-x-1"><ArrowRight size={15} /></span></Link>
+            <Link href={ROUTES.quizBuilder} className="group inline-flex min-h-11 w-fit items-center gap-2 text-sm font-bold text-accent">Tạo Quiz trong 2 bước <span className="grid size-8 place-items-center rounded-full bg-accent/10 transition-transform duration-200 group-hover:translate-x-1"><ArrowRight size={15} /></span></Link>
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
             <ScrollReveal className="lg:col-span-2">
@@ -114,7 +115,7 @@ export default function Home() {
                 <span className="inline-flex items-center rounded-full bg-white/75 px-3 py-1 text-[11px] font-bold uppercase tracking-[.14em] text-[#6a32b8] shadow-sm">Tạo Quiz siêu tốc</span>
                 <h3 className="mt-5 text-[clamp(1.8rem,3vw,2.55rem)] font-extrabold leading-tight tracking-[-.035em] text-[#5d249f]">Chọn một mẫu, thêm câu hỏi, và nhận ngay Quiz của bạn!</h3>
                 <p className="mt-4 max-w-md text-[15px] font-medium leading-7 text-[#4c4262]">Không có nhiều thời gian? Bạn vẫn có thể tạo bài Quiz nhanh chóng chỉ với hai bước rõ ràng.</p>
-                <Button asChild className="mt-7 rounded-full bg-[#7035c1] px-6 text-white hover:bg-[#5d249f]"><Link href="/tao-quiz">Tạo Quiz ngay <ArrowRight size={16} /></Link></Button>
+                <Button asChild className="mt-7 rounded-full bg-[#7035c1] px-6 text-white hover:bg-[#5d249f]"><Link href={ROUTES.quizBuilder}>Tạo Quiz ngay <ArrowRight size={16} /></Link></Button>
               </div>
               <img src="/manus-storage/quiz_landing_1_1_image_en_2x_27b3e0b5.webp" alt="Minh họa hai bước tạo Quiz từ mẫu có sẵn" className="pointer-events-none relative z-0 mx-auto mt-6 block w-full max-w-[590px] object-contain sm:absolute sm:-bottom-3 sm:right-1 sm:mt-0 sm:w-[54%]" />
             </article>

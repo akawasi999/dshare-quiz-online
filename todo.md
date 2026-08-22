@@ -468,3 +468,6 @@
 - [x] Tinh chỉnh Hero để đồng bộ trực quan với các khu vực trang chủ mới.
 - [x] Thêm animation xuất hiện nhẹ cho từng thẻ khi cuộn, tôn trọng reduced motion.
 - [x] Kiểm thử responsive, accessibility, regression và lưu checkpoint cho Hero/animation.
+- [x] Kiểm kê toàn bộ routes và liên kết tiếng Việt hiện có.
+- [x] Thiết lập routes tiếng Anh cùng chuyển hướng tương thích từ URL cũ.
+- [x] Cập nhật liên kết nội bộ, kiểm thử routing và lưu checkpoint chuẩn hóa URL.

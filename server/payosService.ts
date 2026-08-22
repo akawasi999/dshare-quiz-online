@@ -9,8 +9,8 @@ type PayosLinkResponse = {
 export function buildPayosCallbackUrls(origin: string, orderCode: number) {
   const base = origin.replace(/\/$/, "");
   return {
-    returnUrl: `${base}/thanh-toan?status=return&orderCode=${orderCode}`,
-    cancelUrl: `${base}/thanh-toan?status=cancel&orderCode=${orderCode}`,
+    returnUrl: `${base}/payment-status?status=return&orderCode=${orderCode}`,
+    cancelUrl: `${base}/payment-status?status=cancel&orderCode=${orderCode}`,
   };
 }
 

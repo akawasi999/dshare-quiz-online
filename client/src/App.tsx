@@ -18,66 +18,59 @@ import UserQuizCreator from "@/pages/UserQuizCreator";
 import MyQuizzes from "@/pages/MyQuizzes";
 import AIStudyAssistant from "@/pages/AIStudyAssistant";
 import AccountLayout from "@/components/AccountLayout";
-import { Route, Switch } from "wouter";
+import { LEGACY_ROUTE_MAP, ROUTES } from "@/lib/routes";
+import { Route, Switch, useLocation, useSearch } from "wouter";
+import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 function Router() {
   return <Switch>
-    <Route path="/" component={Home} />
-    <Route path="/kham-pha">{() => <LearnerAccountPage Page={QuizLibrary} />}</Route>
-    <Route path="/quiz/:id" component={QuizRunner} />
-    <Route path="/ket-qua/:id" component={QuizResult} />
-    <Route path="/bang-xep-hang">{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
-    <Route path="/xep-hang">{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
-    <Route path="/bang-gia" component={Pricing} />
-    <Route path="/ho-so" component={Profile} />
-    <Route path="/vi">{() => <LearnerAccountPage Page={Wallet} />}</Route>
-    <Route path="/vi-point">{() => <LearnerAccountPage Page={Wallet} />}</Route>
-    <Route path="/gioi-thieu">{() => <LearnerAccountPage Page={Referral} />}</Route>
-    <Route path="/nap-point">{() => <LearnerAccountPage Page={TopUp} />}</Route>
-    <Route path="/thanh-toan" component={PaymentStatus} />
-    <Route path="/luyen-tap" component={Practice} />
-    <Route path="/tao-quiz" component={UserQuizCreator} />
-    <Route path="/quiz-cua-toi" component={MyQuizzes} />
-    <Route path="/tro-ly-ai">{() => <LearnerAccountPage Page={AIStudyAssistant} />}</Route>
-    <Route path="/quan-tri" component={Admin} />
-    <Route path="/quan-tri/chu-de" component={Admin} />
-    <Route path="/quan-tri/quiz-system" component={Admin} />
-    <Route path="/quan-tri/noi-dung" component={Admin} />
-    <Route path="/quan-tri/cau-hoi" component={Admin} />
-    <Route path="/quan-tri/tao-de-ngau-nhien" component={Admin} />
-    <Route path="/quan-tri/import-xuat" component={Admin} />
-    <Route path="/quan-tri/nguoi-dung" component={Admin} />
-    <Route path="/quan-tri/nhom-nguoi-dung" component={Admin} />
-    <Route path="/quan-tri/point" component={Admin} />
-    <Route path="/quan-tri/xp" component={Admin} />
-    <Route path="/quan-tri/bao-cao" component={Admin} />
-    <Route path="/quan-tri/live-monitoring" component={Admin} />
-    <Route path="/quan-tri/bao-loi" component={Admin} />
-    <Route path="/quan-tri/nhat-ky" component={Admin} />
-    <Route path="/quan-tri/thuong-hieu" component={Admin} />
-    <Route path="/quan-tri/ai-assistant" component={Admin} />
-    <Route path="/admin" component={Admin} />
-    <Route path="/admin/dashboard" component={Admin} />
-    <Route path="/admin/learning/topics" component={Admin} />
-    <Route path="/admin/learning/quizzes" component={Admin} />
-    <Route path="/admin/learning/content" component={Admin} />
-    <Route path="/admin/learning/questions" component={Admin} />
-    <Route path="/admin/learning/random-generator" component={Admin} />
-    <Route path="/admin/learning/import-export" component={Admin} />
-    <Route path="/admin/gamification/points" component={Admin} />
-    <Route path="/admin/users" component={Admin} />
-    <Route path="/admin/users/groups" component={Admin} />
-    <Route path="/admin/moderation/errors" component={Admin} />
-    <Route path="/admin/analytics" component={Admin} />
-    <Route path="/admin/system/monitoring" component={Admin} />
-    <Route path="/admin/system/logs" component={Admin} />
-    <Route path="/admin/system/ai" component={Admin} />
-    <Route path="/admin/appearance/theme" component={Admin} />
+    <Route path={ROUTES.home} component={Home} />
+    <Route path={ROUTES.explore}>{() => <LearnerAccountPage Page={QuizLibrary} />}</Route>
+    <Route path={ROUTES.quizBuilder} component={UserQuizCreator} />
+    <Route path={`${ROUTES.results}/:id`} component={QuizResult} />
+    <Route path={`${ROUTES.quiz}/:id`} component={QuizRunner} />
+    <Route path={ROUTES.leaderboard}>{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
+    <Route path={ROUTES.pricing} component={Pricing} />
+    <Route path={ROUTES.account} component={Profile} />
+    <Route path={ROUTES.wallet}>{() => <LearnerAccountPage Page={Wallet} />}</Route>
+    <Route path={ROUTES.referrals}>{() => <LearnerAccountPage Page={Referral} />}</Route>
+    <Route path={ROUTES.billing}>{() => <LearnerAccountPage Page={TopUp} />}</Route>
+    <Route path={ROUTES.paymentStatus} component={PaymentStatus} />
+    <Route path={ROUTES.practice} component={Practice} />
+    <Route path={ROUTES.myQuizzes} component={MyQuizzes} />
+    <Route path={ROUTES.aiAssistant}>{() => <LearnerAccountPage Page={AIStudyAssistant} />}</Route>
+    <Route path={ROUTES.admin} component={Admin} />
+    <Route path={ROUTES.adminDashboard} component={Admin} />
+    <Route path={ROUTES.adminTopics} component={Admin} />
+    <Route path={ROUTES.adminQuizzes} component={Admin} />
+    <Route path={ROUTES.adminContent} component={Admin} />
+    <Route path={ROUTES.adminQuestions} component={Admin} />
+    <Route path={ROUTES.adminRandomGenerator} component={Admin} />
+    <Route path={ROUTES.adminImportExport} component={Admin} />
+    <Route path={ROUTES.adminPoints} component={Admin} />
+    <Route path={ROUTES.adminXp} component={Admin} />
+    <Route path={ROUTES.adminUsers} component={Admin} />
+    <Route path={ROUTES.adminUserGroups} component={Admin} />
+    <Route path={ROUTES.adminErrors} component={Admin} />
+    <Route path={ROUTES.adminAnalytics} component={Admin} />
+    <Route path={ROUTES.adminMonitoring} component={Admin} />
+    <Route path={ROUTES.adminLogs} component={Admin} />
+    <Route path={ROUTES.adminAi} component={Admin} />
+    <Route path={ROUTES.adminTheme} component={Admin} />
+    <Route path="/ket-qua/:id">{params => <LegacyRedirect to={`${ROUTES.results}/${params.id}`} />}</Route>
+    {Object.entries(LEGACY_ROUTE_MAP).map(([legacyPath, target]) => <Route key={legacyPath} path={legacyPath}>{() => <LegacyRedirect to={target} />}</Route>)}
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>;
+}
+
+function LegacyRedirect({ to }: { to: string }) {
+  const [, setLocation] = useLocation();
+  const search = useSearch();
+  useEffect(() => { setLocation(`${to}${search}`, { replace: true }); }, [search, setLocation, to]);
+  return null;
 }
 
 function LearnerAccountPage({ Page }: { Page: React.ComponentType }) {

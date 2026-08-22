@@ -50,6 +50,6 @@ describe("practice utilities", () => {
     expect(getPracticeTransition({ questionIndex: 1, questionCount: 2 })).toBe("complete-session");
     expect(getPracticeTransition({ questionIndex: 0, questionCount: 1, matchingCount: 0 })).toBe("complete-session");
     expect(getPracticeTransition({ questionIndex: 0, questionCount: 0 })).toBe("complete-session");
-    expect(practiceCompletionDestination).toBe("/kham-pha");
+    expect(practiceCompletionDestination).toBe("/explore");
   });
 });

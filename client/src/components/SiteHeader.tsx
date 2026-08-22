@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { BadgeAlert, Bell, BookOpen, ChevronDown, CircleHelp, Globe2, LayoutDashboard, LifeBuoy, LogOut, Megaphone, Menu, Moon, ShieldCheck, Sparkles, Sun, UserRound, WalletCards, X, type LucideIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { ROUTES } from "@/lib/routes";
 
 type NavMenuItem = { label: string; href: string; description?: string; depth?: number; icon?: LucideIcon; iconClassName?: string };
 type NavItem = { label: string; href?: string; kind?: "topics" | "support"; items?: NavMenuItem[] };
@@ -16,13 +17,13 @@ type NavItem = { label: string; href?: string; kind?: "topics" | "support"; item
 const navigation: NavItem[] = [
   { label: "Giới thiệu về chúng tôi", href: "/#ve-dshare" },
   { label: "Khám phá", kind: "topics" },
-  { label: "Bảng giá", href: "/bang-gia" },
-  { label: "Blog", href: "/kham-pha" },
+  { label: "Bảng giá", href: ROUTES.pricing },
+  { label: "Blog", href: ROUTES.explore },
   { label: "Hỗ trợ khách hàng", kind: "support", items: [
-    { label: "Câu hỏi thường gặp", href: "/ho-so", icon: CircleHelp, iconClassName: "bg-sky-100 text-sky-500" },
-    { label: "Hướng dẫn sử dụng", href: "/tao-quiz", icon: BadgeAlert, iconClassName: "bg-violet-100 text-violet-500" },
-    { label: "Tin cập nhật", href: "/kham-pha", icon: Bell, iconClassName: "bg-pink-100 text-pink-500" },
-    { label: "Thông báo", href: "/ho-so", icon: Megaphone, iconClassName: "bg-rose-100 text-rose-500" },
+    { label: "Câu hỏi thường gặp", href: ROUTES.account, icon: CircleHelp, iconClassName: "bg-sky-100 text-sky-500" },
+    { label: "Hướng dẫn sử dụng", href: ROUTES.quizBuilder, icon: BadgeAlert, iconClassName: "bg-violet-100 text-violet-500" },
+    { label: "Tin cập nhật", href: ROUTES.explore, icon: Bell, iconClassName: "bg-pink-100 text-pink-500" },
+    { label: "Thông báo", href: ROUTES.account, icon: Megaphone, iconClassName: "bg-rose-100 text-rose-500" },
   ] },
 ];
 
@@ -76,7 +77,7 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const notifications = trpc.learner.notifications.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const markNotificationRead = trpc.learner.markNotificationRead.useMutation({ onSuccess: () => void notifications.refetch() });
   const markAllNotificationsRead = trpc.learner.markAllNotificationsRead.useMutation({ onSuccess: () => void notifications.refetch() });
-  const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).filter(topic => topic.parentId === null).map(topic => ({ label: topic.name, href: `/kham-pha?topic=${encodeURIComponent(topic.slug)}`, depth: 0 }));
+  const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).filter(topic => topic.parentId === null).map(topic => ({ label: topic.name, href: `${ROUTES.explore}?topic=${encodeURIComponent(topic.slug)}`, depth: 0 }));
   const navigationItems: NavItem[] = navigation.map(item => item.kind === "topics" ? { ...item, items: topicNavigationItems } : item);
   const isAdmin = user?.role === "admin";
   const accountAvatarUrl = accountSummary.data?.profile?.avatarUrl?.trim() || null;
@@ -104,11 +105,11 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
         <button type="button" aria-label="Ngôn ngữ hiển thị: Tiếng Việt" className="site-header-text flex h-9 items-center gap-1 rounded-md px-2 text-muted-foreground transition-[color,background-color,transform] duration-200 hover:-translate-y-px hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20"><Globe2 size={15} />vi</button>
         {user ? <AccountNotificationBell data={notifications.data} onRead={id => markNotificationRead.mutate({ notificationId: id })} onReadAll={() => markAllNotificationsRead.mutate()} /> : null}
         {loading ? <span className="site-header-text px-2 text-muted-foreground">Đang xác thực...</span> : user ? <div className="relative -mx-2 inline-flex h-10 items-center px-2 after:absolute after:inset-x-0 after:top-full after:h-2 after:content-['']" onMouseEnter={openAccountDropdown} onMouseLeave={scheduleAccountClose} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) closeAccountDropdown(); }}>
-          <Link href="/ho-so" aria-label={`Tài khoản ${user.name?.split(" ")[0] ?? "Hồ sơ"}`} aria-expanded={accountOpen} aria-controls="account-navigation" onFocus={openAccountDropdown} onClick={closeAccountDropdown} className="site-header-text flex h-10 items-center gap-2 rounded-full bg-muted px-2.5 text-foreground transition-[color,background-color,transform] duration-200 hover:-translate-y-px hover:bg-primary-light hover:text-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20">{accountAvatarUrl ? <img src={accountAvatarUrl} alt={`Ảnh đại diện của ${user.name?.split(" ")[0] ?? "tài khoản"}`} className="size-6 rounded-full object-cover ring-1 ring-border/70" /> : <span aria-hidden="true" className="grid size-6 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{user.name?.slice(0, 1).toUpperCase() ?? "D"}</span>}{user.name?.split(" ")[0] ?? "Hồ sơ"}<ChevronDown size={14} className={cn("site-header-nav-chevron transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]", accountOpen && "rotate-180")} /></Link>
+          <Link href={ROUTES.account} aria-label={`Tài khoản ${user.name?.split(" ")[0] ?? "Hồ sơ"}`} aria-expanded={accountOpen} aria-controls="account-navigation" onFocus={openAccountDropdown} onClick={closeAccountDropdown} className="site-header-text flex h-10 items-center gap-2 rounded-full bg-muted px-2.5 text-foreground transition-[color,background-color,transform] duration-200 hover:-translate-y-px hover:bg-primary-light hover:text-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20">{accountAvatarUrl ? <img src={accountAvatarUrl} alt={`Ảnh đại diện của ${user.name?.split(" ")[0] ?? "tài khoản"}`} className="size-6 rounded-full object-cover ring-1 ring-border/70" /> : <span aria-hidden="true" className="grid size-6 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{user.name?.slice(0, 1).toUpperCase() ?? "D"}</span>}{user.name?.split(" ")[0] ?? "Hồ sơ"}<ChevronDown size={14} className={cn("site-header-nav-chevron transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]", accountOpen && "rotate-180")} /></Link>
           {accountOpen ? <div id="account-navigation" role="menu" className="account-dropdown absolute right-2 top-[calc(100%+0.25rem)] w-[236px] origin-top-right rounded-xl border border-border bg-surface p-2 shadow-[var(--shadow-lg)]">
-            <Link href="/ho-so" role="menuitem" onClick={closeAccountDropdown} className="site-header-text flex items-center gap-3 rounded-[var(--radius-sm-token)] px-3 py-2.5 text-foreground transition-colors hover:bg-primary-light hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><LayoutDashboard size={16} />Bảng điều khiển</Link>
-            <Link href="/vi" role="menuitem" onClick={closeAccountDropdown} className="site-header-text flex items-center gap-3 rounded-[var(--radius-sm-token)] px-3 py-2.5 text-foreground transition-colors hover:bg-primary-light hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><WalletCards size={16} /><span className="flex-1">Ví Point</span><span className="text-xs font-bold text-primary">{pointBalanceLabel}</span></Link>
-            {isAdmin ? <Link href="/quan-tri" role="menuitem" onClick={closeAccountDropdown} className="site-header-text flex items-center gap-3 rounded-[var(--radius-sm-token)] px-3 py-2.5 text-foreground transition-colors hover:bg-primary-light hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ShieldCheck size={16} />Admin CPanel</Link> : null}
+            <Link href={ROUTES.account} role="menuitem" onClick={closeAccountDropdown} className="site-header-text flex items-center gap-3 rounded-[var(--radius-sm-token)] px-3 py-2.5 text-foreground transition-colors hover:bg-primary-light hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><LayoutDashboard size={16} />Bảng điều khiển</Link>
+            <Link href={ROUTES.wallet} role="menuitem" onClick={closeAccountDropdown} className="site-header-text flex items-center gap-3 rounded-[var(--radius-sm-token)] px-3 py-2.5 text-foreground transition-colors hover:bg-primary-light hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><WalletCards size={16} /><span className="flex-1">Ví Point</span><span className="text-xs font-bold text-primary">{pointBalanceLabel}</span></Link>
+            {isAdmin ? <Link href={ROUTES.admin} role="menuitem" onClick={closeAccountDropdown} className="site-header-text flex items-center gap-3 rounded-[var(--radius-sm-token)] px-3 py-2.5 text-foreground transition-colors hover:bg-primary-light hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ShieldCheck size={16} />Admin CPanel</Link> : null}
             <div className="my-1 border-t border-border-light" />
             <button type="button" role="menuitem" onClick={() => { closeAccountDropdown(); void logout(); }} className="site-header-text flex w-full items-center gap-3 rounded-[var(--radius-sm-token)] px-3 py-2.5 text-danger transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><LogOut size={16} />Đăng xuất</button>
           </div> : null}

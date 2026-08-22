@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({ setLocation: vi.fn(), duplicate: vi.fn(), remo
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock("@/lib/trpc", () => ({ trpc: { creator: { myQuizzes: { useQuery: () => ({ data: mocks.data, isLoading: false }) }, duplicateQuiz: { useMutation: () => ({ isPending: false, mutate: mocks.duplicate }) }, deleteQuiz: { useMutation: () => ({ isPending: false, mutate: mocks.remove }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
-vi.mock("wouter", () => ({ useLocation: () => ["/quiz-cua-toi", mocks.setLocation] }));
+vi.mock("wouter", () => ({ useLocation: () => ["/my-quizzes", mocks.setLocation] }));
 
 import MyQuizzes from "../client/src/pages/MyQuizzes";
 
@@ -41,6 +41,6 @@ describe("MyQuizzes", () => {
     expect(screen.getByText("Đề cần chỉnh sửa")).toBeTruthy();
     expect(screen.getByText("Bổ sung đáp án đúng cho câu 3.")).toBeTruthy();
     await user.click(screen.getAllByRole("button", { name: "Tạo Quiz mới" })[0]!);
-    expect(mocks.setLocation).toHaveBeenCalledWith("/tao-quiz");
+    expect(mocks.setLocation).toHaveBeenCalledWith("/quiz/create");
   });
 });

@@ -6,8 +6,8 @@ describe("PayOS payment request", () => {
   it("tạo URL kết quả cùng origin và payload có chữ ký đúng", () => {
     const urls = buildPayosCallbackUrls("https://quiz.example.vn/", 1_787_025_000_123_001);
     expect(urls).toEqual({
-      returnUrl: "https://quiz.example.vn/thanh-toan?status=return&orderCode=1787025000123001",
-      cancelUrl: "https://quiz.example.vn/thanh-toan?status=cancel&orderCode=1787025000123001",
+      returnUrl: "https://quiz.example.vn/payment-status?status=return&orderCode=1787025000123001",
+      cancelUrl: "https://quiz.example.vn/payment-status?status=cancel&orderCode=1787025000123001",
     });
     const request = buildPayosCreateRequest({ orderCode: 1_787_025_000_123_001, amount: 30_000, description: "DS point_150", ...urls, checksumKey: "unit-test-key" });
     expect(request.signature).toBeTruthy();
