@@ -462,3 +462,6 @@
 - [x] Chuẩn bị ba hình minh họa người dùng cung cấp làm tài nguyên trang chủ.
 - [x] Thiết kế khu vực Quiz AI trên trang chủ theo bố cục banner và hai thẻ của ảnh tham chiếu.
 - [x] Kiểm thử responsive, regression và lưu checkpoint cho cập nhật trang chủ.
+- [x] Chuẩn bị ba hình minh họa phần 3 người dùng vừa cung cấp làm tài nguyên trang chủ.
+- [x] Thiết kế khu vực tạo Quiz nhanh, ngân hàng câu hỏi và tham gia bằng QR theo bố cục tham chiếu.
+- [x] Kiểm thử responsive, regression và lưu checkpoint cho phần 3 trang chủ.

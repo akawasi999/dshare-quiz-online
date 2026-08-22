@@ -85,6 +85,42 @@ export default function Home() {
           </div>
         </section>
 
+        <section aria-labelledby="quiz-journey-title" className="container pb-16 lg:pb-24">
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.18em] text-accent">Tạo và chia sẻ</p>
+              <h2 id="quiz-journey-title" className="mt-3 max-w-2xl font-serif font-bold">Từ ý tưởng đến trải nghiệm học tập.</h2>
+            </div>
+            <Link href="/tao-quiz" className="group inline-flex min-h-11 w-fit items-center gap-2 text-sm font-bold text-accent">Tạo Quiz trong 2 bước <span className="grid size-8 place-items-center rounded-full bg-accent/10 transition-transform duration-200 group-hover:translate-x-1"><ArrowRight size={15} /></span></Link>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <article className="relative isolate overflow-hidden rounded-[28px] border border-[#decff9] bg-[linear-gradient(118deg,#f8f3ff_0%,#eee2ff_100%)] p-7 shadow-[0_16px_38px_rgba(112,64,180,.08)] sm:p-10 lg:col-span-2 lg:min-h-[340px]">
+              <div className="relative z-10 max-w-[460px]">
+                <span className="inline-flex items-center rounded-full bg-white/75 px-3 py-1 text-[11px] font-bold uppercase tracking-[.14em] text-[#6a32b8] shadow-sm">Tạo Quiz siêu tốc</span>
+                <h3 className="mt-5 text-[clamp(1.8rem,3vw,2.55rem)] font-extrabold leading-tight tracking-[-.035em] text-[#5d249f]">Chọn một mẫu, thêm câu hỏi, và nhận ngay Quiz của bạn!</h3>
+                <p className="mt-4 max-w-md text-[15px] font-medium leading-7 text-[#4c4262]">Không có nhiều thời gian? Bạn vẫn có thể tạo bài Quiz nhanh chóng chỉ với hai bước rõ ràng.</p>
+                <Button asChild className="mt-7 rounded-full bg-[#7035c1] px-6 text-white hover:bg-[#5d249f]"><Link href="/tao-quiz">Tạo Quiz ngay <ArrowRight size={16} /></Link></Button>
+              </div>
+              <img src="/manus-storage/quiz_landing_1_1_image_en_2x_27b3e0b5.webp" alt="Minh họa hai bước tạo Quiz từ mẫu có sẵn" className="pointer-events-none relative z-0 mx-auto mt-6 block w-full max-w-[590px] object-contain sm:absolute sm:-bottom-3 sm:right-1 sm:mt-0 sm:w-[54%]" />
+            </article>
+            <article className="relative isolate min-h-[410px] overflow-hidden rounded-[28px] border border-[#decff9] bg-[linear-gradient(135deg,#f2e6ff_0%,#e4d0ff_100%)] p-7 shadow-[0_16px_38px_rgba(112,64,180,.07)] sm:p-10">
+              <div className="relative z-10 max-w-[440px]">
+                <h3 className="text-[clamp(1.55rem,2.5vw,2.2rem)] font-extrabold leading-tight tracking-[-.03em] text-[#5d249f]">Dễ dàng tìm và sử dụng các câu hỏi có sẵn phù hợp với chương trình học.</h3>
+                <p className="mt-4 max-w-sm text-[15px] font-medium leading-7 text-[#4c4262]">Tìm kiếm, sao chép và tùy chỉnh câu hỏi nhanh chóng để hoàn thiện bài học cho lớp của bạn.</p>
+              </div>
+              <img src="/manus-storage/quiz_landing_1_2_image_en_2x_abdeac42.webp" alt="Minh họa sao chép và tùy chỉnh câu hỏi có sẵn" className="pointer-events-none absolute bottom-0 left-1/2 w-[122%] max-w-[650px] -translate-x-1/2 object-contain sm:w-[108%]" />
+            </article>
+            <article className="relative isolate min-h-[410px] overflow-hidden rounded-[28px] border border-[#e5e2ea] bg-[linear-gradient(135deg,#fdfbff_0%,#f5f1fa_100%)] p-7 shadow-[0_16px_38px_rgba(68,50,95,.07)] sm:p-10">
+              <div className="relative z-10 max-w-[440px]">
+                <h3 className="text-[clamp(1.55rem,2.5vw,2.2rem)] font-extrabold leading-tight tracking-[-.03em] text-[#5d249f]">Truy cập nhanh bằng mã QR hoặc mã tham gia.</h3>
+                <p className="mt-4 max-w-sm text-[15px] font-medium leading-7 text-[#4c4262]">Học viên vào bài ngay trên trình duyệt, không cần tải ứng dụng và không phải chờ đợi.</p>
+              </div>
+              <span aria-hidden="true" className="absolute -bottom-4 -right-4 size-24 rounded-full bg-[#e7ddff]" />
+              <img src="/manus-storage/quiz_landing_1_3_image_kr_2x_31ee6c2a.webp" alt="Minh họa tham gia Quiz bằng mã QR trên nhiều thiết bị" className="pointer-events-none absolute bottom-0 left-1/2 w-[124%] max-w-[650px] -translate-x-1/2 object-contain sm:w-[108%]" />
+            </article>
+          </div>
+        </section>
+
         <section className="container py-16 lg:py-24">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end"><div><p className="text-[11px] font-bold uppercase tracking-[.18em] text-primary">Khám phá có định hướng</p><h2 className="mt-3 max-w-2xl font-serif font-bold">Nội dung được tổ chức để bạn không phải học một mình.</h2></div><Link href="/kham-pha" className="group inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-bold text-primary">Xem toàn bộ thư viện <span className="grid size-8 place-items-center rounded-full bg-primary-light transition-transform group-hover:translate-x-1"><ArrowRight size={15} /></span></Link></div>
           <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">{pathways.map((pathway, index) => <div key={pathway.step} className="relative rounded-[var(--radius-lg-token)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]"><span className="text-xs font-bold text-primary">{pathway.step}</span><pathway.icon className="mt-7 text-primary" size={22} /><p className="mt-5 text-[11px] font-bold uppercase tracking-[.14em] text-text-muted">{pathway.label}</p><p className="mt-1 text-lg font-bold text-foreground">{pathway.value}</p><p className="mt-2 text-sm text-text-secondary">{pathway.note}</p>{index < pathways.length - 1 ? <ChevronRight className="absolute -right-5 top-1/2 z-10 hidden rounded-full border border-border bg-surface p-1 text-primary lg:block" size={27} /> : null}</div>)}</div>

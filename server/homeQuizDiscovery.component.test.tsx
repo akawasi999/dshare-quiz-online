@@ -25,6 +25,16 @@ describe("Home quiz discovery", () => {
     expect(screen.getByRole("img", { name: "Minh họa AI gợi ý nhiều phiên bản câu hỏi" }).getAttribute("src")).toBe("/manus-storage/v3_2_3_image_en_2x_33af5b55.webp");
   });
 
+  it("hiển thị phần tạo và chia sẻ Quiz với ba hình minh họa được cung cấp", () => {
+    render(<Home />);
+
+    expect(screen.getByRole("heading", { name: "Từ ý tưởng đến trải nghiệm học tập." })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Tạo Quiz trong 2 bước/i }).getAttribute("href")).toBe("/tao-quiz");
+    expect(screen.getByRole("img", { name: "Minh họa hai bước tạo Quiz từ mẫu có sẵn" }).getAttribute("src")).toBe("/manus-storage/quiz_landing_1_1_image_en_2x_27b3e0b5.webp");
+    expect(screen.getByRole("img", { name: "Minh họa sao chép và tùy chỉnh câu hỏi có sẵn" }).getAttribute("src")).toBe("/manus-storage/quiz_landing_1_2_image_en_2x_abdeac42.webp");
+    expect(screen.getByRole("img", { name: "Minh họa tham gia Quiz bằng mã QR trên nhiều thiết bị" }).getAttribute("src")).toBe("/manus-storage/quiz_landing_1_3_image_kr_2x_31ee6c2a.webp");
+  });
+
   it("supports search and reward sorting for visible Quiz Cards", async () => {
     const user = userEvent.setup();
     render(<Home />);
