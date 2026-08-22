@@ -434,3 +434,7 @@
 - [x] Đưa Đăng xuất vào dropdown và thêm Bảng điều khiển cho tài khoản đã đăng nhập.
 - [x] Hiển thị Admin CPanel trong dropdown khi tài khoản có quyền admin.
 - [x] Kiểm thử interaction, phân quyền, responsive và lưu checkpoint cho dropdown tài khoản.
+- [x] Điều hướng nhấp vào tên tài khoản ở header tới Bảng điều khiển.
+- [x] Loại bỏ thẻ tag gói đăng ký và quota ở góc giao diện tài khoản.
+- [x] Kiểm thử regression, responsive và lưu checkpoint cho thay đổi tài khoản.
+- [x] Loại bỏ AI Assistant khỏi menu profile tài khoản.

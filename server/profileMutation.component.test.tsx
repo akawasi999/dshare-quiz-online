@@ -34,13 +34,11 @@ describe("Profile mutation feedback", () => {
     expect(mocks.toast.error).toHaveBeenCalledWith("Không thể lưu hồ sơ", { description: "Không thể kết nối" });
   });
 
-  it("hiển thị gói hiện tại, quyền lợi và đề xuất nâng cấp từ cấu hình quản trị", () => {
+  it("không hiển thị thẻ gói và quota cố định ở hai góc giao diện", () => {
     mocks.summary.data.currentPlan = { name: "Basic học chủ động", tier: "basic", monthlyPrice: 0, promoPrice: null, benefits: ["20 lượt làm/tháng"] };
     mocks.summary.data.upgradePlans = [{ name: "PRO tăng tốc", tier: "pro", description: "Thêm quyền lợi chuyên sâu", payosEnabled: true }];
     render(<Profile />);
-    expect(screen.getByLabelText("Gói đăng ký hiện tại").textContent).toContain("Basic học chủ động");
-    expect(screen.getByText("20 lượt làm/tháng")).toBeTruthy();
-    expect(screen.getByText("Nâng cấp lên PRO tăng tốc")).toBeTruthy();
-    expect(screen.getByRole("link", { name: /xem ưu đãi/i }).getAttribute("href")).toBe("/nap-point?planTier=pro");
+    expect(screen.queryByLabelText("Gói đăng ký hiện tại")).toBeNull();
+    expect(screen.queryByText("Quota tháng · BASIC")).toBeNull();
   });
 });

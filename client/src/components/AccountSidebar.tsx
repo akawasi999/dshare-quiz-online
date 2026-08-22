@@ -1,9 +1,9 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Bot, CreditCard, GraduationCap, HandHeart, History, LayoutDashboard, LogOut, PlusCircle, Sparkles, Trophy, UserRound, UsersRound } from "lucide-react";
+import { CreditCard, GraduationCap, HandHeart, History, LayoutDashboard, LogOut, PlusCircle, Sparkles, Trophy, UserRound, UsersRound } from "lucide-react";
 import { useLocation } from "wouter";
 
 const links = [
-  [LayoutDashboard, "Bảng điều khiển", "/ho-so"], [PlusCircle, "Quiz của tôi", "/quiz-cua-toi"], [Bot, "AI Assistant", "/tro-ly-ai"], [GraduationCap, "Làm Quiz", "/kham-pha"], [Trophy, "Bảng xếp hạng", "/bang-xep-hang"], [UsersRound, "Mời bạn bè", "/gioi-thieu"], [UserRound, "Thông tin cá nhân", "/ho-so#thiet-lap"], [CreditCard, "Nạp Point", "/nap-point"], [Sparkles, "Nâng cấp tài khoản", "/bang-gia"], [History, "Lịch sử giao dịch", "/vi"], [HandHeart, "Hỗ trợ", "mailto:support@dshare.vn"],
+  [LayoutDashboard, "Bảng điều khiển", "/ho-so"], [PlusCircle, "Quiz của tôi", "/quiz-cua-toi"], [GraduationCap, "Làm Quiz", "/kham-pha"], [Trophy, "Bảng xếp hạng", "/bang-xep-hang"], [UsersRound, "Mời bạn bè", "/gioi-thieu"], [UserRound, "Thông tin cá nhân", "/ho-so#thiet-lap"], [CreditCard, "Nạp Point", "/nap-point"], [Sparkles, "Nâng cấp tài khoản", "/bang-gia"], [History, "Lịch sử giao dịch", "/vi"], [HandHeart, "Hỗ trợ", "mailto:support@dshare.vn"],
 ] as const;
 
 export default function AccountSidebar() {

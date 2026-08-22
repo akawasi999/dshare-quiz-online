@@ -75,7 +75,8 @@ describe("SiteHeader navigation", () => {
     const userEventApi = userEvent.setup();
     mocks.user = { id: 1, name: "Minh Nguyễn", role: "user" };
     const { rerender } = render(<SiteHeader />);
-    const accountTrigger = screen.getByRole("button", { name: /Tài khoản Minh/ });
+    const accountTrigger = screen.getByRole("link", { name: /Tài khoản Minh/ });
+    expect(accountTrigger.getAttribute("href")).toBe("/ho-so");
     fireEvent.mouseEnter(accountTrigger.parentElement!);
     expect(screen.getByRole("menuitem", { name: "Bảng điều khiển" }).getAttribute("href")).toBe("/ho-so");
     expect(screen.getByRole("menuitem", { name: "Đăng xuất" })).toBeTruthy();
@@ -85,7 +86,7 @@ describe("SiteHeader navigation", () => {
 
     mocks.user = { id: 2, name: "Quản trị", role: "admin" };
     rerender(<SiteHeader />);
-    fireEvent.mouseEnter(screen.getByRole("button", { name: /Tài khoản Quản/ }).parentElement!);
+    fireEvent.mouseEnter(screen.getByRole("link", { name: /Tài khoản Quản/ }).parentElement!);
     expect(screen.getByRole("menuitem", { name: "Admin CPanel" }).getAttribute("href")).toBe("/quan-tri");
   });
 });
