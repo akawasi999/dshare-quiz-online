@@ -452,3 +452,7 @@
 - [x] Lưu và phát thông báo in-app khi Quiz được phê duyệt hoặc từ chối.
 - [x] Thêm chuông thông báo cùng lịch sử đọc/chưa đọc trên header người dùng.
 - [x] Kiểm thử workflow đồng bộ Studio và thông báo desktop/mobile, sau đó lưu checkpoint.
+- [x] Làm mượt chuông thông báo và đóng menu khi nhấp ngoài.
+- [x] Thay selector Chủ đề Studio bằng các ô cha–con theo cây CPanel.
+- [x] Bắt buộc chọn đủ cấp Chủ đề hiện hữu và loại bỏ mô tả dưới selector.
+- [x] Kiểm thử interaction, validation, responsive và lưu checkpoint.

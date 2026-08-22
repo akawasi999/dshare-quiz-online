@@ -103,4 +103,14 @@ describe("SiteHeader navigation", () => {
     await userEventApi.click(screen.getByRole("menuitem", { name: /Quiz cần chỉnh sửa/ }));
     expect(mocks.markRead).toHaveBeenCalledWith({ notificationId: 77 });
   });
+
+  it("đóng menu thông báo khi người dùng nhấp ra ngoài", async () => {
+    const userEventApi = userEvent.setup();
+    mocks.user = { id: 1, name: "Minh Nguyễn", role: "user" };
+    render(<SiteHeader />);
+    await userEventApi.click(screen.getAllByRole("button", { name: /Mở thông báo, 1 chưa đọc/ })[0]!);
+    expect(screen.getByRole("menu", { name: "Lịch sử thông báo" })).toBeTruthy();
+    await userEventApi.click(document.body);
+    expect(screen.queryByRole("menu", { name: "Lịch sử thông báo" })).toBeNull();
+  });
 });
