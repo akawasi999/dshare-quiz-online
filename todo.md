@@ -438,3 +438,7 @@
 - [x] Loại bỏ thẻ tag gói đăng ký và quota ở góc giao diện tài khoản.
 - [x] Kiểm thử regression, responsive và lưu checkpoint cho thay đổi tài khoản.
 - [x] Loại bỏ AI Assistant khỏi menu profile tài khoản.
+- [x] Thêm avatar tròn nhỏ bên cạnh tên tài khoản trên header.
+- [x] Hiển thị số dư thực trong mục Ví Point của dropdown tài khoản.
+- [x] Tinh chỉnh fade-in mượt khi mở dropdown tài khoản.
+- [x] Kiểm thử dữ liệu, interaction, responsive và lưu checkpoint cho menu tài khoản.
