@@ -51,7 +51,6 @@
 
 /* One 40px flex line prevents independent link line-boxes from drifting vertically. */
 .site-header-navigation {
-  display: flex;
   min-height: 40px;
   align-items: center;
 }

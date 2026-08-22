@@ -4,9 +4,9 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), topics: [{ id: 10, name: "Tiểu học", slug: "tieu-hoc", parentId: null, depth: 0 }, { id: 11, name: "Lớp 1", slug: "lop-1", parentId: 10, depth: 1 }] }));
+const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), logout: vi.fn(), user: null as null | { id: number; name: string; role: "user" | "admin" }, topics: [{ id: 10, name: "Tiểu học", slug: "tieu-hoc", parentId: null, depth: 0 }, { id: 11, name: "Lớp 1", slug: "lop-1", parentId: 10, depth: 1 }] }));
 
-vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: null, loading: false, logout: vi.fn() }) }));
+vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: mocks.user, loading: false, logout: mocks.logout }) }));
 vi.mock("@/contexts/ThemeContext", () => ({ useTheme: () => ({ theme: "light", toggleTheme: mocks.toggleTheme }) }));
 vi.mock("@/components/BrandLogo", () => ({ default: () => <span>Dshare</span> }));
 vi.mock("@/lib/trpc", () => ({ trpc: { catalog: { topics: { useQuery: () => ({ data: mocks.topics }) } } } }));
@@ -15,7 +15,7 @@ vi.mock("wouter", () => ({ Link: ({ href, children, ...props }: { href: string; 
 import SiteHeader from "../client/src/components/SiteHeader";
 
 describe("SiteHeader navigation", () => {
-  afterEach(cleanup);
+  afterEach(() => { cleanup(); mocks.user = null; mocks.logout.mockReset(); });
 
   it("hiển thị liên kết trực tiếp, dropdown chủ đề/hỗ trợ và không khôi phục lối vào Xếp hạng", async () => {
     const user = userEvent.setup();
@@ -69,5 +69,23 @@ describe("SiteHeader navigation", () => {
     act(() => vi.advanceTimersByTime(1));
     expect(screen.queryByRole("menu")).toBeNull();
     vi.useRealTimers();
+  });
+
+  it("hiển thị dropdown tài khoản cho người dùng và chỉ hiển thị Admin CPanel cho admin", async () => {
+    const userEventApi = userEvent.setup();
+    mocks.user = { id: 1, name: "Minh Nguyễn", role: "user" };
+    const { rerender } = render(<SiteHeader />);
+    const accountTrigger = screen.getByRole("button", { name: /Tài khoản Minh/ });
+    fireEvent.mouseEnter(accountTrigger.parentElement!);
+    expect(screen.getByRole("menuitem", { name: "Bảng điều khiển" }).getAttribute("href")).toBe("/ho-so");
+    expect(screen.getByRole("menuitem", { name: "Đăng xuất" })).toBeTruthy();
+    expect(screen.queryByRole("menuitem", { name: "Admin CPanel" })).toBeNull();
+    await userEventApi.click(screen.getByRole("menuitem", { name: "Đăng xuất" }));
+    expect(mocks.logout).toHaveBeenCalledTimes(1);
+
+    mocks.user = { id: 2, name: "Quản trị", role: "admin" };
+    rerender(<SiteHeader />);
+    fireEvent.mouseEnter(screen.getByRole("button", { name: /Tài khoản Quản/ }).parentElement!);
+    expect(screen.getByRole("menuitem", { name: "Admin CPanel" }).getAttribute("href")).toBe("/quan-tri");
   });
 });

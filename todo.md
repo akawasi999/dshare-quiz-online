@@ -430,3 +430,7 @@
 - [x] Kiểm thử dropdown Khám phá tối giản và lưu checkpoint.
 - [x] Căn chỉnh cùng baseline cho toàn bộ nhãn và chevron trên navigation desktop.
 - [x] Kiểm thử trực quan, regression và lưu checkpoint cho căn chỉnh navigation.
+- [x] Thêm dropdown tài khoản ở header với mở hover, focus và nhấp.
+- [x] Đưa Đăng xuất vào dropdown và thêm Bảng điều khiển cho tài khoản đã đăng nhập.
+- [x] Hiển thị Admin CPanel trong dropdown khi tài khoản có quyền admin.
+- [x] Kiểm thử interaction, phân quyền, responsive và lưu checkpoint cho dropdown tài khoản.
