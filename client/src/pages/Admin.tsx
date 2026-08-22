@@ -16,6 +16,7 @@ import MembershipGroupPermissionsPanel from "@/components/MembershipGroupPermiss
 import UserManagementPanel from "@/components/UserManagementPanel";
 import AdminAiAssistantPanel from "@/components/AdminAiAssistantPanel";
 import ContentManagementPanel from "@/components/ContentManagementPanel";
+import AnalyticsControlPanel from "@/components/AnalyticsControlPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,12 +43,12 @@ export default function Admin() {
   if (canonicalLocation === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;
   if (canonicalLocation === "/quan-tri/nguoi-dung") content = <UserManagementPanel />;
   if (canonicalLocation === "/quan-tri/nhom-nguoi-dung") content = <MembershipGroupPermissionsPanel />;
-  if (canonicalLocation === "/quan-tri/bao-cao") content = <><OperationalCharts /><AnalyticsDashboard /></>;
+  if (canonicalLocation === "/quan-tri/bao-cao") content = <AnalyticsControlPanel />;
   if (canonicalLocation === "/quan-tri/live-monitoring") content = <LiveMonitoringPanel />;
   if (canonicalLocation === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
   if (canonicalLocation === "/quan-tri/point") content = <AdminPointLedgerPanel />;
   if (canonicalLocation === "/quan-tri/nhat-ky") content = <AuditTrail />;
-  if (canonicalLocation === "/quan-tri/thuong-hieu") content = <><ColorPalettePreview /><BrandSettingsPanel /></>;
+  if (canonicalLocation === "/quan-tri/thuong-hieu") content = <BrandSettingsPanel />;
   if (canonicalLocation === "/quan-tri/ai-assistant") content = <AdminAiAssistantPanel />;
   return <DashboardLayout>{content}</DashboardLayout>;
 }
