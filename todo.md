@@ -376,3 +376,6 @@
 - [x] Mở rộng dữ liệu, validation và chấm điểm cho nhóm nhận định chọn Có/Không.
 - [x] Bổ sung trình soạn Studio, Preview, Quiz Runner và kết quả cho dạng nhận định Đúng/Sai.
 - [x] Bổ sung hồi quy, xác minh responsive và cập nhật bàn giao cho dạng câu hỏi mới.
+- [x] Phân tích navigation tham chiếu và đối chiếu SiteHeader hiện có.
+- [x] Thiết kế lại navigation desktop với nhóm menu, dropdown, CTA, đăng nhập và chọn ngôn ngữ.
+- [x] Kiểm thử responsive, accessibility và cập nhật bàn giao cho navigation mới.

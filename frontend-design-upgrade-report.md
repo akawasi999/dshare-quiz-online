@@ -90,3 +90,9 @@ Point và XP được ghi nhãn tách biệt trên Dashboard, Analytics, Point l
 | Hồi quy | `questionValidation.test.ts`, `quizEngine.test.ts`, `quizRunnerState.component.test.tsx`, `userQuizCreatorState.component.test.tsx` | Validation, chấm toàn phần, Studio và Sandbox được bao phủ |
 
 Regression cuối đạt **71 tệp / 180 ca kiểm thử**, TypeScript sạch và build production hoàn tất. Studio được xác minh tại desktop 1440px và mobile 375px; trên mobile, điểm truy cập “Nhận định Có / Không” giữ kích thước chạm rõ, xuống dòng tự nhiên và không tạo tràn ngang.
+
+## Navigation công khai theo mẫu tham chiếu
+
+`SiteHeader` đã chuyển sang bố cục navigation công khai có năm nhóm: **Giới thiệu về chúng tôi**, **Khám phá**, **Bảng giá**, **Blog** và **Hỗ trợ khách hàng**. Các nhóm có menu thả xuống chứa mô tả ngắn, tương thích chuột, bàn phím và focus state; CTA “Bắt đầu”, đăng nhập, đổi giao diện và chỉ báo ngôn ngữ được đặt ở phía phải. Khi đã đăng nhập, CTA được thay bằng lối vào hồ sơ và đăng xuất để giữ luồng xác thực hiện hành.
+
+Trên mobile, menu được tổ chức thành drawer nhóm rõ ràng, các lối vào có chiều cao chạm phù hợp và không tràn ngang. Regression cuối tiếp tục đạt **71 tệp / 180 ca kiểm thử**, TypeScript sạch và build production hoàn tất; ảnh kiểm tra desktop 1440px và mobile 375px xác nhận bố cục header mới.
