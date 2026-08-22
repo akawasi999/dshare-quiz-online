@@ -382,3 +382,6 @@
 - [x] Rà soát nhóm chủ đề, dropdown hỗ trợ và typography Bảng giá trước khi tinh chỉnh.
 - [x] Chuyển Giới thiệu/Blog thành liên kết trực tiếp; thay dropdown Khám phá bằng chủ đề và Hỗ trợ theo mẫu.
 - [x] Đồng bộ typography Bảng giá, thêm hover/dropdown motion và hoàn tất hồi quy responsive.
+- [x] Rà soát kích thước, trọng lượng và khoảng cách chữ của các mục header.
+- [x] Chuẩn hóa typography navigation, CTA và điều khiển header thành một thang chữ thống nhất.
+- [x] Kiểm thử responsive, hồi quy và cập nhật bàn giao cho typography header.

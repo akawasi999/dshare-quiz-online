@@ -102,3 +102,7 @@ Trên mobile, menu được tổ chức thành drawer nhóm rõ ràng, các lố
 Theo phản hồi mới nhất, **Giới thiệu về chúng tôi** và **Blog** là liên kết trực tiếp; chỉ **Khám phá** và **Hỗ trợ khách hàng** có dropdown. Khám phá hiện liệt kê các chủ đề Công nghệ thông tin, Tin học văn phòng và Lập trình. Hỗ trợ mô phỏng đúng nhịp thông tin của mẫu với Câu hỏi thường gặp, Hướng dẫn sử dụng, Tin cập nhật và Thông báo, mỗi mục có biểu tượng màu riêng.
 
 Dropdown mở bằng hover, focus hoặc click; phần bảng được chuyển bằng opacity/transform 200ms, icon mũi tên xoay theo trạng thái và từng mục dịch nhẹ khi hover. Các motion được bọc `motion-safe` để tôn trọng reduced motion. Trang Bảng giá đã bỏ font serif tại hero, tên gói và giá để đồng bộ Inter/font-sans với navigation. Regression cuối đạt **71 tệp / 180 ca kiểm thử**, TypeScript sạch, build production hoàn tất và desktop/mobile đã được xác minh.
+
+## Chuẩn hóa typography header
+
+Header nay dùng chung thang chữ **13px / semibold / leading-none / tracking -0.01em** cho điều hướng desktop, trigger dropdown, chỉ báo ngôn ngữ, CTA, hồ sơ và đăng nhập/đăng xuất. Khoảng đệm ngang các mục cũng được đưa về nhịp 8px–12px để tránh cảm giác chữ lớn/nhỏ lẫn lộn. Hồi quy xác nhận lớp typography trên liên kết Bảng giá và CTA; TypeScript sạch, build production hoàn tất, desktop 1440px cùng mobile 375px đã được kiểm tra.
