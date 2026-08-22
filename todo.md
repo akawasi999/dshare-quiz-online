@@ -395,7 +395,7 @@
 - [x] Kiểm thử desktop/mobile, hồi quy và cập nhật bàn giao cho căn chỉnh navigation.
 - [x] Đọc toàn bộ đặc tả CPanel v2.0 và lập ma trận chênh lệch giữa yêu cầu mới với mã nguồn, schema và route hiện có.
 - [x] Chuẩn hóa sidebar/route CPanel: Learning chỉ gồm Chủ đề và Quiz System; gỡ lối vào CPanel cho Content, Question Bank, Random Generator và Import/Export.
-- [ ] Hoàn thiện shell CPanel gồm notification center, account menu, trạng thái kết nối, sidebar preference và command palette theo quyền.
+- [x] Hoàn thiện shell CPanel gồm notification center, account menu, trạng thái kết nối, sidebar preference và command palette theo quyền.
 - [x] Xây dựng quản trị Chủ đề phân cấp có CRUD, thứ tự, trạng thái active/archived, kiểm tra liên kết, soft-delete và audit.
 - [x] Xây dựng Quiz System có danh sách 20 dòng/trang, URL state, tìm kiếm/lọc/sắp xếp, quản trị câu hỏi nội bộ, publish/lock/archive, bulk backend và audit thay đổi.
 - [x] Nâng cấp User 360, nhóm người dùng, ma trận quyền, bulk membership, quyền hiệu lực và audit thay đổi quyền.
@@ -404,3 +404,5 @@
 - [x] Hoàn thiện Live Monitoring, Activity Logs, AI Assistant, Settings và Appearance theo đặc tả, giữ rõ giới hạn telemetry và dữ liệu thật.
 - [x] Bổ sung migration, API contract, permission, transaction, validation, concurrency và audit backend cho Topic, Quiz System, câu hỏi nội bộ và XP.
 - [x] Kiểm thử regression, responsive, accessibility, migration và cập nhật báo cáo bàn giao cho toàn bộ CPanel v2.0.
+- [x] Rà soát và hoàn thiện chỉnh sửa tối giản nội dung trang quản lý Chủ đề trước checkpoint.
+- [x] Kiểm thử trực quan/hồi quy trang Chủ đề và lưu checkpoint cho chỉnh sửa mới.

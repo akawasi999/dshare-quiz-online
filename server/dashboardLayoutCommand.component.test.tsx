@@ -38,4 +38,21 @@ describe("DashboardLayout CPanel v2", () => {
     expect(screen.queryByText("Tạo đề ngẫu nhiên")).toBeNull();
     expect(screen.queryByText("Import / Export")).toBeNull();
   });
+
+  it("cung cấp notification center và lối vào hồ sơ từ shell quản trị", () => {
+    render(<DashboardLayout><p>Workspace</p></DashboardLayout>);
+
+    const notificationTrigger = screen.getByRole("button", { name: "Mở thông báo vận hành" });
+    fireEvent.pointerDown(notificationTrigger, { button: 0, ctrlKey: false });
+    fireEvent.click(notificationTrigger);
+    expect(screen.getByText("Thông báo vận hành")).toBeTruthy();
+    expect(screen.getByText("Mở Activity Logs")).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    const [accountTrigger] = screen.getAllByRole("button", { name: "Mở menu tài khoản quản trị" });
+    fireEvent.pointerDown(accountTrigger, { button: 0, ctrlKey: false });
+    fireEvent.click(accountTrigger);
+    expect(screen.getByText("Hồ sơ tài khoản")).toBeTruthy();
+  });
 });
