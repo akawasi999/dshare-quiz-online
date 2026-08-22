@@ -55,6 +55,21 @@ function Router() {
     <Route path="/quan-tri/nhat-ky" component={Admin} />
     <Route path="/quan-tri/thuong-hieu" component={Admin} />
     <Route path="/quan-tri/ai-assistant" component={Admin} />
+    <Route path="/admin" component={Admin} />
+    <Route path="/admin/dashboard" component={Admin} />
+    <Route path="/admin/learning/content" component={Admin} />
+    <Route path="/admin/learning/questions" component={Admin} />
+    <Route path="/admin/learning/random-generator" component={Admin} />
+    <Route path="/admin/learning/import-export" component={Admin} />
+    <Route path="/admin/gamification/points" component={Admin} />
+    <Route path="/admin/users" component={Admin} />
+    <Route path="/admin/users/groups" component={Admin} />
+    <Route path="/admin/moderation/errors" component={Admin} />
+    <Route path="/admin/analytics" component={Admin} />
+    <Route path="/admin/system/monitoring" component={Admin} />
+    <Route path="/admin/system/logs" component={Admin} />
+    <Route path="/admin/system/ai" component={Admin} />
+    <Route path="/admin/appearance/theme" component={Admin} />
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>;

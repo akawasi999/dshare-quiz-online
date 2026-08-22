@@ -367,3 +367,8 @@
 - [x] Làm mới giao diện màu, trạng thái tương tác và bố cục responsive cho trang Xếp hạng và Giới thiệu.
 - [x] Loại bỏ mục Xếp hạng và Giới thiệu khỏi menu đầu trang, giữ điểm truy cập trong không gian hồ sơ.
 - [x] Bổ sung hồi quy, xác minh desktop/mobile và cập nhật báo cáo bàn giao cho thay đổi điều hướng.
+- [x] Phân tích tài liệu DShare CPanel Architecture v2.0 và lập inventory chênh lệch với quản trị hiện có.
+- [x] Triển khai Phase 1: khung điều hướng và tổng quan CPanel theo đặc tả được ưu tiên.
+- [ ] Triển khai Phase 2: các mô-đun quản trị nội dung và người dùng theo đặc tả được ưu tiên.
+- [ ] Triển khai Phase 3: vận hành, báo cáo và cấu hình hệ thống theo đặc tả được ưu tiên.
+- [ ] Chạy regression, xác minh desktop/mobile, cập nhật báo cáo và checkpoint sau từng phase CPanel.

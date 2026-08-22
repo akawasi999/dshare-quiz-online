@@ -31,20 +31,23 @@ export default function Admin() {
   const [location] = useLocation();
   if (loading) return <main className="grid min-h-screen place-items-center bg-[#ebf8ff] p-6"><p role="status" aria-live="polite" className="text-sm font-medium text-[#617786]">Đang kiểm tra quyền truy cập quản trị…</p></main>;
   if (user?.role !== "admin") return <main className="grid min-h-screen place-items-center bg-[#f4f7ff] p-6"><div className="max-w-md rounded-[28px] bg-white p-8 text-center shadow-sm"><ShieldAlert className="mx-auto text-[#b66b59]" size={30} /><h1 className="mt-4 font-serif text-3xl font-semibold text-[#172554]">Khu vực hạn chế</h1><p className="mt-3 text-sm leading-6 text-[#617786]">Chỉ tài khoản quản trị có quyền truy cập vào trung tâm điều hành Dshare.</p></div></main>;
-  let content = <><ColorPalettePreview /><AdminOperationsDashboard /></>;
-  if (location === "/quan-tri/noi-dung") content = <ContentManager />;
-  if (location === "/quan-tri/tao-de-ngau-nhien") content = <RandomQuizBuilder />;
-  if (location === "/quan-tri/cau-hoi") content = <><AIQuestionGeneratorPanel /><QuestionEditorPanel /></>;
-  if (location === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;
-  if (location === "/quan-tri/nguoi-dung") content = <UserManagementPanel />;
-  if (location === "/quan-tri/nhom-nguoi-dung") content = <MembershipGroupPermissionsPanel />;
-  if (location === "/quan-tri/bao-cao") content = <><OperationalCharts /><AnalyticsDashboard /></>;
-  if (location === "/quan-tri/live-monitoring") content = <LiveMonitoringPanel />;
-  if (location === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
-  if (location === "/quan-tri/point") content = <AdminPointLedgerPanel />;
-  if (location === "/quan-tri/nhat-ky") content = <AuditTrail />;
-  if (location === "/quan-tri/thuong-hieu") content = <BrandSettingsPanel />;
-  if (location === "/quan-tri/ai-assistant") content = <AdminAiAssistantPanel />;
+  const canonicalLocation = {
+    "/admin": "/quan-tri", "/admin/dashboard": "/quan-tri", "/admin/learning/content": "/quan-tri/noi-dung", "/admin/learning/questions": "/quan-tri/cau-hoi", "/admin/learning/random-generator": "/quan-tri/tao-de-ngau-nhien", "/admin/learning/import-export": "/quan-tri/import-xuat", "/admin/gamification/points": "/quan-tri/point", "/admin/users": "/quan-tri/nguoi-dung", "/admin/users/groups": "/quan-tri/nhom-nguoi-dung", "/admin/moderation/errors": "/quan-tri/bao-loi", "/admin/analytics": "/quan-tri/bao-cao", "/admin/system/monitoring": "/quan-tri/live-monitoring", "/admin/system/logs": "/quan-tri/nhat-ky", "/admin/system/ai": "/quan-tri/ai-assistant", "/admin/appearance/theme": "/quan-tri/thuong-hieu",
+  }[location] ?? location;
+  let content = <AdminOperationsDashboard />;
+  if (canonicalLocation === "/quan-tri/noi-dung") content = <ContentManager />;
+  if (canonicalLocation === "/quan-tri/tao-de-ngau-nhien") content = <RandomQuizBuilder />;
+  if (canonicalLocation === "/quan-tri/cau-hoi") content = <><AIQuestionGeneratorPanel /><QuestionEditorPanel /></>;
+  if (canonicalLocation === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;
+  if (canonicalLocation === "/quan-tri/nguoi-dung") content = <UserManagementPanel />;
+  if (canonicalLocation === "/quan-tri/nhom-nguoi-dung") content = <MembershipGroupPermissionsPanel />;
+  if (canonicalLocation === "/quan-tri/bao-cao") content = <><OperationalCharts /><AnalyticsDashboard /></>;
+  if (canonicalLocation === "/quan-tri/live-monitoring") content = <LiveMonitoringPanel />;
+  if (canonicalLocation === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
+  if (canonicalLocation === "/quan-tri/point") content = <AdminPointLedgerPanel />;
+  if (canonicalLocation === "/quan-tri/nhat-ky") content = <AuditTrail />;
+  if (canonicalLocation === "/quan-tri/thuong-hieu") content = <><ColorPalettePreview /><BrandSettingsPanel /></>;
+  if (canonicalLocation === "/quan-tri/ai-assistant") content = <AdminAiAssistantPanel />;
   return <DashboardLayout>{content}</DashboardLayout>;
 }
 
