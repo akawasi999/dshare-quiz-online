@@ -64,3 +64,15 @@ Trang Xếp hạng và Giới thiệu đã được chuyển sang bố cục car
 | Hồi quy | `siteHeaderNavigation.component.test.tsx` | Bổ sung test bảo vệ menu đầu trang không khôi phục hai mục trùng lặp |
 
 Regression sau thay đổi đạt **67 tệp / 172 ca kiểm thử**; `pnpm check` sạch và build production hoàn tất. Ảnh kiểm tra tại desktop 1440px và mobile 375px xác nhận bố cục hero, thẻ số liệu và nội dung không tràn ngang.
+
+## CPanel Architecture v2.0 — Learning Control Center
+
+Khu quản trị đã được nâng cấp theo tài liệu `DShare_CPanel_Architecture_v2.0.docx` qua ba phase, giữ nguyên tRPC procedure, database schema và business logic đang vận hành. Lớp `.cpanel-v2` trong `index.css` scope palette, surface, border, radius, shadow và Dark Mode riêng cho CPanel; do đó không làm thay đổi token giao diện học viên. Báo cáo audit chi tiết và route mapping được lưu tại `cpanel-v2-audit.md`.
+
+| Phase | Hạng mục trọng yếu | Kết quả |
+|---|---|---|
+| 1 | Shell, navigation, dashboard | Sidebar phân nhóm, desktop header/breadcrumb, Command Palette `Ctrl/Cmd+K`, alias `/admin/*`, Dashboard Learning Control Center dùng dữ liệu thực |
+| 2 | Learning và Users | Page template cho Nội dung bốn cấp, content tree, User Management search/filter/sort/bulk/pagination responsive, User 360 bảo toàn Quiz/Point/payment/email history |
+| 3 | Analytics, System, Appearance | Analytics Learning Intelligence, Point ledger, Live Monitoring, AI Content & Learning Copilot, Design System Manager preview realtime |
+
+Point và XP được ghi nhãn tách biệt trên Dashboard, Analytics, Point ledger và User 360. Những phần chưa có domain dữ liệu thực, gồm XP, mission, achievement, streak, telemetry request/queue/error, được thông báo rõ theo phạm vi thay vì mô phỏng số liệu. Regression cuối đạt **71 tệp / 176 ca kiểm thử**, TypeScript sạch, build production hoàn tất; desktop 1440px và mobile 375px đã được xác minh trên các tuyến CPanel trọng yếu.
