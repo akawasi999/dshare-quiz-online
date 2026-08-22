@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }], topics: [{ id: 24, name: "Tin học văn phòng", parentId: null, depth: 0, status: "active" }, { id: 25, name: "Excel", parentId: 24, depth: 1, status: "active" }, { id: 26, name: "Hàm tính", parentId: 25, depth: 2, status: "active" }] }, isLoading: false },
+  content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }], topics: [{ id: 24, name: "Tin học văn phòng", parentId: null, depth: 0, status: "active" }, { id: 25, name: "Excel", parentId: 24, depth: 1, status: "active" }, { id: 26, name: "Hàm tính", parentId: 25, depth: 2, status: "active" }, { id: 27, name: "Chủ đề một cấp", parentId: null, depth: 0, status: "active" }, { id: 28, name: "Chủ đề hai cấp", parentId: null, depth: 0, status: "active" }, { id: 29, name: "Nhánh cuối", parentId: 28, depth: 1, status: "active" }] }, isLoading: false },
   create: { mutate: vi.fn(), isPending: false },
   chat: { mutate: vi.fn(), isPending: false },
   pinVersion: vi.fn(),
@@ -66,10 +66,16 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeTruthy();
     expect(screen.getByRole("option", { name: "Tin học văn phòng" })).toBeTruthy();
     expect(screen.queryByText("Bản đồ Game")).toBeNull();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề cấp 1" }), "24");
-    expect(screen.getByRole("combobox", { name: "Chủ đề cấp 2" })).toBeTruthy();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề cấp 2" }), "25");
-    expect(screen.getByRole("combobox", { name: "Chủ đề cấp 3" })).toBeTruthy();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề" }), "24");
+    expect(screen.getByRole("combobox", { name: "Chủ đề con cấp 2" })).toBeTruthy();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề con cấp 2" }), "25");
+    expect(screen.getByRole("combobox", { name: "Chủ đề con cấp 3" })).toBeTruthy();
+    expect(screen.queryByText("Chủ đề cấp 2")).toBeNull();
+    expect(screen.queryByText("Chủ đề cấp 3")).toBeNull();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề" }), "27");
+    expect(screen.queryByRole("combobox", { name: "Chủ đề con cấp 2" })).toBeNull();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề" }), "28");
+    expect(screen.getByRole("combobox", { name: "Chủ đề con cấp 2" })).toBeTruthy();
   });
 
   it("mở split-screen chat AI từ toolbar phải và thu gọn về Editor", async () => {

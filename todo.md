@@ -456,3 +456,6 @@
 - [x] Thay selector Chủ đề Studio bằng các ô cha–con theo cây CPanel.
 - [x] Bắt buộc chọn đủ cấp Chủ đề hiện hữu và loại bỏ mô tả dưới selector.
 - [x] Kiểm thử interaction, validation, responsive và lưu checkpoint.
+- [x] Đổi nhãn selector đầu thành Chủ đề và ẩn nhãn cấp 2/cấp 3.
+- [x] Kiểm thử yêu cầu chọn đến lá của nhánh Chủ đề một, hai và ba cấp.
+- [x] Lưu checkpoint cho tinh chỉnh selector Chủ đề.
