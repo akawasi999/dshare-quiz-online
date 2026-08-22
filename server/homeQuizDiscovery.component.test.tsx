@@ -15,6 +15,16 @@ import Home from "../client/src/pages/Home";
 describe("Home quiz discovery", () => {
   afterEach(cleanup);
 
+  it("hiển thị khu vực Quiz AI với ba hình minh họa đã cung cấp", () => {
+    render(<Home />);
+
+    expect(screen.getByRole("heading", { name: "Tạo câu hỏi từ nội dung bạn đã có." })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Bắt đầu tạo Quiz/i }).getAttribute("href")).toBe("/tao-quiz");
+    expect(screen.getByRole("img", { name: "Minh họa AI biến tài liệu thành Quiz" }).getAttribute("src")).toBe("/manus-storage/v3_2_1_image_en_2x_5b02546b.webp");
+    expect(screen.getByRole("img", { name: "Minh họa AI tạo đáp án và lựa chọn" }).getAttribute("src")).toBe("/manus-storage/v3_2_2_image_en_2x_e8570fbb.webp");
+    expect(screen.getByRole("img", { name: "Minh họa AI gợi ý nhiều phiên bản câu hỏi" }).getAttribute("src")).toBe("/manus-storage/v3_2_3_image_en_2x_33af5b55.webp");
+  });
+
   it("supports search and reward sorting for visible Quiz Cards", async () => {
     const user = userEvent.setup();
     render(<Home />);

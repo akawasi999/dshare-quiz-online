@@ -459,3 +459,6 @@
 - [x] Đổi nhãn selector đầu thành Chủ đề và ẩn nhãn cấp 2/cấp 3.
 - [x] Kiểm thử yêu cầu chọn đến lá của nhánh Chủ đề một, hai và ba cấp.
 - [x] Lưu checkpoint cho tinh chỉnh selector Chủ đề.
+- [x] Chuẩn bị ba hình minh họa người dùng cung cấp làm tài nguyên trang chủ.
+- [x] Thiết kế khu vực Quiz AI trên trang chủ theo bố cục banner và hai thẻ của ảnh tham chiếu.
+- [x] Kiểm thử responsive, regression và lưu checkpoint cho cập nhật trang chủ.
