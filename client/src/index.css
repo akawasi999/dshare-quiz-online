@@ -441,3 +441,43 @@ body:has(main[data-ai-viewport="true"]) #root {
 .hover\:text-\[\#172554\]:hover { color: var(--foreground) !important; }
 .hover\:text-\[\#065be5\]:hover, .hover\:text-\[\#2563eb\]:hover { color: var(--primary) !important; }
 .focus\:border-\[\#065be5\]:focus, .focus\:ring-\[\#065be5\]:focus { border-color: var(--primary) !important; --tw-ring-color: color-mix(in srgb, var(--primary) 24%, transparent) !important; }
+
+/* Tooltip toàn cục cho các control chỉ có icon; aria-label là nguồn mô tả duy nhất. */
+:where(button, a, [role="button"])[data-icon-tooltip] {
+  position: relative;
+}
+
+:where(button, a, [role="button"])[data-icon-tooltip]::after {
+  content: attr(data-icon-tooltip);
+  position: absolute;
+  z-index: 80;
+  left: 50%;
+  top: calc(100% + 8px);
+  width: max-content;
+  max-width: min(20rem, calc(100vw - 2rem));
+  transform: translate(-50%, -3px);
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  border-radius: 6px;
+  background: var(--foreground);
+  color: var(--background);
+  box-shadow: var(--shadow-md);
+  padding: 6px 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  opacity: 0;
+  pointer-events: none;
+  white-space: normal;
+  transition: opacity 140ms var(--ease-out), transform 140ms var(--ease-out);
+}
+
+:where(button, a, [role="button"])[data-icon-tooltip]:hover::after,
+:where(button, a, [role="button"])[data-icon-tooltip]:focus-visible::after {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(button, a, [role="button"])[data-icon-tooltip]::after { transition: none; }
+}

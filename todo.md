@@ -408,3 +408,5 @@
 - [x] Kiểm thử trực quan/hồi quy trang Chủ đề và lưu checkpoint cho chỉnh sửa mới.
 - [x] Kiểm kê và loại bỏ heading, mô tả, nhãn đầu trang ở toàn bộ workspace quản trị đang điều hướng.
 - [x] Kiểm thử responsive, hồi quy và lưu checkpoint cho giao diện quản trị tối giản.
+- [x] Kiểm kê icon tương tác và chuẩn hóa tooltip hover/focus trên toàn bộ website.
+- [x] Kiểm thử accessibility, hồi quy và lưu checkpoint cho hệ tooltip toàn website.
