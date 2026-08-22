@@ -1,14 +1,15 @@
 // @vitest-environment jsdom
 import React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn() }));
+const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), topics: [{ id: 10, name: "An toàn thông tin", slug: "an-toan-thong-tin", parentId: null, depth: 0 }, { id: 11, name: "Mật khẩu", slug: "mat-khau", parentId: 10, depth: 1 }] }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: null, loading: false, logout: vi.fn() }) }));
 vi.mock("@/contexts/ThemeContext", () => ({ useTheme: () => ({ theme: "light", toggleTheme: mocks.toggleTheme }) }));
 vi.mock("@/components/BrandLogo", () => ({ default: () => <span>Dshare</span> }));
+vi.mock("@/lib/trpc", () => ({ trpc: { catalog: { topics: { useQuery: () => ({ data: mocks.topics }) } } } }));
 vi.mock("wouter", () => ({ Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => <a href={href} {...props}>{children}</a>, useLocation: () => ["/"] }));
 
 import SiteHeader from "../client/src/components/SiteHeader";
@@ -34,8 +35,8 @@ describe("SiteHeader navigation", () => {
     expect(screen.queryByRole("link", { name: "Xếp hạng" })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Khám phá" }));
-    expect(screen.getByRole("menuitem", { name: /Công nghệ thông tin/ }).getAttribute("href")).toContain("topic=cong-nghe-thong-tin");
-    expect(screen.getByRole("menuitem", { name: /Tin học văn phòng/ })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: /An toàn thông tin/ }).getAttribute("href")).toContain("topic=an-toan-thong-tin");
+    expect(screen.getByRole("menuitem", { name: /Mật khẩu/ })).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Hỗ trợ khách hàng" }));
     expect(screen.getByRole("menuitem", { name: "Câu hỏi thường gặp" })).toBeTruthy();
@@ -45,5 +46,21 @@ describe("SiteHeader navigation", () => {
 
     await user.click(screen.getByRole("button", { name: "Mở menu" }));
     expect(screen.queryByRole("link", { name: "Xếp hạng" })).toBeNull();
+  });
+
+  it("giữ dropdown Khám phá trong vùng đệm hover trước khi đóng", () => {
+    vi.useFakeTimers();
+    render(<SiteHeader />);
+    const trigger = screen.getByRole("button", { name: "Khám phá" });
+    const dropdownZone = trigger.parentElement!;
+    fireEvent.mouseEnter(dropdownZone);
+    expect(screen.getByRole("menu").className).toContain("top-[calc(100%-0.25rem)]");
+    expect(dropdownZone.className).toContain("pb-2");
+    fireEvent.mouseLeave(dropdownZone);
+    act(() => vi.advanceTimersByTime(179));
+    expect(screen.getByRole("menu")).toBeTruthy();
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.queryByRole("menu")).toBeNull();
+    vi.useRealTimers();
   });
 });

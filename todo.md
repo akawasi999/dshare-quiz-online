@@ -421,3 +421,6 @@
 - [x] Thêm xem trước chi tiết Quiz đang chờ duyệt trước khi ra quyết định.
 - [x] Thêm từ chối có lý do và hiển thị phản hồi cho người tạo Quiz.
 - [x] Kiểm thử workflow Dashboard, duyệt/từ chối và lưu checkpoint.
+- [x] Hiển thị danh sách Chủ đề thực tế trong dropdown Khám phá ở header.
+- [x] Mở rộng vùng hover/focus để dropdown Khám phá không ẩn quá nhanh.
+- [x] Kiểm thử responsive, accessibility và lưu checkpoint cho dropdown Khám phá.

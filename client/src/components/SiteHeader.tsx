@@ -3,20 +3,18 @@ import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { startLogin } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
+import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { BadgeAlert, Bell, BookOpen, ChevronDown, CircleHelp, Globe2, LifeBuoy, Megaphone, Menu, Moon, Sparkles, Sun, UserRound, X, type LucideIcon } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 
-type NavItem = { label: string; href?: string; kind?: "topics" | "support"; items?: Array<{ label: string; href: string; description?: string; icon?: LucideIcon; iconClassName?: string }> };
+type NavMenuItem = { label: string; href: string; description?: string; depth?: number; icon?: LucideIcon; iconClassName?: string };
+type NavItem = { label: string; href?: string; kind?: "topics" | "support"; items?: NavMenuItem[] };
 
 const navigation: NavItem[] = [
   { label: "Giới thiệu về chúng tôi", href: "/#ve-dshare" },
-  { label: "Khám phá", kind: "topics", items: [
-    { label: "Công nghệ thông tin", href: "/kham-pha?topic=cong-nghe-thong-tin", description: "Bộ đề công nghệ và kỹ năng số" },
-    { label: "Tin học văn phòng", href: "/kham-pha?topic=tin-hoc-van-phong", description: "Excel, Word, PowerPoint" },
-    { label: "Lập trình", href: "/kham-pha?topic=lap-trinh", description: "Kiến thức nền tảng và thực hành" },
-  ] },
+  { label: "Khám phá", kind: "topics" },
   { label: "Bảng giá", href: "/bang-gia" },
   { label: "Blog", href: "/kham-pha" },
   { label: "Hỗ trợ khách hàng", kind: "support", items: [
@@ -31,17 +29,17 @@ function NavDropdown({ item, open, onOpen, onClose, onToggle, onNavigate }: { it
   const menuId = useId();
   const isActive = item.items?.some(child => location.pathname === child.href.split("?")[0]);
   const isSupport = item.kind === "support";
-  return <div className="relative" onMouseEnter={onOpen} onMouseLeave={onClose}>
+  return <div className="relative -mx-2 px-2 pb-2" onMouseEnter={onOpen} onMouseLeave={onClose}>
     <button type="button" onFocus={onOpen} onClick={onToggle} aria-expanded={open} aria-controls={menuId} className={cn("site-header-text site-header-nav-item group gap-1 rounded-md px-0 transition-[color,background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20", isActive ? "text-primary" : "text-muted-foreground hover:text-foreground")}><span className="site-header-nav-label">{item.label}</span><ChevronDown size={14} className={cn("site-header-nav-chevron transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]", open && "rotate-180")} /></button>
-    {open ? <div id={menuId} role="menu" className={cn("absolute top-[calc(100%+8px)] origin-top-left border border-border bg-surface p-2 shadow-[var(--shadow-lg)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:zoom-in-95 motion-safe:duration-200", isSupport ? "right-0 w-[230px] rounded-xl" : "left-0 w-[300px] rounded-[var(--radius-lg-token)]")}>
-      {!isSupport ? <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[.14em] text-primary">Chủ đề nổi bật</p> : null}
-      {item.items?.map(child => {
+    {open ? <div id={menuId} role="menu" className={cn("absolute top-[calc(100%-0.25rem)] origin-top-left border border-border bg-surface p-2 shadow-[var(--shadow-lg)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:zoom-in-95 motion-safe:duration-200", isSupport ? "right-0 w-[230px] rounded-xl" : "left-0 max-h-[min(420px,calc(100vh-96px))] w-[320px] overflow-y-auto rounded-[var(--radius-lg-token)]")}>
+      {!isSupport ? <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[.14em] text-primary">Chủ đề</p> : null}
+      {item.items?.length ? item.items.map(child => {
         const Icon = child.icon ?? BookOpen;
         return <Link key={child.label} href={child.href} role="menuitem" onClick={onNavigate} className={cn("group/menu flex rounded-[var(--radius-sm-token)] transition-[transform,background-color,color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:translate-x-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", isSupport ? "items-center gap-3 px-3 py-2.5 hover:bg-muted" : "items-start gap-3 px-3 py-3 hover:bg-primary-light")}>
           {isSupport ? <span className={cn("grid size-7 shrink-0 place-items-center rounded-full", child.iconClassName)}><Icon size={15} /></span> : <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-primary-light text-primary"><Icon size={14} /></span>}
-          <span className="min-w-0"><span className={cn("site-header-text block transition-colors", isSupport ? "text-foreground group-hover/menu:text-primary" : "text-foreground")}>{child.label}</span>{child.description ? <span className="site-header-text mt-1 block text-text-secondary">{child.description}</span> : null}</span>
+          <span className="min-w-0"><span className={cn("site-header-text block transition-colors", isSupport ? "text-foreground group-hover/menu:text-primary" : "text-foreground")}>{!isSupport && child.depth ? <span aria-hidden="true" className="mr-1 text-text-muted">{"— ".repeat(child.depth)}</span> : null}{child.label}</span>{child.description ? <span className="site-header-text mt-1 block text-text-secondary">{child.description}</span> : null}</span>
         </Link>;
-      })}
+      }) : !isSupport ? <p className="px-3 py-4 text-sm leading-5 text-text-secondary">Chưa có Chủ đề đang hoạt động.</p> : null}
       {!isSupport ? <Link href="/kham-pha" role="menuitem" onClick={onNavigate} className="site-header-text mt-1 flex items-center justify-between rounded-[var(--radius-sm-token)] px-3 py-2 text-primary transition-colors hover:bg-primary-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Xem tất cả chủ đề <ChevronDown size={14} className="-rotate-90" /></Link> : null}
     </div> : null}
   </div>;
@@ -50,18 +48,26 @@ function NavDropdown({ item, open, onOpen, onClose, onToggle, onNavigate }: { it
 export default function SiteHeader({ variant = "light" }: { variant?: "light" | "dark" }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const menuCloseTimer = useRef<number | null>(null);
   const [location] = useLocation();
   const { user, loading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const isDarkLogo = variant === "dark" || theme === "dark";
+  const publicTopics = trpc.catalog.topics.useQuery();
+  const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).map(topic => ({ label: topic.name, href: `/kham-pha?topic=${encodeURIComponent(topic.slug)}`, description: topic.depth ? "Chủ đề con" : "Khám phá Quiz theo Chủ đề", depth: topic.depth }));
+  const navigationItems: NavItem[] = navigation.map(item => item.kind === "topics" ? { ...item, items: topicNavigationItems } : item);
+  const clearMenuCloseTimer = () => { if (menuCloseTimer.current !== null) { window.clearTimeout(menuCloseTimer.current); menuCloseTimer.current = null; } };
+  const openDropdown = (label: string) => { clearMenuCloseTimer(); setOpenMenu(label); };
+  const scheduleDropdownClose = (label: string) => { clearMenuCloseTimer(); menuCloseTimer.current = window.setTimeout(() => { setOpenMenu(current => current === label ? null : current); menuCloseTimer.current = null; }, 180); };
 
-  useEffect(() => { setOpenMenu(null); }, [location]);
+  useEffect(() => { setOpenMenu(null); clearMenuCloseTimer(); }, [location]);
+  useEffect(() => () => clearMenuCloseTimer(), []);
 
   return <header className="relative z-40 border-b border-border bg-surface text-foreground" data-theme-variant={variant}>
     <div className="container flex h-[68px] items-center gap-4">
       <Link href="/" className="group flex shrink-0 items-center" aria-label="Dshare Quiz Online"><BrandLogo monochrome={isDarkLogo} className="h-8 max-w-[122px] transition-transform duration-200 group-hover:scale-[1.02] sm:h-9 sm:max-w-[142px]" /></Link>
       <nav className="site-header-navigation hidden min-w-0 flex-1 items-center gap-5 xl:gap-8 lg:flex" aria-label="Điều hướng chính">
-        {navigation.map(item => item.href ? <Link key={item.label} href={item.href} className={cn("site-header-text site-header-nav-item rounded-md px-0 transition-[color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20", location === item.href ? "text-primary" : "text-muted-foreground hover:text-foreground")}><span className="site-header-nav-label">{item.label}</span></Link> : <NavDropdown key={item.label} item={item} open={openMenu === item.label} onOpen={() => setOpenMenu(item.label)} onClose={() => setOpenMenu(current => current === item.label ? null : current)} onToggle={() => setOpenMenu(item.label)} onNavigate={() => setOpenMenu(null)} />)}
+        {navigationItems.map(item => item.href ? <Link key={item.label} href={item.href} className={cn("site-header-text site-header-nav-item rounded-md px-0 transition-[color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20", location === item.href ? "text-primary" : "text-muted-foreground hover:text-foreground")}><span className="site-header-nav-label">{item.label}</span></Link> : <NavDropdown key={item.label} item={item} open={openMenu === item.label} onOpen={() => openDropdown(item.label)} onClose={() => scheduleDropdownClose(item.label)} onToggle={() => { clearMenuCloseTimer(); setOpenMenu(item.label); }} onNavigate={() => { clearMenuCloseTimer(); setOpenMenu(null); }} />)}
       </nav>
       <div className="ml-auto hidden shrink-0 items-center gap-1.5 lg:flex">
         <button type="button" onClick={toggleTheme} aria-label={theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"} aria-pressed={theme === "dark"} className="grid size-9 place-items-center rounded-full text-muted-foreground transition-[color,background-color,transform] duration-200 hover:scale-105 hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20">{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button>
@@ -70,6 +76,6 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
       </div>
       <button type="button" aria-label={menuOpen ? "Đóng menu" : "Mở menu"} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(value => !value)} className="ml-auto grid size-11 place-items-center rounded-[var(--radius-md-token)] bg-primary-light text-primary transition-[background-color,transform] duration-200 hover:scale-[1.03] hover:bg-primary-light/75 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20 lg:hidden">{menuOpen ? <X size={19} /> : <Menu size={19} />}</button>
     </div>
-    {menuOpen ? <div id="mobile-navigation" className="absolute left-0 top-[68px] w-full border-b border-border bg-surface px-5 py-4 shadow-[var(--shadow-md)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-200 lg:hidden"><div className="mx-auto flex max-w-md flex-col gap-1">{navigation.map(item => <div key={item.label} className="rounded-[var(--radius-md-token)] border border-transparent bg-transparent"><p className="flex min-h-11 items-center px-4 text-sm font-bold text-foreground">{item.href ? <Link href={item.href} onClick={() => setMenuOpen(false)} className="w-full">{item.label}</Link> : item.label}</p>{item.items ? <div className="-mt-1 space-y-0.5 px-2 pb-2">{item.items.map(child => { const Icon = child.icon ?? BookOpen; return <Link key={child.label} href={child.href} onClick={() => setMenuOpen(false)} className="flex min-h-10 items-center gap-2 rounded-[var(--radius-sm-token)] px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"><Icon size={13} />{child.label}</Link>; })}</div> : null}</div>)}<div className="mt-2 border-t border-border-light pt-3"><button type="button" onClick={toggleTheme} className="flex min-h-11 w-full items-center justify-between rounded-[var(--radius-md-token)] px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"><span>{theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}</span>{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button><div className="mt-3 px-1">{user ? <Button asChild className="w-full rounded-md"><Link href="/ho-so" onClick={() => setMenuOpen(false)}><UserRound size={15} /> Hồ sơ học tập</Link></Button> : <div className="grid grid-cols-2 gap-2"><Button className="rounded-md" onClick={() => startLogin()}><Sparkles size={15} /> Bắt đầu</Button><Button variant="outline" className="rounded-md" onClick={() => startLogin()}><LifeBuoy size={15} /> Đăng nhập</Button></div>}</div></div></div></div> : null}
+    {menuOpen ? <div id="mobile-navigation" className="absolute left-0 top-[68px] w-full border-b border-border bg-surface px-5 py-4 shadow-[var(--shadow-md)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-200 lg:hidden"><div className="mx-auto flex max-w-md flex-col gap-1">{navigationItems.map(item => <div key={item.label} className="rounded-[var(--radius-md-token)] border border-transparent bg-transparent"><p className="flex min-h-11 items-center px-4 text-sm font-bold text-foreground">{item.href ? <Link href={item.href} onClick={() => setMenuOpen(false)} className="w-full">{item.label}</Link> : item.label}</p>{item.items ? <div className="-mt-1 space-y-0.5 px-2 pb-2">{item.items.length ? item.items.map(child => { const Icon = child.icon ?? BookOpen; return <Link key={child.label} href={child.href} onClick={() => setMenuOpen(false)} className="flex min-h-10 items-center gap-2 rounded-[var(--radius-sm-token)] px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-primary-light hover:text-primary"><Icon size={13} />{child.depth ? <span aria-hidden="true" className="text-text-muted">{"— ".repeat(child.depth)}</span> : null}{child.label}</Link>; }) : item.kind === "topics" ? <p className="px-3 py-2 text-xs text-text-secondary">Chưa có Chủ đề đang hoạt động.</p> : null}</div> : null}</div>)}<div className="mt-2 border-t border-border-light pt-3"><button type="button" onClick={toggleTheme} className="flex min-h-11 w-full items-center justify-between rounded-[var(--radius-md-token)] px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"><span>{theme === "dark" ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}</span>{theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button><div className="mt-3 px-1">{user ? <Button asChild className="w-full rounded-md"><Link href="/ho-so" onClick={() => setMenuOpen(false)}><UserRound size={15} /> Hồ sơ học tập</Link></Button> : <div className="grid grid-cols-2 gap-2"><Button className="rounded-md" onClick={() => startLogin()}><Sparkles size={15} /> Bắt đầu</Button><Button variant="outline" className="rounded-md" onClick={() => startLogin()}><LifeBuoy size={15} /> Đăng nhập</Button></div>}</div></div></div></div> : null}
   </header>;
 }

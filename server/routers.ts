@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   aiAssistantConversations,
@@ -26,6 +26,7 @@ import {
   quizSourceHistories,
   subscriptionPlans,
   subjects,
+  topics,
   userGroupMembers,
   userGroupPermissions,
   userGroups,
@@ -314,6 +315,25 @@ export const appRouter = router({
 
   catalog: router({
     categories: publicProcedure.query(() => listCategories()),
+    topics: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select({ id: topics.id, name: topics.name, slug: topics.slug, parentId: topics.parentId, depth: topics.depth, sortOrder: topics.sortOrder })
+        .from(topics)
+        .where(and(eq(topics.status, "active"), isNull(topics.deletedAt)))
+        .orderBy(asc(topics.sortOrder), asc(topics.name));
+      const childrenByParent = new Map<number | null, typeof rows>();
+      for (const row of rows) childrenByParent.set(row.parentId, [...(childrenByParent.get(row.parentId) ?? []), row]);
+      const ordered: typeof rows = [];
+      const visit = (parentId: number | null) => {
+        for (const row of childrenByParent.get(parentId) ?? []) {
+          ordered.push(row);
+          visit(row.id);
+        }
+      };
+      visit(null);
+      return ordered.map(({ sortOrder: _sortOrder, ...topic }) => topic);
+    }),
     membershipPlans: publicProcedure.query(async () => {
       const db = await getDb();
       if (!db) return [];

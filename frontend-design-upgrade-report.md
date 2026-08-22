@@ -151,3 +151,9 @@ Quiz System bổ sung trạng thái lifecycle **Cần chỉnh sửa** (`rejected
 | Dữ liệu & audit | Migration `0034` thêm lifecycle `rejected` và metadata review, không có thao tác xóa dữ liệu. |
 
 Regression bổ sung cho lối tắt Dashboard, phần phản hồi trên **Quiz của tôi**, và modal từ chối bắt buộc lý do. Toàn bộ suite đạt **76 tệp / 190 ca**; TypeScript sạch, build production hoàn tất trong **21,96 giây**. Ảnh desktop và mobile xác nhận Dashboard và trạng thái filter **Chờ duyệt** hiển thị responsive, không tràn bố cục.
+
+## Dropdown Khám phá dùng Chủ đề thực
+
+Menu **Khám phá** trong SiteHeader nay gọi contract công khai `catalog.topics`, chỉ nhận các Chủ đề active chưa soft-delete. Backend sắp xếp lại dữ liệu theo cây cha–con và frontend hiển thị đầy đủ danh sách trong dropdown có cuộn nội bộ, gồm thụt cấp cho Chủ đề con; mobile drawer dùng cùng nguồn dữ liệu. Các liên kết giữ URL theo slug Chủ đề.
+
+Vùng tương tác dropdown được mở rộng bằng vùng đệm 8px và menu được neo vào vùng đệm này. Khi con trỏ rời vùng, menu chỉ đóng sau 180ms và hủy lịch đóng ngay khi người dùng quay lại; nhờ đó khoảng di chuyển từ trigger xuống menu không còn làm dropdown biến mất sớm. Hồi quy mới xác nhận Chủ đề được render từ dữ liệu query và menu tồn tại xuyên suốt thời gian đệm hover. Toàn bộ suite đạt **76 tệp / 191 ca**, TypeScript sạch và build production hoàn tất trong **20,85 giây**; header desktop/mobile đã được xác minh.
