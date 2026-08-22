@@ -158,10 +158,7 @@ export default function MembershipGroupPermissionsPanel() {
   const planGroups = planForm.id ? data.groups.filter(group => group.planId === planForm.id) : [];
   const submitting = groupSave.isPending || permissionSave.isPending || planSave.isPending || planPermissionSave.isPending;
   return <div className="mx-auto max-w-7xl">
-    <p className="text-[10px] font-bold uppercase tracking-[.17em] text-[#065be5]">Dshare / Quản trị / Nhóm người dùng</p>
-    <div className="mt-2 max-w-3xl"><h1 className="font-serif text-[36px] font-semibold tracking-[-.045em] text-[#172554]">Nhóm người dùng</h1><p className="mt-2 text-sm leading-6 text-[#617786]">Tổ chức nhóm thành viên theo gói đăng ký, sắp xếp thứ tự hiển thị và kiểm soát quyền truy cập ở một nơi.</p></div>
-
-    <div className="mt-7 rounded-[28px] border border-[#172554]/9 bg-white p-3 shadow-[0_18px_45px_rgba(23,37,84,.07)]">
+    <div className="rounded-[28px] border border-[#172554]/9 bg-white p-3 shadow-[0_18px_45px_rgba(23,37,84,.07)]">
       <div className="flex flex-col gap-3 border-b border-[#172554]/8 p-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex w-full rounded-2xl bg-[#eef4ff] p-1 lg:w-auto"><button type="button" onClick={() => setActiveView("groups")} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition lg:flex-none ${activeView === "groups" ? "bg-white text-[#065be5] shadow-sm" : "text-[#617786] hover:text-[#172554]"}`}><UsersRound size={15} />Tạo nhóm người dùng</button><button type="button" onClick={() => setActiveView("plans")} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition lg:flex-none ${activeView === "plans" ? "bg-white text-[#065be5] shadow-sm" : "text-[#617786] hover:text-[#172554]"}`}><CircleDollarSign size={15} />Gói đăng ký</button></div>
         <span className="hidden items-center gap-2 text-[11px] font-semibold text-[#617786] lg:flex"><BadgeCheck size={15} className="text-[#007453]" />Thay đổi được áp dụng ở máy chủ</span>

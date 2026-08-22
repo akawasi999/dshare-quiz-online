@@ -22,7 +22,7 @@ describe("ContentManagementPanel", () => {
     const user = userEvent.setup();
     render(<ContentManagementPanel />);
 
-    expect(screen.getByRole("heading", { name: "Nội dung học tập" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Nội dung học tập" })).toBeNull();
     expect(screen.getByText("Tin học")).toBeTruthy();
     expect(screen.getByText("Python")).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Môn học" }));

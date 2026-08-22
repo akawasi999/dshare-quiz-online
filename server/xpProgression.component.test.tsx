@@ -25,8 +25,8 @@ describe("XP progression workspace", () => {
 
   it("giữ XP tách khỏi Point và không tạo số liệu mô phỏng khi ledger rỗng", () => {
     render(<XpProgressionPanel />);
-    expect(screen.getByRole("heading", { name: "XP & Gamification" })).toBeTruthy();
-    expect(screen.getByText(/không kế thừa số dư hay giao dịch Point/i)).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "XP & Gamification" })).toBeNull();
+    expect(screen.getByRole("button", { name: /Tạo Rule/i })).toBeTruthy();
     expect(screen.getByText("Chưa có giao dịch XP thực tế để hiển thị.")).toBeTruthy();
     expect(screen.getByText("Chưa có Rule XP. Không có phần thưởng nào được suy diễn từ Point.")).toBeTruthy();
   });

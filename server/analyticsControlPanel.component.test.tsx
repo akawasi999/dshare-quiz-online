@@ -14,7 +14,7 @@ describe("AnalyticsControlPanel", () => {
   afterEach(cleanup);
   it("tổng hợp số liệu thật và ghi rõ XP chưa được suy diễn từ Point", () => {
     render(<AnalyticsControlPanel />);
-    expect(screen.getByRole("heading", { name: "Analytics" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Analytics" })).toBeNull();
     expect(screen.getByText("80")).toBeTruthy();
     expect(screen.getByText("Python cơ bản")).toBeTruthy();
     expect(screen.getByText(/XP, retention, cohort, streak và mission/i)).toBeTruthy();

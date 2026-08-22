@@ -406,3 +406,5 @@
 - [x] Kiểm thử regression, responsive, accessibility, migration và cập nhật báo cáo bàn giao cho toàn bộ CPanel v2.0.
 - [x] Rà soát và hoàn thiện chỉnh sửa tối giản nội dung trang quản lý Chủ đề trước checkpoint.
 - [x] Kiểm thử trực quan/hồi quy trang Chủ đề và lưu checkpoint cho chỉnh sửa mới.
+- [x] Kiểm kê và loại bỏ heading, mô tả, nhãn đầu trang ở toàn bộ workspace quản trị đang điều hướng.
+- [x] Kiểm thử responsive, hồi quy và lưu checkpoint cho giao diện quản trị tối giản.

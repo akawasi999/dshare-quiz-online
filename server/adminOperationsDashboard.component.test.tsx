@@ -21,7 +21,8 @@ describe("AdminOperationsDashboard", () => {
   it("hiển thị Learning Control Center bằng dữ liệu thực và không thay Point bằng XP", () => {
     render(<AdminOperationsDashboard />);
 
-    expect(screen.getByRole("heading", { name: "Điều hành học tập, không chỉ vận hành dữ liệu." })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Điều hành học tập, không chỉ vận hành dữ liệu." })).toBeNull();
+    expect(screen.getAllByRole("link", { name: /Tạo Quiz/i }).length).toBeGreaterThan(0);
     expect(screen.getByText("Point economy, tách biệt với XP")).toBeTruthy();
     expect(screen.getByText("Hệ XP, nhiệm vụ, streak và achievement chưa được khởi tạo dữ liệu; dashboard không hiển thị số liệu thay thế.")).toBeTruthy();
     expect(screen.getAllByText("120").length).toBeGreaterThan(0);

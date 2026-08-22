@@ -76,7 +76,7 @@ describe("MembershipGroupPermissionsPanel", () => {
 
   it("hiển thị menu tạo nhóm và danh sách nhóm với số thành viên", () => {
     render(<MembershipGroupPermissionsPanel />);
-    expect(screen.getByRole("heading", { name: "Nhóm người dùng" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Nhóm người dùng" })).toBeNull();
     expect(screen.getByRole("button", { name: "Tạo nhóm người dùng" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Gói đăng ký" })).toBeTruthy();
     expect(screen.getAllByText("Basic mặc định").length).toBeGreaterThan(0);
