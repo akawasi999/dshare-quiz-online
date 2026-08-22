@@ -287,3 +287,14 @@ body:has(main[data-ai-viewport="true"]) #root {
 .quiz-ai-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(112, 87, 232, .52);
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .quiz-card-enter {
+    animation: quiz-card-enter 260ms var(--ease-out) both;
+  }
+
+  @keyframes quiz-card-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}

@@ -38,6 +38,9 @@ describe("QuizRunner data state", () => {
     await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
     expect(screen.getByRole("img", { name: "Hình minh họa câu hỏi" }).getAttribute("src")).toBe("/manus-storage/question.png");
     expect(container.querySelector("audio")?.getAttribute("src")).toBe("/manus-storage/explain.mp3");
+    await user.click(screen.getByRole("button", { name: /Đúng/ }));
+    expect(screen.getByRole("progressbar", { name: "Tiến độ làm bài" }).getAttribute("aria-valuenow")).toBe("1");
+    expect(screen.getByText("Chính xác! Bạn có thể chuyển sang câu tiếp theo.")).toBeTruthy();
   });
 
   it("hiển thị video đính kèm khi xem trước Sandbox", async () => {

@@ -345,3 +345,7 @@
 - [x] Refactor các component dùng chung theo state, accessibility và responsive mobile, không thay đổi backend/business logic.
 - [x] Áp dụng nâng cấp visual system cho các trang và luồng ưu tiên theo inventory.
 - [x] Chạy regression theo từng nhóm thay đổi, xác minh desktop/mobile và lập báo cáo bàn giao frontend.
+- [x] Token hóa các shell và trang quản trị/tài khoản ưu tiên bằng semantic design tokens mới.
+- [x] Bổ sung hover mượt, skeleton/loading state và motion an toàn cho Quiz Card.
+- [x] Thêm thanh tiến trình trực quan và phản hồi đúng/sai có thể truy cập trong Quiz Runner.
+- [x] Chạy regression, xác minh desktop/mobile và cập nhật báo cáo bàn giao cho đợt nâng cấp UI.

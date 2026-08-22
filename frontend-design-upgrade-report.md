@@ -11,12 +11,14 @@ Typography đã được đồng bộ về Inter qua `client/index.html` và CSS
 | Foundation | `client/index.html`, `client/src/index.css` | Token, typography, spacing, focus-visible, reduced-motion, CTA gradient |
 | Primitives | `components/ui/button.tsx`, `card.tsx`, `input.tsx`, `textarea.tsx`, `badge.tsx`, `tabs.tsx`, `sonner.tsx` | State component đồng nhất, touch target tối thiểu 44px ở control chính |
 | Navigation | `SiteHeader.tsx`, `AccountLayout.tsx`, `AccountSidebar.tsx` | Surface semantic, nav active, menu mobile accessible, CTA thống nhất |
-| Public/Learner | `Home.tsx`, `QuizCard.tsx`, `QuizLibrary.tsx`, `QuizRunner.tsx` | Hero, thư viện, card quiz, quota/filter và luồng Quiz được làm mới theo token |
+| Public/Learner | `Home.tsx`, `QuizCard.tsx`, `QuizLibrary.tsx`, `QuizRunner.tsx` | Hero, thư viện, card quiz, quota/filter, progress và phản hồi Quiz được làm mới theo token |
+| Account/Admin | `Profile.tsx`, `AdminOperationsDashboard.tsx` | Surface, semantic state, KPI, panel tài khoản và dashboard vận hành dùng token thống nhất |
+| Interaction | `QuizCard.tsx`, `QuizRunner.tsx`, `index.css` | Hover nhẹ, skeleton ảnh, reduced-motion, thanh tiến trình có ARIA và phản hồi đúng/sai trong Sandbox |
 | Regression | `server/designSystemPrimitives.component.test.tsx` | Bổ sung 2 ca kiểm thử token và primitive |
 
 ## Xác minh hiện tại
 
-Toàn bộ TypeScript sạch. Hồi quy toàn dự án hiện đạt **64 tệp / 167 ca** và `pnpm build` đã hoàn tất thành công. Các ảnh kiểm tra tại desktop 1440px, tablet 768px và mobile 375px xác nhận Home, Quiz Library và Quiz Runner giữ bố cục, CTA và card grid phù hợp với breakpoint. Việc mở `/quiz/101` trên môi trường kiểm tra trả về `404 Không tìm thấy bộ đề` từ dữ liệu server cho ID này; đây là dữ liệu route không tồn tại, không phải lỗi presentation layer.
+Toàn bộ TypeScript sạch. Hồi quy toàn dự án hiện đạt **64 tệp / 167 ca** và `pnpm build` đã hoàn tất thành công. Kiểm tra trực quan tại desktop 1440px, tablet 768px và mobile 375px xác nhận Home, Quiz Library, Profile và Dashboard quản trị giữ bố cục, CTA, card grid và thứ bậc nội dung phù hợp với breakpoint. Thanh tiến trình Quiz Runner có `role="progressbar"` và thuộc tính ARIA; phản hồi đúng/sai chỉ hiển thị đáp án đúng ở Sandbox/demo để không làm lộ kết quả trong lượt làm thật.
 
 ## Lưu ý kỹ thuật
 
