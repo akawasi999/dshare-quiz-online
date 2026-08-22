@@ -54,7 +54,7 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const { theme, toggleTheme } = useTheme();
   const isDarkLogo = variant === "dark" || theme === "dark";
   const publicTopics = trpc.catalog.topics.useQuery();
-  const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).map(topic => ({ label: topic.name, href: `/kham-pha?topic=${encodeURIComponent(topic.slug)}`, description: topic.depth ? "Chủ đề con" : "Khám phá Quiz theo Chủ đề", depth: topic.depth }));
+  const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).filter(topic => topic.parentId === null).map(topic => ({ label: topic.name, href: `/kham-pha?topic=${encodeURIComponent(topic.slug)}`, description: "Khám phá Quiz theo Chủ đề", depth: 0 }));
   const navigationItems: NavItem[] = navigation.map(item => item.kind === "topics" ? { ...item, items: topicNavigationItems } : item);
   const clearMenuCloseTimer = () => { if (menuCloseTimer.current !== null) { window.clearTimeout(menuCloseTimer.current); menuCloseTimer.current = null; } };
   const openDropdown = (label: string) => { clearMenuCloseTimer(); setOpenMenu(label); };

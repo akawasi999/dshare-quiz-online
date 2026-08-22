@@ -424,3 +424,5 @@
 - [x] Hiển thị danh sách Chủ đề thực tế trong dropdown Khám phá ở header.
 - [x] Mở rộng vùng hover/focus để dropdown Khám phá không ẩn quá nhanh.
 - [x] Kiểm thử responsive, accessibility và lưu checkpoint cho dropdown Khám phá.
+- [x] Giới hạn dropdown Khám phá chỉ hiển thị các Chủ đề cha cấp cao nhất.
+- [x] Kiểm thử responsive và lưu checkpoint cho bộ lọc Chủ đề cha trong header.

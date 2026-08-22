@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), topics: [{ id: 10, name: "An toàn thông tin", slug: "an-toan-thong-tin", parentId: null, depth: 0 }, { id: 11, name: "Mật khẩu", slug: "mat-khau", parentId: 10, depth: 1 }] }));
+const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), topics: [{ id: 10, name: "Tiểu học", slug: "tieu-hoc", parentId: null, depth: 0 }, { id: 11, name: "Lớp 1", slug: "lop-1", parentId: 10, depth: 1 }] }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: null, loading: false, logout: vi.fn() }) }));
 vi.mock("@/contexts/ThemeContext", () => ({ useTheme: () => ({ theme: "light", toggleTheme: mocks.toggleTheme }) }));
@@ -35,8 +35,8 @@ describe("SiteHeader navigation", () => {
     expect(screen.queryByRole("link", { name: "Xếp hạng" })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Khám phá" }));
-    expect(screen.getByRole("menuitem", { name: /An toàn thông tin/ }).getAttribute("href")).toContain("topic=an-toan-thong-tin");
-    expect(screen.getByRole("menuitem", { name: /Mật khẩu/ })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: /Tiểu học/ }).getAttribute("href")).toContain("topic=tieu-hoc");
+    expect(screen.queryByRole("menuitem", { name: /Lớp 1/ })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Hỗ trợ khách hàng" }));
     expect(screen.getByRole("menuitem", { name: "Câu hỏi thường gặp" })).toBeTruthy();
