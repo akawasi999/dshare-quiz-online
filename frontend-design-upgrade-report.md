@@ -23,3 +23,9 @@ Toàn bộ TypeScript sạch. Hồi quy toàn dự án hiện đạt **64 tệp 
 ## Lưu ý kỹ thuật
 
 Quét source cho thấy còn **202** biểu thức mã màu trực tiếp trong **35** file, chủ yếu nằm ở các panel quản trị, AI, quản lý thành viên và trang tài khoản chuyên sâu. Chúng đã nhận typography, primitive, surface và navigation mới thông qua layer dùng chung; việc token hóa tuyệt đối từng class cũ trong các module này nên được thực hiện như một đợt visual cleanup riêng để giảm rủi ro trên các màn vận hành dày dữ liệu.
+
+## Cập nhật tương tác và đồng bộ admin
+
+Lớp tương thích semantic token đã được áp dụng cho các panel quản trị kế thừa, trong đó có Quản lý người dùng, Point, báo lỗi và AI Assistant; các surface, chữ, viền, trạng thái thành công/lỗi và nền panel nay bám theo token chung. Desktop và mobile xác nhận bảng người dùng giữ được thứ bậc rõ ràng, các bộ lọc xếp dọc hợp lý trên màn hẹp.
+
+Trang chủ hiện có vùng khám phá Quiz với tìm kiếm, lọc theo chủ đề và sắp xếp theo mới công bố, lượt làm hoặc phần thưởng. Quiz Runner bổ sung chuyển cảnh opacity/transform giữa câu hỏi; animation tự tắt theo `prefers-reduced-motion`, không thay đổi timer, lưu đáp án hay chấm điểm.

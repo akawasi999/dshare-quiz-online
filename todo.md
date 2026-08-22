@@ -349,3 +349,7 @@
 - [x] Bổ sung hover mượt, skeleton/loading state và motion an toàn cho Quiz Card.
 - [x] Thêm thanh tiến trình trực quan và phản hồi đúng/sai có thể truy cập trong Quiz Runner.
 - [x] Chạy regression, xác minh desktop/mobile và cập nhật báo cáo bàn giao cho đợt nâng cấp UI.
+- [x] Token hóa Quản lý người dùng và các panel admin ưu tiên còn lại bằng semantic design tokens.
+- [x] Thêm chuyển cảnh câu hỏi Quiz Runner mượt, tôn trọng reduced-motion và không ảnh hưởng timer/đáp án.
+- [x] Bổ sung tìm kiếm, lọc và sắp xếp danh sách Quiz Card trên trang chủ bằng dữ liệu hiện có.
+- [x] Chạy regression, xác minh responsive và cập nhật báo cáo cho đợt nâng cấp UI tiếp theo.

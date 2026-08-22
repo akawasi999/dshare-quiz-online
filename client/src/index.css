@@ -297,4 +297,27 @@ body:has(main[data-ai-viewport="true"]) #root {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  .quiz-question-enter {
+    animation: quiz-question-enter 220ms var(--ease-out) both;
+  }
+
+  @keyframes quiz-question-enter {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
 }
+
+/* Compatibility bridge for legacy admin panels while they progressively adopt semantic utilities. */
+[class~="text-[#172554]"] { color: var(--foreground) !important; }
+[class~="text-[#617786]"], [class~="text-[#71838d]"] { color: var(--text-secondary) !important; }
+[class~="text-[#2563eb]"], [class~="text-[#065be5]"], [class~="text-[#3b82f6]"] { color: var(--primary) !important; }
+[class~="bg-[#172554]"] { background-color: var(--primary) !important; }
+[class~="bg-[#2563eb]"], [class~="bg-[#065be5]"], [class~="bg-[#3b82f6]"] { background-color: var(--primary) !important; }
+[class~="bg-[#eef4ff]"], [class~="bg-[#f8fbff]"], [class~="bg-[#dbeafe]"] { background-color: var(--muted) !important; }
+[class~="bg-white"] { background-color: var(--surface); }
+[class~="border-[#172554]/10"], [class~="border-[#172554]/9"], [class~="border-[#172554]/8"], [class~="border-[#172554]/7"], [class~="border-[#172554]/15"] { border-color: var(--border) !important; }
+[class~="text-[#007453]"], [class~="text-[#2c7a50]"] { color: var(--success) !important; }
+[class~="text-[#de1264]"], [class~="text-[#a8493e]"], [class~="text-[#aa5146]"] { color: var(--danger) !important; }
+[class~="bg-[#f3fbf7]"], [class~="bg-[#edf8f1]"], [class~="bg-[#e7f7ef]"] { background-color: color-mix(in srgb, var(--success) 10%, var(--surface)) !important; }
+[class~="bg-[#fff0f6]"], [class~="bg-[#fff7f5]"], [class~="bg-[#fff0ed]"] { background-color: color-mix(in srgb, var(--danger) 8%, var(--surface)) !important; }
