@@ -29,3 +29,9 @@ Quét source cho thấy còn **202** biểu thức mã màu trực tiếp trong 
 Lớp tương thích semantic token đã được áp dụng cho các panel quản trị kế thừa, trong đó có Quản lý người dùng, Point, báo lỗi và AI Assistant; các surface, chữ, viền, trạng thái thành công/lỗi và nền panel nay bám theo token chung. Desktop và mobile xác nhận bảng người dùng giữ được thứ bậc rõ ràng, các bộ lọc xếp dọc hợp lý trên màn hẹp.
 
 Trang chủ hiện có vùng khám phá Quiz với tìm kiếm, lọc theo chủ đề và sắp xếp theo mới công bố, lượt làm hoặc phần thưởng. Quiz Runner bổ sung chuyển cảnh opacity/transform giữa câu hỏi; animation tự tắt theo `prefers-reduced-motion`, không thay đổi timer, lưu đáp án hay chấm điểm.
+
+## Hoàn tất coverage semantic token
+
+Inventory `frontend-token-completion-audit.md` đã phân loại toàn bộ nhóm style legacy còn lại. Lớp compatibility trong `index.css` hiện ánh xạ palette legacy của quản trị, tài khoản, studio và học viên về semantic token cho foreground, secondary/muted text, surface, border, primary/accent và success/warning/danger; đồng thời bao phủ hover, focus-visible và motion Studio.
+
+Xác minh trực quan tại 1440px và 375px trên Quản lý người dùng, Sổ cái Point, Báo lỗi, AI Assistant, Hồ sơ, Ví Point, Bảng giá và Thư viện Quiz cho thấy surface, hệ chữ, nút và trạng thái semantic đồng nhất. Trên mobile, các bộ lọc Quản lý người dùng xếp theo cột, phần quản lý Point và AI giữ khoảng chạm rõ ràng, còn thẻ tài khoản/bảng giá/thư viện giữ nhịp dọc không gây tràn ngang.

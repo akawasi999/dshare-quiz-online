@@ -18,6 +18,13 @@ describe("design system primitives", () => {
     expect(css).toContain("--background: #f8fafc");
     expect(css).toContain("--radius-lg-token: 16px");
     expect(css).toContain("prefers-reduced-motion");
+    expect(css).toContain('[class~="text-[#172554]"]');
+    expect(css).toContain('[class~="text-[#7057e8]"]');
+    expect(css).toContain('[class~="bg-[#fff7e6]"]');
+    expect(css).toContain("hover\\:bg-\\[\\#172554\\]:hover");
+    expect(css).toContain("input:focus-visible");
+    expect(css).toContain("ai-question-arrival");
+    expect(css).toContain("color-mix(in srgb, var(--accent)");
   });
 
   it("chuẩn hóa Button, Card, Input, Badge và Tabs với state truy cập được", () => {

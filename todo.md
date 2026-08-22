@@ -353,3 +353,8 @@
 - [x] Thêm chuyển cảnh câu hỏi Quiz Runner mượt, tôn trọng reduced-motion và không ảnh hưởng timer/đáp án.
 - [x] Bổ sung tìm kiếm, lọc và sắp xếp danh sách Quiz Card trên trang chủ bằng dữ liệu hiện có.
 - [x] Chạy regression, xác minh responsive và cập nhật báo cáo cho đợt nâng cấp UI tiếp theo.
+- [x] Kiểm kê và phân loại toàn bộ page, panel, component còn dùng style legacy ngoài semantic design tokens.
+- [x] Token hóa toàn bộ page và panel quản trị còn lại, giữ nguyên data flow và thao tác quản trị.
+- [x] Token hóa toàn bộ page tài khoản và luồng học viên còn lại, giữ nguyên luồng học tập và thanh toán.
+- [x] Chuẩn hóa compatibility styles, component state và motion dùng chung cho các module legacy.
+- [x] Chạy regression toàn diện, xác minh responsive và cập nhật báo cáo hoàn tất chuẩn hóa token.
