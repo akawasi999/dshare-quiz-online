@@ -55,3 +55,9 @@ Phase 1 đã tạo lớp `.cpanel-v2` để scope token brand, surface, border, 
 `AdminOperationsDashboard` được tổ chức lại thành Learning Control Center theo thứ tự greeting, KPI, Learning Intelligence, Moderation, Point Economy, Quick Actions và Recent Activity. Dashboard dùng dữ liệu thực hiện có; KPI Point và XP được tách rõ, đồng thời nêu minh bạch rằng XP, mission, streak và achievement chưa có domain dữ liệu nên không hiển thị số liệu thay thế.
 
 Regression Phase 1: TypeScript sạch, **69 tệp / 174 ca kiểm thử** đạt, build production hoàn tất. Đã xác minh trực quan desktop 1440px và mobile 375px cho dashboard, đồng thời bổ sung hồi quy cho Command Palette và nguyên tắc hiển thị Point/XP.
+
+## Phase 2 đã hoàn tất — Learning và Users
+
+Mô-đun Nội dung đã chuyển sang page template CPanel v2 với page header, KPI cho bốn cấp nội dung, form tạo node theo ngữ cảnh, cây nội dung có trạng thái rỗng và luồng tạo Quiz kế thừa API hiện hữu. Mô-đun Người dùng được chuẩn hóa table system với toolbar search/filter/sort, bulk action, pagination, mobile row layout và User 360°. User 360° tiếp tục bảo toàn Quiz history, Point, hoạt động quản trị, đơn thanh toán và lịch sử gửi email; những domain XP/achievement/report chưa có dữ liệu được nêu rõ thay vì hiển thị số liệu giả.
+
+Regression Phase 2: TypeScript sạch, **70 tệp / 175 ca kiểm thử** đạt, build production hoàn tất. Đã xác minh desktop 1440px và mobile 375px cho hai mô-đun trọng yếu.

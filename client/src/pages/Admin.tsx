@@ -15,6 +15,7 @@ import RandomQuizBuilder from "@/components/RandomQuizBuilder";
 import MembershipGroupPermissionsPanel from "@/components/MembershipGroupPermissionsPanel";
 import UserManagementPanel from "@/components/UserManagementPanel";
 import AdminAiAssistantPanel from "@/components/AdminAiAssistantPanel";
+import ContentManagementPanel from "@/components/ContentManagementPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +36,7 @@ export default function Admin() {
     "/admin": "/quan-tri", "/admin/dashboard": "/quan-tri", "/admin/learning/content": "/quan-tri/noi-dung", "/admin/learning/questions": "/quan-tri/cau-hoi", "/admin/learning/random-generator": "/quan-tri/tao-de-ngau-nhien", "/admin/learning/import-export": "/quan-tri/import-xuat", "/admin/gamification/points": "/quan-tri/point", "/admin/users": "/quan-tri/nguoi-dung", "/admin/users/groups": "/quan-tri/nhom-nguoi-dung", "/admin/moderation/errors": "/quan-tri/bao-loi", "/admin/analytics": "/quan-tri/bao-cao", "/admin/system/monitoring": "/quan-tri/live-monitoring", "/admin/system/logs": "/quan-tri/nhat-ky", "/admin/system/ai": "/quan-tri/ai-assistant", "/admin/appearance/theme": "/quan-tri/thuong-hieu",
   }[location] ?? location;
   let content = <AdminOperationsDashboard />;
-  if (canonicalLocation === "/quan-tri/noi-dung") content = <ContentManager />;
+  if (canonicalLocation === "/quan-tri/noi-dung") content = <ContentManagementPanel />;
   if (canonicalLocation === "/quan-tri/tao-de-ngau-nhien") content = <RandomQuizBuilder />;
   if (canonicalLocation === "/quan-tri/cau-hoi") content = <><AIQuestionGeneratorPanel /><QuestionEditorPanel /></>;
   if (canonicalLocation === "/quan-tri/import-xuat") content = <QuestionTransferPanel />;

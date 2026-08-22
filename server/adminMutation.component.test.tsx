@@ -33,7 +33,7 @@ describe("Admin mutation feedback", () => {
     const user = userEvent.setup();
     render(<Admin />);
 
-    await user.selectOptions(screen.getByDisplayValue("Basic"), "pro");
+    await user.selectOptions(screen.getAllByLabelText("Hạng của Học viên")[0], "pro");
 
     expect(mocks.toast.error).toHaveBeenCalledWith("Không thể cập nhật hạng", { description: "Không thể cập nhật dữ liệu" });
   });

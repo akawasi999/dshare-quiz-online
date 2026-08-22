@@ -36,7 +36,7 @@ describe("UserManagementPanel enhancements", () => {
   it("cho phép chọn nhiều và gửi thao tác đổi gói hàng loạt", async () => {
     const user = userEvent.setup();
     render(<UserManagementPanel />);
-    await user.click(screen.getByLabelText("Chọn Người học mẫu"));
+    await user.click(screen.getAllByLabelText("Chọn Người học mẫu")[0]);
     expect(screen.getByText("Đã chọn 1 người dùng")).toBeTruthy();
     await user.selectOptions(screen.getByLabelText("Thao tác hàng loạt"), "pro");
     await user.click(screen.getByRole("button", { name: "Áp dụng" }));
@@ -46,7 +46,7 @@ describe("UserManagementPanel enhancements", () => {
   it("hiển thị lịch sử gửi email theo từng đơn thanh toán trong chi tiết thành viên", async () => {
     const user = userEvent.setup();
     render(<UserManagementPanel />);
-    await user.click(screen.getByText("Người học mẫu"));
+    await user.click(screen.getAllByText("Người học mẫu")[0]);
     expect(screen.getByText("Lịch sử xác nhận giao dịch")).toBeTruthy();
     expect(screen.getByText("Nâng cấp PRO")).toBeTruthy();
     expect(screen.getByText("Xác nhận kích hoạt PRO · Dshare Quiz Online")).toBeTruthy();
