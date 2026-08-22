@@ -28,6 +28,8 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByRole("button", { name: "Bắt đầu" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Đăng nhập" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Bảng giá" }).className).toContain("site-header-text");
+    expect(screen.getByRole("link", { name: "Giới thiệu về chúng tôi" }).className).toContain("site-header-nav-item");
+    expect(screen.getByRole("button", { name: "Khám phá" }).className).toContain("site-header-nav-item");
     expect(screen.getByRole("button", { name: "Bắt đầu" }).className).toContain("site-header-text");
     expect(screen.queryByRole("link", { name: "Xếp hạng" })).toBeNull();
 

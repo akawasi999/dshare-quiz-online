@@ -391,3 +391,5 @@
 - [x] Rà soát toàn bộ nhãn header và cascade font-family/font-size/font-weight đang áp dụng.
 - [x] Áp dụng một typography utility dùng chung cho tất cả chữ trên header.
 - [x] Kiểm thử, xác minh trực quan và cập nhật bàn giao cho typography header hợp nhất.
+- [x] Đối chiếu ảnh tham chiếu và căn thẳng baseline của toàn bộ nhãn điều hướng công khai.
+- [x] Kiểm thử desktop/mobile, hồi quy và cập nhật bàn giao cho căn chỉnh navigation.

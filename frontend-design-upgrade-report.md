@@ -116,3 +116,9 @@ Sau khi đo lại ảnh 728 × 69px theo từng lát ngang, header được đi�
 Sau lần rà soát cascade cuối, `index.css` bổ sung utility bắt buộc `.site-header-text` với **Inter / 14px / weight 500 / line-height 20px / letter-spacing 0** và thuộc tính `!important`. Utility này được gắn trực tiếp cho liên kết điều hướng, trigger dropdown, nhãn trong dropdown, chỉ báo ngôn ngữ, trạng thái xác thực, CTA **Bắt đầu**, hồ sơ và đăng xuất. Vì vậy, variant mặc định của Button hay các utility cũ không thể làm riêng font, cỡ hoặc weight của bất kỳ nhãn nào trong header.
 
 Hồi quy `siteHeaderNavigation.component.test.tsx` nay kiểm tra utility chung trên Bảng giá và CTA. `pnpm check` sạch, ca hồi quy header đạt, build production hoàn tất trong **21,35 giây**; ảnh desktop 1440px xác nhận các nhãn và điều khiển header ở cùng một cấp chữ. Tên thương hiệu trong logo vẫn là artwork độc lập, nên không bị áp typography của navigation.
+
+## Căn chỉnh baseline navigation theo ảnh tham chiếu
+
+Ảnh tham chiếu 646 × 70px xác nhận năm nhãn navigation và hai chevron phải chia sẻ một baseline thị giác. `SiteHeader` nay bọc mọi liên kết, trigger dropdown, nhãn và chevron desktop trong một khung flex cao 40px: `.site-header-nav-item` căn giữa theo trục dọc, `.site-header-nav-label` duy trì line-height 20px, còn `.site-header-nav-chevron` không co và tự căn giữa. Cách này loại bỏ line-box độc lập khiến mục **Giới thiệu về chúng tôi** có thể thấp hơn các mục còn lại, đồng thời không thay đổi nội dung, URL hoặc hành vi dropdown.
+
+Hồi quy navigation và TypeScript đều đạt. Build production hoàn tất trong **21,17 giây**; ảnh desktop 1440px xác nhận các nhãn cùng chevron đã nằm trên một đường căn chỉnh ngang.

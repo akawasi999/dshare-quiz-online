@@ -49,6 +49,32 @@
   letter-spacing: 0 !important;
 }
 
+/* One 40px flex line prevents independent link line-boxes from drifting vertically. */
+.site-header-navigation {
+  min-height: 40px;
+}
+
+.site-header-nav-item {
+  display: inline-flex !important;
+  min-height: 40px;
+  align-items: center !important;
+  padding-block: 0 !important;
+  vertical-align: middle;
+}
+
+.site-header-nav-label {
+  display: inline-flex;
+  min-height: 20px;
+  align-items: center;
+  line-height: 20px;
+}
+
+.site-header-nav-chevron {
+  display: block;
+  flex: none;
+  align-self: center;
+}
+
 :root {
   color-scheme: light;
   --primary: #635bff;
