@@ -417,3 +417,7 @@
 - [x] Hiển thị nhãn chính sách Quiz trong cây Chủ đề.
 - [x] Thêm chọn nhiều Chủ đề và cập nhật hàng loạt chính sách Quiz.
 - [x] Kiểm thử workflow chờ duyệt, bulk update và lưu checkpoint.
+- [x] Thêm bộ lọc nhanh Chờ duyệt trên Dashboard quản trị.
+- [x] Thêm xem trước chi tiết Quiz đang chờ duyệt trước khi ra quyết định.
+- [x] Thêm từ chối có lý do và hiển thị phản hồi cho người tạo Quiz.
+- [x] Kiểm thử workflow Dashboard, duyệt/từ chối và lưu checkpoint.

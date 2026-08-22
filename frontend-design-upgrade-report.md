@@ -136,3 +136,18 @@ Hồi quy navigation và TypeScript đều đạt. Build production hoàn tất 
 | XP & Gamification | Schema/ledger XP độc lập Point, Level editor, Rule engine tạo Draft và timeline giao dịch; không suy diễn XP từ Point khi chưa có sự kiện thực |
 
 Migration `0029`, `0030` và `0031` đã được kiểm tra trước khi áp dụng; chúng chỉ mở rộng schema bằng Topic/lifecycle, quan hệ câu hỏi với Topic và ba bảng XP (`xpLevels`, `xpRules`, `xpTransactions`), không có thao tác xóa dữ liệu. Hồi quy đạt **73 tệp / 185 ca**, TypeScript sạch và build production thành công trong **21,34 giây**. Desktop cho XP cùng mobile cho Chủ đề và Quiz System đã được xác minh; log console mới nhất không còn tái hiện lỗi runtime validation trước đó.
+
+## Workflow kiểm duyệt Quiz — Dashboard, xem trước và phản hồi người tạo
+
+Dashboard CPanel có lối tắt **Chờ duyệt** mang theo số lượng Quiz thực tế và điều hướng trực tiếp tới `Quiz System?status=pending_review`. Quick action tương ứng giữ tác vụ kiểm duyệt ở đúng ngữ cảnh vận hành, không thêm heading cấp trang hay telemetry giả. Bộ lọc URL này hoạt động trên cả desktop và mobile.
+
+Quiz System bổ sung trạng thái lifecycle **Cần chỉnh sửa** (`rejected`) cùng ba trường persistence `reviewedAt`, `reviewedByUserId` và `reviewReason`. Quản trị viên mở **Xem trước kiểm duyệt** để đọc toàn bộ câu hỏi, phương án, đáp án đúng và giải thích ở chế độ chỉ đọc trước khi quyết định. Duyệt Quiz chờ duyệt tạo audit `quiz.review_approved`; từ chối yêu cầu lý do tối thiểu ba ký tự, chuyển Quiz sang `rejected`, lưu phản hồi và audit `quiz.review_rejected`.
+
+| Bề mặt | Hành vi hoàn thiện |
+|---|---|
+| Dashboard | Nút và quick action **Chờ duyệt** hiển thị count thực, dẫn thẳng vào URL filter của Quiz System. |
+| Quiz System | Filter **Chờ duyệt**/**Cần chỉnh sửa**, preview read-only, CTA duyệt hoặc từ chối, modal từ chối bắt buộc nhập lý do. |
+| Người tạo | Trang **Quiz của tôi** có filter Chờ duyệt/Cần sửa; thẻ Quiz từ chối hiển thị lý do, thời điểm phản hồi và CTA **Chỉnh sửa theo phản hồi**. |
+| Dữ liệu & audit | Migration `0034` thêm lifecycle `rejected` và metadata review, không có thao tác xóa dữ liệu. |
+
+Regression bổ sung cho lối tắt Dashboard, phần phản hồi trên **Quiz của tôi**, và modal từ chối bắt buộc lý do. Toàn bộ suite đạt **76 tệp / 190 ca**; TypeScript sạch, build production hoàn tất trong **21,96 giây**. Ảnh desktop và mobile xác nhận Dashboard và trạng thái filter **Chờ duyệt** hiển thị responsive, không tràn bố cục.

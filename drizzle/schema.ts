@@ -52,7 +52,7 @@ export const quizModeValues = ["training", "testing"] as const;
 export const questionTypeValues = ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "essay"] as const;
 export const difficultyValues = ["easy", "medium", "hard"] as const;
 export const topicStatusValues = ["active", "archived"] as const;
-export const quizLifecycleStatusValues = ["draft", "pending_review", "published", "locked", "archived"] as const;
+export const quizLifecycleStatusValues = ["draft", "pending_review", "rejected", "published", "locked", "archived"] as const;
 export const xpRuleStatusValues = ["draft", "active", "paused", "archived"] as const;
 
 export const learnerProfiles = mysqlTable("learnerProfiles", {
@@ -278,6 +278,9 @@ export const quizzes = mysqlTable("quizzes", {
   isPublished: boolean("isPublished").default(false).notNull(),
   status: mysqlEnum("status", quizLifecycleStatusValues).default("draft").notNull(),
   publishedAt: timestamp("publishedAt"),
+  reviewedAt: timestamp("reviewedAt"),
+  reviewedByUserId: int("reviewedByUserId"),
+  reviewReason: text("reviewReason"),
   lockedAt: timestamp("lockedAt"),
   lockedByUserId: int("lockedByUserId"),
   lockedFromStatus: mysqlEnum("lockedFromStatus", quizLifecycleStatusValues),

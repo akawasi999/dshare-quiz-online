@@ -8,7 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { buildTopicPath, isTopicDescendantPath, normalizeCpanelLearningSlug, remapDescendantPath } from "./cpanelLearningUtils";
 
 const topicStatusSchema = z.enum(["active", "archived"]);
-const quizStatusSchema = z.enum(["draft", "pending_review", "published", "locked", "archived"]);
+const quizStatusSchema = z.enum(["draft", "pending_review", "rejected", "published", "locked", "archived"]);
 const MAX_QUIZZES_PER_PAGE = 20;
 const quizQuestionPayloadSchema = z.object({
   prompt: z.string().trim().min(8).max(5000),
@@ -164,7 +164,7 @@ export const cpanelLearningRouter = router({
     }),
   }),
   quizzes: router({
-    list: adminProcedure.input(z.object({ page: z.number().int().min(1).default(1), search: z.string().trim().max(160).optional(), topicId: z.number().int().positive().optional(), status: z.enum(["all", "draft", "pending_review", "published", "locked", "archived"]).default("all"), sort: z.enum(["title.asc", "title.desc", "createdAt.desc", "publishedAt.desc"]).default("title.asc") }).optional())
+    list: adminProcedure.input(z.object({ page: z.number().int().min(1).default(1), search: z.string().trim().max(160).optional(), topicId: z.number().int().positive().optional(), status: z.enum(["all", "draft", "pending_review", "rejected", "published", "locked", "archived"]).default("all"), sort: z.enum(["title.asc", "title.desc", "createdAt.desc", "publishedAt.desc"]).default("title.asc") }).optional())
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return { items: [], pagination: { page: 1, pageSize: MAX_QUIZZES_PER_PAGE, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
@@ -259,9 +259,23 @@ export const cpanelLearningRouter = router({
       const invalidQuestion = links.find(({ question }) => validateQuestionConfiguration({ type: question.type, options: optionRows.filter(option => option.questionId === question.id).map(option => ({ body: option.body, isCorrect: option.isCorrect })), answerConfig: question.answerConfig ?? undefined, imageUrl: question.imageUrl }) !== null);
       if (invalidQuestion) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Câu hỏi #${invalidQuestion.question.id} chưa có cấu hình đáp án hợp lệ.` });
       const publishedAt = input.publishedAt ?? new Date();
-      await db.update(quizzes).set({ status: "published", isPublished: true, publishedAt, version: quiz.version + 1 }).where(eq(quizzes.id, quiz.id));
-      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.published", entityType: "quiz", entityId: quiz.id, metadata: { before: { status: quiz.status, publishedAt: quiz.publishedAt }, after: { status: "published", publishedAt }, reason: input.reason } });
+      const isReviewApproval = quiz.status === "pending_review";
+      const reviewedAt = isReviewApproval ? new Date() : quiz.reviewedAt;
+      await db.update(quizzes).set({ status: "published", isPublished: true, publishedAt, reviewedAt, reviewedByUserId: isReviewApproval ? ctx.user.id : quiz.reviewedByUserId, reviewReason: isReviewApproval ? null : quiz.reviewReason, version: quiz.version + 1 }).where(eq(quizzes.id, quiz.id));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: isReviewApproval ? "quiz.review_approved" : "quiz.published", entityType: "quiz", entityId: quiz.id, metadata: { before: { status: quiz.status, publishedAt: quiz.publishedAt }, after: { status: "published", publishedAt, reviewedAt }, reason: input.reason } });
       return { success: true, status: "published" as const, publishedAt, version: quiz.version + 1 };
+    }),
+    reviewReject: adminProcedure.input(z.object({ quizId: z.number().int().positive(), version: z.number().int().positive(), reason: z.string().trim().min(3).max(500) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể từ chối Quiz." });
+      const quiz = (await db.select().from(quizzes).where(and(eq(quizzes.id, input.quizId), isNull(quizzes.deletedAt))).limit(1))[0];
+      if (!quiz) throw notFound("Không tìm thấy Quiz.");
+      if (quiz.version !== input.version) throw conflict("Quiz đã được thay đổi bởi người khác.");
+      if (quiz.status !== "pending_review") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chỉ Quiz đang chờ duyệt mới có thể bị từ chối." });
+      const reviewedAt = new Date();
+      await db.update(quizzes).set({ status: "rejected", isPublished: false, reviewedAt, reviewedByUserId: ctx.user.id, reviewReason: input.reason, version: quiz.version + 1 }).where(and(eq(quizzes.id, quiz.id), eq(quizzes.version, input.version)));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.review_rejected", entityType: "quiz", entityId: quiz.id, metadata: { before: { status: quiz.status }, after: { status: "rejected", reviewedAt }, reason: input.reason } });
+      return { success: true, status: "rejected" as const, reviewedAt, version: quiz.version + 1 };
     }),
     lock: adminProcedure.input(z.object({ quizId: z.number().int().positive(), version: z.number().int().positive(), reason: z.string().trim().min(3).max(500) })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -281,7 +295,7 @@ export const cpanelLearningRouter = router({
       if (!quiz) throw notFound("Không tìm thấy Quiz.");
       if (quiz.version !== input.version) throw conflict("Quiz đã được thay đổi bởi người khác.");
       if (quiz.status !== "locked") throw conflict("Quiz không ở trạng thái khóa.");
-      const nextStatus = quiz.lockedFromStatus === "published" ? "published" : quiz.lockedFromStatus === "pending_review" ? "pending_review" : "draft";
+      const nextStatus = quiz.lockedFromStatus === "published" ? "published" : quiz.lockedFromStatus === "pending_review" ? "pending_review" : quiz.lockedFromStatus === "rejected" ? "rejected" : "draft";
       await db.update(quizzes).set({ status: nextStatus, isPublished: nextStatus === "published", lockedAt: null, lockedByUserId: null, lockedFromStatus: null, lockReason: null, version: quiz.version + 1 }).where(eq(quizzes.id, quiz.id));
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.unlocked", entityType: "quiz", entityId: quiz.id, metadata: { before: { status: "locked" }, after: { status: nextStatus }, reason: input.reason } });
       return { success: true, status: nextStatus, version: quiz.version + 1 };
