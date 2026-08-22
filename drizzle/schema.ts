@@ -238,6 +238,8 @@ export const topics = mysqlTable("topics", {
   depth: int("depth").default(0).notNull(),
   sortOrder: int("sortOrder").default(0).notNull(),
   status: mysqlEnum("status", topicStatusValues).default("active").notNull(),
+  allowQuizCreation: boolean("allowQuizCreation").default(true).notNull(),
+  requireQuizModeration: boolean("requireQuizModeration").default(false).notNull(),
   createdByUserId: int("createdByUserId").notNull(),
   updatedByUserId: int("updatedByUserId").notNull(),
   deletedAt: timestamp("deletedAt"),

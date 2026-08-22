@@ -410,3 +410,6 @@
 - [x] Kiểm thử responsive, hồi quy và lưu checkpoint cho giao diện quản trị tối giản.
 - [x] Kiểm kê icon tương tác và chuẩn hóa tooltip hover/focus trên toàn bộ website.
 - [x] Kiểm thử accessibility, hồi quy và lưu checkpoint cho hệ tooltip toàn website.
+- [x] Cập nhật popup Chủ đề: bỏ mô tả, đổi Slug thành URL và báo URL trùng ngay dưới trường nhập.
+- [x] Thêm tùy chọn cho phép tạo Quiz và kiểm duyệt Quiz mới theo từng Chủ đề.
+- [x] Kiểm thử popup Chủ đề, validation URL và lưu checkpoint.

@@ -57,7 +57,18 @@ export const cpanelLearningRouter = router({
       ]);
       return { topic, children, quizCount: Number(quizStat[0]?.count ?? 0) };
     }),
-    create: adminProcedure.input(z.object({ name: z.string().trim().min(2).max(160), slug: z.string().trim().max(180).optional(), parentId: z.number().int().positive().nullable().optional(), status: topicStatusSchema.default("active") }))
+    checkUrl: adminProcedure.input(z.object({ url: z.string().trim().max(180), excludeTopicId: z.number().int().positive().optional() }))
+      .query(async ({ input }) => {
+        const normalizedUrl = normalizeCpanelLearningSlug(input.url);
+        if (!normalizedUrl) return { normalizedUrl, available: false };
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể kiểm tra URL Chủ đề." });
+        const conditions = [eq(topics.slug, normalizedUrl)];
+        if (input.excludeTopicId) conditions.push(ne(topics.id, input.excludeTopicId));
+        const duplicate = await db.select({ id: topics.id }).from(topics).where(and(...conditions)).limit(1);
+        return { normalizedUrl, available: !duplicate.length };
+      }),
+    create: adminProcedure.input(z.object({ name: z.string().trim().min(2).max(160), slug: z.string().trim().max(180).optional(), parentId: z.number().int().positive().nullable().optional(), status: topicStatusSchema.default("active"), allowQuizCreation: z.boolean().default(true), requireQuizModeration: z.boolean().default(false) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo Chủ đề." });
@@ -70,15 +81,15 @@ export const cpanelLearningRouter = router({
           if (parent?.status === "archived") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Không thể tạo Chủ đề con trong nhánh đã archive." });
           const siblingFilter = parent ? eq(topics.parentId, parent.id) : isNull(topics.parentId);
           const orderRow = (await tx.select({ max: sql<number>`coalesce(max(${topics.sortOrder}), -1)` }).from(topics).where(and(siblingFilter, isNull(topics.deletedAt))))[0];
-          const created = await tx.insert(topics).values({ name: input.name, slug, parentId: parent?.id ?? null, path: "/pending/", depth: parent ? parent.depth + 1 : 0, sortOrder: Number(orderRow?.max ?? -1) + 1, status: input.status, createdByUserId: ctx.user.id, updatedByUserId: ctx.user.id });
+          const created = await tx.insert(topics).values({ name: input.name, slug, parentId: parent?.id ?? null, path: "/pending/", depth: parent ? parent.depth + 1 : 0, sortOrder: Number(orderRow?.max ?? -1) + 1, status: input.status, allowQuizCreation: input.allowQuizCreation, requireQuizModeration: input.requireQuizModeration, createdByUserId: ctx.user.id, updatedByUserId: ctx.user.id });
           const id = Number(created[0].insertId);
           const path = buildTopicPath(parent?.path ?? null, id);
           await tx.update(topics).set({ path }).where(eq(topics.id, id));
-          await tx.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "topic.created", entityType: "topic", entityId: id, metadata: { after: { name: input.name, slug, parentId: parent?.id ?? null, path, status: input.status } } });
-          return { id, name: input.name, slug, parentId: parent?.id ?? null, path, depth: parent ? parent.depth + 1 : 0, status: input.status };
+          await tx.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "topic.created", entityType: "topic", entityId: id, metadata: { after: { name: input.name, slug, parentId: parent?.id ?? null, path, status: input.status, allowQuizCreation: input.allowQuizCreation, requireQuizModeration: input.requireQuizModeration } } });
+          return { id, name: input.name, slug, parentId: parent?.id ?? null, path, depth: parent ? parent.depth + 1 : 0, status: input.status, allowQuizCreation: input.allowQuizCreation, requireQuizModeration: input.requireQuizModeration };
         });
       }),
-    update: adminProcedure.input(z.object({ topicId: z.number().int().positive(), name: z.string().trim().min(2).max(160).optional(), slug: z.string().trim().max(180).optional(), parentId: z.number().int().positive().nullable().optional(), status: topicStatusSchema.optional(), version: z.number().int().positive(), reason: z.string().trim().max(500).optional() }))
+    update: adminProcedure.input(z.object({ topicId: z.number().int().positive(), name: z.string().trim().min(2).max(160).optional(), slug: z.string().trim().max(180).optional(), parentId: z.number().int().positive().nullable().optional(), status: topicStatusSchema.optional(), allowQuizCreation: z.boolean().optional(), requireQuizModeration: z.boolean().optional(), version: z.number().int().positive(), reason: z.string().trim().max(500).optional() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật Chủ đề." });
@@ -98,13 +109,13 @@ export const cpanelLearningRouter = router({
           }
           const nextPath = parentChanged ? buildTopicPath(parent?.path ?? null, topic.id) : topic.path;
           const nextDepth = parentChanged ? (parent ? parent.depth + 1 : 0) : topic.depth;
-          const before = { name: topic.name, slug: topic.slug, parentId: topic.parentId, path: topic.path, depth: topic.depth, status: topic.status, version: topic.version };
-          await tx.update(topics).set({ name: input.name ?? topic.name, slug: nextSlug, parentId: parentChanged ? input.parentId ?? null : topic.parentId, path: nextPath, depth: nextDepth, status: input.status ?? topic.status, updatedByUserId: ctx.user.id, version: topic.version + 1 }).where(and(eq(topics.id, topic.id), eq(topics.version, input.version)));
+          const before = { name: topic.name, slug: topic.slug, parentId: topic.parentId, path: topic.path, depth: topic.depth, status: topic.status, allowQuizCreation: topic.allowQuizCreation, requireQuizModeration: topic.requireQuizModeration, version: topic.version };
+          await tx.update(topics).set({ name: input.name ?? topic.name, slug: nextSlug, parentId: parentChanged ? input.parentId ?? null : topic.parentId, path: nextPath, depth: nextDepth, status: input.status ?? topic.status, allowQuizCreation: input.allowQuizCreation ?? topic.allowQuizCreation, requireQuizModeration: input.requireQuizModeration ?? topic.requireQuizModeration, updatedByUserId: ctx.user.id, version: topic.version + 1 }).where(and(eq(topics.id, topic.id), eq(topics.version, input.version)));
           if (parentChanged) {
             const descendants = await tx.select().from(topics).where(and(like(topics.path, `${topic.path}%`), isNull(topics.deletedAt), ne(topics.id, topic.id)));
             for (const child of descendants) await tx.update(topics).set({ path: remapDescendantPath(child.path, topic.path, nextPath), depth: child.depth + (nextDepth - topic.depth), updatedByUserId: ctx.user.id }).where(eq(topics.id, child.id));
           }
-          const after = { name: input.name ?? topic.name, slug: nextSlug, parentId: parentChanged ? input.parentId ?? null : topic.parentId, path: nextPath, depth: nextDepth, status: input.status ?? topic.status, version: topic.version + 1 };
+          const after = { name: input.name ?? topic.name, slug: nextSlug, parentId: parentChanged ? input.parentId ?? null : topic.parentId, path: nextPath, depth: nextDepth, status: input.status ?? topic.status, allowQuizCreation: input.allowQuizCreation ?? topic.allowQuizCreation, requireQuizModeration: input.requireQuizModeration ?? topic.requireQuizModeration, version: topic.version + 1 };
           await tx.insert(auditLogs).values({ actorUserId: ctx.user.id, action: parentChanged ? "topic.parent_changed" : "topic.updated", entityType: "topic", entityId: topic.id, metadata: { before, after, reason: input.reason ?? null } });
           return { id: topic.id, ...after };
         });
@@ -187,6 +198,7 @@ export const cpanelLearningRouter = router({
       if (input.topicId) {
         const topic = (await db.select().from(topics).where(and(eq(topics.id, input.topicId), eq(topics.status, "active"), isNull(topics.deletedAt))).limit(1))[0];
         if (!topic) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chủ đề đã chọn không tồn tại hoặc đã archive." });
+        if (!topic.allowQuizCreation) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chủ đề đã chọn không cho phép tạo Quiz mới." });
       }
       const baseSlug = normalizeCpanelLearningSlug(input.title);
       const duplicate = await db.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.slug, baseSlug)).limit(1);
