@@ -385,3 +385,6 @@
 - [x] Rà soát kích thước, trọng lượng và khoảng cách chữ của các mục header.
 - [x] Chuẩn hóa typography navigation, CTA và điều khiển header thành một thang chữ thống nhất.
 - [x] Kiểm thử responsive, hồi quy và cập nhật bàn giao cho typography header.
+- [x] Đọc tỷ lệ chữ, spacing và căn giữa navigation trong ảnh tham chiếu mới.
+- [x] Điều chỉnh lại typography và khoảng cách navigation để đồng nhất sát ảnh.
+- [x] Xác minh trực quan, hồi quy và cập nhật bàn giao cho tinh chỉnh navigation.

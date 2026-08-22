@@ -27,8 +27,8 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByRole("button", { name: "Hỗ trợ khách hàng" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Bắt đầu" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Đăng nhập" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Bảng giá" }).className).toContain("text-[13px]");
-    expect(screen.getByRole("button", { name: "Bắt đầu" }).className).toContain("text-[13px]");
+    expect(screen.getByRole("link", { name: "Bảng giá" }).className).toContain("text-sm");
+    expect(screen.getByRole("button", { name: "Bắt đầu" }).className).toContain("text-sm");
     expect(screen.queryByRole("link", { name: "Xếp hạng" })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Khám phá" }));

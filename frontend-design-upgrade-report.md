@@ -106,3 +106,7 @@ Dropdown mở bằng hover, focus hoặc click; phần bảng được chuyển 
 ## Chuẩn hóa typography header
 
 Header nay dùng chung thang chữ **13px / semibold / leading-none / tracking -0.01em** cho điều hướng desktop, trigger dropdown, chỉ báo ngôn ngữ, CTA, hồ sơ và đăng nhập/đăng xuất. Khoảng đệm ngang các mục cũng được đưa về nhịp 8px–12px để tránh cảm giác chữ lớn/nhỏ lẫn lộn. Hồi quy xác nhận lớp typography trên liên kết Bảng giá và CTA; TypeScript sạch, build production hoàn tất, desktop 1440px cùng mobile 375px đã được kiểm tra.
+
+## Hiệu chỉnh theo ảnh tham chiếu lần hai
+
+Sau khi đo lại ảnh 728 × 69px theo từng lát ngang, header được điều chỉnh từ 13px semibold sang **14px (`text-sm`) / medium / line-height 20px / tracking mặc định**. Navigation desktop dùng khoảng cách 32px tại breakpoint lớn và bỏ padding ngang thừa trên mỗi nhãn, nhờ đó Bảng giá, Blog, Khám phá, Hỗ trợ khách hàng cùng một cấp thị giác sát ảnh tham chiếu. Hồi quy header và TypeScript đạt; build production hoàn tất, desktop 1440px và mobile 375px đã xác minh.
