@@ -1,0 +1,2 @@
+ALTER TABLE `questions` MODIFY COLUMN `type` enum('single','multiple','true_false','true_false_statements','fill_blank','image','matching','essay') NOT NULL DEFAULT 'single';--> statement-breakpoint
+ALTER TABLE `attemptAnswers` ADD `answerPayload` json;

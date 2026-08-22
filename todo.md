@@ -372,3 +372,7 @@
 - [x] Triển khai Phase 2: các mô-đun quản trị nội dung và người dùng theo đặc tả được ưu tiên.
 - [x] Triển khai Phase 3: vận hành, báo cáo và cấu hình hệ thống theo đặc tả được ưu tiên.
 - [x] Chạy regression, xác minh desktop/mobile, cập nhật báo cáo và checkpoint sau từng phase CPanel.
+- [x] Phân tích mẫu tham chiếu và đối chiếu mô hình câu hỏi Đúng/Sai hiện có.
+- [x] Mở rộng dữ liệu, validation và chấm điểm cho nhóm nhận định chọn Có/Không.
+- [x] Bổ sung trình soạn Studio, Preview, Quiz Runner và kết quả cho dạng nhận định Đúng/Sai.
+- [x] Bổ sung hồi quy, xác minh responsive và cập nhật bàn giao cho dạng câu hỏi mới.

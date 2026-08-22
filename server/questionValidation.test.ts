@@ -17,4 +17,9 @@ describe("question configuration validation", () => {
     expect(validateQuestionConfiguration({ type: "essay", options: [], answerConfig: {} })).toContain("dàn ý");
     expect(validateQuestionConfiguration({ type: "essay", options: [], answerConfig: { sampleOutline: "Nêu luận điểm, dẫn chứng và kết luận." } })).toBeUndefined();
   });
+
+  it("yêu cầu ít nhất hai nhận định Có/Không hợp lệ", () => {
+    expect(validateQuestionConfiguration({ type: "true_false_statements", options: [], answerConfig: { statements: [{ id: "a", text: "Nhận định hợp lệ", correct: true }] } })).toContain("hai đến tám");
+    expect(validateQuestionConfiguration({ type: "true_false_statements", options: [], answerConfig: { statements: [{ id: "a", text: "Mệnh đề thứ nhất", correct: true }, { id: "b", text: "Mệnh đề thứ hai", correct: false }] } })).toBeUndefined();
+  });
 });

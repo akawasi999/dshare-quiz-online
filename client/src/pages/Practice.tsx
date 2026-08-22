@@ -22,6 +22,7 @@ const typeLabels = {
   single: "Chọn một đáp án",
   multiple: "Chọn các đáp án đúng",
   true_false: "Đúng hoặc Sai",
+  true_false_statements: "Nhận định Có / Không",
   fill_blank: "Điền đáp án",
   image: "Quan sát hình ảnh",
   matching: "Ghép nối",

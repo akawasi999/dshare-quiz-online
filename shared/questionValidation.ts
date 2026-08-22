@@ -1,4 +1,17 @@
-export type QuestionValidationType = "single" | "multiple" | "true_false" | "fill_blank" | "image" | "matching" | "essay";
+export type QuestionValidationType = "single" | "multiple" | "true_false" | "true_false_statements" | "fill_blank" | "image" | "matching" | "essay";
+
+export type TrueFalseStatement = { id: string; text: string; correct: boolean };
+
+export function getTrueFalseStatements(answerConfig?: Record<string, unknown>): TrueFalseStatement[] {
+  const values = answerConfig?.statements;
+  if (!Array.isArray(values)) return [];
+  return values.flatMap(value => {
+    if (!value || typeof value !== "object") return [];
+    const statement = value as Record<string, unknown>;
+    if (typeof statement.id !== "string" || typeof statement.text !== "string" || typeof statement.correct !== "boolean") return [];
+    return [{ id: statement.id, text: statement.text, correct: statement.correct }];
+  });
+}
 
 export type EditableQuestionConfig = {
   type: QuestionValidationType;
@@ -19,6 +32,11 @@ export function validateQuestionConfiguration(input: EditableQuestionConfig) {
   if (input.type === "true_false") {
     const labels = cleanOptions.map(option => option.body.trim().toLocaleLowerCase("vi-VN")).sort().join("|");
     if (labels !== "sai|đúng" || correctOptions.length !== 1) return "Câu đúng/sai phải gồm hai lựa chọn Đúng và Sai, với đúng một đáp án đúng.";
+  }
+  if (input.type === "true_false_statements") {
+    const statements = getTrueFalseStatements(input.answerConfig);
+    if (statements.length < 2 || statements.length > 8) return "Câu nhận định Đúng/Sai cần từ hai đến tám nhận định hợp lệ.";
+    if (new Set(statements.map(statement => statement.id.trim())).size !== statements.length || statements.some(statement => !statement.id.trim() || statement.text.trim().length < 3)) return "Mỗi nhận định cần mã riêng và nội dung tối thiểu ba ký tự.";
   }
   if (input.type === "fill_blank") {
     const accepted = input.answerConfig?.acceptedAnswers;

@@ -143,6 +143,16 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getAllByRole("option", { name: "⇄ Đúng / Sai" }).length).toBeGreaterThan(0);
   });
 
+  it("tạo được câu nhận định Có/Không với bảng nhiều hàng", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "+ Nhận định Có / Không" }));
+    expect(screen.getAllByText("Nhận định chọn Có / Không").length).toBeGreaterThan(0);
+    const statementInput = screen.getByPlaceholderText("Nhận định 1") as HTMLInputElement;
+    await user.type(statementInput, "Máy tính cần có nguồn điện để hoạt động.");
+    expect(statementInput.value).toContain("nguồn điện");
+  });
+
   it("hiển thị điều khiển media, điểm và Preview Sandbox trong luồng P0", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);

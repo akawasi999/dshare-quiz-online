@@ -197,6 +197,13 @@
       "when": 1787303025247,
       "tag": "0027_mushy_omega_flight",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "5",
+      "when": 1787367249556,
+      "tag": "0028_dizzy_tarot",
+      "breakpoints": true
     }
   ]
 }

@@ -51,4 +51,17 @@ describe("QuizRunner data state", () => {
     await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
     expect(container.querySelector("video")?.getAttribute("src")).toBe("/manus-storage/explain.webm");
   });
+
+  it("chấm nhận định Có/Không khi người học trả lời đủ từng hàng", async () => {
+    const user = userEvent.setup();
+    sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox nhận định", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Chọn Có hoặc Không cho từng nhận định.", type: "true_false_statements", difficulty: "medium", tags: ["Sandbox"], statements: [{ id: "a", text: "Nhận định thứ nhất", correct: true }, { id: "b", text: "Nhận định thứ hai", correct: false }], options: [], correctOptionIds: [] }] }));
+    window.history.replaceState({}, "", `${window.location.origin}/quiz/0?sandbox=1`);
+    render(<QuizRunner />);
+    await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
+    expect(screen.getByText("Nhận định thứ nhất")).toBeTruthy();
+    await user.click(screen.getAllByRole("button", { name: "Có" })[0]!);
+    await user.click(screen.getAllByRole("button", { name: "Không" })[1]!);
+    expect(screen.getByRole("progressbar", { name: "Tiến độ làm bài" }).getAttribute("aria-valuenow")).toBe("1");
+    expect(screen.getByText("Chính xác! Bạn có thể chuyển sang câu tiếp theo.")).toBeTruthy();
+  });
 });

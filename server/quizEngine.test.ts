@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areSameSelections, scoreQuiz, shuffledForAttempt } from "./quizEngine";
+import { areSameSelections, areSameStatementSelections, scoreQuiz, shuffledForAttempt } from "./quizEngine";
 
 describe("quiz scoring engine", () => {
   it("requires the exact set of options for a multi-choice answer", () => {
@@ -21,6 +21,14 @@ describe("quiz scoring engine", () => {
     );
 
     expect(result).toMatchObject({ earnedPoints: 2, availablePoints: 5, scorePercent: 40, correctCount: 1 });
+  });
+
+  it("chấm đúng khi mọi nhận định Có/Không khớp và không cho điểm từng phần", () => {
+    const answerKey = { s1: true, s2: false, s3: true };
+    expect(areSameStatementSelections(answerKey, { statementAnswers: answerKey })).toBe(true);
+    expect(areSameStatementSelections(answerKey, { statementAnswers: { s1: true, s2: true, s3: true } })).toBe(false);
+    const result = scoreQuiz([{ questionId: 7, optionIds: [], correctOptionIds: [], type: "true_false_statements", statementAnswers: answerKey, points: 4 }], [{ questionId: 7, selectedOptionIds: [], answerPayload: { statementAnswers: { s1: true, s2: true, s3: true } } }]);
+    expect(result).toMatchObject({ earnedPoints: 0, availablePoints: 4, correctCount: 0 });
   });
 
   it("keeps a deterministic but non-mutating shuffled order", () => {

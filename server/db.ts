@@ -21,6 +21,7 @@ import {
 import { ENV } from "./_core/env";
 import { sortLeaderboardEntries } from "./leaderboard";
 import { scoreQuiz } from "./quizEngine";
+import { getTrueFalseStatements } from "../shared/questionValidation";
 import { getEffectiveTier } from "./membershipUtils";
 import { getQuotaPeriod } from "./quotaUtils";
 
@@ -282,14 +283,15 @@ export async function recordAiUsage(userId: number, action: "explain" | "assist"
   await db.insert(aiUsageEvents).values({ userId, action });
 }
 
-export async function saveAnswer(input: { attemptId: number; questionId: number; selectedOptionIds: number[] }) {
+export async function saveAnswer(input: { attemptId: number; questionId: number; selectedOptionIds: number[]; answerPayload?: Record<string, unknown> }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   await db.insert(attemptAnswers).values({
     attemptId: input.attemptId,
     questionId: input.questionId,
     selectedOptionIds: input.selectedOptionIds,
-  }).onDuplicateKeyUpdate({ set: { selectedOptionIds: input.selectedOptionIds, savedAt: new Date() } });
+    answerPayload: input.answerPayload ?? null,
+  }).onDuplicateKeyUpdate({ set: { selectedOptionIds: input.selectedOptionIds, answerPayload: input.answerPayload ?? null, savedAt: new Date() } });
 }
 
 export async function submitAttempt(attemptId: number, userId: number) {
@@ -308,9 +310,11 @@ export async function submitAttempt(attemptId: number, userId: number) {
       questionId: row.question.id,
       optionIds: row.options.map(option => option.id),
       correctOptionIds: row.options.filter(option => option.isCorrect).map(option => option.id),
+      type: row.question.type,
+      statementAnswers: row.question.type === "true_false_statements" ? Object.fromEntries(getTrueFalseStatements(row.question.answerConfig ?? {}).map(statement => [statement.id, statement.correct])) : undefined,
       points: row.points,
     })),
-    answers.map(answer => ({ questionId: answer.questionId, selectedOptionIds: answer.selectedOptionIds }))
+    answers.map(answer => ({ questionId: answer.questionId, selectedOptionIds: answer.selectedOptionIds, answerPayload: answer.answerPayload }))
   );
   const passed = summary.scorePercent >= detail.quiz.passingScore;
   const [priorCompletions, priorQuizCompletions] = await Promise.all([
@@ -350,12 +354,16 @@ export async function submitAttempt(attemptId: number, userId: number) {
     }
   }
   const selectedByQuestion = new Map(answers.map(answer => [answer.questionId, answer.selectedOptionIds]));
+  const payloadByQuestion = new Map(answers.map(answer => [answer.questionId, answer.answerPayload]));
   const correctnessByQuestion = new Map(summary.answerResults.map(result => [result.questionId, result.isCorrect]));
   const review = questionSet.map(row => ({
     questionId: row.question.id,
     prompt: row.question.prompt,
     explanation: row.question.explanation,
+    type: row.question.type,
     selectedOptionIds: selectedByQuestion.get(row.question.id) ?? [],
+    selectedStatementAnswers: (payloadByQuestion.get(row.question.id) as { statementAnswers?: Record<string, boolean> } | null)?.statementAnswers ?? {},
+    statements: row.question.type === "true_false_statements" ? getTrueFalseStatements(row.question.answerConfig ?? {}).map(statement => ({ id: statement.id, text: statement.text, correct: statement.correct })) : [],
     correctOptionIds: row.options.filter(option => option.isCorrect).map(option => option.id),
     isCorrect: correctnessByQuestion.get(row.question.id) ?? false,
     options: row.options.map(option => ({ id: option.id, body: option.body })),

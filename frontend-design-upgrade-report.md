@@ -76,3 +76,17 @@ Khu quản trị đã được nâng cấp theo tài liệu `DShare_CPanel_Archi
 | 3 | Analytics, System, Appearance | Analytics Learning Intelligence, Point ledger, Live Monitoring, AI Content & Learning Copilot, Design System Manager preview realtime |
 
 Point và XP được ghi nhãn tách biệt trên Dashboard, Analytics, Point ledger và User 360. Những phần chưa có domain dữ liệu thực, gồm XP, mission, achievement, streak, telemetry request/queue/error, được thông báo rõ theo phạm vi thay vì mô phỏng số liệu. Regression cuối đạt **71 tệp / 176 ca kiểm thử**, TypeScript sạch, build production hoàn tất; desktop 1440px và mobile 375px đã được xác minh trên các tuyến CPanel trọng yếu.
+
+## Câu hỏi nhận định Đúng/Sai — Có/Không
+
+Đã bổ sung loại `true_false_statements`, dựa trên bố cục bảng của mẫu tham chiếu: một đoạn dẫn và từ hai đến tám nhận định, mỗi nhận định được chọn độc lập tại cột **Có** hoặc **Không**. Câu chỉ được tính đúng khi toàn bộ nhận định khớp đáp án; hệ thống không cộng điểm một phần. Mô hình dữ liệu được lưu trong `answerConfig.statements`, còn đáp án người học được lưu an toàn tại `attemptAnswers.answerPayload`.
+
+| Luồng | Tệp chính | Kết quả |
+|---|---|---|
+| Tạo và validation | `UserQuizCreator.tsx`, `QuestionEditorPanel.tsx`, `questionValidation.ts` | Studio và ngân hàng câu hỏi có bảng thêm/xóa nhận định, chọn đáp án Có/Không, giới hạn 2–8 dòng và validation client/server |
+| Làm bài và chấm điểm | `QuizRunner.tsx`, `quizEngine.ts`, `routers.ts` | Bảng đáp án responsive, lưu từng hàng, Sandbox có phản hồi đúng/sai; lượt làm thật không tiết lộ đáp án |
+| Xem trước, kết quả | `UserQuizCreator.tsx`, `QuizResult.tsx`, `quizResultUtils.ts` | Sandbox mang theo nhận định; màn kết quả hiển thị lựa chọn người học và đáp án đúng theo từng hàng |
+| Lưu trữ | `drizzle/0028_dizzy_tarot.sql`, `schema.ts` | Enum loại câu hỏi mới và JSON payload đáp án đã được migration vào cơ sở dữ liệu |
+| Hồi quy | `questionValidation.test.ts`, `quizEngine.test.ts`, `quizRunnerState.component.test.tsx`, `userQuizCreatorState.component.test.tsx` | Validation, chấm toàn phần, Studio và Sandbox được bao phủ |
+
+Regression cuối đạt **71 tệp / 180 ca kiểm thử**, TypeScript sạch và build production hoàn tất. Studio được xác minh tại desktop 1440px và mobile 375px; trên mobile, điểm truy cập “Nhận định Có / Không” giữ kích thước chạm rõ, xuống dòng tự nhiên và không tạo tràn ngang.
