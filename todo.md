@@ -358,3 +358,8 @@
 - [x] Token hóa toàn bộ page tài khoản và luồng học viên còn lại, giữ nguyên luồng học tập và thanh toán.
 - [x] Chuẩn hóa compatibility styles, component state và motion dùng chung cho các module legacy.
 - [x] Chạy regression toàn diện, xác minh responsive và cập nhật báo cáo hoàn tất chuẩn hóa token.
+- [x] Rà soát theme switcher, dữ liệu kết quả Quiz và khả năng tạo báo cáo hiện có.
+- [x] Triển khai Dark Mode chuyển đổi được trên toàn website bằng semantic design tokens.
+- [x] Nâng cấp màn hình tổng kết Quiz với thống kê tỷ lệ đúng/sai và thời gian làm bài trực quan.
+- [x] Bổ sung chia sẻ kết quả lên mạng xã hội và tải báo cáo kết quả PDF.
+- [ ] Chạy regression, xác minh desktop/mobile và cập nhật báo cáo bàn giao.

@@ -1,20 +1,30 @@
 import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { QuizAIStudyAssistant } from "@/components/QuizAIStudyAssistant";
+import { exportQuizResultToPdf } from "@/lib/quizDocumentExport";
 import { trpc } from "@/lib/trpc";
 import { parseStoredQuizResult } from "@/lib/quizResultUtils";
-import { Check, CheckCircle2, ChevronDown, CircleAlert, CircleX, Flag, MessageCircle, RefreshCw, Trophy } from "lucide-react";
+import { BarChart3, Check, CheckCircle2, ChevronDown, CircleAlert, CircleX, Clock3, Copy, Download, Flag, MessageCircle, RefreshCw, Share2, Target, Trophy } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Link, useRoute } from "wouter";
+
+const formatDuration = (seconds?: number) => {
+  if (!seconds) return "Chưa ghi nhận";
+  const minutes = Math.floor(seconds / 60);
+  const remaining = seconds % 60;
+  return minutes ? `${minutes} phút ${remaining.toString().padStart(2, "0")} giây` : `${remaining} giây`;
+};
 
 export default function QuizResult() {
   const [, params] = useRoute("/ket-qua/:id");
   const result = typeof window !== "undefined" ? parseStoredQuizResult(sessionStorage.getItem("dshare-quiz-result")) : null;
   const [expanded, setExpanded] = useState<number | null>(null);
   const [discussion, setDiscussion] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
   const report = trpc.reports.submit.useMutation();
   const discussionMutation = trpc.discussion.create.useMutation();
+
   const reportQuestion = async (questionId: number) => {
     const details = window.prompt("Mô tả lỗi của câu hỏi (tối thiểu 10 ký tự):");
     if (!details?.trim()) return;
@@ -25,6 +35,7 @@ export default function QuizResult() {
       toast.error("Chưa thể gửi báo lỗi", { description: "Hãy đăng nhập và thử lại sau." });
     }
   };
+
   const postDiscussion = async () => {
     if (!discussion.trim()) return;
     try {
@@ -35,11 +46,82 @@ export default function QuizResult() {
       toast.error("Chưa thể đăng thảo luận", { description: "Tính năng chỉ mở cho tài khoản đã hoàn thành bài ở hệ thống." });
     }
   };
-  if (!result) return <div className="min-h-screen bg-[#fff7e6]"><SiteHeader /><main className="container grid min-h-[70vh] place-items-center"><div role="alert" className="text-center"><CircleAlert aria-hidden="true" className="mx-auto text-[#f59e0b]" size={30} /><h1 className="mt-4 font-serif text-3xl font-semibold text-[#172554]">Chưa có kết quả để hiển thị</h1><p className="mt-2 text-sm text-[#617786]">Hãy hoàn thành một bộ đề để xem phân tích chi tiết.</p><Button asChild className="mt-6 rounded-full bg-[#172554]"><Link href="/kham-pha">Khám phá bộ đề</Link></Button></div></main></div>;
-  return <div className="min-h-screen bg-[#fff7e6]"><SiteHeader />
-    <main className="container py-9 lg:py-12"><section className={`overflow-hidden rounded-[32px] p-7 text-white sm:p-10 ${result.passed ? "bg-[#172554]" : "bg-[#172554]"}`}><div className="grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-center"><div className="relative mx-auto grid h-44 w-44 place-items-center rounded-full border-[9px] border-[#fbbf24] bg-white/8"><div className="text-center"><p className="font-serif text-[52px] font-semibold tracking-[-.07em]">{result.scorePercent}</p><p className="text-[10px] font-bold uppercase tracking-[.17em] text-[#fbbf24]">điểm</p></div></div><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#fbbf24]">Kết quả {result.passed ? "đạt mục tiêu" : "cần thêm một chút"}</p><h1 className="mt-3 font-serif text-[40px] font-semibold leading-[1.08] tracking-[-.05em]">{result.passed ? "Bạn đã hoàn thành rất tốt." : "Đây là một bước để hiểu sâu hơn."}</h1><p className="mt-4 max-w-xl text-sm leading-6 text-[#eef4ff]">{result.quiz.title} · Đúng {result.correctCount}/{result.availablePoints} câu. {result.passed ? `Bạn nhận được ${result.quiz.completionReward ?? 0} Point thưởng nếu đây là lượt kiểm tra hợp lệ.` : `Mốc đạt là ${result.quiz.passingScore} điểm. Hãy xem lại các câu cần ôn ngay bên dưới.`}</p><div className="mt-6 flex flex-wrap gap-3"><Button asChild className="rounded-full bg-[#fbbf24] text-[#172554] hover:bg-[#fbbf24]"><Link href={`/quiz/${params?.id ?? "101"}`}><RefreshCw size={15} /> Làm lại</Link></Button><Button asChild variant="outline" className="rounded-full border-white/25 bg-white/5 text-white hover:bg-white/10 hover:text-white"><Link href="/kham-pha">Bộ đề khác</Link></Button></div></div></div></section>
-      <section className="mt-7 grid gap-6 lg:grid-cols-[1fr_.38fr]"><div className="space-y-4"><div className="flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#f59e0b]">Xem lại từng câu</p><h2 className="mt-2 font-serif text-[30px] font-semibold text-[#172554]">Phản hồi để tiến bộ</h2></div><p className="text-xs text-[#617786]">{result.review.filter(item => item.isCorrect).length} đúng · {result.review.filter(item => !item.isCorrect).length} cần ôn</p></div>{result.review.length ? result.review.map((question, index) => <article key={question.questionId} className="rounded-[22px] border border-[#172554]/9 bg-white p-5"><button onClick={() => setExpanded(expanded === question.questionId ? null : question.questionId)} className="flex w-full items-start gap-4 text-left"><span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${question.isCorrect ? "bg-[#e6efe3] text-[#617786]" : "bg-[#f5e5df] text-[#af5d50]"}`}>{question.isCorrect ? <CheckCircle2 size={17} /> : <CircleX size={17} />}</span><div className="min-w-0 flex-1"><p className="text-[10px] font-bold uppercase tracking-[.13em] text-[#617786]">Câu {index + 1} · {question.isCorrect ? "Chính xác" : "Cần xem lại"}</p><h3 className="mt-2 font-serif text-[21px] font-semibold leading-tight text-[#172554]">{question.prompt}</h3></div><ChevronDown className={`mt-2 shrink-0 text-[#617786] transition-transform ${expanded === question.questionId ? "rotate-180" : ""}`} size={18} /></button>{expanded === question.questionId && <div className="ml-12 mt-5 border-t border-[#172554]/8 pt-5"><div className="space-y-2">{question.options.map(option => { const isCorrect = question.correctOptionIds.includes(option.id); const chosen = question.selectedOptionIds.includes(option.id); return <div key={option.id} className={`flex gap-3 rounded-xl px-3 py-2.5 text-xs leading-5 ${isCorrect ? "bg-[#e8f0e6] text-[#172554]" : chosen ? "bg-[#f7e6df] text-[#9d5348]" : "bg-[#eef4ff] text-[#617786]"}`}><span className="mt-0.5">{isCorrect ? <Check size={14} /> : chosen ? <CircleX size={14} /> : "·"}</span><span>{option.body}</span></div>; })}</div><div className="mt-4 rounded-xl bg-[#fff7e6] p-4"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#d97706]">Giải thích</p><p className="mt-2 text-xs leading-6 text-[#617786]">{question.explanation || "Lời giải chi tiết sẽ được cập nhật bởi đội ngũ nội dung."}</p></div><QuizAIStudyAssistant question={question} /><Button onClick={() => reportQuestion(question.questionId)} disabled={report.isPending} variant="ghost" className="mt-2 h-9 rounded-full text-[11px] text-[#d97706]"><Flag size={13} /> Báo lỗi câu hỏi</Button></div>}</article>) : <div className="rounded-[22px] border border-dashed border-[#172554]/15 bg-white p-7 text-center" role="status"><CircleAlert className="mx-auto text-[#f59e0b]" size={24} /><p className="mt-3 font-serif text-xl font-semibold text-[#172554]">Chưa có dữ liệu xem lại</p><p className="mt-2 text-sm leading-6 text-[#617786]">Kết quả này chưa kèm chi tiết từng câu. Bạn có thể làm lại bộ đề để nhận phản hồi đầy đủ.</p></div>}</div>
-        <aside className="space-y-5"><div className="rounded-[24px] bg-[#fff7e6] p-6"><Trophy className="text-[#d97706]" size={22} /><p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-[#d97706]">Đề xuất bước tiếp theo</p><h2 className="mt-2 font-serif text-[27px] font-semibold leading-tight text-[#172554]">{result.passed ? "Duy trì đà học của bạn." : "Làm lại các câu chưa đúng."}</h2><p className="mt-3 text-xs leading-5 text-[#617786]">Chế độ luyện tập phản hồi ngay sau mỗi câu, phù hợp để củng cố những điểm cần ôn.</p><Button asChild className="mt-5 w-full rounded-full bg-[#172554]"><Link href={`/quiz/${params?.id ?? "101"}`}>Vào chế độ luyện tập</Link></Button></div><div className="rounded-[24px] border border-[#172554]/9 bg-white p-6"><MessageCircle className="text-[#617786]" size={21} /><h2 className="mt-4 font-serif text-[25px] font-semibold text-[#172554]">Thảo luận sau bài</h2><p className="mt-2 text-xs leading-5 text-[#617786]">Bạn đã hoàn thành bài, vì vậy khu vực trao đổi đã được mở.</p><textarea value={discussion} onChange={event => setDiscussion(event.target.value)} placeholder="Chia sẻ cách bạn suy luận..." className="mt-4 min-h-24 w-full resize-none rounded-xl border border-[#172554]/10 bg-[#fff7e6] p-3 text-xs outline-none focus:border-[#f59e0b]" /><Button onClick={postDiscussion} disabled={discussionMutation.isPending} className="mt-3 w-full rounded-full bg-[#172554] text-xs">Đăng thảo luận</Button></div></aside></section>
+
+  if (!result) {
+    return <div className="min-h-screen bg-background"><SiteHeader /><main className="container grid min-h-[70vh] place-items-center"><div role="alert" className="text-center"><CircleAlert aria-hidden="true" className="mx-auto text-warning" size={30} /><h1 className="mt-4 font-serif text-3xl font-semibold text-foreground">Chưa có kết quả để hiển thị</h1><p className="mt-2 text-sm text-text-secondary">Hãy hoàn thành một bộ đề để xem phân tích chi tiết.</p><Button asChild className="mt-6 rounded-full"><Link href="/kham-pha">Khám phá bộ đề</Link></Button></div></main></div>;
+  }
+
+  const correctCount = result.review.filter(item => item.isCorrect).length || result.correctCount;
+  const questionCount = result.review.length || result.availablePoints;
+  const incorrectCount = Math.max(0, questionCount - correctCount);
+  const correctPercent = questionCount ? Math.round((correctCount / questionCount) * 100) : 0;
+  const chartStyle = { background: `conic-gradient(var(--success) 0 ${correctPercent}%, var(--danger) ${correctPercent}% 100%)` };
+  const shareText = `Tôi vừa hoàn thành “${result.quiz.title}” trên Dshare với ${result.scorePercent}/100 điểm (${correctCount}/${questionCount} câu đúng).`;
+  const copyResultLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${window.location.href}`);
+      toast.success("Đã sao chép kết quả", { description: "Bạn có thể dán nội dung vào mạng xã hội hoặc tin nhắn." });
+    } catch {
+      toast.error("Chưa thể sao chép kết quả", { description: "Hãy thử lại hoặc dùng nút chia sẻ khác." });
+    }
+  };
+  const shareResult = async () => {
+    const shareApi = navigator as Navigator & { share?: (data: { title: string; text: string; url: string }) => Promise<void> };
+    if (shareApi.share) {
+      try {
+        await shareApi.share({ title: `Kết quả Quiz · ${result.quiz.title}`, text: shareText, url: window.location.href });
+        return;
+      } catch (error) {
+        if ((error as Error).name === "AbortError") return;
+      }
+    }
+    await copyResultLink();
+  };
+  const openSocialShare = (channel: "facebook" | "zalo") => {
+    const url = encodeURIComponent(window.location.href);
+    const quote = encodeURIComponent(shareText);
+    const destination = channel === "facebook" ? `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}` : `https://zalo.me/share?url=${url}`;
+    window.open(destination, "_blank", "noopener,noreferrer");
+  };
+  const downloadResultPdf = async () => {
+    setIsExporting(true);
+    try {
+      await exportQuizResultToPdf({ title: result.quiz.title, scorePercent: result.scorePercent, correctCount, incorrectCount, questionCount, durationSeconds: result.durationSeconds, passed: result.passed, review: result.review });
+      toast.success("Đang tải báo cáo PDF", { description: "Báo cáo kết quả đã được tạo trên thiết bị của bạn." });
+    } catch {
+      toast.error("Chưa thể tạo báo cáo PDF", { description: "Hãy thử lại sau ít phút." });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return <div className="min-h-screen bg-background"><SiteHeader />
+    <main className="container py-9 lg:py-12">
+      <section className="overflow-hidden rounded-[var(--radius-xl-token)] bg-[linear-gradient(135deg,var(--primary)_0%,var(--accent)_100%)] p-7 text-primary-foreground shadow-[var(--shadow-md)] sm:p-10">
+        <div className="grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-center">
+          <div className="relative mx-auto grid h-44 w-44 place-items-center rounded-full border-[9px] border-warning bg-white/8"><div className="text-center"><p className="font-serif text-[52px] font-semibold tracking-[-.07em]">{result.scorePercent}</p><p className="text-[10px] font-bold uppercase tracking-[.17em] text-warning">điểm</p></div></div>
+          <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-warning">Kết quả {result.passed ? "đạt mục tiêu" : "cần thêm một chút"}</p><h1 className="mt-3 font-serif text-[40px] font-semibold leading-[1.08] tracking-[-.05em]">{result.passed ? "Bạn đã hoàn thành rất tốt." : "Đây là một bước để hiểu sâu hơn."}</h1><p className="mt-4 max-w-xl text-sm leading-6 text-white/80">{result.quiz.title} · Đúng {correctCount}/{questionCount} câu. {result.passed ? `Bạn nhận được ${result.quiz.completionReward ?? 0} Point thưởng nếu đây là lượt kiểm tra hợp lệ.` : `Mốc đạt là ${result.quiz.passingScore} điểm. Hãy xem lại các câu cần ôn ngay bên dưới.`}</p><div className="mt-6 flex flex-wrap gap-3"><Button asChild className="rounded-full bg-warning text-foreground hover:bg-warning/90"><Link href={`/quiz/${params?.id ?? "101"}`}><RefreshCw size={15} /> Làm lại</Link></Button><Button asChild variant="outline" className="rounded-full border-white/25 bg-white/5 text-white hover:bg-white/10 hover:text-white"><Link href="/kham-pha">Bộ đề khác</Link></Button></div></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="quiz-summary-title" className="mt-7 rounded-[var(--radius-xl-token)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)] sm:p-7">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">Tổng kết lượt làm</p><h2 id="quiz-summary-title" className="mt-2 font-serif text-[28px] font-semibold text-foreground">Bức tranh kết quả của bạn</h2></div><p className="text-xs text-text-secondary">Dữ liệu được tính từ lượt làm vừa hoàn thành.</p></div>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[220px_1fr] lg:items-center">
+          <div className="mx-auto grid size-44 place-items-center rounded-full p-4 shadow-[var(--shadow-sm)]" role="img" aria-label={`Tỷ lệ đúng ${correctPercent}%, ${correctCount} câu đúng và ${incorrectCount} câu cần ôn`} style={chartStyle}><div className="grid size-full place-items-center rounded-full bg-surface text-center"><p className="text-3xl font-bold text-foreground">{correctPercent}%</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[.13em] text-text-secondary">Tỷ lệ đúng</p></div></div>
+          <div className="grid gap-3 sm:grid-cols-3"><SummaryStat icon={<CheckCircle2 className="text-success" size={20} />} label="Trả lời đúng" value={`${correctCount}/${questionCount}`} note="Câu đã nắm vững" /><SummaryStat icon={<CircleX className="text-danger" size={20} />} label="Cần ôn lại" value={`${incorrectCount} câu`} note="Xem lại lời giải" /><SummaryStat icon={<Clock3 className="text-primary" size={20} />} label="Thời gian làm" value={formatDuration(result.durationSeconds)} note={result.totalDurationSeconds ? `Tối đa ${formatDuration(result.totalDurationSeconds)}` : "Từ phiên làm bài"} /></div>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-4 border-t border-border-light pt-5 text-xs font-semibold"><span className="flex items-center gap-2 text-success"><i className="size-2 rounded-full bg-success" />Đúng {correctCount}</span><span className="flex items-center gap-2 text-danger"><i className="size-2 rounded-full bg-danger" />Cần ôn {incorrectCount}</span><span className="flex items-center gap-2 text-text-secondary"><BarChart3 size={15} />Điểm {result.scorePercent}/100</span></div>
+        <div className="mt-5 flex flex-wrap gap-2"><Button type="button" onClick={shareResult} className="rounded-full"><Share2 size={15} />Chia sẻ kết quả</Button><Button type="button" variant="outline" onClick={copyResultLink} className="rounded-full"><Copy size={15} />Sao chép</Button><Button type="button" variant="outline" onClick={downloadResultPdf} disabled={isExporting} aria-busy={isExporting} className="rounded-full"><Download size={15} />{isExporting ? "Đang tạo PDF…" : "Tải báo cáo PDF"}</Button><Button type="button" variant="ghost" onClick={() => openSocialShare("facebook")} className="rounded-full text-xs" aria-label="Chia sẻ kết quả lên Facebook"><span className="font-black">f</span> Facebook</Button><Button type="button" variant="ghost" onClick={() => openSocialShare("zalo")} className="rounded-full text-xs" aria-label="Chia sẻ kết quả qua Zalo"><span className="font-black">Z</span> Zalo</Button></div>
+      </section>
+
+      <section className="mt-7 grid gap-6 lg:grid-cols-[1fr_.38fr]">
+        <div className="space-y-4"><div className="flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">Xem lại từng câu</p><h2 className="mt-2 font-serif text-[30px] font-semibold text-foreground">Phản hồi để tiến bộ</h2></div><p className="text-xs text-text-secondary">{correctCount} đúng · {incorrectCount} cần ôn</p></div>{result.review.length ? result.review.map((question, index) => <article key={question.questionId} className="rounded-[var(--radius-lg-token)] border border-border bg-surface p-5"><button onClick={() => setExpanded(expanded === question.questionId ? null : question.questionId)} className="flex w-full items-start gap-4 text-left"><span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${question.isCorrect ? "bg-success/12 text-success" : "bg-danger/8 text-danger"}`}>{question.isCorrect ? <CheckCircle2 size={17} /> : <CircleX size={17} />}</span><div className="min-w-0 flex-1"><p className="text-[10px] font-bold uppercase tracking-[.13em] text-text-secondary">Câu {index + 1} · {question.isCorrect ? "Chính xác" : "Cần xem lại"}</p><h3 className="mt-2 font-serif text-[21px] font-semibold leading-tight text-foreground">{question.prompt}</h3></div><ChevronDown className={`mt-2 shrink-0 text-text-secondary transition-transform ${expanded === question.questionId ? "rotate-180" : ""}`} size={18} /></button>{expanded === question.questionId && <div className="ml-12 mt-5 border-t border-border-light pt-5"><div className="space-y-2">{question.options.map(option => { const isCorrect = question.correctOptionIds.includes(option.id); const chosen = question.selectedOptionIds.includes(option.id); return <div key={option.id} className={`flex gap-3 rounded-[var(--radius-sm-token)] px-3 py-2.5 text-xs leading-5 ${isCorrect ? "bg-success/12 text-foreground" : chosen ? "bg-danger/8 text-danger" : "bg-muted text-text-secondary"}`}><span className="mt-0.5">{isCorrect ? <Check size={14} /> : chosen ? <CircleX size={14} /> : "·"}</span><span>{option.body}</span></div>; })}</div><div className="mt-4 rounded-[var(--radius-sm-token)] bg-warning/10 p-4"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-warning">Giải thích</p><p className="mt-2 text-xs leading-6 text-text-secondary">{question.explanation || "Lời giải chi tiết sẽ được cập nhật bởi đội ngũ nội dung."}</p></div><QuizAIStudyAssistant question={question} /><Button onClick={() => reportQuestion(question.questionId)} disabled={report.isPending} variant="ghost" className="mt-2 h-9 rounded-full text-[11px] text-warning"><Flag size={13} /> Báo lỗi câu hỏi</Button></div>}</article>) : <div className="rounded-[var(--radius-lg-token)] border border-dashed border-border bg-surface p-7 text-center" role="status"><CircleAlert className="mx-auto text-warning" size={24} /><p className="mt-3 font-serif text-xl font-semibold text-foreground">Chưa có dữ liệu xem lại</p><p className="mt-2 text-sm leading-6 text-text-secondary">Kết quả này chưa kèm chi tiết từng câu. Bạn có thể làm lại bộ đề để nhận phản hồi đầy đủ.</p></div>}</div>
+        <aside className="space-y-5"><div className="rounded-[var(--radius-lg-token)] bg-warning/10 p-6"><Trophy className="text-warning" size={22} /><p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-warning">Đề xuất bước tiếp theo</p><h2 className="mt-2 font-serif text-[27px] font-semibold leading-tight text-foreground">{result.passed ? "Duy trì đà học của bạn." : "Làm lại các câu chưa đúng."}</h2><p className="mt-3 text-xs leading-5 text-text-secondary">Chế độ luyện tập phản hồi ngay sau mỗi câu, phù hợp để củng cố những điểm cần ôn.</p><Button asChild className="mt-5 w-full rounded-full"><Link href={`/quiz/${params?.id ?? "101"}`}><Target size={15} /> Vào chế độ luyện tập</Link></Button></div><div className="rounded-[var(--radius-lg-token)] border border-border bg-surface p-6"><MessageCircle className="text-primary" size={21} /><h2 className="mt-4 font-serif text-[25px] font-semibold text-foreground">Thảo luận sau bài</h2><p className="mt-2 text-xs leading-5 text-text-secondary">Bạn đã hoàn thành bài, vì vậy khu vực trao đổi đã được mở.</p><textarea value={discussion} onChange={event => setDiscussion(event.target.value)} placeholder="Chia sẻ cách bạn suy luận..." className="field mt-4 min-h-24 resize-none text-xs" /><Button onClick={postDiscussion} disabled={discussionMutation.isPending} className="mt-3 w-full rounded-full text-xs">Đăng thảo luận</Button></div></aside>
+      </section>
     </main>
   </div>;
+}
+
+function SummaryStat({ icon, label, value, note }: { icon: React.ReactNode; label: string; value: string; note: string }) {
+  return <div className="rounded-[var(--radius-md-token)] bg-muted p-4"><div className="flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-[.12em] text-text-secondary">{label}</p>{icon}</div><p className="mt-5 text-xl font-bold text-foreground">{value}</p><p className="mt-1 text-[11px] text-text-secondary">{note}</p></div>;
 }

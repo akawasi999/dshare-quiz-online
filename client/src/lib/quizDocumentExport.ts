@@ -14,6 +14,16 @@ export type PrintableQuizQuestion = {
 };
 
 export type PrintableQuiz = { title: string; summary?: string; durationMinutes: number; questions: PrintableQuizQuestion[] };
+export type PrintableQuizResult = {
+  title: string;
+  scorePercent: number;
+  correctCount: number;
+  incorrectCount: number;
+  questionCount: number;
+  durationSeconds?: number;
+  passed: boolean;
+  review: Array<{ prompt: string; isCorrect: boolean; explanation?: string | null }>;
+};
 
 const questionTypeLabels = { single: "Chọn 1 đáp án", multiple: "Chọn nhiều đáp án", true_false: "Đúng / Sai", fill_blank: "Điền vào chỗ trống", matching: "Ghép nối", essay: "Tự luận" };
 const difficultyLabels = { easy: "Dễ", medium: "Trung bình", hard: "Khó" };
@@ -99,4 +109,45 @@ export async function exportQuizToPdf(quiz: PrintableQuiz) {
     footer: (currentPage: number, pageCount: number) => ({ text: `Dshare Quiz Online · Trang ${currentPage}/${pageCount}`, alignment: "center", color: "64748B", fontSize: 8, margin: [0, 10, 0, 0] }),
   };
   pdfMake.createPdf(definition).download(`${safeFileName(quiz.title)}.pdf`);
+}
+
+export async function exportQuizResultToPdf(result: PrintableQuizResult) {
+  const [pdfMakeModule, pdfFontsModule] = await Promise.all([import("pdfmake/build/pdfmake"), import("pdfmake/build/vfs_fonts")]);
+  const pdfMake = pdfMakeModule.default || pdfMakeModule;
+  const pdfFonts = pdfFontsModule.default || pdfFontsModule;
+  if (typeof pdfMake.addVirtualFileSystem === "function") pdfMake.addVirtualFileSystem(pdfFonts);
+  else pdfMake.vfs = pdfFonts.pdfMake?.vfs || pdfFonts.vfs || pdfFonts;
+  const duration = result.durationSeconds ? `${Math.floor(result.durationSeconds / 60)} phút ${String(result.durationSeconds % 60).padStart(2, "0")} giây` : "Chưa ghi nhận";
+  const definition = {
+    pageSize: "A4",
+    pageMargins: [42, 48, 42, 48],
+    defaultStyle: { font: "Roboto", fontSize: 10, color: "1F2937" },
+    content: [
+      { text: "Dshare Quiz Online", style: "brand" },
+      { text: "BÁO CÁO KẾT QUẢ QUIZ", style: "title" },
+      { text: result.title, style: "quizTitle" },
+      { text: `Tạo lúc ${new Date().toLocaleString("vi-VN")}`, style: "meta" },
+      { table: { widths: ["*", "*", "*"], body: [[{ text: "ĐIỂM", style: "cardLabel" }, { text: "ĐÚNG / SAI", style: "cardLabel" }, { text: "THỜI GIAN", style: "cardLabel" }], [{ text: `${result.scorePercent}/100`, style: "cardValue" }, { text: `${result.correctCount}/${result.incorrectCount}`, style: "cardValue" }, { text: duration, style: "cardValue" }]] }, layout: { hLineWidth: () => 0, vLineWidth: () => 0, fillColor: () => "F1F5F9", paddingLeft: () => 12, paddingRight: () => 12, paddingTop: () => 10, paddingBottom: () => 10 }, margin: [0, 20, 0, 20] },
+      { text: result.passed ? "KẾT QUẢ: ĐẠT MỤC TIÊU" : "KẾT QUẢ: CẦN ÔN THÊM", style: result.passed ? "success" : "warning" },
+      { text: "PHÂN TÍCH CÂU HỎI", style: "section" },
+      ...result.review.map((item, index) => ({ text: [{ text: `${item.isCorrect ? "✓" : "•"} Câu ${index + 1}: `, bold: true }, { text: item.prompt }], style: item.isCorrect ? "correct" : "incorrect", margin: [0, 5, 0, 0] })),
+      { text: `Tổng quan: ${result.correctCount} câu trả lời đúng và ${result.incorrectCount} câu cần ôn lại trên tổng ${result.questionCount} câu.`, style: "summary" },
+    ],
+    styles: {
+      brand: { fontSize: 10, bold: true, color: "635BFF", alignment: "center", margin: [0, 0, 0, 8] },
+      title: { fontSize: 21, bold: true, color: "1F2937", alignment: "center", margin: [0, 0, 0, 5] },
+      quizTitle: { fontSize: 13, color: "4B5563", alignment: "center" },
+      meta: { fontSize: 9, color: "6B7280", alignment: "center", margin: [0, 6, 0, 0] },
+      cardLabel: { fontSize: 8, bold: true, color: "6B7280", alignment: "center" },
+      cardValue: { fontSize: 14, bold: true, color: "1F2937", alignment: "center" },
+      success: { fontSize: 11, bold: true, color: "16A34A", margin: [0, 0, 0, 18] },
+      warning: { fontSize: 11, bold: true, color: "D97706", margin: [0, 0, 0, 18] },
+      section: { fontSize: 11, bold: true, color: "635BFF", margin: [0, 0, 0, 8] },
+      correct: { fontSize: 10, color: "166534" },
+      incorrect: { fontSize: 10, color: "B91C1C" },
+      summary: { fontSize: 10, color: "4B5563", margin: [0, 20, 0, 0] },
+    },
+    footer: (currentPage: number, pageCount: number) => ({ text: `Dshare Quiz Online · Báo cáo kết quả · Trang ${currentPage}/${pageCount}`, alignment: "center", color: "6B7280", fontSize: 8, margin: [0, 10, 0, 0] }),
+  };
+  pdfMake.createPdf(definition).download(`${safeFileName(`ket-qua-${result.title}`)}.pdf`);
 }

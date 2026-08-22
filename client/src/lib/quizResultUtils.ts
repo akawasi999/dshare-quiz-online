@@ -4,6 +4,8 @@ export type StoredQuizResult = {
   availablePoints: number;
   earnedPoints: number;
   passed: boolean;
+  durationSeconds?: number;
+  totalDurationSeconds?: number;
   quiz: { title: string; completionReward?: number; passingScore: number };
   review: Array<{ questionId: number; prompt: string; explanation?: string | null; selectedOptionIds: number[]; correctOptionIds: number[]; isCorrect: boolean; options: { id: number; body: string }[] }>;
 };

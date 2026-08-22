@@ -7,11 +7,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   report: { isPending: false, mutateAsync: vi.fn() },
   discussion: { isPending: false, mutateAsync: vi.fn() },
+  exportPdf: vi.fn(),
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/components/QuizAIStudyAssistant", () => ({ QuizAIStudyAssistant: () => null }));
+vi.mock("@/lib/quizDocumentExport", () => ({ exportQuizResultToPdf: mocks.exportPdf }));
 vi.mock("@/lib/trpc", () => ({ trpc: { reports: { submit: { useMutation: () => mocks.report } }, discussion: { create: { useMutation: () => mocks.discussion } } } }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useRoute: () => [true, { id: "7" }] }));
@@ -24,6 +26,8 @@ const storedResult = JSON.stringify({
   availablePoints: 1,
   earnedPoints: 1,
   passed: true,
+  durationSeconds: 125,
+  totalDurationSeconds: 900,
   quiz: { title: "Quiz kiểm thử", completionReward: 10, passingScore: 70 },
   review: [{ questionId: 9, prompt: "Câu hỏi kiểm thử", explanation: "Lời giải", options: [{ id: 1, body: "Đáp án A" }], selectedOptionIds: [1], correctOptionIds: [1], isCorrect: true }],
 });
@@ -33,6 +37,7 @@ describe("QuizResult mutation feedback", () => {
     sessionStorage.setItem("dshare-quiz-result", storedResult);
     mocks.report.mutateAsync.mockReset();
     mocks.discussion.mutateAsync.mockReset();
+    mocks.exportPdf.mockReset();
     mocks.toast.error.mockReset();
     mocks.toast.success.mockReset();
   });
@@ -62,5 +67,21 @@ describe("QuizResult mutation feedback", () => {
 
     expect(mocks.report.mutateAsync).toHaveBeenCalledWith({ questionId: 9, details: "Mô tả lỗi đủ dài" });
     expect(mocks.toast.error).toHaveBeenCalledWith("Chưa thể gửi báo lỗi", expect.any(Object));
+  });
+
+  it("hiển thị tổng kết đúng/sai và thời gian làm bài trực quan", () => {
+    render(<QuizResult />);
+
+    expect(screen.getByRole("img", { name: /Tỷ lệ đúng 100%/ })).toBeTruthy();
+    expect(screen.getByText("2 phút 05 giây")).toBeTruthy();
+    expect(screen.getByText("Cần ôn lại")).toBeTruthy();
+  });
+
+  it("tạo báo cáo PDF từ dữ liệu tổng kết hiện có", async () => {
+    const user = userEvent.setup();
+    render(<QuizResult />);
+
+    await user.click(screen.getByRole("button", { name: "Tải báo cáo PDF" }));
+    expect(mocks.exportPdf).toHaveBeenCalledWith(expect.objectContaining({ title: "Quiz kiểm thử", scorePercent: 80, correctCount: 1, incorrectCount: 0, questionCount: 1, durationSeconds: 125 }));
   });
 });
