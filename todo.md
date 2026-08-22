@@ -362,4 +362,4 @@
 - [x] Triển khai Dark Mode chuyển đổi được trên toàn website bằng semantic design tokens.
 - [x] Nâng cấp màn hình tổng kết Quiz với thống kê tỷ lệ đúng/sai và thời gian làm bài trực quan.
 - [x] Bổ sung chia sẻ kết quả lên mạng xã hội và tải báo cáo kết quả PDF.
-- [ ] Chạy regression, xác minh desktop/mobile và cập nhật báo cáo bàn giao.
+- [x] Chạy regression, xác minh desktop/mobile và cập nhật báo cáo bàn giao.
