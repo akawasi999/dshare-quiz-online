@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   checkUrl: { data: { normalizedUrl: "tin-hoc-van-phong", available: false }, isFetching: false, refetch: vi.fn(async () => ({ data: { normalizedUrl: "tin-hoc-van-phong", available: false } })) },
   create: { mutate: vi.fn(), isPending: false },
   update: { mutate: vi.fn(), isPending: false },
+  bulk: { mutate: vi.fn(), isPending: false },
   archive: { mutate: vi.fn(), isPending: false },
   remove: { mutate: vi.fn(), isPending: false },
 }));
@@ -20,6 +21,7 @@ vi.mock("@/lib/trpc", () => ({ trpc: {
     checkUrl: { useQuery: () => mocks.checkUrl },
     create: { useMutation: () => mocks.create },
     update: { useMutation: () => mocks.update },
+    bulkUpdateQuizPolicies: { useMutation: () => mocks.bulk },
     archive: { useMutation: () => mocks.archive },
     remove: { useMutation: () => mocks.remove },
   } } },
@@ -46,5 +48,18 @@ describe("TopicManagementPanel", () => {
     expect(screen.getByText("URL đã có")).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Tạo Chủ đề" }));
     expect(mocks.create.mutate).not.toHaveBeenCalled();
+  });
+
+  it("hiển thị nhãn policy và gửi cập nhật hàng loạt cho các Chủ đề đã chọn", async () => {
+    mocks.tree.data = { items: [{ id: 9, name: "Tin học", slug: "tin-hoc", parentId: null, path: "/9/", depth: 0, sortOrder: 0, status: "active", allowQuizCreation: false, requireQuizModeration: true, version: 1, quizCount: 0, childCount: 0, updatedAt: new Date() }], refreshedAt: new Date() } as any;
+    const user = userEvent.setup();
+    render(<TopicManagementPanel />);
+
+    expect(screen.getByText("Tắt tạo Quiz")).toBeTruthy();
+    expect(screen.getByText("Duyệt Quiz")).toBeTruthy();
+    await user.click(screen.getByRole("checkbox", { name: "Chọn Chủ đề Tin học" }));
+    expect(screen.getByText("Đã chọn 1 Chủ đề")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Áp dụng" }));
+    expect(mocks.bulk.mutate).toHaveBeenCalledWith(expect.objectContaining({ topicIds: [9], allowQuizCreation: true, requireQuizModeration: false }));
   });
 });

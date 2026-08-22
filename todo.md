@@ -413,3 +413,7 @@
 - [x] Cập nhật popup Chủ đề: bỏ mô tả, đổi Slug thành URL và báo URL trùng ngay dưới trường nhập.
 - [x] Thêm tùy chọn cho phép tạo Quiz và kiểm duyệt Quiz mới theo từng Chủ đề.
 - [x] Kiểm thử popup Chủ đề, validation URL và lưu checkpoint.
+- [x] Thêm trạng thái chờ duyệt cho Quiz mới thuộc Chủ đề có yêu cầu kiểm duyệt.
+- [x] Hiển thị nhãn chính sách Quiz trong cây Chủ đề.
+- [x] Thêm chọn nhiều Chủ đề và cập nhật hàng loạt chính sách Quiz.
+- [x] Kiểm thử workflow chờ duyệt, bulk update và lưu checkpoint.

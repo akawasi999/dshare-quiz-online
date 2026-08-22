@@ -8,7 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { buildTopicPath, isTopicDescendantPath, normalizeCpanelLearningSlug, remapDescendantPath } from "./cpanelLearningUtils";
 
 const topicStatusSchema = z.enum(["active", "archived"]);
-const quizStatusSchema = z.enum(["draft", "published", "locked", "archived"]);
+const quizStatusSchema = z.enum(["draft", "pending_review", "published", "locked", "archived"]);
 const MAX_QUIZZES_PER_PAGE = 20;
 const quizQuestionPayloadSchema = z.object({
   prompt: z.string().trim().min(8).max(5000),
@@ -120,6 +120,23 @@ export const cpanelLearningRouter = router({
           return { id: topic.id, ...after };
         });
       }),
+    bulkUpdateQuizPolicies: adminProcedure.input(z.object({ topicIds: z.array(z.number().int().positive()).min(1).max(100), allowQuizCreation: z.boolean(), requireQuizModeration: z.boolean(), reason: z.string().trim().min(3).max(500) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật chính sách Chủ đề." });
+        const uniqueIds = Array.from(new Set(input.topicIds));
+        return db.transaction(async tx => {
+          const selected = await tx.select().from(topics).where(and(inArray(topics.id, uniqueIds), isNull(topics.deletedAt)));
+          if (selected.length !== uniqueIds.length) throw notFound("Một hoặc nhiều Chủ đề đã không còn tồn tại.");
+          for (const topic of selected) {
+            const before = { allowQuizCreation: topic.allowQuizCreation, requireQuizModeration: topic.requireQuizModeration, version: topic.version };
+            const after = { allowQuizCreation: input.allowQuizCreation, requireQuizModeration: input.requireQuizModeration, version: topic.version + 1 };
+            await tx.update(topics).set({ allowQuizCreation: input.allowQuizCreation, requireQuizModeration: input.requireQuizModeration, updatedByUserId: ctx.user.id, version: topic.version + 1 }).where(and(eq(topics.id, topic.id), eq(topics.version, topic.version)));
+            await tx.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "topic.quiz_policies_bulk_updated", entityType: "topic", entityId: topic.id, metadata: { before, after, reason: input.reason, bulkSize: selected.length } });
+          }
+          return { affected: selected.length };
+        });
+      }),
     archive: adminProcedure.input(z.object({ topicId: z.number().int().positive(), version: z.number().int().positive(), reason: z.string().trim().min(3).max(500) })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể archive Chủ đề." });
@@ -147,7 +164,7 @@ export const cpanelLearningRouter = router({
     }),
   }),
   quizzes: router({
-    list: adminProcedure.input(z.object({ page: z.number().int().min(1).default(1), search: z.string().trim().max(160).optional(), topicId: z.number().int().positive().optional(), status: z.enum(["all", "draft", "published", "locked", "archived"]).default("all"), sort: z.enum(["title.asc", "title.desc", "createdAt.desc", "publishedAt.desc"]).default("title.asc") }).optional())
+    list: adminProcedure.input(z.object({ page: z.number().int().min(1).default(1), search: z.string().trim().max(160).optional(), topicId: z.number().int().positive().optional(), status: z.enum(["all", "draft", "pending_review", "published", "locked", "archived"]).default("all"), sort: z.enum(["title.asc", "title.desc", "createdAt.desc", "publishedAt.desc"]).default("title.asc") }).optional())
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return { items: [], pagination: { page: 1, pageSize: MAX_QUIZZES_PER_PAGE, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
@@ -195,18 +212,20 @@ export const cpanelLearningRouter = router({
     create: adminProcedure.input(z.object({ title: z.string().trim().min(4).max(220), topicId: z.number().int().positive().optional(), summary: z.string().trim().max(1000).optional() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo Quiz." });
+      let topicPolicy: typeof topics.$inferSelect | undefined;
       if (input.topicId) {
-        const topic = (await db.select().from(topics).where(and(eq(topics.id, input.topicId), eq(topics.status, "active"), isNull(topics.deletedAt))).limit(1))[0];
-        if (!topic) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chủ đề đã chọn không tồn tại hoặc đã archive." });
-        if (!topic.allowQuizCreation) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chủ đề đã chọn không cho phép tạo Quiz mới." });
+        topicPolicy = (await db.select().from(topics).where(and(eq(topics.id, input.topicId), eq(topics.status, "active"), isNull(topics.deletedAt))).limit(1))[0];
+        if (!topicPolicy) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chủ đề đã chọn không tồn tại hoặc đã archive." });
+        if (!topicPolicy.allowQuizCreation) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chủ đề đã chọn không cho phép tạo Quiz mới." });
       }
       const baseSlug = normalizeCpanelLearningSlug(input.title);
       const duplicate = await db.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.slug, baseSlug)).limit(1);
       const slug = duplicate.length ? `${baseSlug}-${Date.now().toString(36)}` : baseSlug;
-      const created = await db.insert(quizzes).values({ lessonId: null, topicId: input.topicId ?? null, creatorUserId: ctx.user.id, authorUserId: ctx.user.id, title: input.title, slug, summary: input.summary ?? null, status: "draft", isPublished: false, questionCount: 0 });
+      const initialStatus = topicPolicy?.requireQuizModeration ? "pending_review" as const : "draft" as const;
+      const created = await db.insert(quizzes).values({ lessonId: null, topicId: input.topicId ?? null, creatorUserId: ctx.user.id, authorUserId: ctx.user.id, title: input.title, slug, summary: input.summary ?? null, status: initialStatus, isPublished: false, questionCount: 0 });
       const id = Number(created[0].insertId);
-      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.created", entityType: "quiz", entityId: id, metadata: { after: { title: input.title, topicId: input.topicId ?? null, status: "draft" } } });
-      return { id, slug, status: "draft" as const };
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: initialStatus === "pending_review" ? "quiz.created_pending_review" : "quiz.created", entityType: "quiz", entityId: id, metadata: { after: { title: input.title, topicId: input.topicId ?? null, status: initialStatus, requireQuizModeration: topicPolicy?.requireQuizModeration ?? false } } });
+      return { id, slug, status: initialStatus };
     }),
     update: adminProcedure.input(z.object({ quizId: z.number().int().positive(), title: z.string().trim().min(4).max(220).optional(), topicId: z.number().int().positive().nullable().optional(), summary: z.string().trim().max(1000).nullable().optional(), version: z.number().int().positive(), reason: z.string().trim().max(500).optional() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -262,7 +281,7 @@ export const cpanelLearningRouter = router({
       if (!quiz) throw notFound("Không tìm thấy Quiz.");
       if (quiz.version !== input.version) throw conflict("Quiz đã được thay đổi bởi người khác.");
       if (quiz.status !== "locked") throw conflict("Quiz không ở trạng thái khóa.");
-      const nextStatus = quiz.lockedFromStatus === "published" ? "published" : "draft";
+      const nextStatus = quiz.lockedFromStatus === "published" ? "published" : quiz.lockedFromStatus === "pending_review" ? "pending_review" : "draft";
       await db.update(quizzes).set({ status: nextStatus, isPublished: nextStatus === "published", lockedAt: null, lockedByUserId: null, lockedFromStatus: null, lockReason: null, version: quiz.version + 1 }).where(eq(quizzes.id, quiz.id));
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.unlocked", entityType: "quiz", entityId: quiz.id, metadata: { before: { status: "locked" }, after: { status: nextStatus }, reason: input.reason } });
       return { success: true, status: nextStatus, version: quiz.version + 1 };
