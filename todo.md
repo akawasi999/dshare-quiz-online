@@ -465,3 +465,6 @@
 - [x] Chuẩn bị ba hình minh họa phần 3 người dùng vừa cung cấp làm tài nguyên trang chủ.
 - [x] Thiết kế khu vực tạo Quiz nhanh, ngân hàng câu hỏi và tham gia bằng QR theo bố cục tham chiếu.
 - [x] Kiểm thử responsive, regression và lưu checkpoint cho phần 3 trang chủ.
+- [x] Tinh chỉnh Hero để đồng bộ trực quan với các khu vực trang chủ mới.
+- [x] Thêm animation xuất hiện nhẹ cho từng thẻ khi cuộn, tôn trọng reduced motion.
+- [x] Kiểm thử responsive, accessibility, regression và lưu checkpoint cho Hero/animation.

@@ -19,6 +19,8 @@ describe("Home quiz discovery", () => {
     render(<Home />);
 
     expect(screen.getByRole("heading", { name: "Tạo câu hỏi từ nội dung bạn đã có." })).toBeTruthy();
+    expect(screen.getByTestId("hero-creation-preview")).toBeTruthy();
+    expect(screen.getByText("Tải tệp hoặc chọn chủ đề")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Bắt đầu tạo Quiz/i }).getAttribute("href")).toBe("/tao-quiz");
     expect(screen.getByRole("img", { name: "Minh họa AI biến tài liệu thành Quiz" }).getAttribute("src")).toBe("/manus-storage/v3_2_1_image_en_2x_5b02546b.webp");
     expect(screen.getByRole("img", { name: "Minh họa AI tạo đáp án và lựa chọn" }).getAttribute("src")).toBe("/manus-storage/v3_2_2_image_en_2x_e8570fbb.webp");
@@ -33,6 +35,7 @@ describe("Home quiz discovery", () => {
     expect(screen.getByRole("img", { name: "Minh họa hai bước tạo Quiz từ mẫu có sẵn" }).getAttribute("src")).toBe("/manus-storage/quiz_landing_1_1_image_en_2x_27b3e0b5.webp");
     expect(screen.getByRole("img", { name: "Minh họa sao chép và tùy chỉnh câu hỏi có sẵn" }).getAttribute("src")).toBe("/manus-storage/quiz_landing_1_2_image_en_2x_abdeac42.webp");
     expect(screen.getByRole("img", { name: "Minh họa tham gia Quiz bằng mã QR trên nhiều thiết bị" }).getAttribute("src")).toBe("/manus-storage/quiz_landing_1_3_image_kr_2x_31ee6c2a.webp");
+    expect(document.querySelectorAll("[data-scroll-reveal='true']").length).toBe(6);
   });
 
   it("supports search and reward sorting for visible Quiz Cards", async () => {

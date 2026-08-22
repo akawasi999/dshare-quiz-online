@@ -312,6 +312,13 @@ button:active { transform: scale(.97); }
 
 @media (prefers-reduced-motion: no-preference) { .rise-in { animation: rise-in 640ms cubic-bezier(.23,1,.32,1) both; } .rise-in-delay { animation: rise-in 640ms 90ms cubic-bezier(.23,1,.32,1) both; } @keyframes rise-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } } }
 
+.home-scroll-reveal { min-width: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .home-scroll-reveal[data-revealed="false"] { opacity: 0; transform: translateY(18px); }
+  .home-scroll-reveal[data-revealed="true"] { animation: home-scroll-reveal 520ms var(--reveal-delay, 0ms) var(--ease-out) both; }
+  @keyframes home-scroll-reveal { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+}
+
 @media (min-width: 1280px) {
   [data-testid="spec-quiz-workspace"] > aside { display: flex; }
   [data-testid="spec-quiz-workspace"] > aside > section { width: 100%; }

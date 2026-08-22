@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { showcaseQuizzes } from "@/data/demo";
 import { trpc } from "@/lib/trpc";
 import { ArrowRight, BookMarked, BrainCircuit, CheckCircle2, ChevronRight, CircleHelp, Compass, Crown, Layers3, Search, ShieldCheck, SlidersHorizontal, Sparkles, TimerReset } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 
 const pathways = [
@@ -34,15 +34,23 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <section className="relative overflow-hidden bg-[linear-gradient(145deg,var(--primary-light)_0%,var(--background)_52%,var(--surface)_100%)]">
+      <section className="relative overflow-hidden bg-[radial-gradient(circle_at_76%_20%,rgba(171,145,255,.25),transparent_23%),radial-gradient(circle_at_87%_74%,rgba(148,244,194,.22),transparent_25%),linear-gradient(145deg,var(--primary-light)_0%,var(--background)_52%,var(--surface)_100%)]">
         <SiteHeader />
-        <div className="container relative flex min-h-[620px] items-center py-16 sm:py-20 lg:min-h-[680px] lg:py-28">
-          <div className="rise-in max-w-4xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-surface/90 px-4 py-2 text-[11px] font-bold uppercase tracking-[.08em] text-primary shadow-[var(--shadow-sm)]"><span className="size-2 rounded-full bg-primary" />Tạo Quiz bằng AI</div>
+        <div className="container relative grid min-h-[620px] items-center gap-12 py-16 sm:py-20 lg:min-h-[680px] lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,.98fr)] lg:py-24">
+          <div className="rise-in max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-surface/90 px-4 py-2 text-[11px] font-bold uppercase tracking-[.08em] text-primary shadow-[var(--shadow-sm)]"><span className="size-2 rounded-full bg-primary" />Quiz AI · Tạo · Chia sẻ · Học</div>
             <h1 className="mt-7 max-w-4xl font-serif text-[clamp(2.5rem,6vw,4.75rem)] font-extrabold leading-[1.08] tracking-[-.05em] text-foreground">Tạo Quiz để học tập <span className="bg-[linear-gradient(135deg,var(--primary)_0%,var(--accent)_100%)] bg-clip-text text-transparent">rõ ràng hơn</span>.</h1>
-            <p className="mt-6 max-w-3xl text-[17px] leading-8 text-text-secondary sm:text-[19px]">Tạo quiz từ văn bản, PDF, URL hoặc chủ đề bất kỳ. Làm bài, theo dõi tiến độ và nhận phản hồi AI trong một không gian học tập có tổ chức.</p>
+            <p className="mt-6 max-w-2xl text-[17px] leading-8 text-text-secondary sm:text-[19px]">Biến văn bản, PDF, URL hoặc chủ đề bất kỳ thành trải nghiệm học tập tương tác—từ tạo câu hỏi, hoàn thiện Quiz đến chia sẻ cho người học.</p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row"><Button asChild size="lg" className="cta-gradient rounded-full px-7"><Link href="/kham-pha">Khám phá miễn phí <ArrowRight size={18} /></Link></Button><Button asChild variant="outline" size="lg" className="rounded-full px-7"><Link href="/tao-quiz">Tạo Quiz mới</Link></Button></div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-text-secondary"><span className="flex items-center gap-2"><CheckCircle2 size={17} className="text-success" /> Tạo Quiz thủ công</span><span className="flex items-center gap-2"><CheckCircle2 size={17} className="text-success" /> Có AI hỗ trợ</span><span className="flex items-center gap-2"><CheckCircle2 size={17} className="text-success" /> Không cần thẻ thanh toán</span></div>
+          </div>
+          <div data-testid="hero-creation-preview" className="rise-in-delay relative hidden min-h-[420px] items-center justify-center lg:flex" aria-label="Xem trước luồng tạo Quiz">
+            <div className="absolute left-5 top-8 rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-[var(--shadow-md)] backdrop-blur"><p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#087458]">Bước 01</p><p className="mt-1 text-sm font-bold text-foreground">Tải tệp hoặc chọn chủ đề</p></div>
+            <div className="relative w-full max-w-[500px] overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(135deg,#edfff0_0%,#eee8ff_100%)] p-4 shadow-[0_28px_70px_rgba(76,55,141,.16)]">
+              <div className="flex items-center justify-between rounded-2xl bg-white/80 px-4 py-3"><div><p className="text-xs font-bold text-[#5d249f]">AI Quiz Workspace</p><p className="mt-1 text-[11px] text-text-secondary">Từ nội dung đến bài học hoàn chỉnh</p></div><span className="rounded-full bg-[#e8dbff] px-3 py-1 text-[11px] font-bold text-[#7035c1]">2 bước</span></div>
+              <img src="/manus-storage/quiz_landing_1_1_image_en_2x_27b3e0b5.webp" alt="" className="mt-2 h-[278px] w-full object-contain" />
+            </div>
+            <div className="absolute bottom-8 right-3 rounded-2xl border border-white/80 bg-white/90 px-4 py-3 shadow-[var(--shadow-md)] backdrop-blur"><p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#5d249f]">Bước 02</p><p className="mt-1 text-sm font-bold text-foreground">Chia sẻ bằng QR hoặc mã</p></div>
           </div>
         </div>
       </section>
@@ -57,7 +65,8 @@ export default function Home() {
             <Link href="/tao-quiz" className="group inline-flex min-h-11 w-fit items-center gap-2 text-sm font-bold text-primary">Bắt đầu tạo Quiz <span className="grid size-8 place-items-center rounded-full bg-primary-light transition-transform duration-200 group-hover:translate-x-1"><ArrowRight size={15} /></span></Link>
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
-            <article className="relative isolate overflow-hidden rounded-[28px] border border-[#b7e7c5] bg-[linear-gradient(115deg,#effff1_0%,#dff9e6_100%)] p-7 shadow-[0_16px_38px_rgba(24,105,64,.08)] sm:p-10 lg:col-span-2 lg:min-h-[330px]">
+            <ScrollReveal className="lg:col-span-2">
+            <article className="relative isolate overflow-hidden rounded-[28px] border border-[#b7e7c5] bg-[linear-gradient(115deg,#effff1_0%,#dff9e6_100%)] p-7 shadow-[0_16px_38px_rgba(24,105,64,.08)] sm:p-10 lg:min-h-[330px]">
               <div className="relative z-10 max-w-[450px]">
                 <span className="inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[.14em] text-[#087458] shadow-sm">Tạo nhanh với AI</span>
                 <h3 className="mt-5 text-[clamp(1.8rem,3vw,2.55rem)] font-extrabold leading-tight tracking-[-.035em] text-[#087458]">Tạo câu hỏi nhanh chóng, dễ dàng với QUIZ AI!</h3>
@@ -66,6 +75,8 @@ export default function Home() {
               </div>
               <img src="/manus-storage/v3_2_1_image_en_2x_5b02546b.webp" alt="Minh họa AI biến tài liệu thành Quiz" className="pointer-events-none relative z-0 mx-auto mt-5 block w-full max-w-[510px] object-contain sm:absolute sm:-bottom-5 sm:right-5 sm:mt-0 sm:w-[51%]" />
             </article>
+            </ScrollReveal>
+            <ScrollReveal delay={70}>
             <article className="relative isolate min-h-[390px] overflow-hidden rounded-[28px] border border-[#b7e7c5] bg-[linear-gradient(135deg,#eaffeb_0%,#c9f8d5_100%)] p-7 shadow-[0_16px_38px_rgba(24,105,64,.07)] sm:p-10">
               <div className="relative z-10 max-w-[395px]">
                 <h3 className="text-[clamp(1.55rem,2.5vw,2.2rem)] font-extrabold leading-tight tracking-[-.03em] text-[#087458]">Câu hỏi, đáp án và lựa chọn—tất cả đã sẵn sàng.</h3>
@@ -73,6 +84,8 @@ export default function Home() {
               </div>
               <img src="/manus-storage/v3_2_2_image_en_2x_e8570fbb.webp" alt="Minh họa AI tạo đáp án và lựa chọn" className="pointer-events-none absolute bottom-0 left-1/2 w-[118%] max-w-[620px] -translate-x-1/2 object-contain sm:w-[104%]" />
             </article>
+            </ScrollReveal>
+            <ScrollReveal delay={140}>
             <article className="relative isolate min-h-[390px] overflow-hidden rounded-[28px] border border-[#d8e4d7] bg-[linear-gradient(135deg,#fbfffb_0%,#eef8ed_100%)] p-7 shadow-[0_16px_38px_rgba(34,72,41,.07)] sm:p-10">
               <div className="relative z-10 max-w-[410px]">
                 <h3 className="text-[clamp(1.55rem,2.5vw,2.2rem)] font-extrabold leading-tight tracking-[-.03em] text-[#087458]">AI biến một câu hỏi thành nhiều phiên bản chỉ trong tích tắc.</h3>
@@ -82,6 +95,7 @@ export default function Home() {
               <span aria-hidden="true" className="absolute bottom-8 right-5 size-14 rounded-full bg-[#71baf7]/50" />
               <img src="/manus-storage/v3_2_3_image_en_2x_33af5b55.webp" alt="Minh họa AI gợi ý nhiều phiên bản câu hỏi" className="pointer-events-none absolute bottom-0 left-1/2 w-[124%] max-w-[640px] -translate-x-1/2 object-contain sm:w-[106%]" />
             </article>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -94,7 +108,8 @@ export default function Home() {
             <Link href="/tao-quiz" className="group inline-flex min-h-11 w-fit items-center gap-2 text-sm font-bold text-accent">Tạo Quiz trong 2 bước <span className="grid size-8 place-items-center rounded-full bg-accent/10 transition-transform duration-200 group-hover:translate-x-1"><ArrowRight size={15} /></span></Link>
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
-            <article className="relative isolate overflow-hidden rounded-[28px] border border-[#decff9] bg-[linear-gradient(118deg,#f8f3ff_0%,#eee2ff_100%)] p-7 shadow-[0_16px_38px_rgba(112,64,180,.08)] sm:p-10 lg:col-span-2 lg:min-h-[340px]">
+            <ScrollReveal className="lg:col-span-2">
+            <article className="relative isolate overflow-hidden rounded-[28px] border border-[#decff9] bg-[linear-gradient(118deg,#f8f3ff_0%,#eee2ff_100%)] p-7 shadow-[0_16px_38px_rgba(112,64,180,.08)] sm:p-10 lg:min-h-[340px]">
               <div className="relative z-10 max-w-[460px]">
                 <span className="inline-flex items-center rounded-full bg-white/75 px-3 py-1 text-[11px] font-bold uppercase tracking-[.14em] text-[#6a32b8] shadow-sm">Tạo Quiz siêu tốc</span>
                 <h3 className="mt-5 text-[clamp(1.8rem,3vw,2.55rem)] font-extrabold leading-tight tracking-[-.035em] text-[#5d249f]">Chọn một mẫu, thêm câu hỏi, và nhận ngay Quiz của bạn!</h3>
@@ -103,6 +118,8 @@ export default function Home() {
               </div>
               <img src="/manus-storage/quiz_landing_1_1_image_en_2x_27b3e0b5.webp" alt="Minh họa hai bước tạo Quiz từ mẫu có sẵn" className="pointer-events-none relative z-0 mx-auto mt-6 block w-full max-w-[590px] object-contain sm:absolute sm:-bottom-3 sm:right-1 sm:mt-0 sm:w-[54%]" />
             </article>
+            </ScrollReveal>
+            <ScrollReveal delay={70}>
             <article className="relative isolate min-h-[410px] overflow-hidden rounded-[28px] border border-[#decff9] bg-[linear-gradient(135deg,#f2e6ff_0%,#e4d0ff_100%)] p-7 shadow-[0_16px_38px_rgba(112,64,180,.07)] sm:p-10">
               <div className="relative z-10 max-w-[440px]">
                 <h3 className="text-[clamp(1.55rem,2.5vw,2.2rem)] font-extrabold leading-tight tracking-[-.03em] text-[#5d249f]">Dễ dàng tìm và sử dụng các câu hỏi có sẵn phù hợp với chương trình học.</h3>
@@ -110,6 +127,8 @@ export default function Home() {
               </div>
               <img src="/manus-storage/quiz_landing_1_2_image_en_2x_abdeac42.webp" alt="Minh họa sao chép và tùy chỉnh câu hỏi có sẵn" className="pointer-events-none absolute bottom-0 left-1/2 w-[122%] max-w-[650px] -translate-x-1/2 object-contain sm:w-[108%]" />
             </article>
+            </ScrollReveal>
+            <ScrollReveal delay={140}>
             <article className="relative isolate min-h-[410px] overflow-hidden rounded-[28px] border border-[#e5e2ea] bg-[linear-gradient(135deg,#fdfbff_0%,#f5f1fa_100%)] p-7 shadow-[0_16px_38px_rgba(68,50,95,.07)] sm:p-10">
               <div className="relative z-10 max-w-[440px]">
                 <h3 className="text-[clamp(1.55rem,2.5vw,2.2rem)] font-extrabold leading-tight tracking-[-.03em] text-[#5d249f]">Truy cập nhanh bằng mã QR hoặc mã tham gia.</h3>
@@ -118,6 +137,7 @@ export default function Home() {
               <span aria-hidden="true" className="absolute -bottom-4 -right-4 size-24 rounded-full bg-[#e7ddff]" />
               <img src="/manus-storage/quiz_landing_1_3_image_kr_2x_31ee6c2a.webp" alt="Minh họa tham gia Quiz bằng mã QR trên nhiều thiết bị" className="pointer-events-none absolute bottom-0 left-1/2 w-[124%] max-w-[650px] -translate-x-1/2 object-contain sm:w-[108%]" />
             </article>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -137,4 +157,28 @@ export default function Home() {
 
 function Feature({ icon: Icon, title, description }: { icon: typeof Sparkles; title: string; description: string }) {
   return <div className="rounded-[var(--radius-md-token)] bg-white/12 p-4"><Icon size={18} className="text-white" /><p className="mt-4 text-sm font-bold text-white">{title}</p><p className="mt-2 text-xs leading-5 text-white/75">{description}</p></div>;
+}
+
+function ScrollReveal({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    if (typeof window === "undefined" || !window.IntersectionObserver || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setRevealed(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) {
+        setRevealed(true);
+        observer.disconnect();
+      }
+    }, { threshold: 0.14 });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return <div ref={ref} data-scroll-reveal="true" data-revealed={revealed ? "true" : "false"} style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties} className={`home-scroll-reveal ${className}`}>{children}</div>;
 }
