@@ -170,3 +170,18 @@ Dữ liệu vẫn dùng chung nguồn MySQL/TiDB hiện hữu; đợt này bổ 
 | Sửa thứ tự hoặc nội dung câu hỏi trong Quiz System | Catalog và chi tiết Quiz Runner được làm mới để tránh tiếp tục dùng cache cũ. |
 
 Regression `sharedDataSync.component.test.tsx` bảo vệ contract invalidation của bridge. Toàn bộ suite đạt **78 tệp / 194 ca**, TypeScript sạch và build production hoàn tất trong **20,72 giây**; Profile, Ví Point và Thư viện Quiz đã được xác minh ở desktop.
+
+## Studio theo Chủ đề CPanel và thông báo in-app
+
+Studio **Tạo Quiz** nay đọc danh sách Chủ đề active trực tiếp từ CPanel. Chủ đề hiển thị theo cấp cây, được lưu vào `quizzes.topicId` và `questions.topicId`; server kiểm tra chính sách `allowQuizCreation` và tự chuyển Quiz sang `pending_review` khi Chủ đề bật `requireQuizModeration`. Control **Bản đồ Game** đã được gỡ khỏi Studio cùng dữ liệu settings không còn sử dụng.
+
+Migration `0035_optimal_longshot.sql` tạo bảng `userNotifications` có lịch sử đọc/chưa đọc, metadata và index theo người dùng. CPanel tạo thông báo khi quản trị viên đổi gói trực tiếp/hàng loạt, thay đổi nhóm quyền của một thành viên, hoặc phê duyệt/từ chối Quiz. Header người dùng có chuông thông báo trên desktop/mobile, badge chưa đọc, menu lịch sử, thao tác đánh dấu đã đọc và liên kết đến ví hoặc **Quiz của tôi**. Các truy vấn notification refetch theo bridge đồng bộ hiện có nên thay đổi cùng trình duyệt được nhìn thấy ngay.
+
+| Hạng mục | File chính | Kết quả |
+|---|---|---|
+| Studio Chủ đề | `UserQuizCreator.tsx`, `routers.ts` | Selector Chủ đề CPanel, enforcement chính sách tạo/kiểm duyệt và phản hồi trạng thái chờ duyệt. |
+| Thông báo in-app | `schema.ts`, `inAppNotifications.ts`, `routers.ts`, `cpanelLearningRouter.ts` | Lưu lịch sử thay đổi gói/quyền và kết quả kiểm duyệt Quiz; có read state. |
+| Header | `SiteHeader.tsx` | Chuông, badge, lịch sử responsive, deep-link và action đánh dấu đọc. |
+| Hồi quy | `siteHeaderNavigation.component.test.tsx`, `userQuizCreatorState.component.test.tsx` | Bảo vệ chuông thông báo, selector Chủ đề và việc gỡ bản đồ game. |
+
+Toàn bộ suite đạt **78 tệp / 195 ca**, TypeScript sạch và build production hoàn tất trong **21,45 giây**. Studio đã được xác minh ở desktop 1280px và mobile 375px; header mobile giữ chuông và menu mà không tràn ngang.

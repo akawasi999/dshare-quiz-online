@@ -446,3 +446,9 @@
 - [x] Đồng bộ dữ liệu hồ sơ, gói/quyền, Point/XP và trạng thái Quiz giữa hai khu vực.
 - [x] Làm mới dữ liệu giao diện sau thay đổi quản trị hoặc người dùng.
 - [x] Kiểm thử các luồng đồng bộ và lưu checkpoint bàn giao.
+- [x] Đồng bộ danh sách Chủ đề của Studio Tạo Quiz với dữ liệu CPanel.
+- [x] Loại bỏ bản đồ game khỏi phần cài đặt Quiz Studio.
+- [x] Lưu và phát thông báo in-app khi admin thay đổi quyền hoặc gói tài khoản.
+- [x] Lưu và phát thông báo in-app khi Quiz được phê duyệt hoặc từ chối.
+- [x] Thêm chuông thông báo cùng lịch sử đọc/chưa đọc trên header người dùng.
+- [x] Kiểm thử workflow đồng bộ Studio và thông báo desktop/mobile, sau đó lưu checkpoint.

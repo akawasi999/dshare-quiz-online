@@ -54,6 +54,7 @@ export const difficultyValues = ["easy", "medium", "hard"] as const;
 export const topicStatusValues = ["active", "archived"] as const;
 export const quizLifecycleStatusValues = ["draft", "pending_review", "rejected", "published", "locked", "archived"] as const;
 export const xpRuleStatusValues = ["draft", "active", "paused", "archived"] as const;
+export const userNotificationTypeValues = ["account_plan", "account_permission", "quiz_approved", "quiz_rejected"] as const;
 
 export const learnerProfiles = mysqlTable("learnerProfiles", {
   id: int("id").autoincrement().primaryKey(),
@@ -74,6 +75,22 @@ export const learnerProfiles = mysqlTable("learnerProfiles", {
 }, table => [
   uniqueIndex("learner_profiles_user_unique").on(table.userId),
   uniqueIndex("learner_profiles_referral_unique").on(table.referralCode),
+]);
+
+export const userNotifications = mysqlTable("userNotifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", userNotificationTypeValues).notNull(),
+  title: varchar("title", { length: 180 }).notNull(),
+  body: text("body").notNull(),
+  href: varchar("href", { length: 512 }),
+  metadata: json("metadata").$type<Record<string, unknown>>(),
+  isRead: boolean("isRead").default(false).notNull(),
+  readAt: timestamp("readAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [
+  index("user_notifications_user_unread_created_idx").on(table.userId, table.isRead, table.createdAt),
+  index("user_notifications_user_created_idx").on(table.userId, table.createdAt),
 ]);
 
 export const xpLevels = mysqlTable("xpLevels", {

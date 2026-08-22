@@ -4,12 +4,12 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), logout: vi.fn(), user: null as null | { id: number; name: string; role: "user" | "admin" }, summary: { profile: { avatarUrl: "https://example.com/minh.png", pointBalance: 1250 } }, topics: [{ id: 10, name: "Tiểu học", slug: "tieu-hoc", parentId: null, depth: 0 }, { id: 11, name: "Lớp 1", slug: "lop-1", parentId: 10, depth: 1 }] }));
+const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), logout: vi.fn(), markRead: vi.fn(), markAllRead: vi.fn(), user: null as null | { id: number; name: string; role: "user" | "admin" }, summary: { profile: { avatarUrl: "https://example.com/minh.png", pointBalance: 1250 } }, notifications: { items: [{ id: 77, type: "quiz_rejected", title: "Quiz cần chỉnh sửa", body: "Lý do: cần bổ sung đáp án.", href: "/quiz-cua-toi?status=rejected", isRead: false, createdAt: new Date("2026-08-22T08:00:00Z") }], unreadCount: 1 }, topics: [{ id: 10, name: "Tiểu học", slug: "tieu-hoc", parentId: null, depth: 0 }, { id: 11, name: "Lớp 1", slug: "lop-1", parentId: 10, depth: 1 }] }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: mocks.user, loading: false, logout: mocks.logout }) }));
 vi.mock("@/contexts/ThemeContext", () => ({ useTheme: () => ({ theme: "light", toggleTheme: mocks.toggleTheme }) }));
 vi.mock("@/components/BrandLogo", () => ({ default: () => <span>Dshare</span> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { catalog: { topics: { useQuery: () => ({ data: mocks.topics }) } }, learner: { summary: { useQuery: () => ({ data: mocks.summary }) } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { catalog: { topics: { useQuery: () => ({ data: mocks.topics }) } }, learner: { summary: { useQuery: () => ({ data: mocks.summary }) }, notifications: { useQuery: () => ({ data: mocks.notifications, refetch: vi.fn() }) }, markNotificationRead: { useMutation: () => ({ mutate: mocks.markRead }) }, markAllNotificationsRead: { useMutation: () => ({ mutate: mocks.markAllRead }) } } } }));
 vi.mock("wouter", () => ({ Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => <a href={href} {...props}>{children}</a>, useLocation: () => ["/"] }));
 
 import SiteHeader from "../client/src/components/SiteHeader";
@@ -91,5 +91,16 @@ describe("SiteHeader navigation", () => {
     rerender(<SiteHeader />);
     fireEvent.mouseEnter(screen.getByRole("link", { name: /Tài khoản Quản/ }).parentElement!);
     expect(screen.getByRole("menuitem", { name: "Admin CPanel" }).getAttribute("href")).toBe("/quan-tri");
+  });
+
+  it("hiển thị chuông với lịch sử thông báo và đánh dấu mục đã đọc", async () => {
+    const userEventApi = userEvent.setup();
+    mocks.user = { id: 1, name: "Minh Nguyễn", role: "user" };
+    render(<SiteHeader />);
+    await userEventApi.click(screen.getAllByRole("button", { name: /Mở thông báo, 1 chưa đọc/ })[0]!);
+    expect(screen.getByRole("menu", { name: "Lịch sử thông báo" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: /Quiz cần chỉnh sửa/ }).getAttribute("href")).toContain("status=rejected");
+    await userEventApi.click(screen.getByRole("menuitem", { name: /Quiz cần chỉnh sửa/ }));
+    expect(mocks.markRead).toHaveBeenCalledWith({ notificationId: 77 });
   });
 });

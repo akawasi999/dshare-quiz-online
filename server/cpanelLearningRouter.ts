@@ -3,6 +3,7 @@ import { z } from "zod";
 import { attempts, auditLogs, questionOptions, questions, quizQuestions, quizzes, topics, users } from "../drizzle/schema";
 import { validateQuestionConfiguration } from "../shared/questionValidation";
 import { getDb } from "./db";
+import { createInAppNotification } from "./inAppNotifications";
 import { adminProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { buildTopicPath, isTopicDescendantPath, normalizeCpanelLearningSlug, remapDescendantPath } from "./cpanelLearningUtils";
@@ -263,6 +264,7 @@ export const cpanelLearningRouter = router({
       const reviewedAt = isReviewApproval ? new Date() : quiz.reviewedAt;
       await db.update(quizzes).set({ status: "published", isPublished: true, publishedAt, reviewedAt, reviewedByUserId: isReviewApproval ? ctx.user.id : quiz.reviewedByUserId, reviewReason: isReviewApproval ? null : quiz.reviewReason, version: quiz.version + 1 }).where(eq(quizzes.id, quiz.id));
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: isReviewApproval ? "quiz.review_approved" : "quiz.published", entityType: "quiz", entityId: quiz.id, metadata: { before: { status: quiz.status, publishedAt: quiz.publishedAt }, after: { status: "published", publishedAt, reviewedAt }, reason: input.reason } });
+      if (isReviewApproval && quiz.creatorUserId) await createInAppNotification(db, { userId: quiz.creatorUserId, type: "quiz_approved", title: "Quiz đã được phê duyệt", body: `Quiz “${quiz.title}” đã được quản trị viên duyệt và xuất bản.`, href: "/quiz-cua-toi?status=published", metadata: { quizId: quiz.id, status: "published" } });
       return { success: true, status: "published" as const, publishedAt, version: quiz.version + 1 };
     }),
     reviewReject: adminProcedure.input(z.object({ quizId: z.number().int().positive(), version: z.number().int().positive(), reason: z.string().trim().min(3).max(500) })).mutation(async ({ ctx, input }) => {
@@ -275,6 +277,7 @@ export const cpanelLearningRouter = router({
       const reviewedAt = new Date();
       await db.update(quizzes).set({ status: "rejected", isPublished: false, reviewedAt, reviewedByUserId: ctx.user.id, reviewReason: input.reason, version: quiz.version + 1 }).where(and(eq(quizzes.id, quiz.id), eq(quizzes.version, input.version)));
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.review_rejected", entityType: "quiz", entityId: quiz.id, metadata: { before: { status: quiz.status }, after: { status: "rejected", reviewedAt }, reason: input.reason } });
+      if (quiz.creatorUserId) await createInAppNotification(db, { userId: quiz.creatorUserId, type: "quiz_rejected", title: "Quiz cần chỉnh sửa", body: `Quiz “${quiz.title}” chưa được duyệt. Lý do: ${input.reason}`, href: "/quiz-cua-toi?status=rejected", metadata: { quizId: quiz.id, status: "rejected", reason: input.reason } });
       return { success: true, status: "rejected" as const, reviewedAt, version: quiz.version + 1 };
     }),
     lock: adminProcedure.input(z.object({ quizId: z.number().int().positive(), version: z.number().int().positive(), reason: z.string().trim().min(3).max(500) })).mutation(async ({ ctx, input }) => {

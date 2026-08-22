@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }] }, isLoading: false },
+  content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }], topics: [{ id: 24, name: "Tin học văn phòng", depth: 0, status: "active" }] }, isLoading: false },
   create: { mutate: vi.fn(), isPending: false },
   chat: { mutate: vi.fn(), isPending: false },
   pinVersion: vi.fn(),
@@ -64,6 +64,8 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByText("Cấu hình làm bài")).toBeTruthy();
     expect(screen.getByText("Bảo mật & nâng cao")).toBeTruthy();
     expect(screen.getByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeTruthy();
+    expect(screen.getByRole("option", { name: "Tin học văn phòng" })).toBeTruthy();
+    expect(screen.queryByText("Bản đồ Game")).toBeNull();
   });
 
   it("mở split-screen chat AI từ toolbar phải và thu gọn về Editor", async () => {

@@ -30,6 +30,7 @@ import {
   userGroupMembers,
   userGroupPermissions,
   userGroups,
+  userNotifications,
   users,
   walletTransactions,
   xpLevels,
@@ -78,6 +79,7 @@ import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQue
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
 import { importManualQuizFile, ocrPdfWithVision } from "./manualQuizImport";
 import { cpanelLearningRouter } from "./cpanelLearningRouter";
+import { createInAppNotification } from "./inAppNotifications";
 import { extractRemoteQuizSource } from "./remoteQuizExtraction";
 import { transcribeAudio } from "./_core/voiceTranscription";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
@@ -365,6 +367,28 @@ export const appRouter = router({
       return { tier, limits, usage, remaining };
     }),
     wallet: protectedProcedure.query(({ ctx }) => getWalletTransactions(ctx.user.id)),
+    notifications: protectedProcedure.input(z.object({ limit: z.number().int().min(1).max(50).default(20) }).optional()).query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return { items: [], unreadCount: 0 };
+      const limit = input?.limit ?? 20;
+      const [items, unread] = await Promise.all([
+        db.select().from(userNotifications).where(eq(userNotifications.userId, ctx.user.id)).orderBy(desc(userNotifications.createdAt)).limit(limit),
+        db.select({ count: sql<number>`count(*)` }).from(userNotifications).where(and(eq(userNotifications.userId, ctx.user.id), eq(userNotifications.isRead, false))),
+      ]);
+      return { items, unreadCount: Number(unread[0]?.count ?? 0) };
+    }),
+    markNotificationRead: protectedProcedure.input(z.object({ notificationId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật thông báo." });
+      await db.update(userNotifications).set({ isRead: true, readAt: new Date() }).where(and(eq(userNotifications.id, input.notificationId), eq(userNotifications.userId, ctx.user.id), eq(userNotifications.isRead, false)));
+      return { success: true };
+    }),
+    markAllNotificationsRead: protectedProcedure.mutation(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật thông báo." });
+      await db.update(userNotifications).set({ isRead: true, readAt: new Date() }).where(and(eq(userNotifications.userId, ctx.user.id), eq(userNotifications.isRead, false)));
+      return { success: true };
+    }),
     updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), learningGoal: z.string().trim().max(220).optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")), notificationPreferences: z.object({ studyReminders: z.boolean(), resultUpdates: z.boolean(), platformUpdates: z.boolean() }).optional() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -611,13 +635,14 @@ export const appRouter = router({
   creator: router({
     contentOptions: protectedProcedure.query(async () => {
       const db = await getDb();
-      if (!db) return { categories: [], subjects: [], lessons: [] };
-      const [categoryRows, subjectRows, lessonRows] = await Promise.all([
+      if (!db) return { categories: [], subjects: [], lessons: [], topics: [] };
+      const [categoryRows, subjectRows, lessonRows, topicRows] = await Promise.all([
         db.select().from(categories).where(eq(categories.isPublished, true)).orderBy(categories.sortOrder),
         db.select().from(subjects).where(eq(subjects.isPublished, true)).orderBy(subjects.sortOrder),
         db.select().from(lessons).where(eq(lessons.isPublished, true)).orderBy(lessons.sortOrder),
+        db.select().from(topics).where(and(eq(topics.status, "active"), isNull(topics.deletedAt))).orderBy(asc(topics.path), asc(topics.sortOrder), asc(topics.name)),
       ]);
-      return { categories: categoryRows, subjects: subjectRows, lessons: lessonRows };
+      return { categories: categoryRows, subjects: subjectRows, lessons: lessonRows, topics: topicRows };
     }),
     uploadCover: protectedProcedure.input(quizImageUploadInput).mutation(async ({ ctx, input }) => {
       const bytes = decodeQuizImageUpload(input);
@@ -726,7 +751,7 @@ export const appRouter = router({
       return { success: true, coverImageUrl: input.coverImageUrl };
     }),
     createQuiz: protectedProcedure.input(z.object({
-      lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
+      lessonId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440).default(15), maxAttempts: z.number().int().min(0).max(1000).default(0), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean().default(false), hideHintsAndExplanation: z.boolean().default(false), allowBackNavigation: z.boolean().default(true), requireRegistration: z.boolean().default(true), liveMonitoring: z.boolean().default(false), requireEmail: z.boolean().default(false), shuffleQuestions: z.boolean().default(false), shuffleAnswers: z.boolean().default(false), visibility: z.enum(["public", "private"]).default("public") }).default({ durationMinutes: 15, maxAttempts: 0, antiCheatMonitor: false, hideHintsAndExplanation: false, allowBackNavigation: true, requireRegistration: true, liveMonitoring: false, requireEmail: false, shuffleQuestions: false, shuffleAnswers: false, visibility: "public" }),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
@@ -734,6 +759,9 @@ export const appRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo quiz lúc này." });
       await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
       await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "tạo Quiz");
+      const topic = input.topicId ? (await db.select().from(topics).where(and(eq(topics.id, input.topicId), eq(topics.status, "active"), isNull(topics.deletedAt))).limit(1))[0] : undefined;
+      if (input.topicId && !topic) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chủ đề đã chọn không còn hoạt động." });
+      if (topic && !topic.allowQuizCreation) throw new TRPCError({ code: "FORBIDDEN", message: "Chủ đề này hiện không cho phép tạo Quiz." });
       const lesson = input.lessonId ? await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.id, input.lessonId)).limit(1) : await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.isPublished, true)).limit(1);
       if (!lesson.length) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy bài học để gắn quiz." });
       for (const item of input.questions) {
@@ -744,19 +772,20 @@ export const appRouter = router({
       const requestedSlug = input.slug || autoSlug;
       const slugExists = await db.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.slug, requestedSlug)).limit(1);
       const quizSlug = slugExists.length ? `${requestedSlug}-${Date.now().toString(36)}` : requestedSlug;
-      const createdQuiz = await db.insert(quizzes).values({ lessonId: lesson[0]!.id, creatorUserId: ctx.user.id, title: input.title, slug: quizSlug, summary: input.summary, coverImageUrl: input.coverImageUrl, mode: "training", accessTier: "basic", durationSeconds: input.settings.durationMinutes * 60, passingScore: 70, questionCount: input.questions.length, randomizeQuestions: input.settings.shuffleQuestions, randomizeOptions: input.settings.shuffleAnswers, visibility: input.settings.visibility, creatorSettings: input.settings, isPublished: input.isPublished });
+      const status = topic?.requireQuizModeration && input.isPublished ? "pending_review" : input.isPublished ? "published" : "draft";
+      const createdQuiz = await db.insert(quizzes).values({ lessonId: lesson[0]!.id, topicId: topic?.id ?? null, creatorUserId: ctx.user.id, title: input.title, slug: quizSlug, summary: input.summary, coverImageUrl: input.coverImageUrl, mode: "training", accessTier: "basic", durationSeconds: input.settings.durationMinutes * 60, passingScore: 70, questionCount: input.questions.length, randomizeQuestions: input.settings.shuffleQuestions, randomizeOptions: input.settings.shuffleAnswers, visibility: input.settings.visibility, creatorSettings: input.settings, status, isPublished: status === "published" });
       const quizId = Number(createdQuiz[0].insertId);
       for (let index = 0; index < input.questions.length; index += 1) {
         const item = input.questions[index]!;
-        const createdQuestion = await db.insert(questions).values({ lessonId: lesson[0]!.id, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig });
+        const createdQuestion = await db.insert(questions).values({ lessonId: lesson[0]!.id, topicId: topic?.id ?? null, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig });
         const questionId = Number(createdQuestion[0].insertId);
         if (item.options.length) await db.insert(questionOptions).values(item.options.map((option: { body: string; isCorrect: boolean }, optionIndex: number) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex })));
         await db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: item.points });
       }
-      return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: input.isPublished, visibility: input.settings.visibility };
+      return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: status === "published", status, visibility: input.settings.visibility };
     }),
     updateQuiz: protectedProcedure.input(z.object({
-      quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
+      quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean(), shuffleQuestions: z.boolean(), shuffleAnswers: z.boolean(), visibility: z.enum(["public", "private"]) }),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
@@ -764,10 +793,15 @@ export const appRouter = router({
       for (const item of input.questions) { const error = validateQuestionConfiguration({ type: item.type, options: item.options, answerConfig: item.answerConfig, imageUrl: item.imageUrl ?? null }); if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` }); }
       const lessonId = input.lessonId ?? source.quiz.lessonId;
       if (!lessonId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Quiz thuộc mô hình Chủ đề mới cần được chỉnh sửa trong Quiz System." });
+      const topicId = input.topicId ?? source.quiz.topicId ?? undefined;
+      const topic = topicId ? (await source.db.select().from(topics).where(and(eq(topics.id, topicId), eq(topics.status, "active"), isNull(topics.deletedAt))).limit(1))[0] : undefined;
+      if (!topic) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Hãy chọn một Chủ đề đang hoạt động từ CPanel." });
+      if (!topic.allowQuizCreation) throw new TRPCError({ code: "FORBIDDEN", message: "Chủ đề này hiện không cho phép tạo Quiz." });
+      const status = topic.requireQuizModeration && input.isPublished ? "pending_review" : input.isPublished ? "published" : "draft";
       await removeOwnedQuizQuestions(source.db, source.quiz.id, source.questions);
-      await source.db.update(quizzes).set({ lessonId, title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl, durationSeconds: input.settings.durationMinutes * 60, questionCount: input.questions.length, randomizeQuestions: input.settings.shuffleQuestions, randomizeOptions: input.settings.shuffleAnswers, visibility: input.settings.visibility, creatorSettings: input.settings, isPublished: input.isPublished }).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
-      for (let index = 0; index < input.questions.length; index += 1) { const item = input.questions[index]!; const createdQuestion = await source.db.insert(questions).values({ lessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(createdQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option, optionIndex) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId: source.quiz.id, questionId, sortOrder: index, points: item.points }); }
-      return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length, isPublished: input.isPublished, visibility: input.settings.visibility };
+      await source.db.update(quizzes).set({ lessonId, topicId, status, title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl, durationSeconds: input.settings.durationMinutes * 60, questionCount: input.questions.length, randomizeQuestions: input.settings.shuffleQuestions, randomizeOptions: input.settings.shuffleAnswers, visibility: input.settings.visibility, creatorSettings: input.settings, isPublished: status === "published" }).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
+      for (let index = 0; index < input.questions.length; index += 1) { const item = input.questions[index]!; const createdQuestion = await source.db.insert(questions).values({ lessonId, topicId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(createdQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option, optionIndex) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId: source.quiz.id, questionId, sortOrder: index, points: item.points }); }
+      return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length, isPublished: status === "published", status, visibility: input.settings.visibility };
     }),
     generateQuestionAI: protectedProcedure.input(aiQuestionInputSchema.omit({ lessonId: true })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi bằng AI");
@@ -1256,6 +1290,7 @@ export const appRouter = router({
           const profile = await ensureLearnerProfile(userId);
           if (!profile) continue;
           await db.update(learnerProfiles).set({ ...(input.tier ? { tier: input.tier } : {}), ...(input.isBanned !== undefined ? { isBanned: input.isBanned } : {}) }).where(eq(learnerProfiles.id, profile.id));
+          if (input.tier) await createInAppNotification(db, { userId, type: "account_plan", title: "Gói tài khoản đã được cập nhật", body: `Quản trị viên đã cập nhật gói tài khoản của bạn thành ${input.tier.toUpperCase()}.`, href: "/ho-so", metadata: { tier: input.tier, source: "bulk" } });
         }
         await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "users.bulk_updated", entityType: "user_batch", metadata: { userIds: uniqueUserIds, tier: input.tier, isBanned: input.isBanned } });
         return { success: true, updatedCount: uniqueUserIds.length };
@@ -1382,6 +1417,7 @@ export const appRouter = router({
         if (profile) await db.update(learnerProfiles).set({ tier: group.plan.tier }).where(eq(learnerProfiles.id, profile.id));
       }
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user_group.member_assigned", entityType: "user", entityId: input.userId, metadata: { groupId: input.groupId } });
+      await createInAppNotification(db, { userId: input.userId, type: "account_permission", title: "Quyền truy cập đã được cập nhật", body: `Bạn đã được đưa vào nhóm “${group.group.name}”${group.plan ? `, liên kết gói ${group.plan.name}` : ""}.`, href: "/ho-so", metadata: { groupId: input.groupId, planId: group.plan?.id ?? null } });
       return { success: true };
     }),
     removeUserGroupMember: adminProcedure.input(z.object({ userId: z.number().int().positive(), groupId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
@@ -1399,6 +1435,7 @@ export const appRouter = router({
         if (!profile) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy hồ sơ học viên." });
         await db.update(learnerProfiles).set({ tier: input.tier }).where(eq(learnerProfiles.id, profile.id));
         await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user.tier_updated", entityType: "user", entityId: input.userId, metadata: { tier: input.tier } });
+        await createInAppNotification(db, { userId: input.userId, type: "account_plan", title: "Gói tài khoản đã được cập nhật", body: `Quản trị viên đã cập nhật gói tài khoản của bạn thành ${input.tier.toUpperCase()}.`, href: "/ho-so", metadata: { tier: input.tier, source: "user-management" } });
         return { success: true };
       }),
     updateUserStatus: adminProcedure.input(z.object({ userId: z.number().int().positive(), isBanned: z.boolean() }))
