@@ -1,23 +1,29 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   aiAssistantConversations,
   aiAssistantSettings,
+  achievements,
   attempts,
   attemptAnswers,
   auditLogs,
   brandSettings,
+  badges,
   bugReports,
   categories,
   discussionPosts,
   emailDeliverySettings,
+  gamificationFeatures,
   learnerProfiles,
+  levelFeatureUnlocks,
   lessons,
   membershipGroupPermissions,
+  missionDefinitions,
   paymentEmailDeliveries,
   questionOptions,
   paymentRecords,
+  pointPriceRules,
   questions,
   quizCreatorDrafts,
   quizCreatorDraftVersions,
@@ -32,6 +38,9 @@ import {
   subscriptionPlans,
   subjects,
   topics,
+  userAchievements,
+  userBadges,
+  userMissionAssignments,
   userGroupMembers,
   userGroupPermissions,
   userGroups,
@@ -62,6 +71,7 @@ import {
   getLeaderboard,
   getLearnerSummary,
   getMonthlyQuotaUsage,
+  getXpLeaderboard,
   getQuizDetail,
   getOwnedQuizAnalytics,
   getQuizQuestionSet,
@@ -80,6 +90,7 @@ import { decryptAiAssistantApiKey, discoverGeminiChatModel, encryptAiAssistantAp
 import { analyzeAiAssistantImage } from "./aiAssistantMultimodal";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
+import { getLearnerGamificationSummary } from "./gamification";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
 import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse, questionEnhancementInputSchema, quizStudioChatInputSchema } from "./quizStudioChat";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
@@ -115,6 +126,62 @@ const membershipGroupPermissionInput = z.object({
   canExportData: z.boolean(),
   canViewAdvancedReports: z.boolean(),
   canReceivePrioritySupport: z.boolean(),
+});
+const gamificationFeatureInput = z.object({
+  id: z.number().int().positive().optional(),
+  code: z.string().trim().regex(/^[a-z][a-z0-9_.-]{2,99}$/),
+  name: z.string().trim().min(2).max(160),
+  description: z.string().trim().min(4).max(500),
+  icon: z.string().trim().max(80).nullable().optional(),
+  category: z.enum(["learning", "creation", "ai", "analytics", "premium"]),
+  isActive: z.boolean(),
+});
+const missionDefinitionInput = z.object({
+  id: z.number().int().positive().optional(),
+  code: z.string().trim().regex(/^[a-z][a-z0-9_.-]{2,99}$/),
+  title: z.string().trim().min(2).max(180),
+  description: z.string().trim().min(4).max(500),
+  icon: z.string().trim().max(80).nullable().optional(),
+  repeatType: z.enum(["daily", "weekly", "special"]),
+  metricType: z.enum(["quiz_completed", "questions_answered", "score_threshold", "study_minutes", "ai_content_created"]),
+  target: z.number().int().positive().max(1_000_000),
+  xpReward: z.number().int().min(1).max(100_000),
+  conditionConfig: z.record(z.string(), z.unknown()).nullable().optional(),
+  displayOrder: z.number().int().min(0).max(100_000),
+  isActive: z.boolean(),
+  startsAt: z.date().nullable().optional(),
+  endsAt: z.date().nullable().optional(),
+});
+const badgeInput = z.object({
+  id: z.number().int().positive().optional(),
+  code: z.string().trim().regex(/^[a-z][a-z0-9_.-]{2,99}$/),
+  name: z.string().trim().min(2).max(160),
+  description: z.string().trim().min(4).max(500),
+  icon: z.string().trim().min(1).max(80),
+  color: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/),
+  isActive: z.boolean(),
+});
+const achievementInput = z.object({
+  id: z.number().int().positive().optional(),
+  code: z.string().trim().regex(/^[a-z][a-z0-9_.-]{2,99}$/),
+  title: z.string().trim().min(2).max(180),
+  description: z.string().trim().min(4).max(500),
+  icon: z.string().trim().min(1).max(80),
+  conditionType: z.enum(["quiz_completed", "perfect_score"]),
+  conditionConfig: z.record(z.string(), z.unknown()).nullable().optional(),
+  xpReward: z.number().int().min(0).max(100_000),
+  badgeId: z.number().int().positive().nullable().optional(),
+  displayOrder: z.number().int().min(0).max(100_000),
+  isActive: z.boolean(),
+});
+const pointPriceRuleInput = z.object({
+  id: z.number().int().positive().optional(),
+  code: z.string().trim().regex(/^[a-z][a-z0-9_.-]{2,99}$/),
+  name: z.string().trim().min(2).max(180),
+  description: z.string().trim().max(500).nullable().optional(),
+  pointCost: z.number().int().min(0).max(10_000_000),
+  conditionConfig: z.record(z.string(), z.unknown()).nullable().optional(),
+  isActive: z.boolean(),
 });
 const subscriptionPlanInput = z.object({ id: z.number().int().positive().optional(), code: z.string().trim().toLowerCase().regex(/^[a-z0-9-]+$/).min(3).max(80), name: z.string().trim().min(2).max(120), tier: z.enum(["basic", "pro", "premium"]), description: z.string().trim().max(500).nullable().optional(), benefits: z.array(z.string().trim().min(2).max(180)).max(12).refine(items => new Set(items).size === items.length, { message: "Không được trùng quyền lợi." }).default([]), monthlyPrice: z.number().int().min(0).max(100_000_000), promoPrice: z.number().int().min(0).max(100_000_000).nullable().optional(), payosEnabled: z.boolean().default(false), payosRewardPoints: z.number().int().min(0).max(1_000_000).default(0), membershipMonths: z.number().int().min(1).max(24).default(1), displayOrder: z.number().int().min(0).max(100_000).default(0), isActive: z.boolean() });
 const userGroupInput = z.object({ id: z.number().int().positive().optional(), planId: z.number().int().positive().nullable().optional(), name: z.string().trim().min(2).max(120), description: z.string().trim().max(500).nullable().optional(), displayOrder: z.number().int().min(0).max(100_000).default(0) });
@@ -359,6 +426,14 @@ export const appRouter = router({
 
   learner: router({
     summary: protectedProcedure.query(({ ctx }) => getLearnerSummary(ctx.user.id)),
+    gamification: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải tiến trình Gamification." });
+      await ensureLearnerProfile(ctx.user.id);
+      const summary = await getLearnerGamificationSummary(db, ctx.user.id);
+      if (!summary) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể khởi tạo tiến trình học tập." });
+      return summary;
+    }),
     quota: protectedProcedure.query(async ({ ctx }) => {
       const profile = await ensureLearnerProfile(ctx.user.id);
       if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập quota thành viên." });
@@ -514,6 +589,8 @@ export const appRouter = router({
   leaderboard: router({
     list: publicProcedure.input(z.object({ quizId: z.number().int().positive().optional() }).optional())
       .query(({ input }) => getLeaderboard(input?.quizId)),
+    xp: publicProcedure.input(z.object({ period: z.enum(["all", "week", "month"]).default("all") }).optional())
+      .query(({ input }) => getXpLeaderboard(input?.period ?? "all")),
   }),
 
   quiz: router({
@@ -1693,6 +1770,83 @@ export const appRouter = router({
         if (Number(balance?.total ?? 0) + input.amount < 0) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Điều chỉnh này khiến tổng XP của người dùng âm." });
         const created = await db.insert(xpTransactions).values({ userId: input.userId, amount: input.amount, sourceType: "admin_adjustment", reason: input.reason, actorUserId: ctx.user.id });
         const id = Number(created[0].insertId); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "xp.adjusted", entityType: "user", entityId: input.userId, metadata: { amount: input.amount, reason: input.reason, xpTransactionId: id } }); return { id, balanceAfter: Number(balance?.total ?? 0) + input.amount };
+      }),
+    }),
+    gamification: router({
+      overview: adminProcedure.query(async () => {
+        const db = await getDb();
+        if (!db) return { features: [], unlocks: [], missions: [], achievements: [], badges: [], priceRules: [], missionAssignments: 0, achievementUnlocks: 0 };
+        const [features, unlocks, missions, achievementRows, badgeRows, priceRules, assignmentStat, achievementStat] = await Promise.all([
+          db.select().from(gamificationFeatures).orderBy(asc(gamificationFeatures.category), asc(gamificationFeatures.name)),
+          db.select({ unlock: levelFeatureUnlocks, level: xpLevels, feature: gamificationFeatures }).from(levelFeatureUnlocks).innerJoin(xpLevels, eq(levelFeatureUnlocks.levelId, xpLevels.id)).innerJoin(gamificationFeatures, eq(levelFeatureUnlocks.featureId, gamificationFeatures.id)).orderBy(asc(xpLevels.minXp)),
+          db.select().from(missionDefinitions).orderBy(asc(missionDefinitions.displayOrder), asc(missionDefinitions.title)),
+          db.select({ achievement: achievements, badge: badges }).from(achievements).leftJoin(badges, eq(achievements.badgeId, badges.id)).orderBy(asc(achievements.displayOrder)),
+          db.select().from(badges).orderBy(asc(badges.name)),
+          db.select().from(pointPriceRules).orderBy(asc(pointPriceRules.name)),
+          db.select({ count: sql<number>`count(*)` }).from(userMissionAssignments),
+          db.select({ count: sql<number>`count(*)` }).from(userAchievements).where(eq(userAchievements.status, "unlocked")),
+        ]);
+        return { features, unlocks, missions, achievements: achievementRows, badges: badgeRows, priceRules, missionAssignments: Number(assignmentStat[0]?.count ?? 0), achievementUnlocks: Number(achievementStat[0]?.count ?? 0) };
+      }),
+      saveFeature: adminProcedure.input(gamificationFeatureInput).mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu tính năng mở khóa." });
+        const duplicate = await db.select({ id: gamificationFeatures.id }).from(gamificationFeatures).where(and(eq(gamificationFeatures.code, input.code), input.id ? ne(gamificationFeatures.id, input.id) : undefined)).limit(1);
+        if (duplicate.length) throw new TRPCError({ code: "CONFLICT", message: "Mã tính năng đã tồn tại." });
+        const data = { code: input.code, name: input.name, description: input.description, icon: input.icon ?? null, category: input.category, isActive: input.isActive };
+        if (input.id) { await db.update(gamificationFeatures).set(data).where(eq(gamificationFeatures.id, input.id)); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.feature_updated", entityType: "gamification_feature", entityId: input.id, metadata: { after: data } }); return { id: input.id }; }
+        const created = await db.insert(gamificationFeatures).values(data); const id = Number(created[0].insertId); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.feature_created", entityType: "gamification_feature", entityId: id, metadata: { after: data } }); return { id };
+      }),
+      setLevelUnlocks: adminProcedure.input(z.object({ levelId: z.number().int().positive(), featureIds: z.array(z.number().int().positive()).max(50).refine(values => new Set(values).size === values.length) })).mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật feature unlock." });
+        const level = await db.select({ id: xpLevels.id }).from(xpLevels).where(eq(xpLevels.id, input.levelId)).limit(1);
+        if (!level[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy Level." });
+        if (input.featureIds.length) {
+          const features = await db.select({ id: gamificationFeatures.id }).from(gamificationFeatures).where(inArray(gamificationFeatures.id, input.featureIds));
+          if (features.length !== input.featureIds.length) throw new TRPCError({ code: "BAD_REQUEST", message: "Một hoặc nhiều feature không hợp lệ." });
+        }
+        await db.transaction(async tx => { await tx.delete(levelFeatureUnlocks).where(eq(levelFeatureUnlocks.levelId, input.levelId)); if (input.featureIds.length) await tx.insert(levelFeatureUnlocks).values(input.featureIds.map(featureId => ({ levelId: input.levelId, featureId }))); });
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.level_unlocks_updated", entityType: "xp_level", entityId: input.levelId, metadata: { featureIds: input.featureIds } });
+        return { success: true };
+      }),
+      saveMission: adminProcedure.input(missionDefinitionInput).mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu nhiệm vụ." });
+        if (input.endsAt && input.startsAt && input.endsAt <= input.startsAt) throw new TRPCError({ code: "BAD_REQUEST", message: "Ngày kết thúc phải sau ngày bắt đầu." });
+        const duplicate = await db.select({ id: missionDefinitions.id }).from(missionDefinitions).where(and(eq(missionDefinitions.code, input.code), input.id ? ne(missionDefinitions.id, input.id) : undefined)).limit(1);
+        if (duplicate.length) throw new TRPCError({ code: "CONFLICT", message: "Mã nhiệm vụ đã tồn tại." });
+        const data = { code: input.code, title: input.title, description: input.description, icon: input.icon ?? null, repeatType: input.repeatType, metricType: input.metricType, target: input.target, xpReward: input.xpReward, conditionConfig: input.conditionConfig ?? null, displayOrder: input.displayOrder, isActive: input.isActive, startsAt: input.startsAt ?? null, endsAt: input.endsAt ?? null };
+        if (input.id) { await db.update(missionDefinitions).set(data).where(eq(missionDefinitions.id, input.id)); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.mission_updated", entityType: "mission", entityId: input.id, metadata: { after: data } }); return { id: input.id }; }
+        const created = await db.insert(missionDefinitions).values(data); const id = Number(created[0].insertId); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.mission_created", entityType: "mission", entityId: id, metadata: { after: data } }); return { id };
+      }),
+      saveBadge: adminProcedure.input(badgeInput).mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu badge." });
+        const duplicate = await db.select({ id: badges.id }).from(badges).where(and(eq(badges.code, input.code), input.id ? ne(badges.id, input.id) : undefined)).limit(1);
+        if (duplicate.length) throw new TRPCError({ code: "CONFLICT", message: "Mã badge đã tồn tại." });
+        const data = { code: input.code, name: input.name, description: input.description, icon: input.icon, color: input.color, isActive: input.isActive };
+        if (input.id) { await db.update(badges).set(data).where(eq(badges.id, input.id)); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.badge_updated", entityType: "badge", entityId: input.id, metadata: { after: data } }); return { id: input.id }; }
+        const created = await db.insert(badges).values(data); const id = Number(created[0].insertId); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.badge_created", entityType: "badge", entityId: id, metadata: { after: data } }); return { id };
+      }),
+      saveAchievement: adminProcedure.input(achievementInput).mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu thành tích." });
+        const duplicate = await db.select({ id: achievements.id }).from(achievements).where(and(eq(achievements.code, input.code), input.id ? ne(achievements.id, input.id) : undefined)).limit(1);
+        if (duplicate.length) throw new TRPCError({ code: "CONFLICT", message: "Mã thành tích đã tồn tại." });
+        if (input.badgeId) { const badge = await db.select({ id: badges.id }).from(badges).where(eq(badges.id, input.badgeId)).limit(1); if (!badge[0]) throw new TRPCError({ code: "BAD_REQUEST", message: "Badge liên kết không hợp lệ." }); }
+        const data = { code: input.code, title: input.title, description: input.description, icon: input.icon, conditionType: input.conditionType, conditionConfig: input.conditionConfig ?? null, xpReward: input.xpReward, badgeId: input.badgeId ?? null, displayOrder: input.displayOrder, isActive: input.isActive };
+        if (input.id) { await db.update(achievements).set(data).where(eq(achievements.id, input.id)); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.achievement_updated", entityType: "achievement", entityId: input.id, metadata: { after: data } }); return { id: input.id }; }
+        const created = await db.insert(achievements).values(data); const id = Number(created[0].insertId); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.achievement_created", entityType: "achievement", entityId: id, metadata: { after: data } }); return { id };
+      }),
+      savePointPriceRule: adminProcedure.input(pointPriceRuleInput).mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu cấu hình giá Point." });
+        const duplicate = await db.select({ id: pointPriceRules.id }).from(pointPriceRules).where(and(eq(pointPriceRules.code, input.code), input.id ? ne(pointPriceRules.id, input.id) : undefined)).limit(1);
+        if (duplicate.length) throw new TRPCError({ code: "CONFLICT", message: "Mã pricing rule đã tồn tại." });
+        const data = { code: input.code, name: input.name, description: input.description ?? null, pointCost: input.pointCost, conditionConfig: input.conditionConfig ?? null, isActive: input.isActive };
+        if (input.id) { await db.update(pointPriceRules).set(data).where(eq(pointPriceRules.id, input.id)); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.point_price_updated", entityType: "point_price_rule", entityId: input.id, metadata: { after: data } }); return { id: input.id }; }
+        const created = await db.insert(pointPriceRules).values(data); const id = Number(created[0].insertId); await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "gamification.point_price_created", entityType: "point_price_rule", entityId: id, metadata: { after: data } }); return { id };
       }),
     }),
     analytics: adminProcedure.query(async () => {

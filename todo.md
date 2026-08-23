@@ -543,3 +543,8 @@
 - [x] Xây dựng trình soạn thảo pháp lý và quản trị FAQ trong CPanel.
 - [x] Hoàn thiện FAQ và biểu mẫu liên hệ trên trang Hỗ trợ.
 - [x] Kiểm thử persistence, validation, responsive, hồi quy và lưu checkpoint.
+- [x] Phân tích ROLEAIGamified.docx và kiểm kê mô hình Gamification đang có.
+- [x] Thiết kế mô hình dữ liệu, quyền hạn và lộ trình nâng cấp Gamification theo đặc tả.
+- [x] Triển khai dữ liệu, API và quy tắc nghiệp vụ Gamification được phê duyệt.
+- [x] Hoàn thiện giao diện quản trị và trải nghiệm Gamification cho người dùng.
+- [x] Kiểm thử hồi quy, xác minh responsive và lưu checkpoint nâng cấp Gamification.

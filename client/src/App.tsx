@@ -19,6 +19,8 @@ import PaymentStatus from "@/pages/PaymentStatus";
 import UserQuizCreator from "@/pages/UserQuizCreator";
 import MyQuizzes from "@/pages/MyQuizzes";
 import AIStudyAssistant from "@/pages/AIStudyAssistant";
+import Missions from "@/pages/Missions";
+import Achievements from "@/pages/Achievements";
 import AccountLayout from "@/components/AccountLayout";
 import AppearanceStyleBridge from "@/components/AppearanceStyleBridge";
 import PublicSiteFooter from "@/components/PublicSiteFooter";
@@ -40,6 +42,8 @@ function Router() {
     <Route path={ROUTES.leaderboard}>{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
     <Route path={ROUTES.pricing} component={Pricing} />
     <Route path={ROUTES.account} component={Profile} />
+    <Route path={ROUTES.missions}>{() => <LearnerAccountPage Page={Missions} />}</Route>
+    <Route path={ROUTES.achievements}>{() => <LearnerAccountPage Page={Achievements} />}</Route>
     <Route path={ROUTES.wallet}>{() => <LearnerAccountPage Page={Wallet} />}</Route>
     <Route path={ROUTES.referrals}>{() => <LearnerAccountPage Page={Referral} />}</Route>
     <Route path={ROUTES.billing}>{() => <LearnerAccountPage Page={TopUp} />}</Route>
@@ -60,6 +64,7 @@ function Router() {
     <Route path={ROUTES.adminImportExport} component={Admin} />
     <Route path={ROUTES.adminPoints} component={Admin} />
     <Route path={ROUTES.adminXp} component={Admin} />
+    <Route path={ROUTES.adminGamification} component={Admin} />
     <Route path={ROUTES.adminUsers} component={Admin} />
     <Route path={ROUTES.adminUserGroups} component={Admin} />
     <Route path={ROUTES.adminErrors} component={Admin} />

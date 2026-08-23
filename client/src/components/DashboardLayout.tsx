@@ -32,7 +32,7 @@ import {
 import { startLogin } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Activity, Award, Bell, BookOpenCheck, Bot, ChartNoAxesCombined, ChevronRight, CircleDollarSign, Command, FileWarning, FolderTree, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, Search, ScrollText, Settings2, Share2, Sun, UserRound, Users, UsersRound, Wifi, WifiOff } from "lucide-react";
+import { Activity, Award, Bell, BookOpenCheck, Bot, ChartNoAxesCombined, ChevronRight, CircleDollarSign, Command, FileWarning, FolderTree, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, Search, ScrollText, Settings2, Share2, Sun, Trophy, UserRound, Users, UsersRound, Wifi, WifiOff } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
@@ -49,7 +49,7 @@ const navigationSections: NavigationSection[] = [
     { icon: FolderTree, label: "Chủ đề", path: ROUTES.adminTopics, aliases: ["/quan-tri/chu-de"], description: "Cây phân cấp và taxonomy Quiz" },
     { icon: BookOpenCheck, label: "Quiz System", path: ROUTES.adminQuizzes, aliases: ["/quan-tri/quiz-system"], description: "Quản trị toàn bộ Quiz và vòng đời xuất bản" },
   ] },
-  { label: "Gamification", items: [{ icon: CircleDollarSign, label: "Point", path: ROUTES.adminPoints, aliases: ["/quan-tri/point"], description: "Sổ cái và economy Point" }, { icon: Award, label: "XP & Gamification", path: ROUTES.adminXp, aliases: ["/quan-tri/xp"], description: "Level, rule engine và XP ledger" }] },
+  { label: "Gamification", items: [{ icon: CircleDollarSign, label: "Point", path: ROUTES.adminPoints, aliases: ["/quan-tri/point"], description: "Sổ cái và economy Point" }, { icon: Award, label: "XP & Level", path: ROUTES.adminXp, aliases: ["/quan-tri/xp"], description: "Level, rule engine và XP ledger" }, { icon: Trophy, label: "Gamification Center", path: ROUTES.adminGamification, aliases: ["/quan-tri/gamification"], description: "Missions, achievements, badges và feature unlock" }] },
   { label: "Users", items: [
     { icon: Users, label: "Người dùng", path: ROUTES.adminUsers, aliases: ["/quan-tri/nguoi-dung"], description: "Người học và trạng thái tài khoản" },
     { icon: UsersRound, label: "Nhóm người dùng", path: ROUTES.adminUserGroups, aliases: ["/quan-tri/nhom-nguoi-dung"], description: "Nhóm, gói và quyền liên kết" },

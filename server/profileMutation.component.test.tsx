@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   summary: { data: { profile: { tier: "basic", pointBalance: 0, avatarUrl: "", bio: "", learningGoal: "", notificationPreferences: { studyReminders: true, resultUpdates: true, platformUpdates: true } }, stats: { completed: 0, averageScore: 0, passedCount: 0 }, currentPlan: null as null | { name: string; tier: string; monthlyPrice: number; promoPrice: number | null; benefits: string[] | null }, upgradePlans: [] as Array<{ name: string; tier: "pro" | "premium"; description: string | null; payosEnabled: boolean }> }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
   history: { data: [], isLoading: false, error: null as Error | null },
+  gamification: { data: { profile: { xpBalance: 0, currentStreak: 0 }, currentLevel: { name: "Beginner", minXp: 0, displayOrder: 1 }, nextLevel: { name: "Quiz Explorer", minXp: 250 }, xpToNextLevel: 250, missions: [] as unknown[] }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
   quota: { data: null },
   update: { isPending: false },
   toast: { success: vi.fn(), error: vi.fn() },
@@ -14,7 +15,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name: "Học viên" }, loading: false }) }));
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void }) => ({ ...mocks.update, mutate: () => options.onError?.(new Error("Không thể kết nối")) }) } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void }) => ({ ...mocks.update, mutate: () => options.onError?.(new Error("Không thể kết nối")) }) } } } }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/ho-so", vi.fn()] }));
 

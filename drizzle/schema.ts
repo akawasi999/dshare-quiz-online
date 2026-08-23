@@ -113,6 +113,12 @@ export const topicStatusValues = ["active", "archived"] as const;
 export const quizLifecycleStatusValues = ["draft", "pending_review", "rejected", "published", "locked", "archived"] as const;
 export const xpRuleStatusValues = ["draft", "active", "paused", "archived"] as const;
 export const userNotificationTypeValues = ["account_plan", "account_permission", "quiz_approved", "quiz_rejected"] as const;
+export const missionRepeatTypeValues = ["daily", "weekly", "special"] as const;
+export const missionStatusValues = ["available", "completed", "claimed", "expired"] as const;
+export const missionMetricTypeValues = ["quiz_completed", "questions_answered", "score_threshold", "study_minutes", "ai_content_created"] as const;
+export const achievementStatusValues = ["locked", "unlocked"] as const;
+export const featureCategoryValues = ["learning", "creation", "ai", "analytics", "premium"] as const;
+export const walletTransactionTypeValues = ["top_up", "quiz_fee", "quiz_reward", "referral_reward", "report_reward", "admin_adjustment", "plan_upgrade", "ai_question_generation", "ai_quiz_generation", "premium_feature", "refund"] as const;
 
 export const learnerProfiles = mysqlTable("learnerProfiles", {
   id: int("id").autoincrement().primaryKey(),
@@ -126,6 +132,12 @@ export const learnerProfiles = mysqlTable("learnerProfiles", {
   learningGoal: varchar("learningGoal", { length: 220 }),
   notificationPreferences: json("notificationPreferences").$type<{ studyReminders: boolean; resultUpdates: boolean; platformUpdates: boolean }>(),
   lastPracticeCategoryId: int("lastPracticeCategoryId"),
+  xpBalance: int("xpBalance").default(0).notNull(),
+  currentLevelId: int("currentLevelId"),
+  currentStreak: int("currentStreak").default(0).notNull(),
+  longestStreak: int("longestStreak").default(0).notNull(),
+  lastLearningAt: timestamp("lastLearningAt"),
+  gamificationOnboardedAt: timestamp("gamificationOnboardedAt"),
   tierExpiresAt: timestamp("tierExpiresAt"),
   isBanned: boolean("isBanned").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -156,6 +168,7 @@ export const xpLevels = mysqlTable("xpLevels", {
   name: varchar("name", { length: 120 }).notNull(),
   minXp: int("minXp").notNull(),
   icon: varchar("icon", { length: 80 }),
+  description: varchar("description", { length: 500 }),
   rewardMetadata: json("rewardMetadata").$type<Record<string, unknown>>(),
   displayOrder: int("displayOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
@@ -195,13 +208,152 @@ export const xpTransactions = mysqlTable("xpTransactions", {
   sourceId: varchar("sourceId", { length: 120 }),
   ruleId: int("ruleId"),
   reason: varchar("reason", { length: 500 }).notNull(),
+  balanceAfter: int("balanceAfter").default(0).notNull(),
+  dedupeKey: varchar("dedupeKey", { length: 191 }),
+  metadata: json("metadata").$type<Record<string, unknown>>(),
   actorUserId: int("actorUserId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, table => [
   index("xp_transactions_user_created_idx").on(table.userId, table.createdAt),
   index("xp_transactions_rule_idx").on(table.ruleId),
   index("xp_transactions_source_idx").on(table.sourceType, table.sourceId),
+  uniqueIndex("xp_transactions_dedupe_unique").on(table.dedupeKey),
 ]);
+
+export const gamificationFeatures = mysqlTable("gamificationFeatures", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 100 }).notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  icon: varchar("icon", { length: 80 }),
+  category: mysqlEnum("category", featureCategoryValues).default("learning").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("gamification_features_code_unique").on(table.code), index("gamification_features_active_category_idx").on(table.isActive, table.category)]);
+
+export const levelFeatureUnlocks = mysqlTable("levelFeatureUnlocks", {
+  id: int("id").autoincrement().primaryKey(),
+  levelId: int("levelId").notNull(),
+  featureId: int("featureId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [uniqueIndex("level_feature_unlock_unique").on(table.levelId, table.featureId), index("level_feature_unlock_feature_idx").on(table.featureId)]);
+
+export const missionDefinitions = mysqlTable("missionDefinitions", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 100 }).notNull(),
+  title: varchar("title", { length: 180 }).notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  icon: varchar("icon", { length: 80 }),
+  repeatType: mysqlEnum("repeatType", missionRepeatTypeValues).default("daily").notNull(),
+  metricType: mysqlEnum("metricType", missionMetricTypeValues).notNull(),
+  target: int("target").notNull(),
+  xpReward: int("xpReward").notNull(),
+  conditionConfig: json("conditionConfig").$type<Record<string, unknown>>(),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  startsAt: timestamp("startsAt"),
+  endsAt: timestamp("endsAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("mission_definitions_code_unique").on(table.code), index("mission_definitions_active_repeat_idx").on(table.isActive, table.repeatType, table.displayOrder)]);
+
+export const userMissionAssignments = mysqlTable("userMissionAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  missionDefinitionId: int("missionDefinitionId").notNull(),
+  periodKey: varchar("periodKey", { length: 20 }).notNull(),
+  target: int("target").notNull(),
+  progress: int("progress").default(0).notNull(),
+  xpReward: int("xpReward").notNull(),
+  status: mysqlEnum("status", missionStatusValues).default("available").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  completedAt: timestamp("completedAt"),
+  claimedAt: timestamp("claimedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("user_mission_period_unique").on(table.userId, table.missionDefinitionId, table.periodKey), index("user_missions_user_status_expiry_idx").on(table.userId, table.status, table.expiresAt)]);
+
+export const streakRewardMilestones = mysqlTable("streakRewardMilestones", {
+  id: int("id").autoincrement().primaryKey(),
+  days: int("days").notNull(),
+  title: varchar("title", { length: 160 }).notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  xpReward: int("xpReward").notNull(),
+  badgeId: int("badgeId"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("streak_reward_milestones_days_unique").on(table.days)]);
+
+export const streakRewardClaims = mysqlTable("streakRewardClaims", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  milestoneId: int("milestoneId").notNull(),
+  streakKey: varchar("streakKey", { length: 24 }).notNull(),
+  claimedAt: timestamp("claimedAt").defaultNow().notNull(),
+}, table => [uniqueIndex("streak_reward_claim_unique").on(table.userId, table.milestoneId, table.streakKey), index("streak_reward_claim_user_idx").on(table.userId, table.claimedAt)]);
+
+export const badges = mysqlTable("badges", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 100 }).notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  icon: varchar("icon", { length: 80 }).notNull(),
+  color: varchar("color", { length: 16 }).default("#7C5CFC").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("badges_code_unique").on(table.code), index("badges_active_idx").on(table.isActive)]);
+
+export const achievements = mysqlTable("achievements", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 100 }).notNull(),
+  title: varchar("title", { length: 180 }).notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  icon: varchar("icon", { length: 80 }).notNull(),
+  conditionType: varchar("conditionType", { length: 80 }).notNull(),
+  conditionConfig: json("conditionConfig").$type<Record<string, unknown>>(),
+  xpReward: int("xpReward").default(0).notNull(),
+  badgeId: int("badgeId"),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("achievements_code_unique").on(table.code), index("achievements_active_order_idx").on(table.isActive, table.displayOrder)]);
+
+export const userAchievements = mysqlTable("userAchievements", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  achievementId: int("achievementId").notNull(),
+  progress: int("progress").default(0).notNull(),
+  target: int("target").default(1).notNull(),
+  status: mysqlEnum("status", achievementStatusValues).default("locked").notNull(),
+  unlockedAt: timestamp("unlockedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("user_achievement_unique").on(table.userId, table.achievementId), index("user_achievement_user_status_idx").on(table.userId, table.status)]);
+
+export const userBadges = mysqlTable("userBadges", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  badgeId: int("badgeId").notNull(),
+  sourceType: varchar("sourceType", { length: 80 }).notNull(),
+  sourceId: varchar("sourceId", { length: 120 }),
+  awardedAt: timestamp("awardedAt").defaultNow().notNull(),
+}, table => [uniqueIndex("user_badge_source_unique").on(table.userId, table.badgeId, table.sourceType, table.sourceId), index("user_badges_user_awarded_idx").on(table.userId, table.awardedAt)]);
+
+export const pointPriceRules = mysqlTable("pointPriceRules", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 100 }).notNull(),
+  name: varchar("name", { length: 180 }).notNull(),
+  description: varchar("description", { length: 500 }),
+  pointCost: int("pointCost").notNull(),
+  conditionConfig: json("conditionConfig").$type<Record<string, unknown>>(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("point_price_rules_code_unique").on(table.code), index("point_price_rules_active_idx").on(table.isActive)]);
 
 export const membershipGroupPermissions = mysqlTable("membershipGroupPermissions", {
   id: int("id").autoincrement().primaryKey(),
@@ -497,14 +649,17 @@ export const attemptAnswers = mysqlTable("attemptAnswers", {
 export const walletTransactions = mysqlTable("walletTransactions", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  type: mysqlEnum("type", ["top_up", "quiz_fee", "quiz_reward", "referral_reward", "report_reward", "admin_adjustment", "plan_upgrade"]).notNull(),
+  type: mysqlEnum("type", walletTransactionTypeValues).notNull(),
   amount: int("amount").notNull(),
+  balanceBefore: int("balanceBefore").default(0).notNull(),
   balanceAfter: int("balanceAfter").notNull(),
   description: varchar("description", { length: 500 }).notNull(),
   referenceType: varchar("referenceType", { length: 60 }),
   referenceId: int("referenceId"),
+  dedupeKey: varchar("dedupeKey", { length: 191 }),
+  metadata: json("metadata").$type<Record<string, unknown>>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-}, table => [index("wallet_transactions_user_idx").on(table.userId)]);
+}, table => [index("wallet_transactions_user_idx").on(table.userId), uniqueIndex("wallet_transactions_dedupe_unique").on(table.dedupeKey)]);
 
 export const aiUsageEvents = mysqlTable("aiUsageEvents", {
   id: int("id").autoincrement().primaryKey(),

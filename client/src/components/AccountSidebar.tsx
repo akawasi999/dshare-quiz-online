@@ -1,10 +1,10 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { CreditCard, GraduationCap, HandHeart, History, LayoutDashboard, LogOut, PlusCircle, Sparkles, Trophy, UserRound, UsersRound } from "lucide-react";
+import { CreditCard, GraduationCap, HandHeart, History, LayoutDashboard, LogOut, Medal, PlusCircle, Sparkles, Target, Trophy, UserRound, UsersRound } from "lucide-react";
 import { useLocation } from "wouter";
 import { ROUTES } from "@/lib/routes";
 
 const links = [
-  [LayoutDashboard, "Bảng điều khiển", ROUTES.account], [PlusCircle, "Quiz của tôi", ROUTES.myQuizzes], [GraduationCap, "Làm Quiz", ROUTES.explore], [Trophy, "Bảng xếp hạng", ROUTES.leaderboard], [UsersRound, "Mời bạn bè", ROUTES.referrals], [UserRound, "Thông tin cá nhân", `${ROUTES.account}#thiet-lap`], [CreditCard, "Nạp Point", ROUTES.billing], [Sparkles, "Nâng cấp tài khoản", ROUTES.pricing], [History, "Lịch sử giao dịch", ROUTES.wallet], [HandHeart, "Hỗ trợ", "mailto:support@dshare.vn"],
+  [LayoutDashboard, "Bảng điều khiển", ROUTES.account], [Target, "Nhiệm vụ", ROUTES.missions], [Medal, "Thành tích", ROUTES.achievements], [PlusCircle, "Quiz của tôi", ROUTES.myQuizzes], [GraduationCap, "Làm Quiz", ROUTES.explore], [Trophy, "Bảng xếp hạng", ROUTES.leaderboard], [UsersRound, "Mời bạn bè", ROUTES.referrals], [UserRound, "Thông tin cá nhân", `${ROUTES.account}#thiet-lap`], [CreditCard, "Nạp Point", ROUTES.billing], [Sparkles, "Nâng cấp tài khoản", ROUTES.pricing], [History, "Lịch sử giao dịch", ROUTES.wallet], [HandHeart, "Hỗ trợ", "mailto:support@dshare.vn"],
 ] as const;
 
 export default function AccountSidebar() {

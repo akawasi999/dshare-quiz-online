@@ -16,14 +16,17 @@ import {
 	seoSettings,
 	subscriptionPlans,
 	subjects,
-  users,
-  walletTransactions,
+	  users,
+	  walletTransactions,
+	  xpLevels,
+	  xpTransactions,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { sortLeaderboardEntries } from "./leaderboard";
 import { scoreQuiz } from "./quizEngine";
 import { getTrueFalseStatements } from "../shared/questionValidation";
 import { getEffectiveTier } from "./membershipUtils";
+import { processGamificationForAttempt } from "./gamification";
 import { getQuotaPeriod } from "./quotaUtils";
 
 export const DEFAULT_QUIZ_COVER_URL = "/manus-storage/dshare-default-quiz-cover_d96ff2fa.png";
@@ -346,30 +349,47 @@ export async function submitAttempt(attemptId: number, userId: number) {
   const isFirstCompletion = priorCompletions.length === 0;
   const isPersonalRecord = summary.scorePercent > previousBest;
   const isQuizRecord = summary.scorePercent > previousQuizBest;
-  await db.update(attempts).set({
-    status: "submitted",
-    completedAt: new Date(),
-    score: summary.scorePercent,
-    correctCount: summary.correctCount,
-    passed,
-  }).where(eq(attempts.id, attemptId));
+  await ensureLearnerProfile(userId);
+  const completedAt = new Date();
+  const gamification = await db.transaction(async tx => {
+    const updated = await tx.update(attempts).set({
+      status: "submitted",
+      completedAt,
+      score: summary.scorePercent,
+      correctCount: summary.correctCount,
+      passed,
+    }).where(and(eq(attempts.id, attemptId), eq(attempts.status, "in_progress")));
+    if (!updated[0].affectedRows) throw new Error("Attempt has already been submitted");
 
-  if (passed && detail.quiz.completionReward > 0) {
-    const profile = await ensureLearnerProfile(userId);
-    if (profile) {
+    if (passed && detail.quiz.completionReward > 0) {
+      const profile = (await tx.select().from(learnerProfiles).where(eq(learnerProfiles.userId, userId)).limit(1))[0];
+      if (!profile) throw new Error("Learner profile not found");
       const balanceAfter = profile.pointBalance + detail.quiz.completionReward;
-      await db.update(learnerProfiles).set({ pointBalance: balanceAfter }).where(eq(learnerProfiles.id, profile.id));
-      await db.insert(walletTransactions).values({
+      await tx.update(learnerProfiles).set({ pointBalance: balanceAfter }).where(eq(learnerProfiles.id, profile.id));
+      await tx.insert(walletTransactions).values({
         userId,
         type: "quiz_reward",
         amount: detail.quiz.completionReward,
+        balanceBefore: profile.pointBalance,
         balanceAfter,
         description: `Thưởng hoàn thành: ${detail.quiz.title}`,
         referenceType: "attempt",
         referenceId: attemptId,
+        dedupeKey: `attempt:${attemptId}:point-reward`,
+        metadata: { quizId: detail.quiz.id, scorePercent: summary.scorePercent },
       });
     }
-  }
+    return processGamificationForAttempt(tx, {
+      userId,
+      attemptId,
+      quizId: detail.quiz.id,
+      quizTitle: detail.quiz.title,
+      scorePercent: summary.scorePercent,
+      passed,
+      questionCount: questionSet.length,
+      completedAt,
+    });
+  });
   const selectedByQuestion = new Map(answers.map(answer => [answer.questionId, answer.selectedOptionIds]));
   const payloadByQuestion = new Map(answers.map(answer => [answer.questionId, answer.answerPayload]));
   const correctnessByQuestion = new Map(summary.answerResults.map(result => [result.questionId, result.isCorrect]));
@@ -385,7 +405,7 @@ export async function submitAttempt(attemptId: number, userId: number) {
     isCorrect: correctnessByQuestion.get(row.question.id) ?? false,
     options: row.options.map(option => ({ id: option.id, body: option.body })),
   }));
-  return { ...summary, passed, quiz: detail.quiz, review, isFirstCompletion, isPersonalRecord, isQuizRecord };
+  return { ...summary, passed, quiz: detail.quiz, review, isFirstCompletion, isPersonalRecord, isQuizRecord, gamification };
 }
 
 export async function logSecurityEvent(attemptId: number, eventType: "copy" | "paste" | "context_menu" | "tab_hidden" | "fullscreen_exit") {
@@ -412,6 +432,48 @@ export async function getLeaderboard(quizId?: number) {
     .orderBy(desc(bestScore), desc(completedCount), asc(attempts.userId))
     .limit(20);
   return sortLeaderboardEntries(rows);
+}
+
+export async function getXpLeaderboard(period: "all" | "week" | "month" = "all") {
+  const db = await getDb();
+  if (!db) return [];
+  if (period === "all") {
+    const rows = await db.select({
+      userId: users.id,
+      name: users.name,
+      xp: learnerProfiles.xpBalance,
+      levelName: xpLevels.name,
+      levelOrder: xpLevels.displayOrder,
+      currentStreak: learnerProfiles.currentStreak,
+    }).from(learnerProfiles)
+      .innerJoin(users, eq(learnerProfiles.userId, users.id))
+      .leftJoin(xpLevels, eq(learnerProfiles.currentLevelId, xpLevels.id))
+      .where(sql`${learnerProfiles.xpBalance} > 0`)
+      .orderBy(desc(learnerProfiles.xpBalance), desc(learnerProfiles.currentStreak), asc(users.id))
+      .limit(50);
+    return rows.map(row => ({ ...row, xp: Number(row.xp ?? 0) }));
+  }
+  const now = new Date();
+  const start = period === "week"
+    ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - ((now.getUTCDay() + 6) % 7)))
+    : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const earned = sql<number>`coalesce(sum(case when ${xpTransactions.amount} > 0 then ${xpTransactions.amount} else 0 end), 0)`;
+  const rows = await db.select({
+    userId: users.id,
+    name: users.name,
+    xp: earned,
+    levelName: xpLevels.name,
+    levelOrder: xpLevels.displayOrder,
+    currentStreak: learnerProfiles.currentStreak,
+  }).from(xpTransactions)
+    .innerJoin(users, eq(xpTransactions.userId, users.id))
+    .innerJoin(learnerProfiles, eq(learnerProfiles.userId, users.id))
+    .leftJoin(xpLevels, eq(learnerProfiles.currentLevelId, xpLevels.id))
+    .where(sql`${xpTransactions.createdAt} >= ${start}`)
+    .groupBy(users.id, users.name, xpLevels.name, xpLevels.displayOrder, learnerProfiles.currentStreak)
+    .orderBy(desc(earned), desc(learnerProfiles.currentStreak), asc(users.id))
+    .limit(50);
+  return rows.map(row => ({ ...row, xp: Number(row.xp ?? 0) }));
 }
 
 export async function getWalletTransactions(userId: number) {
