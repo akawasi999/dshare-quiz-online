@@ -38,6 +38,8 @@ describe("BrandSettingsPanel", () => {
     expect(screen.getAllByText("Bộ đề nổi bật").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "Footer" }));
     expect(screen.getByText("Footer Navigation theo cột")).toBeTruthy();
+    expect(screen.getByText("Mạng xã hội")).toBeTruthy();
+    expect(screen.getByLabelText("URL Facebook")).toBeTruthy();
     const first = screen.getByLabelText("Tên link Thông tin 1");
     const second = screen.getByLabelText("Tên link Hỗ trợ 1");
     fireEvent.dragStart(first.closest("[draggable=true]")!);

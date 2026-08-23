@@ -511,3 +511,7 @@
 - [x] Mở rộng Footer thành nhóm liên kết theo cột, tương thích cấu hình cũ.
 - [x] Xây dựng quản trị cột Footer, kéo-thả thứ tự cột và liên kết.
 - [x] Cập nhật preview công khai, responsive, regression và lưu checkpoint cho Footer nhiều cột.
+- [x] Rà soát Footer nhiều cột và các điểm hiển thị biểu tượng hiện có.
+- [x] Mở rộng dữ liệu Footer với icon liên kết và cấu hình mạng xã hội.
+- [x] Xây dựng Appearance quản trị biểu tượng và URL mạng xã hội.
+- [x] Cập nhật Footer công khai, preview, responsive, regression và lưu checkpoint.
