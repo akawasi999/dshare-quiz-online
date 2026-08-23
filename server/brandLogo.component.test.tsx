@@ -19,4 +19,11 @@ describe("BrandLogo", () => {
     expect(logo?.className).toContain("brightness-0");
     expect(logo?.className).toContain("invert");
   });
+
+  it("ưu tiên logo tùy chỉnh khi Appearance cung cấp đường dẫn ảnh", () => {
+    const { container } = render(<BrandLogo src="/manus-storage/custom-dshare-logo.png" monochrome />);
+    const logo = container.querySelector("img")!;
+    expect(logo.getAttribute("src")).toBe("/manus-storage/custom-dshare-logo.png");
+    expect(logo.className).not.toContain("brightness-0");
+  });
 });

@@ -502,3 +502,8 @@
 - [x] Chuyển các cấu hình SEO và Google từ Appearance sang Cài đặt.
 - [x] Bổ sung hoặc hoàn thiện mục Quiz Studio và Ảnh bìa Quiz mặc định theo phạm vi đặc tả.
 - [x] Kiểm thử persistence, responsive, accessibility, regression và lưu checkpoint cho Appearance.
+- [x] Rà soát điểm tích hợp logo Header, Footer Navigation và preview Appearance hiện có.
+- [x] Áp dụng logo tùy chỉnh Appearance vào Header công khai với fallback logo hệ thống.
+- [x] Thêm kéo-thả để sắp xếp Footer Navigation và lưu thứ tự trong Appearance.
+- [x] Mở rộng preview để mô phỏng toàn bộ trang công khai theo style đang chỉnh.
+- [x] Kiểm thử responsive, persistence, hồi quy và lưu checkpoint cho cập nhật Appearance mở rộng.

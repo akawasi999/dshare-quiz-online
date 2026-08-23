@@ -5,6 +5,7 @@ import { startLogin } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
 import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
+import { mergeAppearanceConfig } from "@/lib/appearanceConfig";
 import { cn } from "@/lib/utils";
 import { BadgeAlert, Bell, BookOpen, ChevronDown, CircleHelp, Globe2, LayoutDashboard, LifeBuoy, LogOut, Megaphone, Menu, Moon, ShieldCheck, Sparkles, Sun, UserRound, WalletCards, X, type LucideIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
@@ -74,6 +75,7 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const isDarkLogo = variant === "dark" || theme === "dark";
   const publicTopics = trpc.catalog.topics.useQuery(undefined, sharedDataQueryOptions);
   const managedNavigation = trpc.site.navigation.useQuery(undefined, sharedDataQueryOptions);
+  const appearance = trpc.branding.get.useQuery();
   const accountSummary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const notifications = trpc.learner.notifications.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const markNotificationRead = trpc.learner.markNotificationRead.useMutation({ onSuccess: () => void notifications.refetch() });
@@ -81,6 +83,8 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).filter(topic => topic.parentId === null).map(topic => ({ label: topic.name, href: `${ROUTES.explore}?topic=${encodeURIComponent(topic.slug)}`, depth: 0 }));
   const configuredNavigation: NavItem[] = (managedNavigation.data?.length ? managedNavigation.data.map(item => item.label === "Khám phá" ? { label: item.label, kind: "topics" as const } : { label: item.label, href: item.url }) : navigation);
   const navigationItems: NavItem[] = configuredNavigation.map(item => item.kind === "topics" ? { ...item, items: topicNavigationItems } : item);
+  const appearanceConfig = mergeAppearanceConfig(appearance.data?.styleConfig);
+  const configuredLogo = isDarkLogo ? appearanceConfig.assets.logoDark || appearanceConfig.assets.logoLight || appearanceConfig.assets.logo : appearanceConfig.assets.logo || appearanceConfig.assets.logoLight;
   const isAdmin = user?.role === "admin";
   const accountAvatarUrl = accountSummary.data?.profile?.avatarUrl?.trim() || null;
   const pointBalance = accountSummary.data?.profile?.pointBalance ?? 0;
@@ -98,7 +102,7 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
 
   return <header className="site-header relative z-40 border-b border-border bg-surface text-foreground" data-theme-variant={variant}>
     <div className="container flex h-[var(--site-header-height,68px)] items-center gap-4">
-      <Link href="/" className="group flex shrink-0 items-center" aria-label="Dshare Quiz Online"><BrandLogo monochrome={isDarkLogo} className="h-8 max-w-[122px] transition-transform duration-200 group-hover:scale-[1.02] sm:h-9 sm:max-w-[142px]" /></Link>
+      <Link href="/" className="group flex shrink-0 items-center" aria-label="Dshare Quiz Online"><BrandLogo src={configuredLogo || undefined} monochrome={isDarkLogo && !configuredLogo} className="h-8 max-w-[122px] transition-transform duration-200 group-hover:scale-[1.02] sm:h-9 sm:max-w-[142px]" /></Link>
       <nav className="site-header-navigation hidden min-w-0 flex-1 items-center gap-5 xl:gap-8 lg:flex" aria-label="Điều hướng chính">
         {navigationItems.map(item => item.href ? <Link key={item.label} href={item.href} className={cn("site-header-text site-header-nav-item rounded-md px-0 transition-[color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20", location === item.href ? "text-primary" : "text-muted-foreground hover:text-foreground")}><span className="site-header-nav-label">{item.label}</span></Link> : <NavDropdown key={item.label} item={item} open={openMenu === item.label} onOpen={() => openDropdown(item.label)} onClose={() => scheduleDropdownClose(item.label)} onToggle={() => { clearMenuCloseTimer(); setOpenMenu(item.label); }} onNavigate={() => { clearMenuCloseTimer(); setOpenMenu(null); }} />)}
       </nav>

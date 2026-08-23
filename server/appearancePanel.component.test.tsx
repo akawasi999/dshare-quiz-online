@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const refetch = vi.fn();
 const mutateAsync = vi.fn().mockResolvedValue({ success: true });
@@ -18,6 +18,8 @@ vi.mock("../client/src/lib/trpc", () => ({
 import BrandSettingsPanel from "../client/src/components/BrandSettingsPanel";
 
 describe("BrandSettingsPanel", () => {
+  afterEach(() => cleanup());
+
   it("hiển thị đầy đủ các nhóm Appearance và mục mở rộng Quiz Studio/Ảnh bìa", () => {
     render(<BrandSettingsPanel />);
     expect(screen.getByRole("navigation", { name: "Danh mục Appearance" })).toBeTruthy();
@@ -29,5 +31,18 @@ describe("BrandSettingsPanel", () => {
     expect(screen.getByText("Tab Câu hỏi")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Ảnh bìa Quiz" }));
     expect(screen.getByText("Ảnh bìa Quiz mặc định")).toBeTruthy();
+  });
+
+  it("mô phỏng toàn trang công khai và đổi thứ tự Footer Navigation bằng kéo-thả", () => {
+    render(<BrandSettingsPanel />);
+    expect(screen.getAllByText("Bộ đề nổi bật").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Footer" }));
+    const first = screen.getByLabelText("Tên footer link 1");
+    const second = screen.getByLabelText("Tên footer link 2");
+    fireEvent.dragStart(first.closest("[draggable=true]")!);
+    fireEvent.dragOver(second.closest("[draggable=true]")!);
+    fireEvent.drop(second.closest("[draggable=true]")!);
+    expect(screen.getByLabelText("Tên footer link 1").getAttribute("value")).toBe("Bảo mật");
+    expect(screen.getByLabelText("Kéo thả Điều khoản")).toBeTruthy();
   });
 });
