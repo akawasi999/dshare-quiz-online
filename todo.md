@@ -515,3 +515,7 @@
 - [x] Mở rộng dữ liệu Footer với icon liên kết và cấu hình mạng xã hội.
 - [x] Xây dựng Appearance quản trị biểu tượng và URL mạng xã hội.
 - [x] Cập nhật Footer công khai, preview, responsive, regression và lưu checkpoint.
+- [x] Rà soát cấu hình mạng xã hội Footer và luồng lưu Appearance hiện có.
+- [x] Mở rộng cấu hình màu sắc, hình dáng và kiểm tra URL cho social icon.
+- [x] Xây dựng điều khiển Appearance và tooltip social Footer.
+- [x] Kiểm thử validation, tooltip, responsive, hồi quy và lưu checkpoint.

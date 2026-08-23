@@ -40,6 +40,9 @@ describe("BrandSettingsPanel", () => {
     expect(screen.getByText("Footer Navigation theo cột")).toBeTruthy();
     expect(screen.getByText("Mạng xã hội")).toBeTruthy();
     expect(screen.getByLabelText("URL Facebook")).toBeTruthy();
+    expect(screen.getByLabelText("Hình dáng icon mạng xã hội")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("URL Facebook"), { target: { value: "facebook-sai" } });
+    expect(screen.getByRole("alert")).toBeTruthy();
     const first = screen.getByLabelText("Tên link Thông tin 1");
     const second = screen.getByLabelText("Tên link Hỗ trợ 1");
     fireEvent.dragStart(first.closest("[draggable=true]")!);

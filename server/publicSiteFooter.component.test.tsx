@@ -20,6 +20,7 @@ describe("PublicSiteFooter", () => {
     expect(screen.getByRole("link", { name: "Liên hệ" }).getAttribute("href")).toBe("/account");
     expect(screen.queryByRole("link", { name: "Ẩn" })).toBeNull();
     expect(screen.getByRole("link", { name: "Facebook" }).getAttribute("href")).toBe("https://facebook.com/dshare");
+    expect(screen.getByRole("link", { name: "Facebook" }).className).toContain("rounded-full");
     expect(screen.queryByRole("link", { name: "Instagram" })).toBeNull();
     expect(container.querySelectorAll("svg").length).toBeGreaterThan(0);
   });
