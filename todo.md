@@ -530,3 +530,7 @@
 - [x] Xác định dải liên kết phụ Footer cần loại bỏ và regression liên quan.
 - [x] Gỡ dải liên kết phụ, điều chỉnh spacing Footer còn lại.
 - [x] Kiểm thử Footer desktop/mobile, hồi quy và lưu checkpoint.
+- [x] Rà soát các trang công khai và cấu trúc Footer hiện có.
+- [x] Áp dụng Footer chính thống nhất, tối ưu khoảng cuối các trang.
+- [x] Bổ sung liên kết Điều khoản sử dụng và Chính sách bảo mật trong Footer.
+- [x] Kiểm thử Footer desktop/mobile, route công khai, hồi quy và lưu checkpoint.

@@ -14,6 +14,8 @@ export const ROUTES = {
   quizBuilder: "/quiz/create",
   myQuizzes: "/my-quizzes",
   aiAssistant: "/ai-assistant",
+  terms: "/terms",
+  privacy: "/privacy",
   admin: "/admin",
   adminDashboard: "/admin/dashboard",
   adminTopics: "/admin/learning/topics",

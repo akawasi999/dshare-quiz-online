@@ -25,6 +25,8 @@ describe("PublicSiteFooter", () => {
     expect(screen.getByRole("link", { name: "Facebook" }).parentElement?.className).toContain("footer-social-hide-mobile");
     expect(screen.getByRole("link", { name: "Facebook" }).getAttribute("style")).toContain("width: 44px");
     expect(screen.queryByRole("link", { name: "Instagram" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Điều khoản sử dụng" }).getAttribute("href")).toBe("/terms");
+    expect(screen.getByRole("link", { name: "Chính sách bảo mật" }).getAttribute("href")).toBe("/privacy");
     expect(container.querySelectorAll("svg").length).toBeGreaterThan(0);
   });
 });

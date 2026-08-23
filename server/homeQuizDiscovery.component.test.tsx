@@ -46,6 +46,12 @@ describe("Home quiz discovery", () => {
     expect(screen.queryByRole("link", { name: "Thư viện" })).toBeNull();
   });
 
+  it("chỉ giữ một khu vực giới thiệu cuối trang với khoảng cuối gọn", () => {
+    const { container } = render(<Home />);
+    expect(screen.getAllByText("Mỗi kết quả đều cho bạn biết bước tiếp theo.")).toHaveLength(1);
+    expect(container.querySelector("section.container.pb-10.pt-8")).toBeTruthy();
+  });
+
   it("supports search and reward sorting for visible Quiz Cards", async () => {
     const user = userEvent.setup();
     render(<Home />);
