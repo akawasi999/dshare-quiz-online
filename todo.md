@@ -534,3 +534,7 @@
 - [x] Áp dụng Footer chính thống nhất, tối ưu khoảng cuối các trang.
 - [x] Bổ sung liên kết Điều khoản sử dụng và Chính sách bảo mật trong Footer.
 - [x] Kiểm thử Footer desktop/mobile, route công khai, hồi quy và lưu checkpoint.
+- [x] Rà soát mô hình cài đặt, routing công khai và các panel CPanel hiện có.
+- [x] Mở rộng dữ liệu và API quản trị cho nội dung pháp lý cùng thông tin hỗ trợ.
+- [x] Xây dựng CPanel quản trị pháp lý, trang công khai và liên kết hỗ trợ.
+- [x] Kiểm thử persistence, ngày cập nhật, Footer, responsive và lưu checkpoint.

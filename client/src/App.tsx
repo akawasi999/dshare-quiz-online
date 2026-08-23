@@ -4,6 +4,7 @@ import Admin from "@/pages/Admin";
 import Home from "@/pages/Home";
 import Leaderboard from "@/pages/Leaderboard";
 import Legal from "@/pages/Legal";
+import Support from "@/pages/Support";
 import NotFound from "@/pages/NotFound";
 import Pricing from "@/pages/Pricing";
 import Profile from "./pages/Profile";
@@ -48,6 +49,7 @@ function Router() {
     <Route path={ROUTES.aiAssistant}>{() => <LearnerAccountPage Page={AIStudyAssistant} />}</Route>
     <Route path={ROUTES.terms}>{() => <Legal document="terms" />}</Route>
     <Route path={ROUTES.privacy}>{() => <Legal document="privacy" />}</Route>
+    <Route path={ROUTES.support} component={Support} />
     <Route path={ROUTES.admin} component={Admin} />
     <Route path={ROUTES.adminDashboard} component={Admin} />
     <Route path={ROUTES.adminTopics} component={Admin} />

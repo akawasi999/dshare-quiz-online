@@ -8,11 +8,13 @@ const siteSettingsData = { settings: { homePageUrl: "https://dsharequiz-jxleeaps
 const seoSettingsData = { googleAnalyticsMeasurementId: "G-TEST1234", googleSearchConsoleVerification: "verification-token", defaultQuizCoverUrl: null };
 vi.mock("../client/src/lib/trpc", () => ({
   trpc: {
-    useUtils: () => ({ site: { navigation: { invalidate: vi.fn() } } }),
+    useUtils: () => ({ site: { navigation: { invalidate: vi.fn() }, legalSupport: { invalidate: vi.fn() } }, admin: { siteSettings: { invalidate: vi.fn() } } }),
     admin: {
       siteSettings: { useQuery: () => ({ data: siteSettingsData, isLoading: false, error: null, refetch: vi.fn() }) },
       seoSettings: { useQuery: () => ({ data: seoSettingsData, isLoading: false, error: null, refetch: vi.fn() }) },
       saveSiteSettings: { useMutation: () => ({ mutate, isPending: false }) },
+      saveLegalContent: { useMutation: () => ({ mutate, isPending: false }) },
+      saveSupportContent: { useMutation: () => ({ mutate, isPending: false }) },
       saveSeoSettings: { useMutation: () => ({ mutate, isPending: false }) },
       saveNavigationItem: { useMutation: () => ({ mutate, isPending: false }) },
       deleteNavigationItem: { useMutation: () => ({ mutate, isPending: false }) },
@@ -31,6 +33,9 @@ describe("SystemSettingsPanel", () => {
     fireEvent.click(screen.getByRole("tab", { name: "SEO & Google" }));
     expect(screen.getByLabelText("Google Analytics Measurement ID")).toBeTruthy();
     expect(screen.getByLabelText("Google Search Console verification")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Pháp lý & Hỗ trợ" }));
+    expect(screen.getByLabelText("Nội dung Điều khoản sử dụng")).toBeTruthy();
+    expect(screen.getByLabelText("Email hỗ trợ")).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Navigation" }));
     expect(screen.getByText("Quản lý các mục điều hướng trong menu website.")).toBeTruthy();
     expect(screen.getByText("Trang chủ")).toBeTruthy();

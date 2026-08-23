@@ -1013,6 +1013,11 @@ export const appRouter = router({
       if (!db) return [];
       return db.select({ id: siteNavigationItems.id, label: siteNavigationItems.label, url: siteNavigationItems.url, position: siteNavigationItems.position }).from(siteNavigationItems).where(eq(siteNavigationItems.isEnabled, true)).orderBy(asc(siteNavigationItems.position));
     }),
+    legalSupport: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return null;
+      return (await db.select({ termsContent: siteSettings.termsContent, termsUpdatedAt: siteSettings.termsUpdatedAt, privacyContent: siteSettings.privacyContent, privacyUpdatedAt: siteSettings.privacyUpdatedAt, supportTitle: siteSettings.supportTitle, supportDescription: siteSettings.supportDescription, supportEmail: siteSettings.supportEmail, supportPhone: siteSettings.supportPhone, supportHours: siteSettings.supportHours, supportUpdatedAt: siteSettings.supportUpdatedAt }).from(siteSettings).limit(1))[0] ?? null;
+    }),
   }),
   admin: router({
     siteSettings: adminProcedure.query(async () => {
@@ -1035,6 +1040,26 @@ export const appRouter = router({
       if (current) await db.update(siteSettings).set(payload).where(eq(siteSettings.id, current.id)); else await db.insert(siteSettings).values(payload);
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "site.settings_updated", entityType: "site_settings", metadata: { homePageUrl: payload.homePageUrl, boardTitle: payload.boardTitle } });
       return { success: true, ...payload };
+    }),
+    saveLegalContent: adminProcedure.input(z.object({ document: z.enum(["terms", "privacy"]), content: z.string().trim().min(40).max(20000) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu nội dung pháp lý." });
+      const now = new Date();
+      const payload = input.document === "terms" ? { termsContent: input.content, termsUpdatedAt: now } : { privacyContent: input.content, privacyUpdatedAt: now };
+      const current = (await db.select({ id: siteSettings.id }).from(siteSettings).limit(1))[0];
+      if (current) await db.update(siteSettings).set(payload).where(eq(siteSettings.id, current.id)); else await db.insert(siteSettings).values(payload);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: `site.${input.document}_updated`, entityType: "site_settings", metadata: { length: input.content.length } });
+      return { success: true, updatedAt: now };
+    }),
+    saveSupportContent: adminProcedure.input(z.object({ title: z.string().trim().min(2).max(180), description: z.string().trim().min(20).max(5000), email: z.string().trim().email().max(320).nullable(), phone: z.string().trim().max(80).nullable(), hours: z.string().trim().max(320).nullable() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu thông tin hỗ trợ." });
+      const now = new Date();
+      const payload = { supportTitle: input.title, supportDescription: input.description, supportEmail: input.email || null, supportPhone: input.phone || null, supportHours: input.hours || null, supportUpdatedAt: now };
+      const current = (await db.select({ id: siteSettings.id }).from(siteSettings).limit(1))[0];
+      if (current) await db.update(siteSettings).set(payload).where(eq(siteSettings.id, current.id)); else await db.insert(siteSettings).values(payload);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "site.support_updated", entityType: "site_settings", metadata: { hasEmail: Boolean(payload.supportEmail), hasPhone: Boolean(payload.supportPhone) } });
+      return { success: true, updatedAt: now };
     }),
     saveNavigationItem: adminProcedure.input(z.object({ id: z.number().int().positive().optional(), label: z.string().trim().min(1).max(100), url: z.string().trim().min(1).max(1024).refine(value => value.startsWith("/") || /^https?:\/\//.test(value), "URL phải bắt đầu bằng / hoặc http(s)://"), position: z.number().int().min(1).max(999), isEnabled: z.boolean() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();

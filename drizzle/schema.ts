@@ -61,6 +61,16 @@ export const siteSettings = mysqlTable("siteSettings", {
   boardTitle: varchar("boardTitle", { length: 180 }).default("Dshare Quiz Online").notNull(),
   metaDescription: varchar("metaDescription", { length: 320 }).default("Nền tảng tạo Quiz, học tập và chia sẻ kiến thức trực tuyến.").notNull(),
   defaultEmailAddress: varchar("defaultEmailAddress", { length: 320 }),
+  termsContent: text("termsContent"),
+  termsUpdatedAt: timestamp("termsUpdatedAt"),
+  privacyContent: text("privacyContent"),
+  privacyUpdatedAt: timestamp("privacyUpdatedAt"),
+  supportTitle: varchar("supportTitle", { length: 180 }),
+  supportDescription: text("supportDescription"),
+  supportEmail: varchar("supportEmail", { length: 320 }),
+  supportPhone: varchar("supportPhone", { length: 80 }),
+  supportHours: varchar("supportHours", { length: 320 }),
+  supportUpdatedAt: timestamp("supportUpdatedAt"),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 

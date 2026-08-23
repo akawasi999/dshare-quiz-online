@@ -27,6 +27,7 @@ describe("PublicSiteFooter", () => {
     expect(screen.queryByRole("link", { name: "Instagram" })).toBeNull();
     expect(screen.getByRole("link", { name: "Điều khoản sử dụng" }).getAttribute("href")).toBe("/terms");
     expect(screen.getByRole("link", { name: "Chính sách bảo mật" }).getAttribute("href")).toBe("/privacy");
+    expect(screen.getByRole("link", { name: "Liên hệ & Hỗ trợ" }).getAttribute("href")).toBe("/support");
     expect(container.querySelectorAll("svg").length).toBeGreaterThan(0);
   });
 });

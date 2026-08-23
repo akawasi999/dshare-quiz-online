@@ -16,6 +16,7 @@ export const ROUTES = {
   aiAssistant: "/ai-assistant",
   terms: "/terms",
   privacy: "/privacy",
+  support: "/support",
   admin: "/admin",
   adminDashboard: "/admin/dashboard",
   adminTopics: "/admin/learning/topics",
