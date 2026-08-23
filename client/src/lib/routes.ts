@@ -28,6 +28,7 @@ export const ROUTES = {
   adminUserGroups: "/admin/users/groups",
   adminErrors: "/admin/moderation/errors",
   adminAnalytics: "/admin/analytics",
+  adminSeoPreview: "/admin/seo-preview",
   adminMonitoring: "/admin/system/monitoring",
   adminLogs: "/admin/system/logs",
   adminAi: "/admin/system/ai",

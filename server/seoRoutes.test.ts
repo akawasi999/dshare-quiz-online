@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { buildSeoHead, buildSitemapXml, legacyRedirectMiddleware, resolveLegacyRedirect, SITEMAP_PATHS, SITE_ORIGIN } from "./seoRoutes";
+import { buildImageSitemapXml, buildQuizJsonLd, buildSeoHead, buildSitemapXml, legacyRedirectMiddleware, resolveLegacyRedirect, SITEMAP_PATHS, SITE_ORIGIN } from "./seoRoutes";
 
 describe("SEO routes", () => {
   it("chuyển URL tiếng Việt cũ sang route tiếng Anh, kể cả trang kết quả động", () => {
@@ -35,5 +35,15 @@ describe("SEO routes", () => {
     expect(head).toContain("twitter:card");
     expect(head).toContain("google-site-verification");
     expect(head).toContain("googletagmanager.com/gtag/js?id=G-ABCD1234");
+  });
+
+  it("tạo sitemap hình ảnh và JSON-LD Quiz không tiết lộ đáp án", () => {
+    const imageSitemap = buildImageSitemapXml([{ quizId: 88, title: "Excel cơ bản", coverImageUrl: "/manus-storage/excel-cover.png" }]);
+    const jsonLd = buildQuizJsonLd({ quizId: 88, title: "Excel cơ bản", summary: "Ôn tập Excel.", image: "/manus-storage/excel-cover.png", datePublished: new Date("2026-08-23T00:00:00.000Z"), category: "Tin học", questions: [{ prompt: "Hàm SUM dùng để làm gì?" }] });
+    expect(imageSitemap).toContain("xmlns:image");
+    expect(imageSitemap).toContain("/manus-storage/excel-cover.png");
+    expect(jsonLd).toMatchObject({ "@type": "LearningResource", learningResourceType: "Quiz" });
+    expect(JSON.stringify(jsonLd)).toContain("Hàm SUM dùng để làm gì?");
+    expect(JSON.stringify(jsonLd)).not.toContain("isCorrect");
   });
 });

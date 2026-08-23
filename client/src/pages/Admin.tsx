@@ -20,6 +20,7 @@ import ContentManagementPanel from "@/components/ContentManagementPanel";
 import TopicManagementPanel from "@/components/TopicManagementPanel";
 import QuizSystemPanel from "@/components/QuizSystemPanel";
 import AnalyticsControlPanel from "@/components/AnalyticsControlPanel";
+import OpenGraphPreviewPanel from "@/components/OpenGraphPreviewPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,7 +53,7 @@ export default function Admin() {
   if (loading) return <main className="grid min-h-screen place-items-center bg-[#ebf8ff] p-6"><p role="status" aria-live="polite" className="text-sm font-medium text-[#617786]">Đang kiểm tra quyền truy cập quản trị…</p></main>;
   if (user?.role !== "admin") return <main className="grid min-h-screen place-items-center bg-[#f4f7ff] p-6"><div className="max-w-md rounded-[28px] bg-white p-8 text-center shadow-sm"><ShieldAlert className="mx-auto text-[#b66b59]" size={30} /><h1 className="mt-4 font-serif text-3xl font-semibold text-[#172554]">Khu vực hạn chế</h1><p className="mt-3 text-sm leading-6 text-[#617786]">Chỉ tài khoản quản trị có quyền truy cập vào trung tâm điều hành Dshare.</p></div></main>;
   const canonicalLocation = {
-    "/admin": "/quan-tri", "/admin/dashboard": "/quan-tri", "/admin/learning/topics": "/quan-tri/chu-de", "/admin/learning/quizzes": "/quan-tri/quiz-system", "/admin/gamification/points": "/quan-tri/point", "/admin/gamification/xp": "/quan-tri/xp", "/admin/users": "/quan-tri/nguoi-dung", "/admin/users/groups": "/quan-tri/nhom-nguoi-dung", "/admin/moderation/errors": "/quan-tri/bao-loi", "/admin/analytics": "/quan-tri/bao-cao", "/admin/system/monitoring": "/quan-tri/live-monitoring", "/admin/system/logs": "/quan-tri/nhat-ky", "/admin/appearance/theme": "/quan-tri/thuong-hieu",
+    "/admin": "/quan-tri", "/admin/dashboard": "/quan-tri", "/admin/learning/topics": "/quan-tri/chu-de", "/admin/learning/quizzes": "/quan-tri/quiz-system", "/admin/gamification/points": "/quan-tri/point", "/admin/gamification/xp": "/quan-tri/xp", "/admin/users": "/quan-tri/nguoi-dung", "/admin/users/groups": "/quan-tri/nhom-nguoi-dung", "/admin/moderation/errors": "/quan-tri/bao-loi", "/admin/analytics": "/quan-tri/bao-cao", "/admin/seo-preview": "/quan-tri/seo-preview", "/admin/system/monitoring": "/quan-tri/live-monitoring", "/admin/system/logs": "/quan-tri/nhat-ky", "/admin/appearance/theme": "/quan-tri/thuong-hieu",
   }[location] ?? location;
   let content = <AdminOperationsDashboard />;
   if (canonicalLocation === "/quan-tri/chu-de") content = <TopicManagementPanel />;
@@ -60,6 +61,7 @@ export default function Admin() {
   if (canonicalLocation === "/quan-tri/nguoi-dung") content = <UserManagementPanel />;
   if (canonicalLocation === "/quan-tri/nhom-nguoi-dung") content = <MembershipGroupPermissionsPanel />;
   if (canonicalLocation === "/quan-tri/bao-cao") content = <AnalyticsControlPanel />;
+  if (canonicalLocation === "/quan-tri/seo-preview") content = <OpenGraphPreviewPanel />;
   if (canonicalLocation === "/quan-tri/live-monitoring") content = <LiveMonitoringPanel />;
   if (canonicalLocation === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
   if (canonicalLocation === "/quan-tri/point") content = <AdminPointLedgerPanel />;

@@ -481,3 +481,7 @@
 - [x] Tích hợp Google Analytics và chuẩn bị xác minh Google Search Console.
 - [x] Kiểm thử SEO, analytics, routes, responsive và lưu checkpoint.
 - [x] Thêm CPanel để quản trị viên nhập và cập nhật cấu hình Google khi cần.
+- [x] Rà soát dữ liệu Quiz/câu hỏi công khai và điểm tích hợp CPanel cho SEO.
+- [x] Phát JSON-LD và sitemap hình ảnh cho từng Quiz public có ảnh bìa.
+- [x] Thêm xem trước Open Graph cho từng Quiz trong CPanel.
+- [x] Kiểm thử SEO, CPanel, responsive và lưu checkpoint.

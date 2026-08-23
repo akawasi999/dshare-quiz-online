@@ -55,6 +55,7 @@ function Router() {
     <Route path={ROUTES.adminUserGroups} component={Admin} />
     <Route path={ROUTES.adminErrors} component={Admin} />
     <Route path={ROUTES.adminAnalytics} component={Admin} />
+    <Route path={ROUTES.adminSeoPreview} component={Admin} />
     <Route path={ROUTES.adminMonitoring} component={Admin} />
     <Route path={ROUTES.adminLogs} component={Admin} />
     <Route path={ROUTES.adminAi} component={Admin} />

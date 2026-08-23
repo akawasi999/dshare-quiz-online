@@ -32,7 +32,7 @@ import {
 import { startLogin } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Activity, Award, Bell, BookOpenCheck, Bot, ChartNoAxesCombined, ChevronRight, CircleDollarSign, Command, FileWarning, FolderTree, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, Search, ScrollText, Sun, UserRound, Users, UsersRound, Wifi, WifiOff } from "lucide-react";
+import { Activity, Award, Bell, BookOpenCheck, Bot, ChartNoAxesCombined, ChevronRight, CircleDollarSign, Command, FileWarning, FolderTree, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, Search, ScrollText, Share2, Sun, UserRound, Users, UsersRound, Wifi, WifiOff } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
@@ -55,7 +55,7 @@ const navigationSections: NavigationSection[] = [
     { icon: UsersRound, label: "Nhóm người dùng", path: ROUTES.adminUserGroups, aliases: ["/quan-tri/nhom-nguoi-dung"], description: "Nhóm, gói và quyền liên kết" },
   ] },
   { label: "Moderation", items: [{ icon: FileWarning, label: "Báo lỗi", path: ROUTES.adminErrors, aliases: ["/quan-tri/bao-loi"], description: "Hàng đợi kiểm duyệt báo lỗi" }] },
-  { label: "Analytics", items: [{ icon: ChartNoAxesCombined, label: "Tổng quan", path: ROUTES.adminAnalytics, aliases: ["/quan-tri/bao-cao"], description: "Phân tích học tập và Point" }] },
+  { label: "Analytics", items: [{ icon: ChartNoAxesCombined, label: "Tổng quan", path: ROUTES.adminAnalytics, aliases: ["/quan-tri/bao-cao"], description: "Phân tích học tập và Point" }, { icon: Share2, label: "Open Graph Preview", path: ROUTES.adminSeoPreview, aliases: ["/quan-tri/seo-preview"], description: "Xem trước thẻ chia sẻ Quiz" }] },
   { label: "System", items: [
     { icon: Activity, label: "Live Monitoring", path: ROUTES.adminMonitoring, aliases: ["/quan-tri/live-monitoring"], description: "Giám sát phiên và vận hành" },
     { icon: ScrollText, label: "Activity Logs", path: ROUTES.adminLogs, aliases: ["/quan-tri/nhat-ky"], description: "Nhật ký kiểm toán" },

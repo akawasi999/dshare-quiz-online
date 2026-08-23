@@ -1,0 +1,11 @@
+import { ExternalLink, ImageIcon, Link2, Share2 } from "lucide-react";
+
+const siteOrigin = "https://dsharequiz-jxleeaps.manus.space";
+
+export type OpenGraphQuiz = { id: number; title: string; summary?: string | null; coverImageUrl?: string | null; status?: string };
+
+export default function OpenGraphQuizPreview({ quiz }: { quiz: OpenGraphQuiz }) {
+  const url = `${siteOrigin}/quiz/${quiz.id}`;
+  const hasImage = Boolean(quiz.coverImageUrl);
+  return <section className="overflow-hidden rounded-[var(--radius-md-token)] border border-border bg-muted/45"><div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3"><div className="flex items-center gap-2"><Share2 size={15} className="text-primary" /><div><p className="text-xs font-semibold text-foreground">Xem trước Open Graph</p><p className="mt-0.5 text-[10px] text-text-muted">Thẻ chia sẻ cho URL công khai của Quiz</p></div></div><a href={url} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-1 rounded-md px-2 text-[11px] font-semibold text-primary hover:bg-primary-light"><ExternalLink size={13} />Mở</a></div><div className="grid gap-4 p-4 sm:grid-cols-[170px_minmax(0,1fr)]"><div className="grid aspect-[1.91/1] place-items-center overflow-hidden rounded-[var(--radius-sm-token)] bg-[linear-gradient(135deg,var(--primary),var(--accent))] text-white">{hasImage ? <img src={quiz.coverImageUrl!} alt={`Ảnh chia sẻ ${quiz.title}`} className="size-full object-cover" /> : <ImageIcon size={26} aria-label="Chưa có ảnh bìa" />}</div><div className="min-w-0"><p className="truncate text-[10px] font-semibold text-text-muted">dsharequiz-jxleeaps.manus.space</p><h3 className="mt-1 line-clamp-2 text-sm font-bold leading-5 text-foreground">{quiz.title} · Dshare Quiz Online</h3><p className="mt-1 line-clamp-2 text-xs leading-5 text-text-secondary">{quiz.summary?.trim() || "Làm Quiz và ôn tập trực tuyến trên Dshare Quiz Online."}</p><p className="mt-3 flex items-center gap-1 truncate font-mono text-[10px] text-text-muted"><Link2 size={12} />{url}</p>{!hasImage ? <p className="mt-2 text-[10px] text-warning">Chưa có ảnh bìa; chia sẻ sẽ dùng thẻ tóm tắt không có ảnh.</p> : null}</div></div></section>;
+}
