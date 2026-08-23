@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   summary: { data: { profile: { tier: "basic", pointBalance: 0, avatarUrl: "", bio: "", learningGoal: "", notificationPreferences: { studyReminders: true, resultUpdates: true, platformUpdates: true } }, stats: { completed: 0, averageScore: 0, passedCount: 0 }, currentPlan: null as null | { name: string; tier: string; monthlyPrice: number; promoPrice: number | null; benefits: string[] | null }, upgradePlans: [] as Array<{ name: string; tier: "pro" | "premium"; description: string | null; payosEnabled: boolean }> }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
   history: { data: [], isLoading: false, error: null as Error | null },
-  gamification: { data: { profile: { xpBalance: 0, currentStreak: 0 }, currentLevel: { name: "Beginner", minXp: 0, displayOrder: 1 }, nextLevel: { name: "Quiz Explorer", minXp: 250 }, xpToNextLevel: 250, missions: [] as unknown[] }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
+  gamification: { data: { profile: { xpBalance: 0, currentStreak: 0 }, currentLevel: { name: "Beginner", minXp: 0, displayOrder: 1 }, nextLevel: { name: "Quiz Explorer", minXp: 250, displayOrder: 2 }, xpToNextLevel: 250, missions: [] as unknown[], achievements: [] as unknown[], badges: [] as unknown[], xpHistory: [] as unknown[] }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
+  leaderboard: { data: [], isLoading: false, error: null as Error | null, refetch: vi.fn() },
+  referral: { data: { referralCode: "DS000001", invitations: [], totalRewarded: 0 }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
   quota: { data: null },
   update: { isPending: false },
   toast: { success: vi.fn(), error: vi.fn() },
@@ -15,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name: "Học viên" }, loading: false }) }));
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void }) => ({ ...mocks.update, mutate: () => options.onError?.(new Error("Không thể kết nối")) }) } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, referral: { useQuery: () => mocks.referral }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void }) => ({ ...mocks.update, mutate: () => options.onError?.(new Error("Không thể kết nối")) }) } }, leaderboard: { xp: { useQuery: () => mocks.leaderboard } } } }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/ho-so", vi.fn()] }));
 
@@ -41,5 +43,15 @@ describe("Profile mutation feedback", () => {
     render(<Profile />);
     expect(screen.queryByLabelText("Gói đăng ký hiện tại")).toBeNull();
     expect(screen.queryByText("Quota tháng · BASIC")).toBeNull();
+  });
+
+  it("hiển thị các khối Dashboard học tập theo cấu trúc mới", () => {
+    render(<Profile />);
+    expect(screen.getByText("Hành trình học tập")).toBeTruthy();
+    expect(screen.getByText("Vị trí của bạn")).toBeTruthy();
+    expect(screen.getByText("Cùng học, cùng nhận thưởng")).toBeTruthy();
+    expect(screen.getByText("Nhiệm vụ đang chờ bạn")).toBeTruthy();
+    expect(screen.getByText("Tủ danh hiệu của bạn")).toBeTruthy();
+    expect(screen.getByText("Hoạt động gần đây")).toBeTruthy();
   });
 });

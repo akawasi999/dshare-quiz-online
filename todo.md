@@ -568,3 +568,8 @@
 - [x] Triển khai điều khiển thu gọn/mở rộng Sidebar có nhãn truy cập và lưu trạng thái.
 - [x] Bổ sung hiệu ứng chuyển mục Sidebar mượt mà, tôn trọng reduced motion và responsive.
 - [x] Kiểm thử desktop/mobile, accessibility, hồi quy và lưu checkpoint Sidebar.
+- [x] Phân tích đầy đủ đặc tả Profile UI/UX v2.0 và kiểm kê dữ liệu Dashboard hiện có.
+- [x] Thiết kế lại cấu trúc User Learning Dashboard, tách Navigation khỏi tiến trình học tập.
+- [x] Triển khai Hero người học, stats, leaderboard, referral, nhiệm vụ, thành tích và lịch sử Quiz theo dữ liệu thực.
+- [x] Chuẩn hóa Sidebar chỉ điều hướng, responsive, accessibility và các trạng thái Dashboard mới.
+- [x] Kiểm thử hồi quy, xác minh đa breakpoint và lưu checkpoint tái thiết kế Profile.

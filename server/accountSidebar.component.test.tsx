@@ -13,9 +13,9 @@ describe("AccountSidebar", () => {
   beforeEach(() => localStorage.clear());
   afterEach(cleanup);
 
-  it("giữ các mục học tập và không còn hiển thị AI Assistant", () => {
+  it("giữ các mục học tập theo nhóm và không còn hiển thị AI Assistant", () => {
     render(<AccountSidebar />);
-    expect(screen.getByRole("button", { name: "Bảng điều khiển" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Tổng quan" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Quiz của tôi" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "AI Assistant" })).toBeNull();
   });
