@@ -594,3 +594,6 @@
 - [x] Bổ sung công cụ xem trước/cắt tròn ảnh avatar trước khi tải lên và lưu hồ sơ.
 - [x] Thêm thao tác xóa avatar để khôi phục trạng thái mặc định.
 - [x] Kiểm thử cắt, xóa avatar, responsive, hồi quy và lưu checkpoint Profile.
+- [x] Rà soát card Thành tích và asset icon hiện có để chọn cách hiển thị phù hợp.
+- [x] Bổ sung icon hình ảnh cho badge Thành tích theo trạng thái mở khóa và đang khóa.
+- [x] Kiểm thử trực quan, hồi quy và lưu checkpoint icon Thành tích.

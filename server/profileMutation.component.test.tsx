@@ -69,6 +69,7 @@ describe("Profile mutation feedback", () => {
     expect(screen.getByText("Bài Quiz đã làm")).toBeTruthy();
     expect(document.querySelector('img[src*="profile-hero-trophy"]')).toBeTruthy();
     expect(document.querySelector('img[src*="profile-point-coins"]')).toBeTruthy();
+    expect(document.querySelector('img[src*="profile-achievement"]')).toBeTruthy();
   });
 
   it("hiển thị điều kiện mở khóa từ dữ liệu thành tích khi hover badge", async () => {
