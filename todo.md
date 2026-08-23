@@ -471,3 +471,8 @@
 - [x] Kiểm kê toàn bộ routes và liên kết tiếng Việt hiện có.
 - [x] Thiết lập routes tiếng Anh cùng chuyển hướng tương thích từ URL cũ.
 - [x] Cập nhật liên kết nội bộ, kiểm thử routing và lưu checkpoint chuẩn hóa URL.
+- [x] Rà soát máy chủ, email và trang 404 cho hạng mục SEO sau chuẩn hóa URL.
+- [x] Tạo sitemap.xml và chuyển hướng HTTP 301 từ toàn bộ URL tiếng Việt cũ.
+- [x] Cập nhật liên kết trong email giao dịch sang URL tiếng Anh mới.
+- [x] Thiết kế lại trang 404 với lối về trang chủ và các trang chính.
+- [x] Kiểm thử SEO, redirect, email, responsive và lưu checkpoint.

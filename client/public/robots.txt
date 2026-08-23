@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://dsharequiz-jxleeaps.manus.space/sitemap.xml

@@ -1,12 +1,14 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 export type EmailDeliveryConfig = { apiKeyCiphertext: string | null; fromEmail: string | null; isEnabled: boolean };
-export type PaymentConfirmationInput = { recipient: string | null; learnerName: string | null; planName: string; amount: number; pointAmount: number; membershipMonths: number; orderCode: number | null };
+export type PaymentConfirmationInput = { recipient: string | null; learnerName: string | null; planName: string; amount: number; pointAmount: number; membershipMonths: number; orderCode: number | null; appOrigin?: string };
 type PreparedEmail = { subject: string; html: string };
 
 const key = () => createHash("sha256").update(process.env.JWT_SECRET || "dshare-email-config").digest();
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character] ?? character);
 const formatVnd = (amount: number) => `${amount.toLocaleString("vi-VN")}đ`;
+const appOrigin = (value?: string) => (value?.trim() || process.env.APP_ORIGIN || "https://dsharequiz-jxleeaps.manus.space").replace(/\/$/, "");
+const emailButton = (href: string, label: string) => `<a href="${href}" style="display:inline-block;background:#065BE5;border-radius:999px;padding:13px 20px;color:#ffffff;font-size:14px;font-weight:800;text-decoration:none">${label}</a>`;
 
 export function encryptEmailApiKey(apiKey: string) {
   const iv = randomBytes(12);
@@ -33,9 +35,10 @@ function emailLayout({ eyebrow, title, body, card, footer }: { eyebrow: string; 
 export function buildPaymentConfirmationEmail(input: PaymentConfirmationInput): PreparedEmail {
   const name = escapeHtml(input.learnerName?.trim() || "bạn");
   const planName = escapeHtml(input.planName);
+  const origin = appOrigin(input.appOrigin);
   const pointRow = input.pointAmount > 0 ? `<tr><td style="padding:8px 0;color:#617786">Point thưởng</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#007453">+${input.pointAmount.toLocaleString("vi-VN")} Point</td></tr>` : "";
   const orderRow = input.orderCode ? `<tr><td style="padding:8px 0;color:#617786">Mã đơn</td><td style="padding:8px 0;text-align:right;font-family:monospace;font-weight:700">${input.orderCode}</td></tr>` : "";
-  return { subject: `Xác nhận kích hoạt ${input.planName} · Dshare Quiz Online`, html: emailLayout({ eyebrow: "Thanh toán thành công", title: "Gói học của bạn đã sẵn sàng", body: `Chào <strong>${name}</strong>, Dshare đã xác nhận thanh toán và kích hoạt gói <strong>${planName}</strong> cho tài khoản của bạn.`, card: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:0 0 12px;font-size:16px;font-weight:800;color:#172554" colspan="2">${planName}</td></tr><tr><td style="padding:8px 0;color:#617786">Số tiền thanh toán</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#172554">${formatVnd(input.amount)}</td></tr><tr><td style="padding:8px 0;color:#617786">Thời hạn gói</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#172554">${input.membershipMonths} tháng</td></tr>${pointRow}${orderRow}</table>`, footer: "Bạn có thể bắt đầu học, làm Quiz hoặc xem quyền lợi gói ngay trong không gian học tập. Nếu bạn không thực hiện giao dịch này, vui lòng liên hệ bộ phận hỗ trợ Dshare." }) };
+  return { subject: `Xác nhận kích hoạt ${input.planName} · Dshare Quiz Online`, html: emailLayout({ eyebrow: "Thanh toán thành công", title: "Gói học của bạn đã sẵn sàng", body: `Chào <strong>${name}</strong>, Dshare đã xác nhận thanh toán và kích hoạt gói <strong>${planName}</strong> cho tài khoản của bạn.<div style="margin-top:22px">${emailButton(`${origin}/account`, "Tới không gian học tập")}</div>`, card: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:0 0 12px;font-size:16px;font-weight:800;color:#172554" colspan="2">${planName}</td></tr><tr><td style="padding:8px 0;color:#617786">Số tiền thanh toán</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#172554">${formatVnd(input.amount)}</td></tr><tr><td style="padding:8px 0;color:#617786">Thời hạn gói</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#172554">${input.membershipMonths} tháng</td></tr>${pointRow}${orderRow}</table><div style="margin-top:18px">${emailButton(`${origin}/explore`, "Khám phá Quiz")}</div>`, footer: "Bạn có thể bắt đầu học, làm Quiz hoặc xem quyền lợi gói ngay trong không gian học tập. Nếu bạn không thực hiện giao dịch này, vui lòng liên hệ bộ phận hỗ trợ Dshare." }) };
 }
 
 export function buildTestEmail(recipient: string): PreparedEmail {

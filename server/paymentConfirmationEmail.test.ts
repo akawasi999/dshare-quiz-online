@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decryptEmailApiKey, encryptEmailApiKey, isEmailDeliveryConfigured, sendPaymentConfirmationEmail } from "./paymentConfirmationEmail";
+import { buildPaymentConfirmationEmail, decryptEmailApiKey, encryptEmailApiKey, isEmailDeliveryConfigured, sendPaymentConfirmationEmail } from "./paymentConfirmationEmail";
 
 describe("payment confirmation email", () => {
   it("mã hóa khóa API và chỉ giải mã được qua tiện ích máy chủ", () => {
@@ -12,5 +12,13 @@ describe("payment confirmation email", () => {
     const result = await sendPaymentConfirmationEmail({ apiKeyCiphertext: null, fromEmail: null, isEnabled: false }, { recipient: "learner@example.com", learnerName: "Học viên", planName: "PRO", amount: 50000, pointAmount: 150, membershipMonths: 1, orderCode: 123 });
     expect(isEmailDeliveryConfigured({ apiKeyCiphertext: null, fromEmail: null, isEnabled: false })).toBe(false);
     expect(result).toMatchObject({ attempted: false, sent: false, reason: "not_configured" });
+  });
+
+  it("dùng các URL tiếng Anh canonical trong email xác nhận", () => {
+    const email = buildPaymentConfirmationEmail({ recipient: "learner@example.com", learnerName: "Học viên", planName: "PRO", amount: 50000, pointAmount: 150, membershipMonths: 1, orderCode: 123, appOrigin: "https://quiz.example.vn/" });
+    expect(email.html).toContain('href="https://quiz.example.vn/account"');
+    expect(email.html).toContain('href="https://quiz.example.vn/explore"');
+    expect(email.html).not.toContain("/ho-so");
+    expect(email.html).not.toContain("/kham-pha");
   });
 });

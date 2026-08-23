@@ -9,6 +9,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { registerPayosWebhook } from "../payosWebhook";
+import { registerSeoRoutes } from "../seoRoutes";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -35,6 +36,7 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "75mb" }));
   app.use(express.urlencoded({ limit: "75mb", extended: true }));
+  registerSeoRoutes(app);
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerPayosWebhook(app);
