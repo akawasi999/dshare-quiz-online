@@ -564,3 +564,7 @@
 - [x] Đưa Sidebar, Main Content và Footer vào flow layout chung, không ẩn/xóa bất kỳ menu hoặc chức năng nào.
 - [x] Hoàn thiện cuộn Sidebar độc lập, responsive đa breakpoint và không overflow ngang.
 - [x] Kiểm thử hồi quy các route workspace tài khoản, xác minh đa breakpoint và lưu checkpoint sửa lỗi dứt điểm.
+- [x] Rà soát Sidebar hiện tại và xác định điểm tích hợp trạng thái thu gọn.
+- [x] Triển khai điều khiển thu gọn/mở rộng Sidebar có nhãn truy cập và lưu trạng thái.
+- [x] Bổ sung hiệu ứng chuyển mục Sidebar mượt mà, tôn trọng reduced motion và responsive.
+- [x] Kiểm thử desktop/mobile, accessibility, hồi quy và lưu checkpoint Sidebar.
