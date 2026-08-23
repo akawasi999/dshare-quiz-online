@@ -560,3 +560,7 @@
 - [x] Rà soát nguyên nhân Footer chồng lên sidebar ở cuối trang tài khoản/Hồ sơ.
 - [x] Sửa layout để sidebar kết thúc trước Footer và giữ responsive ổn định.
 - [x] Kiểm thử desktop/mobile, hồi quy và lưu checkpoint sửa lỗi layout Hồ sơ.
+- [x] Audit toàn bộ shell Profile/User Dashboard theo đặc tả Sidebar–Main–Footer.
+- [x] Đưa Sidebar, Main Content và Footer vào flow layout chung, không ẩn/xóa bất kỳ menu hoặc chức năng nào.
+- [x] Hoàn thiện cuộn Sidebar độc lập, responsive đa breakpoint và không overflow ngang.
+- [x] Kiểm thử hồi quy các route workspace tài khoản, xác minh đa breakpoint và lưu checkpoint sửa lỗi dứt điểm.
