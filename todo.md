@@ -476,3 +476,8 @@
 - [x] Cập nhật liên kết trong email giao dịch sang URL tiếng Anh mới.
 - [x] Thiết kế lại trang 404 với lối về trang chủ và các trang chính.
 - [x] Kiểm thử SEO, redirect, email, responsive và lưu checkpoint.
+- [x] Rà soát dữ liệu Quiz công khai, SSR metadata và cấu hình analytics hiện có.
+- [x] Tạo sitemap động cho Quiz public cùng canonical và meta Open Graph/Twitter.
+- [x] Tích hợp Google Analytics và chuẩn bị xác minh Google Search Console.
+- [x] Kiểm thử SEO, analytics, routes, responsive và lưu checkpoint.
+- [x] Thêm CPanel để quản trị viên nhập và cập nhật cấu hình Google khi cần.

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { legacyRedirectMiddleware, resolveLegacyRedirect, SITEMAP_PATHS, SITE_ORIGIN } from "./seoRoutes";
+import { buildSeoHead, buildSitemapXml, legacyRedirectMiddleware, resolveLegacyRedirect, SITEMAP_PATHS, SITE_ORIGIN } from "./seoRoutes";
 
 describe("SEO routes", () => {
   it("chuyển URL tiếng Việt cũ sang route tiếng Anh, kể cả trang kết quả động", () => {
@@ -24,5 +24,16 @@ describe("SEO routes", () => {
     legacyRedirectMiddleware({ method: "GET", path: "/thanh-toan", originalUrl: "/thanh-toan?status=return&orderCode=12" } as never, { redirect } as never, next);
     expect(redirect).toHaveBeenCalledWith(301, "/payment-status?status=return&orderCode=12");
     expect(next).not.toHaveBeenCalled();
+  });
+
+  it("tạo sitemap có từng Quiz public và metadata chia sẻ canonical", () => {
+    const sitemap = buildSitemapXml([{ quizId: 88, createdAt: new Date("2026-08-23T00:00:00.000Z") }]);
+    const head = buildSeoHead({ title: "Excel cơ bản · Dshare Quiz Online", description: "Làm Quiz Excel cơ bản.", canonicalPath: "/quiz/88", image: "/manus-storage/excel-cover.png", type: "article", publishedAt: new Date("2026-08-23T00:00:00.000Z") }, { googleAnalyticsMeasurementId: "G-ABCD1234", googleSearchConsoleVerification: "google-verification-token" });
+    expect(sitemap).toContain(`${SITE_ORIGIN}/quiz/88`);
+    expect(head).toContain(`<link rel="canonical" href="${SITE_ORIGIN}/quiz/88"`);
+    expect(head).toContain("og:image");
+    expect(head).toContain("twitter:card");
+    expect(head).toContain("google-site-verification");
+    expect(head).toContain("googletagmanager.com/gtag/js?id=G-ABCD1234");
   });
 });

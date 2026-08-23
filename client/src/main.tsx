@@ -7,6 +7,7 @@ import superjson from "superjson";
 import App from "./App";
 import IconTooltipEnhancer from "./components/IconTooltipEnhancer";
 import SharedDataSyncBridge from "./components/SharedDataSyncBridge";
+import GoogleAnalyticsTracker from "./components/GoogleAnalyticsTracker";
 import { startLogin } from "./const";
 import "./index.css";
 
@@ -79,6 +80,7 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <IconTooltipEnhancer />
       <SharedDataSyncBridge />
+      <GoogleAnalyticsTracker />
       <App />
     </QueryClientProvider>
   </trpc.Provider>

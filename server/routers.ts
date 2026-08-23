@@ -24,6 +24,7 @@ import {
   quizzes,
   quizQuestions,
   quizSourceHistories,
+  seoSettings,
   subscriptionPlans,
   subjects,
   topics,
@@ -982,8 +983,32 @@ export const appRouter = router({
     get: publicProcedure.query(async () => { const db = await getDb(); if (!db) return null; return (await db.select().from(brandSettings).limit(1))[0] ?? null; }),
     save: adminProcedure.input(z.object({ primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), successColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), attentionColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), pageColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), surfaceColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), questionTabContentWidth: z.number().int().min(760).max(1440), settingsTabContentWidth: z.number().int().min(760).max(1440) })).mutation(async ({ input }) => { const db = await getDb(); if (!db) throw new Error("Database unavailable"); const existing = (await db.select().from(brandSettings).limit(1))[0]; if (existing) await db.update(brandSettings).set(input).where(eq(brandSettings.id, existing.id)); else await db.insert(brandSettings).values(input); return input; }),
   }),
+  seo: router({
+    publicSettings: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return { googleAnalyticsMeasurementId: null };
+      const settings = (await db.select({ googleAnalyticsMeasurementId: seoSettings.googleAnalyticsMeasurementId }).from(seoSettings).limit(1))[0];
+      return { googleAnalyticsMeasurementId: settings?.googleAnalyticsMeasurementId ?? null };
+    }),
+  }),
   admin: router({
     learning: cpanelLearningRouter,
+    seoSettings: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cấu hình Google." });
+      const settings = (await db.select().from(seoSettings).limit(1))[0];
+      return settings ? { googleAnalyticsMeasurementId: settings.googleAnalyticsMeasurementId, googleSearchConsoleVerification: settings.googleSearchConsoleVerification, updatedAt: settings.updatedAt } : { googleAnalyticsMeasurementId: null, googleSearchConsoleVerification: null, updatedAt: null };
+    }),
+    saveSeoSettings: adminProcedure.input(z.object({ googleAnalyticsMeasurementId: z.string().trim().regex(/^G-[A-Z0-9]{6,20}$/).nullable(), googleSearchConsoleVerification: z.string().trim().min(8).max(255).nullable() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu cấu hình Google." });
+      const payload = { googleAnalyticsMeasurementId: input.googleAnalyticsMeasurementId || null, googleSearchConsoleVerification: input.googleSearchConsoleVerification || null };
+      const current = (await db.select().from(seoSettings).limit(1))[0];
+      if (current) await db.update(seoSettings).set(payload).where(eq(seoSettings.id, current.id));
+      else await db.insert(seoSettings).values(payload);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "seo.google_settings_updated", entityType: "seo_settings", metadata: { analyticsConfigured: Boolean(payload.googleAnalyticsMeasurementId), searchConsoleConfigured: Boolean(payload.googleSearchConsoleVerification) } });
+      return { success: true, ...payload };
+    }),
     emailDeliverySettings: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cấu hình email." });

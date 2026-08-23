@@ -46,6 +46,13 @@ export const emailDeliverySettings = mysqlTable("emailDeliverySettings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const seoSettings = mysqlTable("seoSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  googleAnalyticsMeasurementId: varchar("googleAnalyticsMeasurementId", { length: 32 }),
+  googleSearchConsoleVerification: varchar("googleSearchConsoleVerification", { length: 255 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export const accountTierValues = ["basic", "pro", "premium"] as const;
 export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "expired"] as const;
 export const quizModeValues = ["training", "testing"] as const;
