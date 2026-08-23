@@ -1,0 +1,1 @@
+ALTER TABLE `brandSettings` ADD `styleConfig` json;

@@ -18,6 +18,7 @@ import UserQuizCreator from "@/pages/UserQuizCreator";
 import MyQuizzes from "@/pages/MyQuizzes";
 import AIStudyAssistant from "@/pages/AIStudyAssistant";
 import AccountLayout from "@/components/AccountLayout";
+import AppearanceStyleBridge from "@/components/AppearanceStyleBridge";
 import { LEGACY_ROUTE_MAP, ROUTES } from "@/lib/routes";
 import { Route, Switch, useLocation, useSearch } from "wouter";
 import { useEffect } from "react";
@@ -80,7 +81,7 @@ function LearnerAccountPage({ Page }: { Page: React.ComponentType }) {
 }
 
 function App() {
-  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><Toaster /><Router /></TooltipProvider></ThemeProvider></ErrorBoundary>;
+  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><AppearanceStyleBridge /><Toaster /><Router /></TooltipProvider></ThemeProvider></ErrorBoundary>;
 }
 
 export default App;

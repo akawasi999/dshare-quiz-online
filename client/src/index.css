@@ -42,9 +42,9 @@
 
 /* Public header labels must remain visually identical across links, buttons and slots. */
 .site-header-text {
-  font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
+  font-family: var(--font-family-primary, "Inter"), ui-sans-serif, system-ui, sans-serif !important;
+  font-size: var(--site-header-font-size, 14px) !important;
+  font-weight: var(--site-header-font-weight, 500) !important;
   line-height: 20px !important;
   letter-spacing: 0 !important;
 }
@@ -53,6 +53,22 @@
 .site-header-navigation {
   min-height: 40px;
   align-items: center;
+  gap: var(--site-header-gap, 2rem);
+}
+
+html { font-size: var(--font-size-base, 16px); }
+body { font-family: var(--font-family-primary, "Inter"), ui-sans-serif, system-ui, sans-serif; }
+.container { max-width: min(var(--page-max-width, 1440px), 100%); }
+
+:root[data-appearance-header="hidden"] .site-header { display: none; }
+:root[data-appearance-header-logo="hidden"] .site-header a[aria-label="Dshare Quiz Online"] { display: none; }
+:root[data-appearance-header-navigation="hidden"] .site-header .site-header-navigation { display: none !important; }
+:root[data-appearance-header-shadow="true"] .site-header { box-shadow: var(--shadow-sm); }
+:root[data-appearance-header-border="false"] .site-header { border-bottom-color: transparent; }
+.site-header { background-color: var(--site-header-background, var(--surface)); }
+
+@media (min-width: 1024px) {
+  :root[data-appearance-header-sticky="true"] .site-header { position: sticky; top: 0; }
 }
 
 .site-header-nav-item {

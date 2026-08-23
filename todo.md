@@ -497,3 +497,8 @@
 - [x] Xây dựng dữ liệu/lưu trữ cho cài đặt cơ bản và Navigation có thể quản lý.
 - [x] Thiết kế workspace Cài đặt theo ảnh tham chiếu và tích hợp ở cuối CPanel.
 - [x] Kiểm thử cấu hình, Navigation, responsive và lưu checkpoint.
+- [x] Phân tích đặc tả Appearance v2.0 và đối chiếu với workspace Tùy chỉnh Style hiện có.
+- [x] Tái cấu trúc Appearance theo đặc tả, giữ nguyên dữ liệu nhận diện đã lưu.
+- [x] Chuyển các cấu hình SEO và Google từ Appearance sang Cài đặt.
+- [x] Bổ sung hoặc hoàn thiện mục Quiz Studio và Ảnh bìa Quiz mặc định theo phạm vi đặc tả.
+- [x] Kiểm thử persistence, responsive, accessibility, regression và lưu checkpoint cho Appearance.

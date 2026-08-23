@@ -34,6 +34,7 @@ export const brandSettings = mysqlTable("brandSettings", {
   surfaceColor: varchar("surfaceColor", { length: 16 }).default("#FFFFFF").notNull(),
   questionTabContentWidth: int("questionTabContentWidth").default(1440).notNull(),
   settingsTabContentWidth: int("settingsTabContentWidth").default(1040).notNull(),
+  styleConfig: json("styleConfig"),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 

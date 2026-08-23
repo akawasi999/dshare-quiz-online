@@ -5,12 +5,15 @@ import { describe, expect, it, vi } from "vitest";
 
 const mutate = vi.fn();
 const siteSettingsData = { settings: { homePageUrl: "https://dsharequiz-jxleeaps.manus.space", boardTitle: "Dshare Quiz Online", metaDescription: "Nền tảng tạo Quiz, học tập và chia sẻ kiến thức trực tuyến.", defaultEmailAddress: "admin@dshare.net" }, navigation: [{ id: 1, label: "Trang chủ", url: "/", position: 1, isEnabled: true }] };
+const seoSettingsData = { googleAnalyticsMeasurementId: "G-TEST1234", googleSearchConsoleVerification: "verification-token", defaultQuizCoverUrl: null };
 vi.mock("../client/src/lib/trpc", () => ({
   trpc: {
     useUtils: () => ({ site: { navigation: { invalidate: vi.fn() } } }),
     admin: {
       siteSettings: { useQuery: () => ({ data: siteSettingsData, isLoading: false, error: null, refetch: vi.fn() }) },
+      seoSettings: { useQuery: () => ({ data: seoSettingsData, isLoading: false, error: null, refetch: vi.fn() }) },
       saveSiteSettings: { useMutation: () => ({ mutate, isPending: false }) },
+      saveSeoSettings: { useMutation: () => ({ mutate, isPending: false }) },
       saveNavigationItem: { useMutation: () => ({ mutate, isPending: false }) },
       deleteNavigationItem: { useMutation: () => ({ mutate, isPending: false }) },
       reorderNavigation: { useMutation: () => ({ mutate, isPending: false }) },
@@ -25,6 +28,9 @@ describe("SystemSettingsPanel", () => {
     render(<SystemSettingsPanel />);
     expect(screen.getByLabelText("Home page URL")).toBeTruthy();
     expect(screen.getByText("Board meta description")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "SEO & Google" }));
+    expect(screen.getByLabelText("Google Analytics Measurement ID")).toBeTruthy();
+    expect(screen.getByLabelText("Google Search Console verification")).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Navigation" }));
     expect(screen.getByText("Quản lý các mục điều hướng trong menu website.")).toBeTruthy();
     expect(screen.getByText("Trang chủ")).toBeTruthy();

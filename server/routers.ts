@@ -984,6 +984,20 @@ export const appRouter = router({
   branding: router({
     get: publicProcedure.query(async () => { const db = await getDb(); if (!db) return null; return (await db.select().from(brandSettings).limit(1))[0] ?? null; }),
     save: adminProcedure.input(z.object({ primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), successColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), attentionColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), pageColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), surfaceColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/), questionTabContentWidth: z.number().int().min(760).max(1440), settingsTabContentWidth: z.number().int().min(760).max(1440) })).mutation(async ({ input }) => { const db = await getDb(); if (!db) throw new Error("Database unavailable"); const existing = (await db.select().from(brandSettings).limit(1))[0]; if (existing) await db.update(brandSettings).set(input).where(eq(brandSettings.id, existing.id)); else await db.insert(brandSettings).values(input); return input; }),
+    saveAppearance: adminProcedure.input(z.object({ styleConfig: z.record(z.string(), z.unknown()) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu Appearance." });
+      const config = input.styleConfig as { colors?: Record<string, unknown>; studio?: Record<string, unknown> };
+      const colors = config.colors ?? {};
+      const studio = config.studio ?? {};
+      const color = (key: string, fallback: string) => typeof colors[key] === "string" && /^#[0-9A-Fa-f]{6}$/.test(colors[key] as string) ? colors[key] as string : fallback;
+      const width = (key: string, fallback: number) => typeof studio[key] === "number" && Number.isInteger(studio[key]) && studio[key] >= 760 && studio[key] <= 1440 ? studio[key] as number : fallback;
+      const payload = { styleConfig: input.styleConfig, primaryColor: color("primary", "#565BE5"), accentColor: color("info", "#3762D2"), successColor: color("success", "#00845A"), attentionColor: color("danger", "#DC2626"), pageColor: color("body", "#F6F8FC"), surfaceColor: color("surface", "#FFFFFF"), questionTabContentWidth: width("questionsWidth", 1440), settingsTabContentWidth: width("settingsWidth", 1040) };
+      const existing = (await db.select({ id: brandSettings.id }).from(brandSettings).limit(1))[0];
+      if (existing) await db.update(brandSettings).set(payload).where(eq(brandSettings.id, existing.id)); else await db.insert(brandSettings).values(payload);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "appearance.style_updated", entityType: "brand_settings", metadata: { sections: Object.keys(input.styleConfig) } });
+      return { success: true, styleConfig: input.styleConfig };
+    }),
   }),
   seo: router({
     publicSettings: publicProcedure.query(async () => {
@@ -1125,6 +1139,11 @@ export const appRouter = router({
     uploadSeoDefaultCover: adminProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) })).mutation(async ({ ctx, input }) => {
       const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64");
       const uploaded = await storagePut(`seo-default-covers/${ctx.user.id}/${input.fileName}`, bytes, input.mimeType);
+      return { url: uploaded.url };
+    }),
+    uploadAppearanceAsset: adminProcedure.input(z.object({ kind: z.enum(["logo", "favicon", "avatar", "thumbnail", "cover", "open-graph", "not-found", "empty-state"]), fileName: z.string().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/svg+xml", "image/x-icon"]), base64: z.string().min(20).max(8_000_000) })).mutation(async ({ ctx, input }) => {
+      const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64");
+      const uploaded = await storagePut(`appearance/${input.kind}/${ctx.user.id}/${input.fileName}`, bytes, input.mimeType);
       return { url: uploaded.url };
     }),
     updateCategoryCover: adminProcedure.input(z.object({ categoryId: z.number().int().positive(), coverImageUrl: z.string().url().max(1024).nullable() })).mutation(async ({ ctx, input }) => {
