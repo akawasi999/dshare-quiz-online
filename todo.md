@@ -538,3 +538,8 @@
 - [x] Mở rộng dữ liệu và API quản trị cho nội dung pháp lý cùng thông tin hỗ trợ.
 - [x] Xây dựng CPanel quản trị pháp lý, trang công khai và liên kết hỗ trợ.
 - [x] Kiểm thử persistence, ngày cập nhật, Footer, responsive và lưu checkpoint.
+- [x] Rà soát mô hình nội dung pháp lý/hỗ trợ và thư viện UI hiện có.
+- [x] Mở rộng dữ liệu và API cho FAQ cùng tin nhắn liên hệ.
+- [x] Xây dựng trình soạn thảo pháp lý và quản trị FAQ trong CPanel.
+- [x] Hoàn thiện FAQ và biểu mẫu liên hệ trên trang Hỗ trợ.
+- [x] Kiểm thử persistence, validation, responsive, hồi quy và lưu checkpoint.

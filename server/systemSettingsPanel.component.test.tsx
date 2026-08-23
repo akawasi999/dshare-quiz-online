@@ -8,13 +8,19 @@ const siteSettingsData = { settings: { homePageUrl: "https://dsharequiz-jxleeaps
 const seoSettingsData = { googleAnalyticsMeasurementId: "G-TEST1234", googleSearchConsoleVerification: "verification-token", defaultQuizCoverUrl: null };
 vi.mock("../client/src/lib/trpc", () => ({
   trpc: {
-    useUtils: () => ({ site: { navigation: { invalidate: vi.fn() }, legalSupport: { invalidate: vi.fn() } }, admin: { siteSettings: { invalidate: vi.fn() } } }),
+    useUtils: () => ({ site: { navigation: { invalidate: vi.fn() }, legalSupport: { invalidate: vi.fn() }, supportFaqs: { invalidate: vi.fn() } }, admin: { siteSettings: { invalidate: vi.fn() }, supportFaqs: { invalidate: vi.fn() }, supportMessages: { invalidate: vi.fn() } } }),
     admin: {
       siteSettings: { useQuery: () => ({ data: siteSettingsData, isLoading: false, error: null, refetch: vi.fn() }) },
       seoSettings: { useQuery: () => ({ data: seoSettingsData, isLoading: false, error: null, refetch: vi.fn() }) },
       saveSiteSettings: { useMutation: () => ({ mutate, isPending: false }) },
       saveLegalContent: { useMutation: () => ({ mutate, isPending: false }) },
       saveSupportContent: { useMutation: () => ({ mutate, isPending: false }) },
+      supportFaqs: { useQuery: () => ({ data: [], isLoading: false }) },
+      saveSupportFaq: { useMutation: () => ({ mutate, isPending: false }) },
+      deleteSupportFaq: { useMutation: () => ({ mutate, isPending: false }) },
+      reorderSupportFaqs: { useMutation: () => ({ mutate, isPending: false }) },
+      supportMessages: { useQuery: () => ({ data: [], isLoading: false }) },
+      updateSupportMessageStatus: { useMutation: () => ({ mutate, isPending: false }) },
       saveSeoSettings: { useMutation: () => ({ mutate, isPending: false }) },
       saveNavigationItem: { useMutation: () => ({ mutate, isPending: false }) },
       deleteNavigationItem: { useMutation: () => ({ mutate, isPending: false }) },

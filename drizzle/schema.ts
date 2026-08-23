@@ -83,6 +83,27 @@ export const siteNavigationItems = mysqlTable("siteNavigationItems", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => [index("site_navigation_position_idx").on(table.position, table.isEnabled)]);
 
+export const supportFaqs = mysqlTable("supportFaqs", {
+  id: int("id").autoincrement().primaryKey(),
+  question: varchar("question", { length: 500 }).notNull(),
+  answer: text("answer").notNull(),
+  position: int("position").default(0).notNull(),
+  isEnabled: boolean("isEnabled").default(true).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [index("support_faq_position_idx").on(table.position, table.isEnabled)]);
+
+export const contactMessageStatusValues = ["new", "read", "resolved"] as const;
+export const supportMessages = mysqlTable("supportMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 180 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  subject: varchar("subject", { length: 320 }),
+  message: text("message").notNull(),
+  status: mysqlEnum("status", contactMessageStatusValues).default("new").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [index("support_message_status_created_idx").on(table.status, table.createdAt)]);
+
 export const accountTierValues = ["basic", "pro", "premium"] as const;
 export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "expired"] as const;
 export const quizModeValues = ["training", "testing"] as const;

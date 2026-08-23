@@ -27,6 +27,8 @@ import {
   seoSettings,
   siteNavigationItems,
   siteSettings,
+  supportFaqs,
+  supportMessages,
   subscriptionPlans,
   subjects,
   topics,
@@ -46,6 +48,7 @@ import { invokeLLM, listLLMModels } from "./_core/llm";
 import { buildQuizAssistantMessages, type QuizAssistantIntent } from "./aiAssistant";
 import { buildAttemptMilestoneAlert } from "./attemptNotifications";
 import { getReferralValidationError, normalizeReferralCode } from "./referralUtils";
+import { richTextToPlainText, sanitizeRichTextHtml } from "../shared/richText";
 import { allocateQuestionCounts } from "./randomQuiz";
 import { getTrueFalseStatements, validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
@@ -1018,6 +1021,17 @@ export const appRouter = router({
       if (!db) return null;
       return (await db.select({ termsContent: siteSettings.termsContent, termsUpdatedAt: siteSettings.termsUpdatedAt, privacyContent: siteSettings.privacyContent, privacyUpdatedAt: siteSettings.privacyUpdatedAt, supportTitle: siteSettings.supportTitle, supportDescription: siteSettings.supportDescription, supportEmail: siteSettings.supportEmail, supportPhone: siteSettings.supportPhone, supportHours: siteSettings.supportHours, supportUpdatedAt: siteSettings.supportUpdatedAt }).from(siteSettings).limit(1))[0] ?? null;
     }),
+    supportFaqs: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select({ id: supportFaqs.id, question: supportFaqs.question, answer: supportFaqs.answer, position: supportFaqs.position }).from(supportFaqs).where(eq(supportFaqs.isEnabled, true)).orderBy(asc(supportFaqs.position));
+    }),
+    submitContactMessage: publicProcedure.input(z.object({ name: z.string().trim().min(2).max(180), email: z.string().trim().email().max(320), subject: z.string().trim().max(320).nullable(), message: z.string().trim().min(20).max(5000) })).mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể gửi yêu cầu hỗ trợ." });
+      const result = await db.insert(supportMessages).values({ name: input.name, email: input.email, subject: input.subject || null, message: input.message });
+      return { success: true, id: result[0].insertId };
+    }),
   }),
   admin: router({
     siteSettings: adminProcedure.query(async () => {
@@ -1044,11 +1058,13 @@ export const appRouter = router({
     saveLegalContent: adminProcedure.input(z.object({ document: z.enum(["terms", "privacy"]), content: z.string().trim().min(40).max(20000) })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu nội dung pháp lý." });
+      const cleanContent = sanitizeRichTextHtml(input.content);
+      if (richTextToPlainText(cleanContent).length < 40) throw new TRPCError({ code: "BAD_REQUEST", message: "Nội dung pháp lý cần tối thiểu 40 ký tự." });
       const now = new Date();
-      const payload = input.document === "terms" ? { termsContent: input.content, termsUpdatedAt: now } : { privacyContent: input.content, privacyUpdatedAt: now };
+      const payload = input.document === "terms" ? { termsContent: cleanContent, termsUpdatedAt: now } : { privacyContent: cleanContent, privacyUpdatedAt: now };
       const current = (await db.select({ id: siteSettings.id }).from(siteSettings).limit(1))[0];
       if (current) await db.update(siteSettings).set(payload).where(eq(siteSettings.id, current.id)); else await db.insert(siteSettings).values(payload);
-      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: `site.${input.document}_updated`, entityType: "site_settings", metadata: { length: input.content.length } });
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: `site.${input.document}_updated`, entityType: "site_settings", metadata: { length: richTextToPlainText(cleanContent).length } });
       return { success: true, updatedAt: now };
     }),
     saveSupportContent: adminProcedure.input(z.object({ title: z.string().trim().min(2).max(180), description: z.string().trim().min(20).max(5000), email: z.string().trim().email().max(320).nullable(), phone: z.string().trim().max(80).nullable(), hours: z.string().trim().max(320).nullable() })).mutation(async ({ ctx, input }) => {
@@ -1060,6 +1076,45 @@ export const appRouter = router({
       if (current) await db.update(siteSettings).set(payload).where(eq(siteSettings.id, current.id)); else await db.insert(siteSettings).values(payload);
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "site.support_updated", entityType: "site_settings", metadata: { hasEmail: Boolean(payload.supportEmail), hasPhone: Boolean(payload.supportPhone) } });
       return { success: true, updatedAt: now };
+    }),
+    supportFaqs: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải FAQ." });
+      return db.select().from(supportFaqs).orderBy(asc(supportFaqs.position), asc(supportFaqs.id));
+    }),
+    saveSupportFaq: adminProcedure.input(z.object({ id: z.number().int().positive().optional(), question: z.string().trim().min(5).max(500), answer: z.string().trim().min(10).max(5000), position: z.number().int().min(1).max(999), isEnabled: z.boolean() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu FAQ." });
+      const payload = { question: input.question, answer: input.answer, position: input.position, isEnabled: input.isEnabled };
+      if (input.id) await db.update(supportFaqs).set(payload).where(eq(supportFaqs.id, input.id)); else await db.insert(supportFaqs).values(payload);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.id ? "support.faq_updated" : "support.faq_created", entityType: "support_faq", entityId: input.id, metadata: { question: input.question } });
+      return { success: true };
+    }),
+    deleteSupportFaq: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể xóa FAQ." });
+      await db.delete(supportFaqs).where(eq(supportFaqs.id, input.id));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "support.faq_deleted", entityType: "support_faq", entityId: input.id, metadata: {} });
+      return { success: true };
+    }),
+    reorderSupportFaqs: adminProcedure.input(z.object({ items: z.array(z.object({ id: z.number().int().positive(), position: z.number().int().min(1).max(999) })).min(1).max(50) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể sắp xếp FAQ." });
+      await Promise.all(input.items.map(item => db.update(supportFaqs).set({ position: item.position }).where(eq(supportFaqs.id, item.id))));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "support.faq_reordered", entityType: "support_faq", metadata: { count: input.items.length } });
+      return { success: true };
+    }),
+    supportMessages: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải hộp thư hỗ trợ." });
+      return db.select().from(supportMessages).orderBy(desc(supportMessages.createdAt)).limit(50);
+    }),
+    updateSupportMessageStatus: adminProcedure.input(z.object({ id: z.number().int().positive(), status: z.enum(["new", "read", "resolved"]) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật tin nhắn." });
+      await db.update(supportMessages).set({ status: input.status }).where(eq(supportMessages.id, input.id));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "support.message_status_updated", entityType: "support_message", entityId: input.id, metadata: { status: input.status } });
+      return { success: true };
     }),
     saveNavigationItem: adminProcedure.input(z.object({ id: z.number().int().positive().optional(), label: z.string().trim().min(1).max(100), url: z.string().trim().min(1).max(1024).refine(value => value.startsWith("/") || /^https?:\/\//.test(value), "URL phải bắt đầu bằng / hoặc http(s)://"), position: z.number().int().min(1).max(999), isEnabled: z.boolean() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();

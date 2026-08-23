@@ -288,6 +288,13 @@
       "when": 1787463794343,
       "tag": "0040_modern_archangel",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1787464380806,
+      "tag": "0041_elite_riptide",
+      "breakpoints": true
     }
   ]
 }
