@@ -577,3 +577,7 @@
 - [x] Bỏ hành vi sticky/fixed của Sidebar để cuộn cùng nội dung chính.
 - [x] Sắp xếp lại Hero, stats, leaderboard, referral, nhiệm vụ, thành tích và lịch sử Quiz theo lưới ảnh tham chiếu.
 - [x] Tinh chỉnh responsive, accessibility, hồi quy và lưu checkpoint Profile theo ảnh tham chiếu.
+- [x] Chuẩn bị các icon minh họa từ sprite người dùng cung cấp theo các vùng Hero, Point, XP, danh hiệu, referral và thành tích.
+- [x] Tích hợp icon sprite vào Dashboard, giữ dữ liệu tRPC và toàn bộ chức năng Profile hiện có.
+- [x] Nén lưới Dashboard desktop để các vùng trọng yếu nằm trong một màn hình như ảnh mẫu, đồng thời giữ responsive mobile.
+- [x] Kiểm thử trực quan, regression và lưu checkpoint Dashboard có icon sprite.
