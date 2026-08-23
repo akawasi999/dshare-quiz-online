@@ -7,17 +7,14 @@ import { trpc } from "@/lib/trpc";
 import {
   ArrowRight,
   Award,
-  BellRing,
   BookOpenCheck,
   Check,
   CheckCircle2,
-  ChevronDown,
   Clock3,
   Copy,
   Crown,
   LogIn,
   Medal,
-  PencilLine,
   ShieldCheck,
   Sparkles,
   Target,
@@ -28,12 +25,6 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { Link } from "wouter";
-
-const preferenceLabels = [
-  ["studyReminders", "Nhắc học", "Gợi nhắc duy trì nhịp học"],
-  ["resultUpdates", "Kết quả bài làm", "Điểm số và lời giải sau khi nộp"],
-  ["platformUpdates", "Cập nhật nền tảng", "Tính năng và nội dung mới"],
-] as const;
 
 const missionLabel: Record<string, string> = { daily: "Hôm nay", weekly: "Tuần này", special: "Chiến dịch" };
 const sprite = {
@@ -65,13 +56,6 @@ export default function Profile() {
   const gamification = trpc.learner.gamification.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const leaderboard = trpc.leaderboard.xp.useQuery({ period: "week" }, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const referral = trpc.learner.referral.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
-  const updateProfile = trpc.learner.updateProfile.useMutation({
-    onSuccess: () => {
-      summary.refetch();
-      toast.success("Đã cập nhật hồ sơ học tập.");
-    },
-    onError: error => toast.error("Không thể lưu hồ sơ", { description: error.message }),
-  });
   const [copied, setCopied] = useState(false);
 
   if (loading) return <ProfileShell><ProfileLoadingState label="Đang mở trung tâm học tập…" /></ProfileShell>;
@@ -97,22 +81,6 @@ export default function Profile() {
   const rankings = (leaderboard.data ?? []) as any[];
   const ownRank = rankings.findIndex(item => item.userId === user.id) + 1;
   const referralData = referral.data as any;
-  const profileKey = `${profile.avatarUrl ?? ""}-${profile.learningGoal ?? ""}-${profile.updatedAt ?? ""}`;
-
-  const submit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    updateProfile.mutate({
-      avatarUrl: String(form.get("avatarUrl") ?? ""),
-      bio: String(form.get("bio") ?? ""),
-      learningGoal: String(form.get("learningGoal") ?? ""),
-      notificationPreferences: {
-        studyReminders: form.get("studyReminders") === "on",
-        resultUpdates: form.get("resultUpdates") === "on",
-        platformUpdates: form.get("platformUpdates") === "on",
-      },
-    });
-  };
 
   const copyReferral = async () => {
     if (!referralData?.referralCode) return;
@@ -170,7 +138,8 @@ export default function Profile() {
           </section>
 
           <section className="relative overflow-hidden rounded-2xl border border-primary/12 bg-[linear-gradient(145deg,#fbfcff,#f8f5ff)] p-4 shadow-[var(--shadow-sm)] sm:p-4.5">
-            <img src={sprite.gift} alt="" aria-hidden="true" className="pointer-events-none absolute bottom-2 right-2 hidden h-32 w-36 object-contain opacity-95 lg:block" />
+            <span aria-hidden="true" className="absolute bottom-3 right-4 hidden size-28 rounded-full bg-[radial-gradient(circle,#e7e0ff_0%,#f7f4ff_65%,transparent_68%)] lg:block" />
+            <img src="/manus-storage/profile-upgrade-chest_9af97ca5.png" alt="" aria-hidden="true" className="pointer-events-none absolute bottom-2 right-1 hidden h-32 w-40 object-contain lg:block" />
             <div className="relative max-w-[calc(100%-132px)]">
               <SectionHeader title="Giới thiệu bạn bè" icon={UsersRound} actionHref="/referrals" action="Quản lý" />
               <p className="mt-2 text-[11px] leading-5 text-text-secondary">Mời bạn bè tham gia và nhận phần thưởng hấp dẫn.</p>
@@ -201,10 +170,6 @@ export default function Profile() {
           </section>
         </section>
 
-        <details id="thiet-lap" className="group mt-3 scroll-mt-24 rounded-2xl border border-border bg-surface shadow-[var(--shadow-sm)]" key={profileKey}>
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5"><span><span className="inline-flex items-center gap-2 text-sm font-bold text-foreground"><PencilLine size={16} className="text-primary" />Thiết lập hồ sơ & thông báo</span><span className="mt-1 block text-[11px] leading-5 text-text-secondary">Cập nhật ảnh đại diện, mục tiêu học tập và kênh thông báo của bạn.</span></span><ChevronDown className="shrink-0 text-text-muted transition-transform duration-200 group-open:rotate-180" size={19} /></summary>
-          <form onSubmit={submit} className="border-t border-border-light p-4"><div className="grid gap-4 sm:grid-cols-2"><Field label="Ảnh đại diện (URL)" description="Dùng liên kết ảnh HTTPS để hiển thị ảnh cá nhân."><input id="avatarUrl" name="avatarUrl" type="url" defaultValue={profile.avatarUrl ?? ""} placeholder="https://..." className="field" /></Field><Field label="Mục tiêu học tập" description="Tối đa 220 ký tự, hiển thị trên Dashboard."><input id="learningGoal" name="learningGoal" defaultValue={profile.learningGoal ?? ""} maxLength={220} placeholder="Ví dụ: Đạt 7.0 IELTS trong 12 tuần" className="field" /></Field><Field label="Giới thiệu bản thân" full description="Một vài dòng về điều bạn muốn chinh phục."><textarea id="bio" name="bio" defaultValue={profile.bio ?? ""} maxLength={500} placeholder="Mục tiêu học tập hoặc điều bạn muốn chinh phục…" className="field min-h-28 resize-y" /></Field></div><fieldset className="mt-4 rounded-[var(--radius-lg-token)] border border-border-light bg-muted/65 p-4"><legend className="px-1 text-xs font-bold text-foreground"><BellRing className="mr-1 inline-block text-primary" size={14} />Tùy chọn nhận thông báo</legend><div className="mt-3 grid gap-3 md:grid-cols-3">{preferenceLabels.map(([name, title, note]) => <label key={name} className="flex cursor-pointer gap-3 rounded-[var(--radius-md-token)] border border-border-light bg-surface p-3 text-xs transition-colors hover:border-primary/25"><input name={name} type="checkbox" defaultChecked={profile.notificationPreferences?.[name] ?? true} className="mt-0.5 size-4 accent-primary" /><span><strong className="text-foreground">{title}</strong><span className="mt-1 block leading-4 text-text-muted">{note}</span></span></label>)}</div></fieldset><div className="mt-4 flex flex-wrap items-center gap-3"><Button disabled={updateProfile.isPending} className="rounded-full">{updateProfile.isPending ? "Đang lưu thay đổi…" : "Lưu thiết lập"}</Button><p className="text-xs text-text-muted">Các thay đổi chỉ có hiệu lực sau khi lưu.</p></div></form>
-        </details>
       </main>
     </ProfileShell>
   );
@@ -229,7 +194,7 @@ function RankRow({ rank, name, subtitle, xp, active }: { rank: number; name: str
 
 function QuestItem({ item }: { item: any }) { const percent = Math.min(100, Math.round((item.assignment.progress / Math.max(1, item.assignment.target)) * 100)); const done = item.assignment.status === "claimed" || item.assignment.status === "completed"; return <article className="flex items-center gap-2.5 rounded-lg px-0.5 py-1"><span className={`grid size-6 shrink-0 place-items-center rounded-full border ${done ? "border-success/20 bg-success/10 text-success" : "border-border text-transparent"}`}>{done ? <CheckCircle2 size={15} /> : "•"}</span><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><h3 className="truncate text-[11px] font-bold text-foreground">{item.definition.title}</h3><span className="shrink-0 text-[10px] font-bold text-violet-700">+{formatNumber(item.assignment.xpReward)} XP</span></div><div className="mt-1 flex items-center gap-2"><div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-[linear-gradient(90deg,var(--primary),#8b5cf6)]" style={{ width: `${percent}%` }} /></div><span className="shrink-0 text-[9px] text-text-muted">{item.assignment.progress}/{item.assignment.target}</span></div></div></article>; }
 
-function AchievementPreview({ item, spriteSrc }: { item: any | null; spriteSrc?: string }) { const unlocked = item?.userAchievement?.status === "unlocked"; const title = item?.achievement?.title ?? item?.badge?.name ?? "Đang khóa"; return <article className={`min-w-0 rounded-lg border p-2 text-center ${unlocked ? "border-primary/15 bg-primary-light/35" : "border-border-light bg-muted/45 opacity-70"}`}>{spriteSrc && unlocked ? <img src={spriteSrc} alt="" aria-hidden="true" className="mx-auto size-10 object-contain" /> : <span className="mx-auto grid size-10 place-items-center rounded-full bg-muted text-text-muted">{unlocked ? <Award size={20} /> : <ShieldCheck size={18} />}</span>}<h3 className="mt-1.5 line-clamp-1 text-[10px] font-bold text-foreground">{title}</h3><p className="mt-0.5 hidden line-clamp-1 text-[9px] text-text-secondary sm:block">{unlocked ? "Đã mở khóa" : "Đang khóa"}</p></article>; }
+function AchievementPreview({ item, spriteSrc }: { item: any | null; spriteSrc?: string }) { const unlocked = item?.userAchievement?.status === "unlocked"; const title = item?.badge?.name ?? item?.achievement?.title ?? "Đang khóa"; const icon = String(item?.badge?.icon ?? item?.achievement?.icon ?? "").toLowerCase(); const mappedSprite = icon.includes("flame") || icon.includes("streak") ? sprite.achievement[3] : icon.includes("target") || icon.includes("perfect") ? sprite.achievement[2] : icon.includes("star") || icon.includes("expert") ? sprite.achievement[1] : icon.includes("trophy") || icon.includes("quiz") ? sprite.achievement[0] : spriteSrc; return <article className={`min-w-0 rounded-lg border p-2 text-center ${unlocked ? "border-primary/15 bg-primary-light/35 reward-badge-reveal" : "border-border-light bg-muted/45 opacity-70"}`}>{mappedSprite && unlocked ? <img src={mappedSprite} alt="" aria-hidden="true" className="mx-auto size-10 object-contain" /> : <span className="mx-auto grid size-10 place-items-center rounded-full bg-muted text-text-muted">{unlocked ? <Award size={20} /> : <ShieldCheck size={18} />}</span>}<h3 className="mt-1.5 line-clamp-1 text-[10px] font-bold text-foreground">{title}</h3><p className="mt-0.5 hidden line-clamp-1 text-[9px] text-text-secondary sm:block">{unlocked ? "Đã mở khóa" : "Đang khóa"}</p></article>; }
 
 function QuizHistoryRow({ item, xp, accent }: { item: any; xp?: number; accent: number }) { const accents = ["bg-blue-500/15 text-blue-600", "bg-teal-500/15 text-teal-600", "bg-violet-500/15 text-violet-600"]; return <article className="flex min-h-[51px] items-center gap-2.5 py-2"><span className={`grid size-8 shrink-0 place-items-center rounded-md ${accents[accent] ?? accents[0]}`}><BookOpenCheck size={15} /></span><div className="min-w-0 flex-1"><p className="truncate text-[11px] font-bold text-foreground">{item.quizTitle}</p><p className="mt-0.5 truncate text-[9px] text-text-muted">{item.quizMode === "testing" ? "Kiểm tra" : "Ôn tập"} · {formatStudyDate(item.attempt.completedAt)}</p></div><div className="text-right"><p className="text-[11px] font-extrabold text-success">{item.attempt.score ?? 0}%</p>{xp ? <p className="mt-0.5 whitespace-nowrap text-[10px] font-bold text-violet-700">+{formatNumber(xp)} XP</p> : <p className="mt-0.5 text-[9px] text-text-muted">Đã lưu</p>}</div></article>; }
 
@@ -239,5 +204,4 @@ function DashboardEmpty({ icon: Icon, title, text }: { icon: typeof Target; titl
 function SignInState() { return <main className="container grid min-h-[calc(100vh-76px)] place-items-center py-12"><section className="max-w-md rounded-[28px] border border-border bg-surface p-8 text-center shadow-[var(--shadow-md)]"><span className="mx-auto grid size-12 place-items-center rounded-[var(--radius-md-token)] bg-primary-light text-primary"><LogIn size={21} /></span><h1 className="mt-6 text-3xl font-black tracking-[-.04em] text-foreground">Trung tâm học tập của bạn</h1><p className="mt-3 text-sm leading-6 text-text-secondary">Đăng nhập để lưu kết quả, theo dõi tiến độ và quản lý hành trình học tập cá nhân.</p><Button onClick={() => startLogin()} className="mt-7 rounded-full">Đăng nhập để tiếp tục <ArrowRight size={15} /></Button></section></main>; }
 function ProfileLoadingState({ label }: { label: string }) { return <main className="container py-8"><section className="animate-pulse rounded-[28px] bg-muted/70 p-7 sm:p-9"><p role="status" aria-live="polite" className="text-sm font-medium text-text-secondary">{label}</p><div className="mt-6 grid gap-3 sm:grid-cols-3"><span className="h-24 rounded-[var(--radius-lg-token)] bg-surface/80" /><span className="h-24 rounded-[var(--radius-lg-token)] bg-surface/80" /><span className="h-24 rounded-[var(--radius-lg-token)] bg-surface/80" /></div></section></main>; }
 function ProfileErrorState({ message, onRetry }: { message?: string; onRetry: () => void }) { return <main className="container grid min-h-[70vh] place-items-center py-12"><section className="max-w-md rounded-[var(--radius-xl-token)] border border-danger/20 bg-surface p-8 text-center shadow-[var(--shadow-sm)]"><h1 className="text-2xl font-black text-foreground">Chưa tải được Dashboard</h1><p className="mt-3 text-sm leading-6 text-text-secondary">{message ?? "Vui lòng kiểm tra kết nối rồi thử lại."}</p><Button onClick={onRetry} className="mt-6 rounded-full">Thử lại</Button></section></main>; }
-function Field({ label, description, full, children }: { label: string; description: string; full?: boolean; children: React.ReactNode }) { return <label className={`block text-xs font-semibold text-text-secondary ${full ? "sm:col-span-2" : ""}`}><span className="text-foreground">{label}</span><span className="mt-1 block text-[11px] font-normal leading-4 text-text-muted">{description}</span><span className="mt-2 block">{children}</span></label>; }
 function EmptyActivity() { return <div className="mt-3 rounded-lg border border-dashed border-border bg-muted/50 p-4 text-center"><BookOpenCheck className="mx-auto text-primary" size={20} /><p className="mt-2 text-xs font-bold text-foreground">Bạn chưa có lượt làm bài được lưu</p><p className="mt-1 text-[10px] leading-4 text-text-secondary">Chọn một bộ đề để bắt đầu hành trình.</p><Button asChild variant="outline" className="mt-3 h-8 rounded-full text-xs"><Link href="/explore">Khám phá bộ đề <ArrowRight size={13} /></Link></Button></div>; }

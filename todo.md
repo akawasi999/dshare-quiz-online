@@ -581,3 +581,8 @@
 - [x] Tích hợp icon sprite vào Dashboard, giữ dữ liệu tRPC và toàn bộ chức năng Profile hiện có.
 - [x] Nén lưới Dashboard desktop để các vùng trọng yếu nằm trong một màn hình như ảnh mẫu, đồng thời giữ responsive mobile.
 - [x] Kiểm thử trực quan, regression và lưu checkpoint Dashboard có icon sprite.
+- [x] Rà soát dữ liệu badge/thành tích thực, định tuyến và menu tài khoản để xác định điểm tích hợp.
+- [x] Tách Thiết lập hồ sơ & thông báo sang trang Thông tin cá nhân riêng và giữ Tổng quan chỉ dành cho Dashboard.
+- [x] Loại các mục Nhiệm vụ, Thành tích, Bảng xếp hạng và Mời bạn bè khỏi menu Sidebar mà không xóa route/chức năng.
+- [x] Hiển thị badge thành tích đã mở khóa theo dữ liệu thực, thêm animation nhận thưởng và thay asset Referral bị trong suốt.
+- [x] Kiểm thử hồi quy, responsive và lưu checkpoint Profile điều chỉnh.

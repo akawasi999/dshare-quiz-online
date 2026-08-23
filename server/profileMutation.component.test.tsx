@@ -22,6 +22,7 @@ vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/ho-so", vi.fn()] }));
 
 import Profile from "../client/src/pages/Profile";
+import PersonalInfo from "../client/src/pages/PersonalInfo";
 
 describe("Profile mutation feedback", () => {
   beforeEach(() => { mocks.toast.error.mockReset(); mocks.summary.data.currentPlan = null; mocks.summary.data.upgradePlans = []; });
@@ -29,10 +30,8 @@ describe("Profile mutation feedback", () => {
 
   it("công bố lỗi khi không thể lưu thiết lập hồ sơ", async () => {
     const user = userEvent.setup();
-    render(<Profile />);
-
-    await user.click(screen.getByText("Thiết lập hồ sơ & thông báo"));
-    await user.click(screen.getByRole("button", { name: "Lưu thiết lập" }));
+    render(<PersonalInfo />);
+    await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
 
     expect(mocks.toast.error).toHaveBeenCalledWith("Không thể lưu hồ sơ", { description: "Không thể kết nối" });
   });

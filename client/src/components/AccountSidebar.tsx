@@ -8,8 +8,8 @@ const SIDEBAR_STATE_KEY = "dshare-account-sidebar-collapsed";
 const upgradeChest = "/manus-storage/profile-upgrade-chest_9af97ca5.png";
 const navigationGroups = [
   { label: "Tổng quan", items: [[LayoutDashboard, "Tổng quan", ROUTES.account]] },
-  { label: "Quiz", items: [[PlusCircle, "Quiz của tôi", ROUTES.myQuizzes], [GraduationCap, "Làm Quiz", ROUTES.explore], [Target, "Nhiệm vụ", ROUTES.missions], [Medal, "Thành tích", ROUTES.achievements], [Trophy, "Bảng xếp hạng", ROUTES.leaderboard]] },
-  { label: "Tài khoản", items: [[CreditCard, "Nạp Point", ROUTES.billing], [Sparkles, "Nâng cấp tài khoản", ROUTES.pricing], [UserRound, "Thông tin cá nhân", `${ROUTES.account}#thiet-lap`], [UsersRound, "Mời bạn bè", ROUTES.referrals]] },
+  { label: "Quiz", items: [[PlusCircle, "Quiz của tôi", ROUTES.myQuizzes], [GraduationCap, "Làm Quiz", ROUTES.explore]] },
+  { label: "Tài khoản", items: [[CreditCard, "Nạp Point", ROUTES.billing], [Sparkles, "Nâng cấp tài khoản", ROUTES.pricing], [UserRound, "Thông tin cá nhân", ROUTES.accountProfile]] },
   { label: "Giao dịch", items: [[History, "Lịch sử giao dịch", ROUTES.wallet]] },
   { label: "Hỗ trợ", items: [[HandHeart, "Hỗ trợ", "mailto:support@dshare.vn"]] },
 ] as const;

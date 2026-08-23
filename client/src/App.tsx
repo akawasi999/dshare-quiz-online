@@ -8,6 +8,7 @@ import Support from "@/pages/Support";
 import NotFound from "@/pages/NotFound";
 import Pricing from "@/pages/Pricing";
 import Profile from "./pages/Profile";
+import PersonalInfo from "@/pages/PersonalInfo";
 import Practice from "./pages/Practice";
 import QuizLibrary from "@/pages/QuizLibrary";
 import QuizResult from "@/pages/QuizResult";
@@ -34,7 +35,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 
 function Router() {
   const [location] = useLocation();
-  const accountWorkspaceRoutes = [ROUTES.account, ROUTES.explore, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant];
+  const accountWorkspaceRoutes = [ROUTES.account, ROUTES.accountProfile, ROUTES.explore, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant];
   const hidePublicFooter = location.startsWith("/admin") || accountWorkspaceRoutes.some(route => location === route) || location === ROUTES.quizBuilder || location.startsWith(`${ROUTES.quiz}/`) || location.startsWith(ROUTES.results) || location.startsWith(ROUTES.practice);
   return <><Switch>
     <Route path={ROUTES.home} component={Home} />
@@ -45,6 +46,7 @@ function Router() {
     <Route path={ROUTES.leaderboard}>{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
     <Route path={ROUTES.pricing} component={Pricing} />
     <Route path={ROUTES.account} component={Profile} />
+    <Route path={ROUTES.accountProfile} component={PersonalInfo} />
     <Route path={ROUTES.missions}>{() => <LearnerAccountPage Page={Missions} />}</Route>
     <Route path={ROUTES.achievements}>{() => <LearnerAccountPage Page={Achievements} />}</Route>
     <Route path={ROUTES.wallet}>{() => <LearnerAccountPage Page={Wallet} />}</Route>

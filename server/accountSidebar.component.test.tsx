@@ -13,11 +13,15 @@ describe("AccountSidebar", () => {
   beforeEach(() => localStorage.clear());
   afterEach(cleanup);
 
-  it("giữ các mục học tập theo nhóm và không còn hiển thị AI Assistant", () => {
+  it("giữ menu tối giản theo nhóm và không còn hiển thị các trang đã nằm trong Tổng quan", () => {
     render(<AccountSidebar />);
     expect(screen.getByRole("button", { name: "Tổng quan" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Quiz của tôi" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "AI Assistant" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Nhiệm vụ" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Thành tích" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Bảng xếp hạng" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Mời bạn bè" })).toBeNull();
   });
 
   it("thu gọn được bằng điều khiển truy cập được nhưng vẫn giữ toàn bộ menu", async () => {
@@ -29,7 +33,7 @@ describe("AccountSidebar", () => {
     expect(container.querySelector("aside")?.className).toContain("w-[76px]");
     expect(localStorage.getItem("dshare-account-sidebar-collapsed")).toBe("true");
     expect(screen.getByRole("button", { name: "Mở rộng thanh điều hướng" })).toBeTruthy();
-    expect(screen.getByLabelText("Nhiệm vụ")).toBeTruthy();
+    expect(screen.getByLabelText("Thông tin cá nhân")).toBeTruthy();
     expect(screen.getByLabelText("Đăng xuất")).toBeTruthy();
   });
 });

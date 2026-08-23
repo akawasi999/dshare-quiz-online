@@ -6,6 +6,7 @@ export const ROUTES = {
   leaderboard: "/leaderboard",
   pricing: "/pricing",
   account: "/account",
+  accountProfile: "/account/profile",
   missions: "/missions",
   achievements: "/achievements",
   wallet: "/wallet",
