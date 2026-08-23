@@ -110,6 +110,8 @@ const quizIdInput = z.object({ quizId: z.number().int().positive() });
 const quizImageUploadInput = z.object({ fileName: z.string().trim().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) });
 const quizImageMimeTypes = ["image/jpeg", "image/png", "image/webp"] as const;
 const maxQuizImageBytes = 5 * 1024 * 1024;
+const avatarUploadInput = z.object({ fileName: z.string().trim().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(5_000_000) });
+const maxAvatarImageBytes = 3 * 1024 * 1024;
 const safeUploadFileName = (fileName: string) => fileName.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-").slice(0, 120) || "image";
 const quizAssetUrlInput = z.string().trim().max(1024).refine(value => value.startsWith("/manus-storage/") || /^https?:\/\//i.test(value), { message: "URL ảnh phải là liên kết HTTPS/HTTP hoặc đường dẫn lưu trữ hợp lệ." });
 const decodeQuizImageUpload = (input: z.infer<typeof quizImageUploadInput>) => {
@@ -118,6 +120,14 @@ const decodeQuizImageUpload = (input: z.infer<typeof quizImageUploadInput>) => {
   const bytes = Buffer.from(match[2]!, "base64");
   if (!bytes.length) throw new TRPCError({ code: "BAD_REQUEST", message: "Tệp ảnh trống hoặc không đọc được." });
   if (bytes.length > maxQuizImageBytes) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Ảnh tối đa 5 MB." });
+  return bytes;
+};
+const decodeAvatarImageUpload = (input: z.infer<typeof avatarUploadInput>) => {
+  const match = input.base64.match(/^data:([^;]+);base64,([A-Za-z0-9+/=\s]+)$/);
+  if (!match || match[1] !== input.mimeType || !quizImageMimeTypes.includes(input.mimeType)) throw new TRPCError({ code: "BAD_REQUEST", message: "Dữ liệu ảnh đại diện không hợp lệ." });
+  const bytes = Buffer.from(match[2]!, "base64");
+  if (!bytes.length) throw new TRPCError({ code: "BAD_REQUEST", message: "Ảnh đại diện trống hoặc không đọc được." });
+  if (bytes.length > maxAvatarImageBytes) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Ảnh đại diện tối đa 3 MB." });
   return bytes;
 };
 const csvEscape = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
@@ -500,6 +510,16 @@ export const appRouter = router({
         await db.update(learnerProfiles).set({ bio: input.bio || null, learningGoal: input.learningGoal || null, avatarUrl: input.avatarUrl || null, notificationPreferences: input.notificationPreferences }).where(eq(learnerProfiles.id, profile.id));
         return { success: true };
       }),
+    uploadAvatar: protectedProcedure.input(avatarUploadInput).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải ảnh đại diện lúc này." });
+      const profile = await ensureLearnerProfile(ctx.user.id);
+      if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập hồ sơ người học." });
+      const bytes = decodeAvatarImageUpload(input);
+      const uploaded = await storagePut(`learner-avatars/${ctx.user.id}/${Date.now()}-${safeUploadFileName(input.fileName)}`, bytes, input.mimeType);
+      await db.update(learnerProfiles).set({ avatarUrl: uploaded.url }).where(eq(learnerProfiles.id, profile.id));
+      return { url: uploaded.url };
+    }),
     referral: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return { referralCode: "", referredByCode: null, invitations: [], rewards: [], totalRewarded: 0 };

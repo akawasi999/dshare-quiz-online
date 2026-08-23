@@ -586,3 +586,7 @@
 - [x] Loại các mục Nhiệm vụ, Thành tích, Bảng xếp hạng và Mời bạn bè khỏi menu Sidebar mà không xóa route/chức năng.
 - [x] Hiển thị badge thành tích đã mở khóa theo dữ liệu thực, thêm animation nhận thưởng và thay asset Referral bị trong suốt.
 - [x] Kiểm thử hồi quy, responsive và lưu checkpoint Profile điều chỉnh.
+- [x] Rà soát cơ chế storage/upload hiện có và dữ liệu điều kiện mở khóa thành tích.
+- [x] Cho phép tải ảnh đại diện trực tiếp từ thiết bị, xác thực tệp và lưu URL avatar vào hồ sơ.
+- [x] Hiển thị tooltip điều kiện mở khóa lấy từ dữ liệu thành tích thực trên từng badge.
+- [x] Kiểm thử upload, tooltip, responsive, hồi quy và lưu checkpoint Profile.
