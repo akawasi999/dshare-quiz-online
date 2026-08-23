@@ -34,7 +34,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 
 function Router() {
   const [location] = useLocation();
-  const hidePublicFooter = location.startsWith("/admin") || location === ROUTES.quizBuilder || location.startsWith(`${ROUTES.quiz}/`) || location.startsWith(ROUTES.results) || location.startsWith(ROUTES.practice);
+  const accountWorkspaceRoutes = [ROUTES.account, ROUTES.explore, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant];
+  const hidePublicFooter = location.startsWith("/admin") || accountWorkspaceRoutes.some(route => location === route) || location === ROUTES.quizBuilder || location.startsWith(`${ROUTES.quiz}/`) || location.startsWith(ROUTES.results) || location.startsWith(ROUTES.practice);
   return <><Switch>
     <Route path={ROUTES.home} component={Home} />
     <Route path={ROUTES.explore}>{() => <LearnerAccountPage Page={QuizLibrary} />}</Route>

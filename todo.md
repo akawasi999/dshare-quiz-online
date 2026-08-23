@@ -557,3 +557,6 @@
 - [x] Thiết kế lại bố cục Hồ sơ theo hướng chuyên nghiệp, rõ thứ bậc và responsive.
 - [x] Tối ưu CSS, accessibility, loading/error/empty và xử lý lỗi giao diện Hồ sơ.
 - [x] Kiểm thử hồi quy, xác minh desktop/mobile và lưu checkpoint tối ưu Hồ sơ.
+- [x] Rà soát nguyên nhân Footer chồng lên sidebar ở cuối trang tài khoản/Hồ sơ.
+- [x] Sửa layout để sidebar kết thúc trước Footer và giữ responsive ổn định.
+- [x] Kiểm thử desktop/mobile, hồi quy và lưu checkpoint sửa lỗi layout Hồ sơ.
