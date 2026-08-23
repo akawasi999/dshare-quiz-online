@@ -19,6 +19,7 @@ import MyQuizzes from "@/pages/MyQuizzes";
 import AIStudyAssistant from "@/pages/AIStudyAssistant";
 import AccountLayout from "@/components/AccountLayout";
 import AppearanceStyleBridge from "@/components/AppearanceStyleBridge";
+import PublicSiteFooter from "@/components/PublicSiteFooter";
 import { LEGACY_ROUTE_MAP, ROUTES } from "@/lib/routes";
 import { Route, Switch, useLocation, useSearch } from "wouter";
 import { useEffect } from "react";
@@ -26,7 +27,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 function Router() {
-  return <Switch>
+  const [location] = useLocation();
+  const hidePublicFooter = location.startsWith("/admin") || location === ROUTES.quizBuilder || location.startsWith(`${ROUTES.quiz}/`) || location.startsWith(ROUTES.results) || location.startsWith(ROUTES.practice);
+  return <><Switch>
     <Route path={ROUTES.home} component={Home} />
     <Route path={ROUTES.explore}>{() => <LearnerAccountPage Page={QuizLibrary} />}</Route>
     <Route path={ROUTES.quizBuilder} component={UserQuizCreator} />
@@ -66,7 +69,7 @@ function Router() {
     {Object.entries(LEGACY_ROUTE_MAP).map(([legacyPath, target]) => <Route key={legacyPath} path={legacyPath}>{() => <LegacyRedirect to={target} />}</Route>)}
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
-  </Switch>;
+  </Switch>{!hidePublicFooter ? <PublicSiteFooter /> : null}</>;
 }
 
 function LegacyRedirect({ to }: { to: string }) {

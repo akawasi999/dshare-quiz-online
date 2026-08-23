@@ -66,6 +66,11 @@ body { font-family: var(--font-family-primary, "Inter"), ui-sans-serif, system-u
 :root[data-appearance-header-shadow="true"] .site-header { box-shadow: var(--shadow-sm); }
 :root[data-appearance-header-border="false"] .site-header { border-bottom-color: transparent; }
 .site-header { background-color: var(--site-header-background, var(--surface)); }
+.public-site-footer { color: white; }
+.public-site-footer-shadow { box-shadow: 0 -8px 30px rgba(15, 23, 42, .13); }
+.public-site-footer-border { border-top: 1px solid rgba(255,255,255,.17); }
+.public-site-footer-groups { display: grid; gap: 2rem; grid-template-columns: repeat(var(--footer-column-count, 3), minmax(0, 1fr)); }
+@media (max-width: 700px) { .public-site-footer-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem 1.25rem; } }
 
 @media (min-width: 1024px) {
   :root[data-appearance-header-sticky="true"] .site-header { position: sticky; top: 0; }

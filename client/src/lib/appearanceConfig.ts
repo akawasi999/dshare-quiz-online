@@ -6,7 +6,7 @@ export type AppearanceConfig = {
   borders: { defaultWidth: number; thinWidth: number; strongWidth: number; focusWidth: number; radius: Record<"none" | "xs" | "sm" | "md" | "lg" | "xl" | "full", number>; spacing: Record<"xs" | "sm" | "md" | "lg" | "xl" | "2xl", number>; componentRadius: Record<"button" | "input" | "card" | "modal" | "dropdown" | "badge" | "avatar", number> };
   page: { maxWidth: string; leftSidebarEnabled: boolean; leftSidebarWidth: number; rightSidebarEnabled: boolean; rightSidebarWidth: number; mobileBreakpoint: number; tabletBreakpoint: number; desktopBreakpoint: number; sidebarBehavior: "hide" | "collapse" | "offcanvas" | "stack" };
   header: { enabled: boolean; height: number; width: "container" | "full"; sticky: boolean; shadow: boolean; border: boolean; showLogo: boolean; logoWidth: number; showNavigation: boolean; navigationPosition: "left" | "center" | "right"; navigationGap: number; navigationFontSize: number; navigationFontWeight: number; actions: Record<"search" | "notifications" | "messages" | "help" | "userMenu" | "login" | "register" | "cta", boolean> };
-  footer: { enabled: boolean; height: number; width: "container" | "full"; shadow: boolean; border: boolean; columns: 1 | 2 | 3 | 4; description: string; copyright: string; showThemeSwitcher: boolean; links: Array<{ label: string; url: string; enabled: boolean }> };
+  footer: { enabled: boolean; height: number; width: "container" | "full"; shadow: boolean; border: boolean; columns: 1 | 2 | 3 | 4; description: string; copyright: string; showThemeSwitcher: boolean; links: Array<{ label: string; url: string; enabled: boolean }>; linkGroups: Array<{ id: string; title: string; links: Array<{ label: string; url: string; enabled: boolean }> }> };
   studio: { questionsWidth: number; settingsWidth: number };
 };
 
@@ -20,12 +20,15 @@ export const defaultAppearanceConfig: AppearanceConfig = {
   borders: { defaultWidth: 1, thinWidth: 1, strongWidth: 2, focusWidth: 3, radius: { none: 0, xs: 4, sm: 8, md: 12, lg: 16, xl: 24, full: 9999 }, spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, "2xl": 32 }, componentRadius: { button: 12, input: 12, card: 24, modal: 24, dropdown: 16, badge: 9999, avatar: 9999 } },
   page: { maxWidth: "1440px", leftSidebarEnabled: true, leftSidebarWidth: 280, rightSidebarEnabled: false, rightSidebarWidth: 320, mobileBreakpoint: 640, tabletBreakpoint: 768, desktopBreakpoint: 1024, sidebarBehavior: "offcanvas" },
   header: { enabled: true, height: 68, width: "container", sticky: false, shadow: false, border: true, showLogo: true, logoWidth: 142, showNavigation: true, navigationPosition: "left", navigationGap: 32, navigationFontSize: 14, navigationFontWeight: 500, actions: { search: false, notifications: true, messages: false, help: false, userMenu: true, login: true, register: false, cta: true } },
-  footer: { enabled: true, height: 240, width: "container", shadow: false, border: false, columns: 3, description: "Nền tảng tạo Quiz, học tập và chia sẻ kiến thức trực tuyến.", copyright: "© Dshare Quiz Online", showThemeSwitcher: true, links: [{ label: "Điều khoản", url: "/terms", enabled: true }, { label: "Bảo mật", url: "/privacy", enabled: true }, { label: "Liên hệ", url: "/account", enabled: true }] },
+  footer: { enabled: true, height: 240, width: "container", shadow: false, border: false, columns: 3, description: "Nền tảng tạo Quiz, học tập và chia sẻ kiến thức trực tuyến.", copyright: "© Dshare Quiz Online", showThemeSwitcher: true, links: [{ label: "Điều khoản", url: "/terms", enabled: true }, { label: "Bảo mật", url: "/privacy", enabled: true }, { label: "Liên hệ", url: "/account", enabled: true }], linkGroups: [{ id: "information", title: "Thông tin", links: [{ label: "Điều khoản", url: "/terms", enabled: true }, { label: "Bảo mật", url: "/privacy", enabled: true }] }, { id: "support", title: "Hỗ trợ", links: [{ label: "Liên hệ", url: "/account", enabled: true }] }] },
   studio: { questionsWidth: 1440, settingsWidth: 1040 },
 };
 
 export function mergeAppearanceConfig(value: unknown): AppearanceConfig {
   const candidate = value && typeof value === "object" ? value as Partial<AppearanceConfig> : {};
+  const candidateFooter = candidate.footer;
+  const mergedFooter = { ...defaultAppearanceConfig.footer, ...candidateFooter };
+  const legacyFooterLinks = candidateFooter && Array.isArray(candidateFooter.links) ? candidateFooter.links : null;
   return {
     ...defaultAppearanceConfig,
     ...candidate,
@@ -36,7 +39,7 @@ export function mergeAppearanceConfig(value: unknown): AppearanceConfig {
     borders: { ...defaultAppearanceConfig.borders, ...candidate.borders, radius: { ...defaultAppearanceConfig.borders.radius, ...candidate.borders?.radius }, spacing: { ...defaultAppearanceConfig.borders.spacing, ...candidate.borders?.spacing }, componentRadius: { ...defaultAppearanceConfig.borders.componentRadius, ...candidate.borders?.componentRadius } },
     page: { ...defaultAppearanceConfig.page, ...candidate.page },
     header: { ...defaultAppearanceConfig.header, ...candidate.header, actions: { ...defaultAppearanceConfig.header.actions, ...candidate.header?.actions } },
-    footer: { ...defaultAppearanceConfig.footer, ...candidate.footer },
+    footer: { ...mergedFooter, linkGroups: candidateFooter && !Array.isArray(candidateFooter.linkGroups) && legacyFooterLinks ? [{ id: "information", title: "Thông tin", links: legacyFooterLinks }] : mergedFooter.linkGroups },
     studio: { ...defaultAppearanceConfig.studio, ...candidate.studio },
   };
 }

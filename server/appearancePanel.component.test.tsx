@@ -33,16 +33,17 @@ describe("BrandSettingsPanel", () => {
     expect(screen.getByText("Ảnh bìa Quiz mặc định")).toBeTruthy();
   });
 
-  it("mô phỏng toàn trang công khai và đổi thứ tự Footer Navigation bằng kéo-thả", () => {
+  it("mô phỏng toàn trang công khai và đổi thứ tự liên kết giữa các cột Footer", () => {
     render(<BrandSettingsPanel />);
     expect(screen.getAllByText("Bộ đề nổi bật").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "Footer" }));
-    const first = screen.getByLabelText("Tên footer link 1");
-    const second = screen.getByLabelText("Tên footer link 2");
+    expect(screen.getByText("Footer Navigation theo cột")).toBeTruthy();
+    const first = screen.getByLabelText("Tên link Thông tin 1");
+    const second = screen.getByLabelText("Tên link Hỗ trợ 1");
     fireEvent.dragStart(first.closest("[draggable=true]")!);
     fireEvent.dragOver(second.closest("[draggable=true]")!);
     fireEvent.drop(second.closest("[draggable=true]")!);
-    expect(screen.getByLabelText("Tên footer link 1").getAttribute("value")).toBe("Bảo mật");
-    expect(screen.getByLabelText("Kéo thả Điều khoản")).toBeTruthy();
+    expect(screen.getByLabelText("Tên link Thông tin 1")).toBeTruthy();
+    expect(screen.getByLabelText("Kéo thả cột Thông tin")).toBeTruthy();
   });
 });

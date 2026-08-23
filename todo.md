@@ -507,3 +507,7 @@
 - [x] Thêm kéo-thả để sắp xếp Footer Navigation và lưu thứ tự trong Appearance.
 - [x] Mở rộng preview để mô phỏng toàn bộ trang công khai theo style đang chỉnh.
 - [x] Kiểm thử responsive, persistence, hồi quy và lưu checkpoint cho cập nhật Appearance mở rộng.
+- [x] Rà soát cấu trúc Footer Navigation và dữ liệu Appearance hiện có.
+- [x] Mở rộng Footer thành nhóm liên kết theo cột, tương thích cấu hình cũ.
+- [x] Xây dựng quản trị cột Footer, kéo-thả thứ tự cột và liên kết.
+- [x] Cập nhật preview công khai, responsive, regression và lưu checkpoint cho Footer nhiều cột.
