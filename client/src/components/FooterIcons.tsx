@@ -1,8 +1,9 @@
-import type { FooterLinkIcon, FooterSocialPlatform } from "@/lib/appearanceConfig";
+import type { FooterLinkIcon, FooterSocialPlatform, FooterSocialZone } from "@/lib/appearanceConfig";
 import { BookOpen, BriefcaseBusiness, Facebook, FileText, HelpCircle, Instagram, Linkedin, Mail, Music2, ShieldCheck, Twitter, Users, Youtube } from "lucide-react";
 
 export const footerIconOptions: Array<{ value: FooterLinkIcon; label: string }> = [{ value: "none", label: "Không có" }, { value: "book", label: "Sách" }, { value: "shield", label: "Bảo mật" }, { value: "mail", label: "Email" }, { value: "help", label: "Trợ giúp" }, { value: "users", label: "Cộng đồng" }, { value: "briefcase", label: "Dịch vụ" }, { value: "file", label: "Tài liệu" }];
 export const socialPlatformLabels: Record<FooterSocialPlatform, string> = { facebook: "Facebook", instagram: "Instagram", youtube: "YouTube", linkedin: "LinkedIn", twitter: "X / Twitter", tiktok: "TikTok" };
+export const socialZoneLabels: Record<FooterSocialZone, string> = { brand: "Cạnh mô tả thương hiệu", navigation: "Bên dưới nhóm liên kết", bottom: "Thanh bản quyền phía dưới" };
 export const socialColorPresets: Record<FooterSocialPlatform, { backgroundColor: string; iconColor: string }> = { facebook: { backgroundColor: "#1877F2", iconColor: "#FFFFFF" }, instagram: { backgroundColor: "#E4405F", iconColor: "#FFFFFF" }, youtube: { backgroundColor: "#FF0000", iconColor: "#FFFFFF" }, linkedin: { backgroundColor: "#0A66C2", iconColor: "#FFFFFF" }, twitter: { backgroundColor: "#000000", iconColor: "#FFFFFF" }, tiktok: { backgroundColor: "#010101", iconColor: "#FFFFFF" } };
 
 export function getSocialUrlError(value: string, required: boolean) {

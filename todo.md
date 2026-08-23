@@ -523,3 +523,7 @@
 - [x] Bổ sung preset màu theo từng nền tảng và animation hover cho social icon.
 - [x] Thêm kéo-thả để sắp xếp thứ tự social icon trong Appearance.
 - [x] Kiểm thử animation, thứ tự, responsive, hồi quy và lưu checkpoint.
+- [x] Rà soát mô hình social Footer và các điểm render theo khu vực.
+- [x] Mở rộng cấu hình kích thước, khu vực và hiển thị mobile cho social icon.
+- [x] Xây dựng Appearance quản trị nhóm và responsive social icon.
+- [x] Cập nhật Footer công khai, kiểm thử mobile, hồi quy và lưu checkpoint.

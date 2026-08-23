@@ -44,6 +44,8 @@ describe("BrandSettingsPanel", () => {
     expect(screen.getByText("Màu mặc định theo nền tảng")).toBeTruthy();
     expect(screen.getByText("Thứ tự biểu tượng mạng xã hội")).toBeTruthy();
     expect(screen.getByLabelText("Kéo thả Facebook")).toBeTruthy();
+    expect(screen.getByText("Kích thước, khu vực & điện thoại")).toBeTruthy();
+    expect(screen.getByLabelText("Khu vực Facebook")).toBeTruthy();
     fireEvent.change(screen.getByLabelText("URL Facebook"), { target: { value: "facebook-sai" } });
     expect(screen.getByRole("alert")).toBeTruthy();
     const first = screen.getByLabelText("Tên link Thông tin 1");
