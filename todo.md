@@ -553,3 +553,7 @@
 - [x] Triển khai event phần thưởng, nhiệm vụ Daily/Weekly/chiến dịch và trừ Point phía máy chủ.
 - [x] Hoàn thiện popup phần thưởng, CPanel chiến dịch và cảnh báo số dư Point trong các luồng AI.
 - [x] Kiểm thử hồi quy, xác minh responsive và lưu checkpoint Gamification mở rộng.
+- [x] Rà soát cấu trúc, dữ liệu, CSS và các trạng thái trang Hồ sơ hiện có.
+- [x] Thiết kế lại bố cục Hồ sơ theo hướng chuyên nghiệp, rõ thứ bậc và responsive.
+- [x] Tối ưu CSS, accessibility, loading/error/empty và xử lý lỗi giao diện Hồ sơ.
+- [x] Kiểm thử hồi quy, xác minh desktop/mobile và lưu checkpoint tối ưu Hồ sơ.
