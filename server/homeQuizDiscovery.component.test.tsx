@@ -38,6 +38,14 @@ describe("Home quiz discovery", () => {
     expect(document.querySelectorAll("[data-scroll-reveal='true']").length).toBe(6);
   });
 
+  it("không còn hiển thị dải liên kết phụ ở cuối trang chủ", () => {
+    render(<Home />);
+
+    expect(screen.queryByText("Nơi việc học được thiết kế có chủ đích.")).toBeNull();
+    expect(screen.queryByRole("link", { name: "Gói học" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Thư viện" })).toBeNull();
+  });
+
   it("supports search and reward sorting for visible Quiz Cards", async () => {
     const user = userEvent.setup();
     render(<Home />);

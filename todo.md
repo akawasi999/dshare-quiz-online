@@ -527,3 +527,6 @@
 - [x] Mở rộng cấu hình kích thước, khu vực và hiển thị mobile cho social icon.
 - [x] Xây dựng Appearance quản trị nhóm và responsive social icon.
 - [x] Cập nhật Footer công khai, kiểm thử mobile, hồi quy và lưu checkpoint.
+- [x] Xác định dải liên kết phụ Footer cần loại bỏ và regression liên quan.
+- [x] Gỡ dải liên kết phụ, điều chỉnh spacing Footer còn lại.
+- [x] Kiểm thử Footer desktop/mobile, hồi quy và lưu checkpoint.
