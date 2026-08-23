@@ -54,6 +54,24 @@ export const seoSettings = mysqlTable("seoSettings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const siteSettings = mysqlTable("siteSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  homePageUrl: varchar("homePageUrl", { length: 1024 }).default("https://dsharequiz-jxleeaps.manus.space").notNull(),
+  boardTitle: varchar("boardTitle", { length: 180 }).default("Dshare Quiz Online").notNull(),
+  metaDescription: varchar("metaDescription", { length: 320 }).default("Nền tảng tạo Quiz, học tập và chia sẻ kiến thức trực tuyến.").notNull(),
+  defaultEmailAddress: varchar("defaultEmailAddress", { length: 320 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const siteNavigationItems = mysqlTable("siteNavigationItems", {
+  id: int("id").autoincrement().primaryKey(),
+  label: varchar("label", { length: 100 }).notNull(),
+  url: varchar("url", { length: 1024 }).notNull(),
+  position: int("position").default(0).notNull(),
+  isEnabled: boolean("isEnabled").default(true).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [index("site_navigation_position_idx").on(table.position, table.isEnabled)]);
+
 export const accountTierValues = ["basic", "pro", "premium"] as const;
 export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "expired"] as const;
 export const quizModeValues = ["training", "testing"] as const;

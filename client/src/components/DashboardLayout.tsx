@@ -32,7 +32,7 @@ import {
 import { startLogin } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Activity, Award, Bell, BookOpenCheck, Bot, ChartNoAxesCombined, ChevronRight, CircleDollarSign, Command, FileWarning, FolderTree, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, Search, ScrollText, Share2, Sun, UserRound, Users, UsersRound, Wifi, WifiOff } from "lucide-react";
+import { Activity, Award, Bell, BookOpenCheck, Bot, ChartNoAxesCombined, ChevronRight, CircleDollarSign, Command, FileWarning, FolderTree, LayoutDashboard, LogOut, Moon, Palette, PanelLeft, Search, ScrollText, Settings2, Share2, Sun, UserRound, Users, UsersRound, Wifi, WifiOff } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
@@ -63,6 +63,7 @@ const navigationSections: NavigationSection[] = [
   ] },
   { label: "Appearance", items: [{ icon: Palette, label: "Tùy chỉnh Style", path: ROUTES.adminTheme, aliases: ["/quan-tri/thuong-hieu"], description: "Nhận diện và Design System" }] },
 ];
+const settingsNavigationItem: NavigationItem = { icon: Settings2, label: "Cài đặt", path: ROUTES.adminSettings, aliases: ["/quan-tri/cai-dat"], description: "Cấu hình cơ bản và Navigation website" };
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
@@ -94,7 +95,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const isCollapsed = state === "collapsed";
-  const activeItem = navigationSections.flatMap(section => section.items).find(item => location === item.path || item.aliases?.includes(location));
+  const activeItem = [...navigationSections.flatMap(section => section.items), settingsNavigationItem].find(item => location === item.path || item.aliases?.includes(location));
 
   useEffect(() => {
     const syncConnection = () => setIsOnline(navigator.onLine);
@@ -136,7 +137,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
         <SidebarContent className="gap-0 py-3">
           {navigationSections.map(section => <div key={section.label} className="mb-3"><p className="px-4 pb-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-text-muted group-data-[collapsible=icon]:hidden">{section.label}</p><SidebarMenu className="px-2">{section.items.map(item => { const isActive = location === item.path || item.aliases?.includes(location); return <SidebarMenuItem key={item.path}><SidebarMenuButton isActive={isActive} onClick={() => navigate(item)} tooltip={item.label} className={`relative h-10 rounded-[var(--radius-sm-token)] text-[13px] font-medium transition-colors before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-primary ${isActive ? "bg-primary-light text-primary before:block" : "text-text-secondary hover:bg-muted hover:text-foreground before:hidden"}`}><item.icon className="size-4" /><span>{item.label}</span></SidebarMenuButton></SidebarMenuItem>; })}</SidebarMenu></div>)}
         </SidebarContent>
-        <SidebarFooter className="border-t border-border p-3"><p className="mb-2 flex items-center gap-1.5 px-1 text-[10px] text-text-muted"><span className={`size-1.5 rounded-full ${isOnline ? "bg-success" : "bg-danger"}`} />{isOnline ? "Đã kết nối" : "Mất kết nối"}</p><AdminMenu userName={user?.name} email={user?.email} onLogout={logout} onAccount={() => setLocation(ROUTES.account)} collapsed={isCollapsed} /></SidebarFooter>
+        <SidebarFooter className="border-t border-border p-3"><SidebarMenu className="mb-3"><SidebarMenuItem><SidebarMenuButton isActive={activeItem?.path === settingsNavigationItem.path} onClick={() => navigate(settingsNavigationItem)} tooltip="Cài đặt" className={`relative h-10 rounded-[var(--radius-sm-token)] text-[13px] font-medium transition-colors before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-primary ${activeItem?.path === settingsNavigationItem.path ? "bg-primary-light text-primary before:block" : "text-text-secondary hover:bg-muted hover:text-foreground before:hidden"}`}><Settings2 className="size-4" /><span>Cài đặt</span></SidebarMenuButton></SidebarMenuItem></SidebarMenu><p className="mb-2 flex items-center gap-1.5 px-1 text-[10px] text-text-muted"><span className={`size-1.5 rounded-full ${isOnline ? "bg-success" : "bg-danger"}`} />{isOnline ? "Đã kết nối" : "Mất kết nối"}</p><AdminMenu userName={user?.name} email={user?.email} onLogout={logout} onAccount={() => setLocation(ROUTES.account)} collapsed={isCollapsed} /></SidebarFooter>
       </Sidebar>
       <div className={`absolute bottom-0 right-0 top-0 z-50 w-1 cursor-col-resize transition-colors hover:bg-primary/20 ${isCollapsed ? "hidden" : ""}`} onMouseDown={() => setIsResizing(true)} />
     </div>
@@ -151,7 +152,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
 }
 
 function CPanelCommandPalette({ open, onOpenChange, onNavigate }: { open: boolean; onOpenChange: (open: boolean) => void; onNavigate: (item: NavigationItem) => void }) {
-  return <CommandDialog open={open} onOpenChange={onOpenChange} title="Tìm nhanh CPanel" description="Đi tới mô-đun quản trị" className="max-w-xl"><CommandInput placeholder="Tìm dashboard, người dùng, Point, báo lỗi…" /><CommandList><CommandEmpty>Không tìm thấy mô-đun phù hợp.</CommandEmpty>{navigationSections.map(section => <CommandGroup key={section.label} heading={section.label}>{section.items.map(item => <CommandItem key={item.path} value={`${item.label} ${item.description} ${section.label}`} onSelect={() => onNavigate(item)}><item.icon size={16} /><span>{item.label}</span><CommandShortcut>{section.label}</CommandShortcut></CommandItem>)}</CommandGroup>)}</CommandList></CommandDialog>;
+  return <CommandDialog open={open} onOpenChange={onOpenChange} title="Tìm nhanh CPanel" description="Đi tới mô-đun quản trị" className="max-w-xl"><CommandInput placeholder="Tìm dashboard, người dùng, Point, báo lỗi…" /><CommandList><CommandEmpty>Không tìm thấy mô-đun phù hợp.</CommandEmpty>{[...navigationSections, { label: "Cài đặt", items: [settingsNavigationItem] }].map(section => <CommandGroup key={section.label} heading={section.label}>{section.items.map(item => <CommandItem key={item.path} value={`${item.label} ${item.description} ${section.label}`} onSelect={() => onNavigate(item)}><item.icon size={16} /><span>{item.label}</span><CommandShortcut>{section.label}</CommandShortcut></CommandItem>)}</CommandGroup>)}</CommandList></CommandDialog>;
 }
 
 function ConnectionStatus({ online }: { online: boolean }) { return <span role="status" aria-label={online ? "Trạng thái kết nối: trực tuyến" : "Trạng thái kết nối: ngoại tuyến"} className={`hidden items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-bold lg:inline-flex ${online ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>{online ? <Wifi size={13} /> : <WifiOff size={13} />}{online ? "Trực tuyến" : "Ngoại tuyến"}</span>; }

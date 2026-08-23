@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { LEGACY_ROUTE_MAP, ROUTES } from "../client/src/lib/routes";
 import { DEFAULT_QUIZ_COVER_URL, getDb, getQuizDetail, getQuizQuestionSet, listPublishedCatalog, withImageCacheVersion } from "./db";
-import { seoSettings } from "../drizzle/schema";
+import { seoSettings, siteSettings } from "../drizzle/schema";
 
 export const SITE_ORIGIN = "https://dsharequiz-jxleeaps.manus.space";
 export const SITEMAP_PATHS = [ROUTES.home, ROUTES.explore, ROUTES.pricing, ROUTES.leaderboard] as const;
@@ -61,7 +61,7 @@ function combineJsonLd(...items: Array<Record<string, unknown> | undefined>) {
   return { "@context": "https://schema.org", "@graph": items.filter(Boolean) };
 }
 
-export function buildSeoHead(meta: PageMeta, settings: SeoSettings) {
+export function buildSeoHead(meta: PageMeta, settings: SeoSettings, siteName = "Dshare Quiz Online") {
   const title = compactText(meta.title, 70);
   const description = compactText(meta.description, 200);
   const canonical = `${SITE_ORIGIN}${meta.canonicalPath}`;
@@ -75,7 +75,7 @@ export function buildSeoHead(meta: PageMeta, settings: SeoSettings) {
     `<meta property="og:title" content="${escapeHtml(title)}" />`,
     `<meta property="og:description" content="${escapeHtml(description)}" />`,
     `<meta property="og:url" content="${escapeHtml(canonical)}" />`,
-    `<meta property="og:site_name" content="Dshare Quiz Online" />`,
+    `<meta property="og:site_name" content="${escapeHtml(siteName)}" />`,
     `<meta property="og:locale" content="vi_VN" />`,
     `<meta name="twitter:card" content="${image ? "summary_large_image" : "summary"}" />`,
     `<meta name="twitter:title" content="${escapeHtml(title)}" />`,
@@ -97,10 +97,18 @@ async function readSeoSettings(): Promise<SeoSettings> {
   return settings ?? { googleAnalyticsMeasurementId: null, googleSearchConsoleVerification: null, defaultQuizCoverUrl: null };
 }
 
+async function readBasicSiteSettings() {
+  const fallback = { boardTitle: "Dshare Quiz Online", metaDescription: "Nền tảng Quiz và ôn tập trực tuyến cho hành trình học tập có định hướng." };
+  const db = await getDb();
+  if (!db) return fallback;
+  return (await db.select({ boardTitle: siteSettings.boardTitle, metaDescription: siteSettings.metaDescription }).from(siteSettings).limit(1))[0] ?? fallback;
+}
+
 export async function attachSeoMetadata(req: Request, res: Response, next: NextFunction) {
   if (req.method !== "GET" || req.path.startsWith("/api/")) return next();
   try {
     const settings = await readSeoSettings();
+    const basicSettings = await readBasicSiteSettings();
     const match = req.path.match(/^\/quiz\/(\d+)$/);
     if (match) {
       const detail = await getQuizDetail(Number(match[1]));
@@ -111,13 +119,13 @@ export async function attachSeoMetadata(req: Request, res: Response, next: NextF
         const image = withImageCacheVersion(rawImage, imageVersion);
         const questions = await getQuizQuestionSet(quiz.id);
         const jsonLd = buildQuizJsonLd({ quizId: quiz.id, title: quiz.title, summary: quiz.summary, image, datePublished: quiz.publishedAt ?? quiz.createdAt, category: detail.category.title, questions: questions.map(item => ({ prompt: item.question.prompt })) });
-        res.locals.seoHead = buildSeoHead({ title: `${quiz.title} · Dshare Quiz Online`, description: quiz.summary || `Làm Quiz ${quiz.title} trên Dshare Quiz Online.`, canonicalPath: `${ROUTES.quiz}/${quiz.id}`, image, type: "article", publishedAt: quiz.publishedAt ?? quiz.createdAt, jsonLd: combineJsonLd(buildBreadcrumbJsonLd(`${ROUTES.quiz}/${quiz.id}`, quiz.title), jsonLd) }, settings);
+        res.locals.seoHead = buildSeoHead({ title: `${quiz.title} · ${basicSettings.boardTitle}`, description: quiz.summary || `Làm Quiz ${quiz.title} trên ${basicSettings.boardTitle}.`, canonicalPath: `${ROUTES.quiz}/${quiz.id}`, image, type: "article", publishedAt: quiz.publishedAt ?? quiz.createdAt, jsonLd: combineJsonLd(buildBreadcrumbJsonLd(`${ROUTES.quiz}/${quiz.id}`, quiz.title), jsonLd) }, settings, basicSettings.boardTitle);
       } else {
-        res.locals.seoHead = buildSeoHead({ title: "Quiz không khả dụng · Dshare Quiz Online", description: "Quiz này không còn công khai hoặc đã được di chuyển.", canonicalPath: req.path, noindex: true }, settings);
+        res.locals.seoHead = buildSeoHead({ title: `Quiz không khả dụng · ${basicSettings.boardTitle}`, description: "Quiz này không còn công khai hoặc đã được di chuyển.", canonicalPath: req.path, noindex: true }, settings, basicSettings.boardTitle);
       }
       return next();
     }
-    res.locals.seoHead = buildSeoHead({ title: "Dshare Quiz Online", description: "Nền tảng Quiz và ôn tập trực tuyến cho hành trình học tập có định hướng.", canonicalPath: req.path === "/" ? "/" : req.path, jsonLd: buildBreadcrumbJsonLd(req.path) }, settings);
+    res.locals.seoHead = buildSeoHead({ title: basicSettings.boardTitle, description: basicSettings.metaDescription, canonicalPath: req.path === "/" ? "/" : req.path, jsonLd: buildBreadcrumbJsonLd(req.path) }, settings, basicSettings.boardTitle);
     return next();
   } catch (error) {
     console.error("[SEO] Không thể tạo metadata động:", error);

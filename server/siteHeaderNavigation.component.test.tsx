@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), logout: vi.fn(), markRea
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: mocks.user, loading: false, logout: mocks.logout }) }));
 vi.mock("@/contexts/ThemeContext", () => ({ useTheme: () => ({ theme: "light", toggleTheme: mocks.toggleTheme }) }));
 vi.mock("@/components/BrandLogo", () => ({ default: () => <span>Dshare</span> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { catalog: { topics: { useQuery: () => ({ data: mocks.topics }) } }, learner: { summary: { useQuery: () => ({ data: mocks.summary }) }, notifications: { useQuery: () => ({ data: mocks.notifications, refetch: vi.fn() }) }, markNotificationRead: { useMutation: () => ({ mutate: mocks.markRead }) }, markAllNotificationsRead: { useMutation: () => ({ mutate: mocks.markAllRead }) } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { catalog: { topics: { useQuery: () => ({ data: mocks.topics }) } }, site: { navigation: { useQuery: () => ({ data: [] }) } }, learner: { summary: { useQuery: () => ({ data: mocks.summary }) }, notifications: { useQuery: () => ({ data: mocks.notifications, refetch: vi.fn() }) }, markNotificationRead: { useMutation: () => ({ mutate: mocks.markRead }) }, markAllNotificationsRead: { useMutation: () => ({ mutate: mocks.markAllRead }) } } } }));
 vi.mock("wouter", () => ({ Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => <a href={href} {...props}>{children}</a>, useLocation: () => ["/"] }));
 
 import SiteHeader from "../client/src/components/SiteHeader";

@@ -60,6 +60,7 @@ function Router() {
     <Route path={ROUTES.adminLogs} component={Admin} />
     <Route path={ROUTES.adminAi} component={Admin} />
     <Route path={ROUTES.adminTheme} component={Admin} />
+    <Route path={ROUTES.adminSettings} component={Admin} />
     <Route path="/ket-qua/:id">{params => <LegacyRedirect to={`${ROUTES.results}/${params.id}`} />}</Route>
     {Object.entries(LEGACY_ROUTE_MAP).map(([legacyPath, target]) => <Route key={legacyPath} path={legacyPath}>{() => <LegacyRedirect to={target} />}</Route>)}
     <Route path="/404" component={NotFound} />

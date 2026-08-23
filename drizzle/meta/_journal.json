@@ -267,6 +267,13 @@
       "when": 1787450230535,
       "tag": "0037_confused_power_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1787452059387,
+      "tag": "0038_lame_mandarin",
+      "breakpoints": true
     }
   ]
 }

@@ -73,12 +73,14 @@ export default function SiteHeader({ variant = "light" }: { variant?: "light" | 
   const { theme, toggleTheme } = useTheme();
   const isDarkLogo = variant === "dark" || theme === "dark";
   const publicTopics = trpc.catalog.topics.useQuery(undefined, sharedDataQueryOptions);
+  const managedNavigation = trpc.site.navigation.useQuery(undefined, sharedDataQueryOptions);
   const accountSummary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const notifications = trpc.learner.notifications.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const markNotificationRead = trpc.learner.markNotificationRead.useMutation({ onSuccess: () => void notifications.refetch() });
   const markAllNotificationsRead = trpc.learner.markAllNotificationsRead.useMutation({ onSuccess: () => void notifications.refetch() });
   const topicNavigationItems: NavMenuItem[] = (publicTopics.data ?? []).filter(topic => topic.parentId === null).map(topic => ({ label: topic.name, href: `${ROUTES.explore}?topic=${encodeURIComponent(topic.slug)}`, depth: 0 }));
-  const navigationItems: NavItem[] = navigation.map(item => item.kind === "topics" ? { ...item, items: topicNavigationItems } : item);
+  const configuredNavigation: NavItem[] = (managedNavigation.data?.length ? managedNavigation.data.map(item => item.label === "Khám phá" ? { label: item.label, kind: "topics" as const } : { label: item.label, href: item.url }) : navigation);
+  const navigationItems: NavItem[] = configuredNavigation.map(item => item.kind === "topics" ? { ...item, items: topicNavigationItems } : item);
   const isAdmin = user?.role === "admin";
   const accountAvatarUrl = accountSummary.data?.profile?.avatarUrl?.trim() || null;
   const pointBalance = accountSummary.data?.profile?.pointBalance ?? 0;

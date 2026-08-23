@@ -493,3 +493,7 @@
 - [x] Thêm cấu hình ảnh bìa mặc định trong CPanel cùng cache-busting ảnh Quiz.
 - [x] Thêm bộ đếm và cảnh báo giới hạn title/mô tả mạng xã hội trong CPanel.
 - [x] Kiểm thử migration, CPanel, cache, SEO và lưu checkpoint.
+- [x] Rà soát sidebar CPanel, cấu hình hệ thống và mô hình Navigation hiện có.
+- [x] Xây dựng dữ liệu/lưu trữ cho cài đặt cơ bản và Navigation có thể quản lý.
+- [x] Thiết kế workspace Cài đặt theo ảnh tham chiếu và tích hợp ở cuối CPanel.
+- [x] Kiểm thử cấu hình, Navigation, responsive và lưu checkpoint.

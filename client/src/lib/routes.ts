@@ -33,6 +33,7 @@ export const ROUTES = {
   adminLogs: "/admin/system/logs",
   adminAi: "/admin/system/ai",
   adminTheme: "/admin/appearance/theme",
+  adminSettings: "/admin/settings",
 } as const;
 
 export const LEGACY_ROUTE_MAP: Record<string, string> = {
@@ -67,4 +68,5 @@ export const LEGACY_ROUTE_MAP: Record<string, string> = {
   "/quan-tri/nhat-ky": ROUTES.adminLogs,
   "/quan-tri/thuong-hieu": ROUTES.adminTheme,
   "/quan-tri/ai-assistant": ROUTES.adminAi,
+  "/quan-tri/cai-dat": ROUTES.adminSettings,
 };

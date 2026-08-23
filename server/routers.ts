@@ -25,6 +25,8 @@ import {
   quizQuestions,
   quizSourceHistories,
   seoSettings,
+  siteNavigationItems,
+  siteSettings,
   subscriptionPlans,
   subjects,
   topics,
@@ -991,7 +993,57 @@ export const appRouter = router({
       return { googleAnalyticsMeasurementId: settings?.googleAnalyticsMeasurementId ?? null };
     }),
   }),
+  site: router({
+    navigation: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select({ id: siteNavigationItems.id, label: siteNavigationItems.label, url: siteNavigationItems.url, position: siteNavigationItems.position }).from(siteNavigationItems).where(eq(siteNavigationItems.isEnabled, true)).orderBy(asc(siteNavigationItems.position));
+    }),
+  }),
   admin: router({
+    siteSettings: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cài đặt hệ thống." });
+      const [settings, navigation] = await Promise.all([
+        db.select().from(siteSettings).limit(1),
+        db.select().from(siteNavigationItems).orderBy(asc(siteNavigationItems.position)),
+      ]);
+      return {
+        settings: settings[0] ?? { homePageUrl: "https://dsharequiz-jxleeaps.manus.space", boardTitle: "Dshare Quiz Online", metaDescription: "Nền tảng tạo Quiz, học tập và chia sẻ kiến thức trực tuyến.", defaultEmailAddress: null, updatedAt: null },
+        navigation,
+      };
+    }),
+    saveSiteSettings: adminProcedure.input(z.object({ homePageUrl: z.string().trim().url().max(1024), boardTitle: z.string().trim().min(2).max(180), metaDescription: z.string().trim().min(20).max(320), defaultEmailAddress: z.string().trim().email().max(320).nullable() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu cài đặt hệ thống." });
+      const payload = { ...input, defaultEmailAddress: input.defaultEmailAddress || null };
+      const current = (await db.select({ id: siteSettings.id }).from(siteSettings).limit(1))[0];
+      if (current) await db.update(siteSettings).set(payload).where(eq(siteSettings.id, current.id)); else await db.insert(siteSettings).values(payload);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "site.settings_updated", entityType: "site_settings", metadata: { homePageUrl: payload.homePageUrl, boardTitle: payload.boardTitle } });
+      return { success: true, ...payload };
+    }),
+    saveNavigationItem: adminProcedure.input(z.object({ id: z.number().int().positive().optional(), label: z.string().trim().min(1).max(100), url: z.string().trim().min(1).max(1024).refine(value => value.startsWith("/") || /^https?:\/\//.test(value), "URL phải bắt đầu bằng / hoặc http(s)://"), position: z.number().int().min(1).max(999), isEnabled: z.boolean() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu Navigation." });
+      const payload = { label: input.label, url: input.url, position: input.position, isEnabled: input.isEnabled };
+      if (input.id) await db.update(siteNavigationItems).set(payload).where(eq(siteNavigationItems.id, input.id)); else await db.insert(siteNavigationItems).values(payload);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.id ? "site.navigation_updated" : "site.navigation_created", entityType: "site_navigation", entityId: input.id, metadata: payload });
+      return { success: true };
+    }),
+    deleteNavigationItem: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể xóa mục Navigation." });
+      await db.delete(siteNavigationItems).where(eq(siteNavigationItems.id, input.id));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "site.navigation_deleted", entityType: "site_navigation", entityId: input.id, metadata: {} });
+      return { success: true };
+    }),
+    reorderNavigation: adminProcedure.input(z.object({ items: z.array(z.object({ id: z.number().int().positive(), position: z.number().int().min(1).max(999) })).min(1).max(50) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể sắp xếp Navigation." });
+      await Promise.all(input.items.map(item => db.update(siteNavigationItems).set({ position: item.position }).where(eq(siteNavigationItems.id, item.id))));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "site.navigation_reordered", entityType: "site_navigation", metadata: { count: input.items.length } });
+      return { success: true };
+    }),
     learning: cpanelLearningRouter,
     seoSettings: adminProcedure.query(async () => {
       const db = await getDb();
