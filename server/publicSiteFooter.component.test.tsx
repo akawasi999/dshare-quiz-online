@@ -21,6 +21,7 @@ describe("PublicSiteFooter", () => {
     expect(screen.queryByRole("link", { name: "Ẩn" })).toBeNull();
     expect(screen.getByRole("link", { name: "Facebook" }).getAttribute("href")).toBe("https://facebook.com/dshare");
     expect(screen.getByRole("link", { name: "Facebook" }).className).toContain("rounded-full");
+    expect(screen.getByRole("link", { name: "Facebook" }).className).toContain("footer-social-icon");
     expect(screen.queryByRole("link", { name: "Instagram" })).toBeNull();
     expect(container.querySelectorAll("svg").length).toBeGreaterThan(0);
   });

@@ -519,3 +519,7 @@
 - [x] Mở rộng cấu hình màu sắc, hình dáng và kiểm tra URL cho social icon.
 - [x] Xây dựng điều khiển Appearance và tooltip social Footer.
 - [x] Kiểm thử validation, tooltip, responsive, hồi quy và lưu checkpoint.
+- [x] Rà soát cấu hình social Footer và các trạng thái hiển thị hiện có.
+- [x] Bổ sung preset màu theo từng nền tảng và animation hover cho social icon.
+- [x] Thêm kéo-thả để sắp xếp thứ tự social icon trong Appearance.
+- [x] Kiểm thử animation, thứ tự, responsive, hồi quy và lưu checkpoint.
