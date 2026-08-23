@@ -19,4 +19,10 @@ describe("Gamification mission periods", () => {
     expect(period.key).toBe("special-42");
     expect(getGamificationDayKey(new Date("2026-08-23T18:45:00.000Z"))).toBe("2026-08-23");
   });
+
+  it("dùng chính ngày kết thúc cấu hình làm hạn của chiến dịch", () => {
+    const endsAt = new Date("2026-09-01T12:00:00.000Z");
+    const period = getMissionPeriod("special", 42, new Date("2026-08-23T18:45:00.000Z"), endsAt);
+    expect(period.expiresAt.toISOString()).toBe("2026-09-01T12:00:00.000Z");
+  });
 });

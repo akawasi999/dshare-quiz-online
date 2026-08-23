@@ -548,3 +548,8 @@
 - [x] Triển khai dữ liệu, API và quy tắc nghiệp vụ Gamification được phê duyệt.
 - [x] Hoàn thiện giao diện quản trị và trải nghiệm Gamification cho người dùng.
 - [x] Kiểm thử hồi quy, xác minh responsive và lưu checkpoint nâng cấp Gamification.
+- [x] Rà soát luồng phần thưởng, nhiệm vụ và AI để xác định điểm tích hợp mở rộng.
+- [x] Thiết kế dữ liệu chiến dịch có thời hạn và quy tắc Point cho tính năng AI nâng cao.
+- [x] Triển khai event phần thưởng, nhiệm vụ Daily/Weekly/chiến dịch và trừ Point phía máy chủ.
+- [x] Hoàn thiện popup phần thưởng, CPanel chiến dịch và cảnh báo số dư Point trong các luồng AI.
+- [x] Kiểm thử hồi quy, xác minh responsive và lưu checkpoint Gamification mở rộng.

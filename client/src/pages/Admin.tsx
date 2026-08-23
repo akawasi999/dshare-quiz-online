@@ -23,6 +23,7 @@ import AnalyticsControlPanel from "@/components/AnalyticsControlPanel";
 import OpenGraphPreviewPanel from "@/components/OpenGraphPreviewPanel";
 import SystemSettingsPanel from "@/components/SystemSettingsPanel";
 import GamificationControlPanel from "@/components/GamificationControlPanel";
+import GamificationCampaignPanel from "@/components/GamificationCampaignPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,7 +69,7 @@ export default function Admin() {
   if (canonicalLocation === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
   if (canonicalLocation === "/quan-tri/point") content = <AdminPointLedgerPanel />;
   if (canonicalLocation === "/quan-tri/xp") content = <XpProgressionPanel />;
-  if (canonicalLocation === "/quan-tri/gamification") content = <GamificationControlPanel />;
+  if (canonicalLocation === "/quan-tri/gamification") content = <><GamificationControlPanel /><GamificationCampaignPanel /></>;
   if (canonicalLocation === "/quan-tri/nhat-ky") content = <AuditTrail />;
   if (canonicalLocation === "/quan-tri/thuong-hieu") content = <BrandSettingsPanel />;
   if (canonicalLocation === "/quan-tri/cai-dat") content = <SystemSettingsPanel />;

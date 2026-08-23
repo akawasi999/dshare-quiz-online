@@ -3,6 +3,7 @@ import {
   achievements,
   attempts,
   badges,
+  gamificationCelebrations,
   gamificationFeatures,
   learnerProfiles,
   levelFeatureUnlocks,
@@ -54,7 +55,7 @@ function startOfUtcWeek(value = new Date()) {
   return new Date(start.getTime() - offset * DAY_MS);
 }
 
-export function getMissionPeriod(repeatType: "daily" | "weekly" | "special", missionId: number, now: Date) {
+export function getMissionPeriod(repeatType: "daily" | "weekly" | "special", missionId: number, now: Date, endsAt?: Date | null) {
   if (repeatType === "daily") {
     const start = utcDayStart(now);
     return { key: getGamificationDayKey(start), expiresAt: new Date(start.getTime() + DAY_MS) };
@@ -63,12 +64,36 @@ export function getMissionPeriod(repeatType: "daily" | "weekly" | "special", mis
     const start = startOfUtcWeek(now);
     return { key: `${getGamificationDayKey(start)}-w`, expiresAt: new Date(start.getTime() + 7 * DAY_MS) };
   }
-  return { key: `special-${missionId}`, expiresAt: new Date(Date.UTC(2100, 0, 1)) };
+  return { key: `special-${missionId}`, expiresAt: endsAt && endsAt.getTime() > now.getTime() ? endsAt : new Date(Date.UTC(2100, 0, 1)) };
 }
 
 function configNumber(config: Record<string, unknown> | null, key: string, fallback: number) {
   const value = config?.[key];
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+async function enqueueCelebration(db: DbExecutor, input: { userId: number; type: "level_up" | "badge_awarded"; title: string; body: string; xpAmount?: number; icon?: string | null; sourceKey: string; metadata?: Record<string, unknown> }) {
+  try {
+    await db.insert(gamificationCelebrations).values({ userId: input.userId, type: input.type, title: input.title, body: input.body, xpAmount: input.xpAmount ?? 0, icon: input.icon ?? null, sourceKey: input.sourceKey, metadata: input.metadata ?? null });
+    return true;
+  } catch (error) {
+    const duplicate = await db.select({ id: gamificationCelebrations.id }).from(gamificationCelebrations).where(eq(gamificationCelebrations.sourceKey, input.sourceKey)).limit(1);
+    if (duplicate[0]) return false;
+    throw error;
+  }
+}
+
+async function awardBadge(db: DbExecutor, input: { userId: number; badgeId: number; sourceType: string; sourceId: string; now: Date }) {
+  const existing = await db.select({ id: userBadges.id }).from(userBadges).where(and(eq(userBadges.userId, input.userId), eq(userBadges.badgeId, input.badgeId), eq(userBadges.sourceType, input.sourceType), eq(userBadges.sourceId, input.sourceId))).limit(1);
+  if (existing[0]) return null;
+  try {
+    await db.insert(userBadges).values({ userId: input.userId, badgeId: input.badgeId, sourceType: input.sourceType, sourceId: input.sourceId, awardedAt: input.now });
+  } catch (error) {
+    const duplicate = await db.select({ id: userBadges.id }).from(userBadges).where(and(eq(userBadges.userId, input.userId), eq(userBadges.badgeId, input.badgeId), eq(userBadges.sourceType, input.sourceType), eq(userBadges.sourceId, input.sourceId))).limit(1);
+    if (duplicate[0]) return null;
+    throw error;
+  }
+  return (await db.select().from(badges).where(eq(badges.id, input.badgeId)).limit(1))[0] ?? null;
 }
 
 async function currentLevelForXp(db: DbExecutor, xp: number): Promise<LevelRow | null> {
@@ -132,6 +157,7 @@ export async function awardXp(db: DbExecutor, input: {
   await db.update(learnerProfiles).set({ currentLevelId: nextLevel?.id ?? null }).where(eq(learnerProfiles.id, profile.id));
   await db.update(xpTransactions).set({ balanceAfter: updated.xpBalance }).where(eq(xpTransactions.id, transactionId));
   const unlocked = levelUp ? await unlockedFeaturesForLevel(db, nextLevel?.id ?? null) : [];
+  if (levelUp && nextLevel) await enqueueCelebration(db, { userId: input.userId, type: "level_up", title: `Bạn đã lên Level ${nextLevel.displayOrder}!`, body: `${nextLevel.name} · ${updated.xpBalance.toLocaleString("vi-VN")} XP`, xpAmount: input.amount, icon: nextLevel.icon ?? "Trophy", sourceKey: `level-up:${transactionId}`, metadata: { levelId: nextLevel.id, levelName: nextLevel.name, featureCount: unlocked.length } });
   return { awarded: true, transactionId, balanceAfter: updated.xpBalance, level: nextLevel, levelUp, unlockedFeatures: unlocked.map((row: { feature: typeof gamificationFeatures.$inferSelect }) => row.feature) };
 }
 
@@ -142,7 +168,7 @@ async function ensureMissionAssignments(db: DbExecutor, userId: number, now: Dat
     or(sql`${missionDefinitions.endsAt} is null`, gte(missionDefinitions.endsAt, now)),
   )).orderBy(asc(missionDefinitions.displayOrder));
   for (const definition of definitions) {
-    const period = getMissionPeriod(definition.repeatType, definition.id, now);
+    const period = getMissionPeriod(definition.repeatType, definition.id, now, definition.endsAt);
     await db.insert(userMissionAssignments).values({
       userId,
       missionDefinitionId: definition.id,
@@ -186,7 +212,10 @@ async function rewardStreak(db: DbExecutor, input: { userId: number; now: Date; 
     await db.insert(streakRewardClaims).values({ userId: input.userId, milestoneId: milestone.id, streakKey });
     const reward = await awardXp(db, { userId: input.userId, amount: milestone.xpReward, sourceType: "streak", sourceId: String(milestone.id), dedupeKey: `streak:${input.userId}:${milestone.id}:${streakKey}`, reason: milestone.title, metadata: { streakDays: currentStreak } });
     if (reward.awarded) rewards.push({ amount: milestone.xpReward, reason: milestone.title, sourceType: "streak", sourceId: String(milestone.id) });
-    if (milestone.badgeId) await db.insert(userBadges).values({ userId: input.userId, badgeId: milestone.badgeId, sourceType: "streak", sourceId: streakKey }).onDuplicateKeyUpdate({ set: { awardedAt: input.now } });
+    if (milestone.badgeId) {
+      const badge = await awardBadge(db, { userId: input.userId, badgeId: milestone.badgeId, sourceType: "streak", sourceId: streakKey, now: input.now });
+      if (badge) await enqueueCelebration(db, { userId: input.userId, type: "badge_awarded", title: `Huy hiệu mới: ${badge.name}`, body: badge.description, xpAmount: milestone.xpReward, icon: badge.icon, sourceKey: `badge:streak:${input.userId}:${badge.id}:${streakKey}`, metadata: { badgeId: badge.id, source: "streak", streakDays: currentStreak } });
+    }
   }
   return { currentStreak, rewards };
 }
@@ -254,7 +283,10 @@ async function progressAchievements(db: DbExecutor, input: GamificationAttemptIn
     if (!achieved || existing?.status === "unlocked") continue;
     const reward = await awardXp(db, { userId: input.userId, amount: definition.xpReward, sourceType: "achievement", sourceId: String(definition.id), dedupeKey: `achievement:${input.userId}:${definition.id}`, reason: `Thành tích mở khóa: ${definition.title}`, metadata: { achievementCode: definition.code } });
     if (reward.awarded) rewards.push({ amount: definition.xpReward, reason: definition.title, sourceType: "achievement", sourceId: String(definition.id) });
-    if (definition.badgeId) await db.insert(userBadges).values({ userId: input.userId, badgeId: definition.badgeId, sourceType: "achievement", sourceId: String(definition.id) }).onDuplicateKeyUpdate({ set: { awardedAt: now } });
+    if (definition.badgeId) {
+      const badge = await awardBadge(db, { userId: input.userId, badgeId: definition.badgeId, sourceType: "achievement", sourceId: String(definition.id), now });
+      if (badge) await enqueueCelebration(db, { userId: input.userId, type: "badge_awarded", title: `Huy hiệu mới: ${badge.name}`, body: badge.description, xpAmount: definition.xpReward, icon: badge.icon, sourceKey: `badge:achievement:${input.userId}:${badge.id}:${definition.id}`, metadata: { badgeId: badge.id, source: "achievement", achievementId: definition.id } });
+    }
   }
   return rewards;
 }

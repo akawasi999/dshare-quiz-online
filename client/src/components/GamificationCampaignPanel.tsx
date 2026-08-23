@@ -1,0 +1,29 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { trpc } from "@/lib/trpc";
+import { CalendarClock, Loader2, Plus, Sparkles } from "lucide-react";
+import { FormEvent } from "react";
+import { toast } from "sonner";
+
+const formatDate = (value: Date | null) => value ? new Date(value).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" }) : "Chưa đặt";
+
+export default function GamificationCampaignPanel() {
+  const utils = trpc.useUtils();
+  const overview = trpc.admin.gamification.overview.useQuery();
+  const saveCampaign = trpc.admin.gamification.saveMission.useMutation({ onSuccess: () => { utils.admin.gamification.overview.invalidate(); toast.success("Đã lưu chiến dịch Gamification."); }, onError: error => toast.error("Không thể lưu chiến dịch", { description: error.message }) });
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const startsAt = new Date(String(form.get("startsAt")));
+    const endsAt = new Date(String(form.get("endsAt")));
+    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || endsAt <= startsAt) { toast.error("Thời gian chiến dịch chưa hợp lệ", { description: "Ngày kết thúc phải sau ngày bắt đầu." }); return; }
+    saveCampaign.mutate({ code: String(form.get("code")).trim(), title: String(form.get("title")).trim(), description: String(form.get("description")).trim(), icon: "Sparkles", repeatType: "special", metricType: String(form.get("metricType")) as "quiz_completed", target: Number(form.get("target")), xpReward: Number(form.get("xpReward")), conditionConfig: String(form.get("metricType")) === "score_threshold" ? { minimumScore: Number(form.get("minimumScore")) || 80 } : null, displayOrder: (overview.data?.missions?.length ?? 0) + 100, isActive: true, startsAt, endsAt });
+    event.currentTarget.reset();
+  };
+  const campaigns = (overview.data?.missions ?? []).filter((mission: any) => mission.repeatType === "special");
+  return <section className="mt-5 grid gap-5 xl:grid-cols-[.82fr_1.18fr]"><div className="rounded-[var(--radius-xl-token)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)]"><div className="flex items-start gap-3"><span className="grid size-10 place-items-center rounded-[var(--radius-md-token)] bg-primary-light text-primary"><CalendarClock size={19} /></span><div><h2 className="text-lg font-bold text-foreground">Chiến dịch có thời hạn</h2><p className="mt-1 text-xs leading-5 text-text-secondary">Không cần timer nền: hệ thống chỉ phân nhiệm vụ khi thời gian chiến dịch đang hiệu lực.</p></div></div><form onSubmit={submit} className="mt-5 grid gap-3"><Field label="Mã chiến dịch"><Input name="code" required pattern="[a-z][a-z0-9_.-]{2,99}" placeholder="campaign_mid_autumn" /></Field><Field label="Tên chiến dịch"><Input name="title" required maxLength={180} placeholder="Thử thách 7 ngày chinh phục Quiz" /></Field><Field label="Mô tả"><Textarea name="description" required maxLength={500} className="min-h-20" /></Field><div className="grid gap-3 sm:grid-cols-2"><Field label="Bắt đầu"><Input name="startsAt" required type="datetime-local" /></Field><Field label="Kết thúc"><Input name="endsAt" required type="datetime-local" /></Field><Field label="Mục tiêu"><Input name="target" required min={1} type="number" defaultValue={5} /></Field><Field label="XP thưởng"><Input name="xpReward" required min={1} type="number" defaultValue={200} /></Field><Field label="Metric"><select name="metricType" className="field"><option value="quiz_completed">Quiz hoàn thành</option><option value="questions_answered">Câu đã trả lời</option><option value="score_threshold">Đạt mốc điểm</option></select></Field><Field label="Mốc điểm (%)"><Input name="minimumScore" min={0} max={100} type="number" defaultValue={80} /></Field></div><Button type="submit" disabled={saveCampaign.isPending}>{saveCampaign.isPending ? <Loader2 className="animate-spin" size={15} /> : <Plus size={15} />}Tạo chiến dịch</Button></form></div><div className="rounded-[var(--radius-xl-token)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)]"><div className="flex items-center gap-3"><Sparkles className="text-primary" size={19} /><div><h2 className="text-lg font-bold text-foreground">Chiến dịch đang cấu hình</h2><p className="mt-1 text-xs text-text-secondary">Các khoảng thời gian hiển thị và được kiểm soát bằng UTC ở máy chủ.</p></div></div><div className="mt-5 divide-y divide-border-light">{overview.isLoading ? <div className="grid min-h-32 place-items-center"><Loader2 className="animate-spin text-primary" size={20} /></div> : campaigns.length ? campaigns.map((campaign: any) => <div key={campaign.id} className="flex flex-wrap items-start justify-between gap-3 py-4"><div><p className="text-sm font-bold text-foreground">{campaign.title}</p><p className="mt-1 text-xs leading-5 text-text-secondary">{campaign.description}</p><p className="mt-2 text-[11px] font-semibold text-primary">{formatDate(campaign.startsAt)} → {formatDate(campaign.endsAt)}</p></div><span className="rounded-full bg-[#fef3c7] px-2.5 py-1 text-[10px] font-bold text-[#92400e]">+{campaign.xpReward.toLocaleString("vi-VN")} XP</span></div>) : <p className="rounded-[var(--radius-md-token)] bg-muted p-4 text-sm text-text-secondary">Chưa có chiến dịch thời hạn. Tạo chiến dịch đầu tiên để kích hoạt thử thách theo sự kiện.</p>}</div></div></section>;
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block text-xs font-semibold text-text-secondary"><Label>{label}</Label><span className="mt-1.5 block">{children}</span></label>; }

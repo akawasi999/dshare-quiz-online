@@ -113,6 +113,7 @@ export const topicStatusValues = ["active", "archived"] as const;
 export const quizLifecycleStatusValues = ["draft", "pending_review", "rejected", "published", "locked", "archived"] as const;
 export const xpRuleStatusValues = ["draft", "active", "paused", "archived"] as const;
 export const userNotificationTypeValues = ["account_plan", "account_permission", "quiz_approved", "quiz_rejected"] as const;
+export const gamificationCelebrationTypeValues = ["level_up", "badge_awarded"] as const;
 export const missionRepeatTypeValues = ["daily", "weekly", "special"] as const;
 export const missionStatusValues = ["available", "completed", "claimed", "expired"] as const;
 export const missionMetricTypeValues = ["quiz_completed", "questions_answered", "score_threshold", "study_minutes", "ai_content_created"] as const;
@@ -161,6 +162,23 @@ export const userNotifications = mysqlTable("userNotifications", {
 }, table => [
   index("user_notifications_user_unread_created_idx").on(table.userId, table.isRead, table.createdAt),
   index("user_notifications_user_created_idx").on(table.userId, table.createdAt),
+]);
+
+export const gamificationCelebrations = mysqlTable("gamificationCelebrations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", gamificationCelebrationTypeValues).notNull(),
+  title: varchar("title", { length: 180 }).notNull(),
+  body: varchar("body", { length: 500 }).notNull(),
+  xpAmount: int("xpAmount").default(0).notNull(),
+  icon: varchar("icon", { length: 80 }),
+  metadata: json("metadata").$type<Record<string, unknown>>(),
+  sourceKey: varchar("sourceKey", { length: 191 }).notNull(),
+  seenAt: timestamp("seenAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [
+  uniqueIndex("gamification_celebration_source_unique").on(table.sourceKey),
+  index("gamification_celebration_user_seen_created_idx").on(table.userId, table.seenAt, table.createdAt),
 ]);
 
 export const xpLevels = mysqlTable("xpLevels", {

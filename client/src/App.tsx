@@ -22,7 +22,9 @@ import AIStudyAssistant from "@/pages/AIStudyAssistant";
 import Missions from "@/pages/Missions";
 import Achievements from "@/pages/Achievements";
 import AccountLayout from "@/components/AccountLayout";
+import AiPointPreflightNotice from "@/components/AiPointPreflightNotice";
 import AppearanceStyleBridge from "@/components/AppearanceStyleBridge";
+import GamificationCelebrationPopups from "@/components/GamificationCelebrationPopups";
 import PublicSiteFooter from "@/components/PublicSiteFooter";
 import { LEGACY_ROUTE_MAP, ROUTES } from "@/lib/routes";
 import { Route, Switch, useLocation, useSearch } from "wouter";
@@ -94,7 +96,7 @@ function LearnerAccountPage({ Page }: { Page: React.ComponentType }) {
 }
 
 function App() {
-  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><AppearanceStyleBridge /><Toaster /><Router /></TooltipProvider></ThemeProvider></ErrorBoundary>;
+  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><AppearanceStyleBridge /><Toaster /><GamificationCelebrationPopups /><AiPointPreflightNotice /><Router /></TooltipProvider></ThemeProvider></ErrorBoundary>;
 }
 
 export default App;
