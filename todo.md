@@ -590,3 +590,7 @@
 - [x] Cho phép tải ảnh đại diện trực tiếp từ thiết bị, xác thực tệp và lưu URL avatar vào hồ sơ.
 - [x] Hiển thị tooltip điều kiện mở khóa lấy từ dữ liệu thành tích thực trên từng badge.
 - [x] Kiểm thử upload, tooltip, responsive, hồi quy và lưu checkpoint Profile.
+- [x] Rà soát luồng tải avatar hiện có và xác định điểm tích hợp xem trước cắt tròn.
+- [x] Bổ sung công cụ xem trước/cắt tròn ảnh avatar trước khi tải lên và lưu hồ sơ.
+- [x] Thêm thao tác xóa avatar để khôi phục trạng thái mặc định.
+- [x] Kiểm thử cắt, xóa avatar, responsive, hồi quy và lưu checkpoint Profile.

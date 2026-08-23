@@ -31,7 +31,7 @@ import Profile from "../client/src/pages/Profile";
 import PersonalInfo from "../client/src/pages/PersonalInfo";
 
 describe("Profile mutation feedback", () => {
-  beforeEach(() => { mocks.toast.error.mockReset(); mocks.summary.data.currentPlan = null; mocks.summary.data.upgradePlans = []; });
+  beforeEach(() => { mocks.toast.error.mockReset(); mocks.summary.data.currentPlan = null; mocks.summary.data.upgradePlans = []; mocks.summary.data.profile.avatarUrl = ""; mocks.gamification.data.achievements = []; });
   afterEach(cleanup);
 
   it("công bố lỗi khi không thể lưu thiết lập hồ sơ", async () => {
@@ -40,7 +40,15 @@ describe("Profile mutation feedback", () => {
     await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
 
     expect(mocks.toast.error).toHaveBeenCalledWith("Không thể lưu hồ sơ", { description: "Không thể kết nối" });
-    expect(screen.getByLabelText("Tải ảnh mới")).toBeTruthy();
+    expect(screen.getByLabelText("Chọn & cắt ảnh")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Xóa ảnh" })).toBeNull();
+  });
+
+  it("hiển thị thao tác xóa để đưa avatar hiện có về mặc định", () => {
+    mocks.summary.data.profile.avatarUrl = "/manus-storage/learner-avatars/1/avatar.png";
+    render(<PersonalInfo />);
+    expect(screen.getByRole("button", { name: "Xóa ảnh" })).toBeTruthy();
+    expect(screen.getByLabelText("Chọn & cắt ảnh")).toBeTruthy();
   });
 
   it("không hiển thị thẻ gói và quota cố định ở hai góc giao diện", () => {
