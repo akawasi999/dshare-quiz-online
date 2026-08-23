@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { buildBreadcrumbJsonLd, buildImageSitemapXml, buildQuizJsonLd, buildSeoHead, buildSitemapXml, legacyRedirectMiddleware, resolveLegacyRedirect, SITEMAP_PATHS, SITE_ORIGIN } from "./seoRoutes";
+import { withImageCacheVersion } from "./db";
 
 describe("SEO routes", () => {
   it("chuyển URL tiếng Việt cũ sang route tiếng Anh, kể cả trang kết quả động", () => {
@@ -52,5 +53,10 @@ describe("SEO routes", () => {
     expect(JSON.stringify(breadcrumb)).toContain("BreadcrumbList");
     expect(JSON.stringify(breadcrumb)).toContain("Excel cơ bản");
     expect(JSON.stringify(breadcrumb)).toContain(`${SITE_ORIGIN}/quiz/88`);
+  });
+
+  it("thêm phiên bản cache-busting vào ảnh bìa khi cập nhật", () => {
+    expect(withImageCacheVersion("/manus-storage/cover.png", new Date("2026-08-23T00:00:00.000Z"))).toBe("/manus-storage/cover.png?v=1787443200000");
+    expect(withImageCacheVersion("/manus-storage/cover.png?fit=cover", 9)).toBe("/manus-storage/cover.png?fit=cover&v=9");
   });
 });

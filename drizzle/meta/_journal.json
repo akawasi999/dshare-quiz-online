@@ -260,6 +260,13 @@
       "when": 1787448886947,
       "tag": "0036_striped_otto_octavius",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "5",
+      "when": 1787450230535,
+      "tag": "0037_confused_power_pack",
+      "breakpoints": true
     }
   ]
 }

@@ -13,6 +13,7 @@ import {
 	questions,
 	quizzes,
 	quizQuestions,
+	seoSettings,
 	subscriptionPlans,
 	subjects,
   users,
@@ -26,6 +27,10 @@ import { getEffectiveTier } from "./membershipUtils";
 import { getQuotaPeriod } from "./quotaUtils";
 
 export const DEFAULT_QUIZ_COVER_URL = "/manus-storage/dshare-default-quiz-cover_d96ff2fa.png";
+export const withImageCacheVersion = (url: string, version: Date | number | null | undefined) => {
+  const token = version instanceof Date ? version.getTime() : version;
+  return token ? `${url}${url.includes("?") ? "&" : "?"}v=${token}` : url;
+};
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -105,6 +110,8 @@ export async function getLearnerSummary(userId: number) {
 export async function listPublishedCatalog(search?: string, categoryId?: number) {
   const db = await getDb();
   if (!db) return [];
+  const seoConfig = (await db.select({ defaultQuizCoverUrl: seoSettings.defaultQuizCoverUrl, updatedAt: seoSettings.updatedAt }).from(seoSettings).limit(1))[0];
+  const defaultCoverUrl = seoConfig?.defaultQuizCoverUrl || DEFAULT_QUIZ_COVER_URL;
   const rows = await db.select({
     quizId: quizzes.id,
     title: quizzes.title,
@@ -119,7 +126,9 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
     completionReward: quizzes.completionReward,
     questionCount: quizzes.questionCount,
     createdAt: quizzes.createdAt,
-    coverImageUrl: sql<string>`coalesce(${quizzes.coverImageUrl}, ${categories.coverImageUrl}, ${DEFAULT_QUIZ_COVER_URL})`,
+    coverImageUrl: sql<string | null>`coalesce(${quizzes.coverImageUrl}, ${categories.coverImageUrl})`,
+    quizUpdatedAt: quizzes.updatedAt,
+    categoryUpdatedAt: categories.updatedAt,
     attemptCount: sql<number>`count(${attempts.id})`,
     recentAttemptCount: sql<number>`sum(case when ${attempts.completedAt} >= date_sub(now(), interval 24 hour) then 1 else 0 end)`,
     categoryId: categories.id,
@@ -152,6 +161,8 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
       quizzes.questionCount,
       quizzes.coverImageUrl,
       categories.coverImageUrl,
+      quizzes.updatedAt,
+      categories.updatedAt,
       quizzes.createdAt,
       categories.id,
       categories.title,
@@ -159,7 +170,11 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
       lessons.title,
     )
     .orderBy(desc(quizzes.createdAt));
-  return rows;
+  return rows.map(row => {
+    const inheritedCategoryCover = !row.coverImageUrl && Boolean(row.categoryUpdatedAt);
+    const version = row.coverImageUrl ? row.quizUpdatedAt : inheritedCategoryCover ? row.categoryUpdatedAt : seoConfig?.updatedAt;
+    return { ...row, coverImageUrl: withImageCacheVersion(row.coverImageUrl || defaultCoverUrl, version) };
+  });
 }
 
 export async function listCategories() {

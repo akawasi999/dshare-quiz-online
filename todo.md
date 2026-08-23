@@ -489,3 +489,7 @@
 - [x] Áp dụng ảnh bìa mặc định cho Quiz public chưa có ảnh và BreadcrumbList JSON-LD.
 - [x] Thêm thao tác làm mới cache Facebook/LinkedIn trong Open Graph Preview CPanel.
 - [x] Kiểm thử SEO, chia sẻ, CPanel, responsive và lưu checkpoint.
+- [x] Rà soát cấu hình SEO, luồng ảnh bìa và preview social hiện có.
+- [x] Thêm cấu hình ảnh bìa mặc định trong CPanel cùng cache-busting ảnh Quiz.
+- [x] Thêm bộ đếm và cảnh báo giới hạn title/mô tả mạng xã hội trong CPanel.
+- [x] Kiểm thử migration, CPanel, cache, SEO và lưu checkpoint.

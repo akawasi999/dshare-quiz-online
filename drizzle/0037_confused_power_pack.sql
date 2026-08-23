@@ -1,0 +1,1 @@
+ALTER TABLE `seoSettings` ADD `defaultQuizCoverUrl` varchar(1024);

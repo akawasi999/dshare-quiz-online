@@ -12,5 +12,7 @@ describe("OpenGraphQuizPreview", () => {
     expect(screen.getByRole("link", { name: /Mở/i }).getAttribute("href")).toBe("https://dsharequiz-jxleeaps.manus.space/quiz/88");
     expect(screen.getByRole("link", { name: "Làm mới cache Facebook cho Quiz này" }).getAttribute("href")).toContain("developers.facebook.com/tools/debug");
     expect(screen.getByRole("link", { name: "Làm mới cache LinkedIn cho Quiz này" }).getAttribute("href")).toContain("linkedin.com/post-inspector");
+    expect(screen.getByText("Tiêu đề Open Graph")).toBeTruthy();
+    expect(screen.getByText("Mô tả Open Graph")).toBeTruthy();
   });
 });

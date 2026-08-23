@@ -1,12 +1,12 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { LEGACY_ROUTE_MAP, ROUTES } from "../client/src/lib/routes";
-import { DEFAULT_QUIZ_COVER_URL, getDb, getQuizDetail, getQuizQuestionSet, listPublishedCatalog } from "./db";
+import { DEFAULT_QUIZ_COVER_URL, getDb, getQuizDetail, getQuizQuestionSet, listPublishedCatalog, withImageCacheVersion } from "./db";
 import { seoSettings } from "../drizzle/schema";
 
 export const SITE_ORIGIN = "https://dsharequiz-jxleeaps.manus.space";
 export const SITEMAP_PATHS = [ROUTES.home, ROUTES.explore, ROUTES.pricing, ROUTES.leaderboard] as const;
 
-type SeoSettings = { googleAnalyticsMeasurementId: string | null; googleSearchConsoleVerification: string | null };
+type SeoSettings = { googleAnalyticsMeasurementId: string | null; googleSearchConsoleVerification: string | null; defaultQuizCoverUrl: string | null; updatedAt?: Date | null };
 type PageMeta = { title: string; description: string; canonicalPath: string; image?: string | null; type?: "website" | "article"; publishedAt?: Date | null; noindex?: boolean; jsonLd?: Record<string, unknown> };
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
@@ -92,9 +92,9 @@ export function buildSeoHead(meta: PageMeta, settings: SeoSettings) {
 
 async function readSeoSettings(): Promise<SeoSettings> {
   const db = await getDb();
-  if (!db) return { googleAnalyticsMeasurementId: null, googleSearchConsoleVerification: null };
-  const settings = (await db.select({ googleAnalyticsMeasurementId: seoSettings.googleAnalyticsMeasurementId, googleSearchConsoleVerification: seoSettings.googleSearchConsoleVerification }).from(seoSettings).limit(1))[0];
-  return settings ?? { googleAnalyticsMeasurementId: null, googleSearchConsoleVerification: null };
+  if (!db) return { googleAnalyticsMeasurementId: null, googleSearchConsoleVerification: null, defaultQuizCoverUrl: null };
+  const settings = (await db.select({ googleAnalyticsMeasurementId: seoSettings.googleAnalyticsMeasurementId, googleSearchConsoleVerification: seoSettings.googleSearchConsoleVerification, defaultQuizCoverUrl: seoSettings.defaultQuizCoverUrl, updatedAt: seoSettings.updatedAt }).from(seoSettings).limit(1))[0];
+  return settings ?? { googleAnalyticsMeasurementId: null, googleSearchConsoleVerification: null, defaultQuizCoverUrl: null };
 }
 
 export async function attachSeoMetadata(req: Request, res: Response, next: NextFunction) {
@@ -106,7 +106,9 @@ export async function attachSeoMetadata(req: Request, res: Response, next: NextF
       const detail = await getQuizDetail(Number(match[1]));
       if (detail?.quiz.isPublished && detail.quiz.visibility === "public") {
         const quiz = detail.quiz;
-        const image = quiz.coverImageUrl ?? detail.category.coverImageUrl ?? DEFAULT_QUIZ_COVER_URL;
+        const rawImage = quiz.coverImageUrl ?? detail.category.coverImageUrl ?? settings.defaultQuizCoverUrl ?? DEFAULT_QUIZ_COVER_URL;
+        const imageVersion = quiz.coverImageUrl ? quiz.updatedAt : detail.category.coverImageUrl ? detail.category.updatedAt : settings.updatedAt;
+        const image = withImageCacheVersion(rawImage, imageVersion);
         const questions = await getQuizQuestionSet(quiz.id);
         const jsonLd = buildQuizJsonLd({ quizId: quiz.id, title: quiz.title, summary: quiz.summary, image, datePublished: quiz.publishedAt ?? quiz.createdAt, category: detail.category.title, questions: questions.map(item => ({ prompt: item.question.prompt })) });
         res.locals.seoHead = buildSeoHead({ title: `${quiz.title} · Dshare Quiz Online`, description: quiz.summary || `Làm Quiz ${quiz.title} trên Dshare Quiz Online.`, canonicalPath: `${ROUTES.quiz}/${quiz.id}`, image, type: "article", publishedAt: quiz.publishedAt ?? quiz.createdAt, jsonLd: combineJsonLd(buildBreadcrumbJsonLd(`${ROUTES.quiz}/${quiz.id}`, quiz.title), jsonLd) }, settings);

@@ -997,16 +997,16 @@ export const appRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cấu hình Google." });
       const settings = (await db.select().from(seoSettings).limit(1))[0];
-      return settings ? { googleAnalyticsMeasurementId: settings.googleAnalyticsMeasurementId, googleSearchConsoleVerification: settings.googleSearchConsoleVerification, updatedAt: settings.updatedAt } : { googleAnalyticsMeasurementId: null, googleSearchConsoleVerification: null, updatedAt: null };
+      return settings ? { googleAnalyticsMeasurementId: settings.googleAnalyticsMeasurementId, googleSearchConsoleVerification: settings.googleSearchConsoleVerification, defaultQuizCoverUrl: settings.defaultQuizCoverUrl, updatedAt: settings.updatedAt } : { googleAnalyticsMeasurementId: null, googleSearchConsoleVerification: null, defaultQuizCoverUrl: null, updatedAt: null };
     }),
-    saveSeoSettings: adminProcedure.input(z.object({ googleAnalyticsMeasurementId: z.string().trim().regex(/^G-[A-Z0-9]{6,20}$/).nullable(), googleSearchConsoleVerification: z.string().trim().min(8).max(255).nullable() })).mutation(async ({ ctx, input }) => {
+    saveSeoSettings: adminProcedure.input(z.object({ googleAnalyticsMeasurementId: z.string().trim().regex(/^G-[A-Z0-9]{6,20}$/).nullable(), googleSearchConsoleVerification: z.string().trim().min(8).max(255).nullable(), defaultQuizCoverUrl: z.string().url().max(1024).nullable() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu cấu hình Google." });
-      const payload = { googleAnalyticsMeasurementId: input.googleAnalyticsMeasurementId || null, googleSearchConsoleVerification: input.googleSearchConsoleVerification || null };
+      const payload = { googleAnalyticsMeasurementId: input.googleAnalyticsMeasurementId || null, googleSearchConsoleVerification: input.googleSearchConsoleVerification || null, defaultQuizCoverUrl: input.defaultQuizCoverUrl || null };
       const current = (await db.select().from(seoSettings).limit(1))[0];
       if (current) await db.update(seoSettings).set(payload).where(eq(seoSettings.id, current.id));
       else await db.insert(seoSettings).values(payload);
-      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "seo.google_settings_updated", entityType: "seo_settings", metadata: { analyticsConfigured: Boolean(payload.googleAnalyticsMeasurementId), searchConsoleConfigured: Boolean(payload.googleSearchConsoleVerification) } });
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "seo.google_settings_updated", entityType: "seo_settings", metadata: { analyticsConfigured: Boolean(payload.googleAnalyticsMeasurementId), searchConsoleConfigured: Boolean(payload.googleSearchConsoleVerification), defaultCoverConfigured: Boolean(payload.defaultQuizCoverUrl) } });
       return { success: true, ...payload };
     }),
     emailDeliverySettings: adminProcedure.query(async () => {
@@ -1068,6 +1068,11 @@ export const appRouter = router({
     uploadCategoryCover: adminProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) })).mutation(async ({ ctx, input }) => {
       const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64");
       const uploaded = await storagePut(`category-covers/${ctx.user.id}/${input.fileName}`, bytes, input.mimeType);
+      return { url: uploaded.url };
+    }),
+    uploadSeoDefaultCover: adminProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) })).mutation(async ({ ctx, input }) => {
+      const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64");
+      const uploaded = await storagePut(`seo-default-covers/${ctx.user.id}/${input.fileName}`, bytes, input.mimeType);
       return { url: uploaded.url };
     }),
     updateCategoryCover: adminProcedure.input(z.object({ categoryId: z.number().int().positive(), coverImageUrl: z.string().url().max(1024).nullable() })).mutation(async ({ ctx, input }) => {

@@ -50,6 +50,7 @@ export const seoSettings = mysqlTable("seoSettings", {
   id: int("id").autoincrement().primaryKey(),
   googleAnalyticsMeasurementId: varchar("googleAnalyticsMeasurementId", { length: 32 }),
   googleSearchConsoleVerification: varchar("googleSearchConsoleVerification", { length: 255 }),
+  defaultQuizCoverUrl: varchar("defaultQuizCoverUrl", { length: 1024 }),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
