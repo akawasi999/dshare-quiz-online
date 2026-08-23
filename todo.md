@@ -573,3 +573,7 @@
 - [x] Triển khai Hero người học, stats, leaderboard, referral, nhiệm vụ, thành tích và lịch sử Quiz theo dữ liệu thực.
 - [x] Chuẩn hóa Sidebar chỉ điều hướng, responsive, accessibility và các trạng thái Dashboard mới.
 - [x] Kiểm thử hồi quy, xác minh đa breakpoint và lưu checkpoint tái thiết kế Profile.
+- [x] Đối chiếu layout Dashboard Profile với ảnh tham chiếu và xác định khác biệt trọng yếu.
+- [x] Bỏ hành vi sticky/fixed của Sidebar để cuộn cùng nội dung chính.
+- [x] Sắp xếp lại Hero, stats, leaderboard, referral, nhiệm vụ, thành tích và lịch sử Quiz theo lưới ảnh tham chiếu.
+- [x] Tinh chỉnh responsive, accessibility, hồi quy và lưu checkpoint Profile theo ảnh tham chiếu.

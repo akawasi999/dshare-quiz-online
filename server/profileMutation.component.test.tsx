@@ -47,11 +47,11 @@ describe("Profile mutation feedback", () => {
 
   it("hiển thị các khối Dashboard học tập theo cấu trúc mới", () => {
     render(<Profile />);
-    expect(screen.getByText("Hành trình học tập")).toBeTruthy();
+    expect(screen.getByText("Tổng XP")).toBeTruthy();
     expect(screen.getByText("Vị trí của bạn")).toBeTruthy();
     expect(screen.getByText("Cùng học, cùng nhận thưởng")).toBeTruthy();
-    expect(screen.getByText("Nhiệm vụ đang chờ bạn")).toBeTruthy();
-    expect(screen.getByText("Tủ danh hiệu của bạn")).toBeTruthy();
-    expect(screen.getByText("Hoạt động gần đây")).toBeTruthy();
+    expect(screen.getByText("Nhiệm vụ hôm nay")).toBeTruthy();
+    expect(screen.getByText("Tủ danh hiệu")).toBeTruthy();
+    expect(screen.getByText("Quiz gần đây")).toBeTruthy();
   });
 });
