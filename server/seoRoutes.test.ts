@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { buildImageSitemapXml, buildQuizJsonLd, buildSeoHead, buildSitemapXml, legacyRedirectMiddleware, resolveLegacyRedirect, SITEMAP_PATHS, SITE_ORIGIN } from "./seoRoutes";
+import { buildBreadcrumbJsonLd, buildImageSitemapXml, buildQuizJsonLd, buildSeoHead, buildSitemapXml, legacyRedirectMiddleware, resolveLegacyRedirect, SITEMAP_PATHS, SITE_ORIGIN } from "./seoRoutes";
 
 describe("SEO routes", () => {
   it("chuyển URL tiếng Việt cũ sang route tiếng Anh, kể cả trang kết quả động", () => {
@@ -45,5 +45,12 @@ describe("SEO routes", () => {
     expect(jsonLd).toMatchObject({ "@type": "LearningResource", learningResourceType: "Quiz" });
     expect(JSON.stringify(jsonLd)).toContain("Hàm SUM dùng để làm gì?");
     expect(JSON.stringify(jsonLd)).not.toContain("isCorrect");
+  });
+
+  it("tạo BreadcrumbList theo URL canonical tiếng Anh", () => {
+    const breadcrumb = buildBreadcrumbJsonLd("/quiz/88", "Excel cơ bản");
+    expect(JSON.stringify(breadcrumb)).toContain("BreadcrumbList");
+    expect(JSON.stringify(breadcrumb)).toContain("Excel cơ bản");
+    expect(JSON.stringify(breadcrumb)).toContain(`${SITE_ORIGIN}/quiz/88`);
   });
 });

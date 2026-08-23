@@ -25,6 +25,8 @@ import { getTrueFalseStatements } from "../shared/questionValidation";
 import { getEffectiveTier } from "./membershipUtils";
 import { getQuotaPeriod } from "./quotaUtils";
 
+export const DEFAULT_QUIZ_COVER_URL = "/manus-storage/dshare-default-quiz-cover_d96ff2fa.png";
+
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {
@@ -117,7 +119,7 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
     completionReward: quizzes.completionReward,
     questionCount: quizzes.questionCount,
     createdAt: quizzes.createdAt,
-    coverImageUrl: sql<string | null>`coalesce(${quizzes.coverImageUrl}, ${categories.coverImageUrl})`,
+    coverImageUrl: sql<string>`coalesce(${quizzes.coverImageUrl}, ${categories.coverImageUrl}, ${DEFAULT_QUIZ_COVER_URL})`,
     attemptCount: sql<number>`count(${attempts.id})`,
     recentAttemptCount: sql<number>`sum(case when ${attempts.completedAt} >= date_sub(now(), interval 24 hour) then 1 else 0 end)`,
     categoryId: categories.id,

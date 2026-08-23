@@ -485,3 +485,7 @@
 - [x] Phát JSON-LD và sitemap hình ảnh cho từng Quiz public có ảnh bìa.
 - [x] Thêm xem trước Open Graph cho từng Quiz trong CPanel.
 - [x] Kiểm thử SEO, CPanel, responsive và lưu checkpoint.
+- [x] Rà soát nguồn ảnh bìa mặc định, dữ liệu breadcrumb và preview chia sẻ hiện có.
+- [x] Áp dụng ảnh bìa mặc định cho Quiz public chưa có ảnh và BreadcrumbList JSON-LD.
+- [x] Thêm thao tác làm mới cache Facebook/LinkedIn trong Open Graph Preview CPanel.
+- [x] Kiểm thử SEO, chia sẻ, CPanel, responsive và lưu checkpoint.

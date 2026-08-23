@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { LEGACY_ROUTE_MAP, ROUTES } from "../client/src/lib/routes";
-import { getDb, getQuizDetail, getQuizQuestionSet, listPublishedCatalog } from "./db";
+import { DEFAULT_QUIZ_COVER_URL, getDb, getQuizDetail, getQuizQuestionSet, listPublishedCatalog } from "./db";
 import { seoSettings } from "../drizzle/schema";
 
 export const SITE_ORIGIN = "https://dsharequiz-jxleeaps.manus.space";
@@ -41,6 +41,24 @@ export function buildQuizJsonLd(input: { quizId: number; title: string; summary:
     educationalLevel: input.category,
     hasPart: input.questions.slice(0, 50).map(question => ({ "@type": "Question", name: compactText(question.prompt, 300) })),
   };
+}
+
+export function buildBreadcrumbJsonLd(pathname: string, title?: string) {
+  const cleanPath = pathname === "/" ? "/" : pathname.replace(/\/+$/, "") || "/";
+  const parts = cleanPath.split("/").filter(Boolean);
+  const labels: Record<string, string> = { explore: "Khám phá", pricing: "Bảng giá", leaderboard: "Xếp hạng", quiz: "Quiz", account: "Tài khoản", practice: "Luyện tập", results: "Kết quả" };
+  const items = [{ "@type": "ListItem", position: 1, name: "Trang chủ", item: SITE_ORIGIN }];
+  let accumulated = "";
+  parts.forEach((part, index) => {
+    accumulated += `/${part}`;
+    const isLast = index === parts.length - 1;
+    items.push({ "@type": "ListItem", position: index + 2, name: isLast && title ? title : labels[part] ?? part, item: `${SITE_ORIGIN}${accumulated}` });
+  });
+  return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items };
+}
+
+function combineJsonLd(...items: Array<Record<string, unknown> | undefined>) {
+  return { "@context": "https://schema.org", "@graph": items.filter(Boolean) };
 }
 
 export function buildSeoHead(meta: PageMeta, settings: SeoSettings) {
@@ -88,16 +106,16 @@ export async function attachSeoMetadata(req: Request, res: Response, next: NextF
       const detail = await getQuizDetail(Number(match[1]));
       if (detail?.quiz.isPublished && detail.quiz.visibility === "public") {
         const quiz = detail.quiz;
-        const image = quiz.coverImageUrl ?? detail.category.coverImageUrl;
+        const image = quiz.coverImageUrl ?? detail.category.coverImageUrl ?? DEFAULT_QUIZ_COVER_URL;
         const questions = await getQuizQuestionSet(quiz.id);
         const jsonLd = buildQuizJsonLd({ quizId: quiz.id, title: quiz.title, summary: quiz.summary, image, datePublished: quiz.publishedAt ?? quiz.createdAt, category: detail.category.title, questions: questions.map(item => ({ prompt: item.question.prompt })) });
-        res.locals.seoHead = buildSeoHead({ title: `${quiz.title} · Dshare Quiz Online`, description: quiz.summary || `Làm Quiz ${quiz.title} trên Dshare Quiz Online.`, canonicalPath: `${ROUTES.quiz}/${quiz.id}`, image, type: "article", publishedAt: quiz.publishedAt ?? quiz.createdAt, jsonLd }, settings);
+        res.locals.seoHead = buildSeoHead({ title: `${quiz.title} · Dshare Quiz Online`, description: quiz.summary || `Làm Quiz ${quiz.title} trên Dshare Quiz Online.`, canonicalPath: `${ROUTES.quiz}/${quiz.id}`, image, type: "article", publishedAt: quiz.publishedAt ?? quiz.createdAt, jsonLd: combineJsonLd(buildBreadcrumbJsonLd(`${ROUTES.quiz}/${quiz.id}`, quiz.title), jsonLd) }, settings);
       } else {
         res.locals.seoHead = buildSeoHead({ title: "Quiz không khả dụng · Dshare Quiz Online", description: "Quiz này không còn công khai hoặc đã được di chuyển.", canonicalPath: req.path, noindex: true }, settings);
       }
       return next();
     }
-    res.locals.seoHead = buildSeoHead({ title: "Dshare Quiz Online", description: "Nền tảng Quiz và ôn tập trực tuyến cho hành trình học tập có định hướng.", canonicalPath: req.path === "/" ? "/" : req.path }, settings);
+    res.locals.seoHead = buildSeoHead({ title: "Dshare Quiz Online", description: "Nền tảng Quiz và ôn tập trực tuyến cho hành trình học tập có định hướng.", canonicalPath: req.path === "/" ? "/" : req.path, jsonLd: buildBreadcrumbJsonLd(req.path) }, settings);
     return next();
   } catch (error) {
     console.error("[SEO] Không thể tạo metadata động:", error);
