@@ -597,3 +597,6 @@
 - [x] Rà soát card Thành tích và asset icon hiện có để chọn cách hiển thị phù hợp.
 - [x] Bổ sung icon hình ảnh cho badge Thành tích theo trạng thái mở khóa và đang khóa.
 - [x] Kiểm thử trực quan, hồi quy và lưu checkpoint icon Thành tích.
+- [x] Rà soát tiêu đề và các ô Thành tích để xác định các vị trí cần icon hình ảnh bổ sung.
+- [x] Thêm icon minh họa cho tiêu đề Thành tích và tăng khả năng nhận diện từng trạng thái badge.
+- [x] Kiểm thử trực quan, hồi quy và lưu checkpoint icon Thành tích mở rộng.

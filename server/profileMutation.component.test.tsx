@@ -66,6 +66,7 @@ describe("Profile mutation feedback", () => {
     expect(screen.getByText("Giới thiệu bạn bè")).toBeTruthy();
     expect(screen.getByText("Nhiệm vụ hôm nay")).toBeTruthy();
     expect(screen.getByText("Thành tích")).toBeTruthy();
+    expect(document.querySelector('img[src*="profile-achievement-trophy"]')).toBeTruthy();
     expect(screen.getByText("Bài Quiz đã làm")).toBeTruthy();
     expect(document.querySelector('img[src*="profile-hero-trophy"]')).toBeTruthy();
     expect(document.querySelector('img[src*="profile-point-coins"]')).toBeTruthy();
