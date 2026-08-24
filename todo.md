@@ -713,3 +713,5 @@
 - [x] Rà soát chiều cao App Shell và nguyên nhân scrollbar ngoài ở desktop Studio.
 - [x] Giảm chiều cao Studio theo viewport còn lại, giữ cuộn nội bộ cho Sidebar, Editor và AI.
 - [x] Kiểm thử desktop/mobile, regression và lưu checkpoint cập nhật chiều cao Studio.
+- [x] Ẩn Header website trên `/quiz/create` và giữ App Shell khít viewport.
+- [x] Kiểm thử Studio, cập nhật regression và lưu checkpoint sau khi ẩn Header.
