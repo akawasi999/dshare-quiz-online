@@ -695,3 +695,7 @@
 - [x] Lưu checkpoint bố cục Quiz Studio không còn vùng cố định.
 - [x] Gỡ khối liên kết, AI nâng cao, Ví Point và Áp dụng vào trò chơi khỏi `/quiz/create`.
 - [x] Cập nhật regression, kiểm tra trực quan và lưu checkpoint sau khi gỡ khối AI/Point Studio.
+- [x] Rà soát và tinh gọn khoảng cuối trang Quiz Studio sau khi gỡ khối AI/Point.
+- [x] Kiểm tra, tối ưu layout và interaction của chế độ Chat AI trong luồng cuộn chung.
+- [x] Sắp xếp lại các nhóm nút thao tác chính của Studio theo ưu tiên và breakpoint responsive.
+- [x] Kiểm thử desktop/tablet/mobile, regression và lưu checkpoint cải tiến UX Studio.

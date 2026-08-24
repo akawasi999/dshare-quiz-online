@@ -91,6 +91,9 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByTestId("ai-questions-column").className).not.toContain("flex-col");
     expect(screen.getByTestId("ai-questions-scroll").className).not.toContain("overflow-y-auto");
     expect(screen.getByText("Câu mới từ AI sẽ xuất hiện tại đây.")).toBeTruthy();
+    expect(screen.getByTestId("spec-creator-header")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Xem trước Sandbox" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Xuất bản/ })).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("false");
     await user.click(screen.getByRole("button", { name: /Thu gọn/ }));
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("false");
