@@ -70,6 +70,8 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByRole("dialog").className).toContain("max-w-[800px]");
     expect(screen.getByRole("dialog").className).toContain("max-h-[calc(100dvh-1rem)]");
     expect(screen.getByRole("dialog").className).toContain("overflow-y-auto");
+    expect(screen.getByRole("dialog").className).toContain("overflow-x-clip");
+    expect(screen.getByRole("dialog").className).toContain("w-[calc(100vw-2rem)]");
     await userEventApi.click(screen.getByRole("button", { name: "Đăng ký ngay" }));
     expect(screen.getByLabelText("Tên thành viên")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Hiển thị Xác nhận mật khẩu" })).toBeTruthy();
@@ -87,7 +89,7 @@ describe("SiteHeader navigation", () => {
     await userEventApi.type(screen.getByLabelText("Mật khẩu"), "MatKhauManh2026!");
     expect(screen.getByText("Độ mạnh mật khẩu: Mạnh")).toBeTruthy();
     expect(screen.getByRole("list", { name: "Yêu cầu mật khẩu" })).toBeTruthy();
-    expect(screen.getByText("Tối thiểu 10 ký tự").className).toContain("text-emerald-700");
+    expect(screen.getByText("Tối thiểu 10 ký tự").parentElement?.className).toContain("text-emerald-700");
     await userEventApi.type(screen.getByLabelText("Địa chỉ email"), "minh@example.com");
     await userEventApi.click(screen.getByRole("button", { name: "Đăng nhập" }));
     expect((screen.getByLabelText("Địa chỉ email") as HTMLInputElement).value).toBe("minh@example.com");

@@ -658,3 +658,7 @@
 - [x] Rà soát giới hạn chiều cao và nền ngoài của popup trên màn hình thấp/tablet.
 - [x] Tăng vùng hiển thị popup, thêm cuộn nội bộ và bảo toàn khả năng thao tác toàn bộ nội dung.
 - [x] Kiểm thử popup tại các kích thước màn hình và lưu checkpoint.
+- [x] Kiểm kê nguyên nhân overflow ngang trong container, grid form, social login và vùng hành động popup.
+- [x] Tái cấu trúc width, grid, wrap và breakpoint để popup không vượt viewport ở mọi kích thước.
+- [x] Kiểm thử không tràn ngang tại 320, 360, 375, 390, 414, 480, 768, 1024, 1280 và 1440px.
+- [x] Lưu checkpoint responsive popup không overflow.
