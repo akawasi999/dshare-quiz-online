@@ -288,6 +288,12 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); line-height: 1.3; }
 @keyframes auth-form-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
 .auth-form-shake { animation: auth-form-shake 320ms var(--ease-out); }
 @media (prefers-reduced-motion: reduce) { .auth-form-shake { animation: none; } }
+[data-slot="dialog-content"].max-w-\[800px\] input { transition: border-color 180ms var(--ease-out), box-shadow 180ms var(--ease-out), background-color 180ms var(--ease-out); }
+[data-slot="dialog-content"].max-w-\[800px\] input:hover:not(:disabled) { border-color: color-mix(in srgb, var(--primary) 52%, var(--border)); }
+[data-slot="dialog-content"].max-w-\[800px\] input:focus-visible { background-color: color-mix(in srgb, var(--primary) 3%, var(--surface)); }
+[data-slot="dialog-content"].max-w-\[800px\] [data-slot="button"] { transition-duration: 180ms; }
+@media (min-width: 768px) and (max-width: 1023px) { [data-slot="dialog-content"].max-w-\[800px\] .sm\:pl-\[284px\] { padding-left: 280px; } }
+@media (min-width: 1024px) { [data-slot="dialog-content"].max-w-\[800px\] .sm\:pl-\[284px\] { padding-left: 320px; } }
 ::selection { background: var(--primary-light); color: var(--text); }
 .cta-gradient { background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); box-shadow: 0 12px 28px color-mix(in srgb, var(--primary) 24%, transparent); }
 .cta-gradient:hover { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); }

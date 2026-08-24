@@ -64,6 +64,7 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByLabelText("Địa chỉ email")).toBeTruthy();
     expect(screen.getByLabelText("Mật khẩu")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Hiển thị Mật khẩu" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Hiển thị Mật khẩu" }).textContent).toBe("");
     expect(screen.getByLabelText("Ghi nhớ đăng nhập")).toBeTruthy();
     expect(screen.getByRole("dialog").className).toContain("max-w-[800px]");
     await userEventApi.click(screen.getByRole("button", { name: "Đăng ký ngay" }));

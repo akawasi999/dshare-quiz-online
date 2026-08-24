@@ -643,3 +643,6 @@
 - [x] Rà soát kích thước popup và lưới hai cột đăng ký/đăng nhập hiện có.
 - [x] Cập nhật popup tối đa 800px, cột mô tả 300px và cột nhập liệu 500px trên desktop.
 - [x] Kiểm thử responsive, hồi quy và lưu checkpoint bố cục popup 800px.
+- [x] Rà soát vị trí điều khiển mật khẩu và breakpoint tablet trong popup hiện có.
+- [x] Đưa icon hiện/ẩn vào trong input, tối ưu tablet 768px và thêm transition hover/focus.
+- [x] Kiểm thử desktop/tablet/mobile, hồi quy và lưu checkpoint cải thiện popup.
