@@ -637,3 +637,6 @@
 - [x] Hiển thị checklist yêu cầu mật khẩu theo thời gian thực trong popup đăng ký.
 - [x] Thêm giới hạn đăng nhập sai, thời gian chờ và phản hồi an toàn trên form.
 - [x] Kiểm thử bảo mật, hồi quy và lưu checkpoint giới hạn đăng nhập.
+- [x] Rà soát mô hình đếm lỗi và chọn CAPTCHA phù hợp sau ba lần đăng nhập sai.
+- [x] Thêm CAPTCHA có xác thực máy chủ, nút Quên mật khẩu khi khóa tài khoản và phản hồi lỗi form hoàn chỉnh.
+- [x] Kiểm thử bảo mật, giao diện và lưu checkpoint CAPTCHA đăng nhập.

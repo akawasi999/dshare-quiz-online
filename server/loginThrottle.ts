@@ -1,5 +1,6 @@
 export const LOGIN_MAX_FAILED_ATTEMPTS = 5;
 export const LOGIN_LOCK_DURATION_MS = 15 * 60 * 1000;
+export const LOGIN_CAPTCHA_THRESHOLD = 3;
 
 export function nextFailedLoginState(currentAttempts: number, now = new Date()) {
   const failedLoginAttempts = Math.max(0, currentAttempts) + 1;

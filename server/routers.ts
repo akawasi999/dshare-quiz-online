@@ -107,7 +107,8 @@ import { extractRemoteQuizSource } from "./remoteQuizExtraction";
 import { transcribeAudio } from "./_core/voiceTranscription";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
 import { hashPassword, hashToken, newOneTimeToken, normalizeEmail, verifyPassword } from "./localAuth";
-import { loginLockoutMessage, nextFailedLoginState } from "./loginThrottle";
+import { LOGIN_CAPTCHA_THRESHOLD, loginLockoutMessage, nextFailedLoginState } from "./loginThrottle";
+import { createLoginCaptcha, LOGIN_CAPTCHA_COOKIE, LOGIN_CAPTCHA_MAX_AGE_MS, verifyLoginCaptcha } from "./loginCaptcha";
 import { sdk } from "./_core/sdk";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
@@ -301,6 +302,11 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    getLoginCaptcha: publicProcedure.query(({ ctx }) => {
+      const captcha = createLoginCaptcha();
+      ctx.res.cookie(LOGIN_CAPTCHA_COOKIE, captcha.cookieValue, { ...getSessionCookieOptions(ctx.req), maxAge: LOGIN_CAPTCHA_MAX_AGE_MS });
+      return { question: captcha.question, expiresInSeconds: LOGIN_CAPTCHA_MAX_AGE_MS / 1000 } as const;
+    }),
     register: publicProcedure.input(z.object({ name: z.string().trim().min(2).max(160), email: z.string().trim().email().max(320), password: passwordInput, acceptedTerms: z.literal(true) })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
@@ -318,15 +324,20 @@ export const appRouter = router({
       ctx.res.cookie(COOKIE_NAME, session, { ...getSessionCookieOptions(ctx.req), maxAge: ONE_YEAR_MS });
       return { success: true } as const;
     }),
-    loginWithPassword: publicProcedure.input(z.object({ email: z.string().trim().email().max(320), password: z.string().min(1).max(128), remember: z.boolean().default(true) })).mutation(async ({ ctx, input }) => {
+    loginWithPassword: publicProcedure.input(z.object({ email: z.string().trim().email().max(320), password: z.string().min(1).max(128), remember: z.boolean().default(true), captchaAnswer: z.string().trim().max(3).optional() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
       const user = (await db.select().from(users).where(eq(users.email, normalizeEmail(input.email))).limit(1))[0];
       const credential = user ? (await db.select().from(userCredentials).where(eq(userCredentials.userId, user.id)).limit(1))[0] : undefined;
       const now = new Date();
       if (credential?.loginLockedUntil && credential.loginLockedUntil > now) throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: loginLockoutMessage(credential.loginLockedUntil, now) });
+      if (credential && credential.failedLoginAttempts >= LOGIN_CAPTCHA_THRESHOLD && !verifyLoginCaptcha(ctx.req.headers.cookie, input.captchaAnswer, now)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Vui lòng hoàn tất CAPTCHA trước khi tiếp tục đăng nhập." });
       if (!user || !credential || !(await verifyPassword(input.password, credential.passwordHash))) {
-        if (credential) await db.update(userCredentials).set(nextFailedLoginState(credential.failedLoginAttempts, now)).where(eq(userCredentials.id, credential.id));
+        if (credential) {
+          const nextState = nextFailedLoginState(credential.failedLoginAttempts, now);
+          await db.update(userCredentials).set(nextState).where(eq(userCredentials.id, credential.id));
+          if (nextState.failedLoginAttempts >= LOGIN_CAPTCHA_THRESHOLD) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Bạn đã nhập sai 3 lần. Vui lòng hoàn tất CAPTCHA trước lần đăng nhập tiếp theo." });
+        }
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Email hoặc mật khẩu không đúng." });
       }
       await db.update(userCredentials).set({ failedLoginAttempts: 0, loginLockedUntil: null }).where(eq(userCredentials.id, credential.id));
