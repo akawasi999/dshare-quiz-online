@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { startLogin } from "@/const";
 import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
 import { trpc } from "@/lib/trpc";
-import { BellRing, CheckCircle2, Crop, ImagePlus, LoaderCircle, LogIn, PencilLine, Trash2, UserRound } from "lucide-react";
+import { BellRing, CalendarDays, CheckCircle2, Crop, ImagePlus, KeyRound, LoaderCircle, LogIn, Mail, MapPin, PencilLine, Trash2, UserRound } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -88,6 +88,9 @@ export default function PersonalInfo() {
       avatarUrl: "",
       bio: profile.bio ?? "",
       learningGoal: profile.learningGoal ?? "",
+      contactEmail: profile.contactEmail ?? "",
+      birthDate: profile.birthDate ?? "",
+      address: profile.address ?? "",
       notificationPreferences: profile.notificationPreferences ?? { studyReminders: true, resultUpdates: true, platformUpdates: true },
     }, { onSuccess: () => { setUploadedAvatarUrl(""); toast.success("Đã xóa ảnh đại diện.", { description: "Hồ sơ đang sử dụng ảnh mặc định." }); } });
   };
@@ -99,6 +102,9 @@ export default function PersonalInfo() {
       avatarUrl,
       bio: String(form.get("bio") ?? ""),
       learningGoal: String(form.get("learningGoal") ?? ""),
+      contactEmail: String(form.get("contactEmail") ?? ""),
+      birthDate: String(form.get("birthDate") ?? ""),
+      address: String(form.get("address") ?? ""),
       notificationPreferences: {
         studyReminders: form.get("studyReminders") === "on",
         resultUpdates: form.get("resultUpdates") === "on",
@@ -113,7 +119,7 @@ export default function PersonalInfo() {
         <header className="border-b border-border-light bg-[linear-gradient(110deg,#fafaff,#f6f4ff)] px-5 py-5 sm:px-7">
           <span className="inline-flex size-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-700"><UserRound size={20} /></span>
           <h1 className="mt-3 text-2xl font-black tracking-[-.04em] text-foreground">Thông tin cá nhân</h1>
-          <p className="mt-1 text-sm text-text-secondary">Quản lý ảnh đại diện, mục tiêu học tập và các thông báo phù hợp với bạn.</p>
+          <p className="mt-1 text-sm text-text-secondary">Quản lý ảnh đại diện, thông tin liên hệ, mục tiêu học tập và các thiết lập bảo mật.</p>
         </header>
         <form onSubmit={submit} className="p-5 sm:p-7">
           <div className="grid gap-5 sm:grid-cols-2">
@@ -130,8 +136,17 @@ export default function PersonalInfo() {
               </div>
             </Field>
             <Field label="Mục tiêu học tập" description="Tối đa 220 ký tự, hiển thị trên trang Tổng quan."><input id="learningGoal" name="learningGoal" defaultValue={profile.learningGoal ?? ""} maxLength={220} placeholder="Ví dụ: Đạt 7.0 IELTS trong 12 tuần" className="field" /></Field>
+            <Field label="Email liên hệ" description="Dùng để nhận thông báo học tập. Email đăng nhập vẫn do dịch vụ xác thực quản lý."><span className="relative block"><Mail aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} /><input aria-label="Email liên hệ" id="contactEmail" name="contactEmail" type="email" defaultValue={profile.contactEmail ?? user.email ?? ""} maxLength={320} placeholder="ban@example.com" className="field pl-10" /></span></Field>
+            <Field label="Ngày sinh" description="Dùng để cá nhân hóa trải nghiệm học tập."><span className="relative block"><CalendarDays aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} /><input aria-label="Ngày sinh" id="birthDate" name="birthDate" type="date" defaultValue={profile.birthDate ?? ""} className="field pl-10" /></span></Field>
             <Field label="Giới thiệu bản thân" full description="Một vài dòng về điều bạn muốn chinh phục."><textarea id="bio" name="bio" defaultValue={profile.bio ?? ""} maxLength={500} placeholder="Mục tiêu học tập hoặc điều bạn muốn chinh phục…" className="field min-h-32 resize-y" /></Field>
+            <Field label="Địa chỉ" full description="Tùy chọn, dùng cho các hỗ trợ cần thiết của tài khoản."><span className="relative block"><MapPin aria-hidden="true" className="pointer-events-none absolute left-3 top-3 text-text-muted" size={16} /><textarea aria-label="Địa chỉ" id="address" name="address" defaultValue={profile.address ?? ""} maxLength={500} placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố" className="field min-h-20 resize-y pl-10" /></span></Field>
           </div>
+          <section className="mt-6 rounded-xl border border-violet-100 bg-violet-50/45 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-violet-500/10 text-violet-700"><KeyRound size={17} /></span><div><h2 className="text-sm font-bold text-foreground">Mật khẩu đăng nhập</h2><p className="mt-1 max-w-xl text-xs leading-5 text-text-secondary">Tài khoản sử dụng đăng nhập OAuth. Mật khẩu được quản lý an toàn tại cổng tài khoản, không được lưu trên Dshare Quiz.</p></div></div>
+              <Button type="button" variant="outline" className="shrink-0 border-violet-200 text-violet-700 hover:bg-violet-100" onClick={() => window.open(import.meta.env.VITE_OAUTH_PORTAL_URL, "_blank", "noopener,noreferrer")}>Quản lý mật khẩu</Button>
+            </div>
+          </section>
           <fieldset className="mt-6 rounded-xl border border-border-light bg-muted/55 p-4">
             <legend className="px-1 text-sm font-bold text-foreground"><BellRing className="mr-1 inline-block text-primary" size={15} />Thông báo</legend>
             <div className="mt-3 grid gap-3 md:grid-cols-3">{preferenceLabels.map(([name, title, note]) => <label key={name} className="flex cursor-pointer gap-3 rounded-lg border border-border-light bg-surface p-3 text-xs transition-colors hover:border-primary/25"><input name={name} type="checkbox" defaultChecked={profile.notificationPreferences?.[name] ?? true} className="mt-0.5 size-4 accent-primary" /><span><strong className="text-foreground">{title}</strong><span className="mt-1 block leading-4 text-text-muted">{note}</span></span></label>)}</div>

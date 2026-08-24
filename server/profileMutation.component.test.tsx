@@ -43,6 +43,10 @@ describe("Profile mutation feedback", () => {
     expect(mocks.toast.error).toHaveBeenCalledWith("Không thể lưu hồ sơ", { description: "Không thể kết nối" });
     expect(screen.getByLabelText("Chọn & cắt ảnh")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Xóa ảnh" })).toBeNull();
+    expect(screen.getByLabelText("Email liên hệ")).toBeTruthy();
+    expect(screen.getByLabelText("Ngày sinh")).toBeTruthy();
+    expect(screen.getByLabelText("Địa chỉ")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Quản lý mật khẩu" })).toBeTruthy();
   });
 
   it("hiển thị thao tác xóa để đưa avatar hiện có về mặc định", () => {

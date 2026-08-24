@@ -501,13 +501,13 @@ export const appRouter = router({
       await db.update(userNotifications).set({ isRead: true, readAt: new Date() }).where(and(eq(userNotifications.userId, ctx.user.id), eq(userNotifications.isRead, false)));
       return { success: true };
     }),
-    updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), learningGoal: z.string().trim().max(220).optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")), notificationPreferences: z.object({ studyReminders: z.boolean(), resultUpdates: z.boolean(), platformUpdates: z.boolean() }).optional() }))
+    updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), learningGoal: z.string().trim().max(220).optional(), contactEmail: z.string().trim().email().max(320).optional().or(z.literal("")), birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")), address: z.string().trim().max(500).optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")), notificationPreferences: z.object({ studyReminders: z.boolean(), resultUpdates: z.boolean(), platformUpdates: z.boolean() }).optional() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         const profile = await ensureLearnerProfile(ctx.user.id);
         if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-        await db.update(learnerProfiles).set({ bio: input.bio || null, learningGoal: input.learningGoal || null, avatarUrl: input.avatarUrl || null, notificationPreferences: input.notificationPreferences }).where(eq(learnerProfiles.id, profile.id));
+        await db.update(learnerProfiles).set({ bio: input.bio === undefined ? profile.bio : input.bio || null, learningGoal: input.learningGoal === undefined ? profile.learningGoal : input.learningGoal || null, contactEmail: input.contactEmail === undefined ? profile.contactEmail : input.contactEmail || null, birthDate: input.birthDate === undefined ? profile.birthDate : input.birthDate || null, address: input.address === undefined ? profile.address : input.address || null, avatarUrl: input.avatarUrl === undefined ? profile.avatarUrl : input.avatarUrl || null, notificationPreferences: input.notificationPreferences === undefined ? profile.notificationPreferences : input.notificationPreferences }).where(eq(learnerProfiles.id, profile.id));
         return { success: true };
       }),
     uploadAvatar: protectedProcedure.input(avatarUploadInput).mutation(async ({ ctx, input }) => {

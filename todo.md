@@ -607,3 +607,7 @@
 - [x] Bổ sung toast thành công cho tải lên và xóa avatar.
 - [x] Thêm hiệu ứng hover phóng to nhẹ, làm sáng icon thành tích đã mở khóa.
 - [x] Kiểm thử trực quan, hồi quy và lưu checkpoint phản hồi avatar/thành tích.
+- [x] Rà soát mô hình dữ liệu hồ sơ và ràng buộc email/mật khẩu do OAuth quản lý.
+- [x] Lưu email liên hệ, ngày sinh và địa chỉ trong hồ sơ người học bằng migration và tRPC.
+- [x] Bổ sung giao diện thay đổi email liên hệ, ngày sinh, địa chỉ và luồng quản lý mật khẩu OAuth.
+- [x] Kiểm thử bảo mật, hồi quy, responsive và lưu checkpoint Thông tin cá nhân mở rộng.
