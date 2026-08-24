@@ -87,6 +87,39 @@ body { font-family: var(--font-family-primary, "Inter"), ui-sans-serif, system-u
   :root[data-appearance-header-sticky="true"] .site-header { position: sticky; top: 0; }
 }
 
+/* Quiz Studio uses one document scroll so its header and workspaces travel together. */
+.account-layout-static-header .site-header { position: relative !important; top: auto !important; }
+
+/* Keep every Quiz Studio panel in the document flow: no pinned columns or independent vertical scrollbars. */
+.quiz-studio-synchronous [data-testid="question-navigator"],
+.quiz-studio-synchronous [data-testid="quiz-ai-primary"],
+.quiz-studio-synchronous [data-testid="ai-questions-column"],
+.quiz-studio-synchronous [data-testid="ai-questions-column"] > section {
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+.quiz-studio-synchronous [data-testid="question-navigator-scroll"],
+.quiz-studio-synchronous [data-testid="ai-questions-scroll"],
+.quiz-studio-synchronous [data-testid="ai-chat-scroll"] {
+  flex: none !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.quiz-studio-synchronous [data-testid="question-navigator-scroll"] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
 .site-header-nav-item {
   display: inline-flex !important;
   min-height: 40px;

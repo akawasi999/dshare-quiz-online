@@ -689,3 +689,7 @@
 - [x] Tách footer vào luồng nội dung, sắp xếp các nhóm liên kết, AI, Point và hành động rõ ràng.
 - [x] Kiểm thử desktop/tablet/mobile để đảm bảo footer không tràn hoặc đè form.
 - [x] Lưu checkpoint sửa lỗi footer trang Tạo Quiz.
+- [x] Kiểm kê mọi vùng fixed, sticky, chiều cao khóa và vùng cuộn riêng tại Quiz Studio.
+- [x] Chuyển header Studio, danh sách câu hỏi, thanh công cụ và workspace sang luồng cuộn đồng bộ theo trang.
+- [x] Kiểm thử cuộn đồng bộ desktop/tablet/mobile, interaction và regression trang Tạo Quiz.
+- [x] Lưu checkpoint bố cục Quiz Studio không còn vùng cố định.
