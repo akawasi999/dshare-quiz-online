@@ -704,3 +704,5 @@
 - [x] Chuẩn hóa sidebar dạng danh sách dọc, card câu hỏi trung tâm và sticky bar AI nhanh.
 - [x] Bảo toàn/tối ưu kéo-thả sắp xếp, nút nhân bản-xóa và trạng thái câu hỏi đang chọn.
 - [x] Kiểm thử desktop/tablet/mobile, Chat AI, kéo-thả, regression và lưu checkpoint App Shell Studio.
+- [x] Bật lại Header website trên `/quiz/create` và điều chỉnh chiều cao App Shell tương ứng.
+- [x] Kiểm thử Header, Workspace và lưu checkpoint cập nhật.

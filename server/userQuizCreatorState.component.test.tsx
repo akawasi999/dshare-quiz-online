@@ -26,7 +26,7 @@ describe("Quiz Creator theo đặc tả", () => {
     render(<UserQuizCreator />);
     expect(screen.getByTestId("spec-creator-header").className).toContain("editor-header");
     expect(screen.getByTestId("spec-quiz-workspace").className).toContain("editor-body");
-    expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
+    expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("false");
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-footer")).toBe("true");
     expect(screen.getByText("Danh sách câu hỏi")).toBeTruthy();
     expect(screen.getByText("Nhập chủ đề")).toBeTruthy();
@@ -90,7 +90,7 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByTestId("spec-creator-header")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Xem trước Sandbox" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Xuất bản/ })).toBeTruthy();
-    expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
+    expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("false");
     await user.click(screen.getByRole("button", { name: /Thu gọn/ }));
     expect(screen.queryByLabelText("AI Assistant")).toBeNull();
   });
