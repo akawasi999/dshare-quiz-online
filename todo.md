@@ -710,3 +710,6 @@
 - [x] Tái bố cục card câu hỏi với phân cấp, media và đáp án gọn rõ; Việt hóa Sao chép/Xóa.
 - [x] Đồng bộ màu xanh thương hiệu, spacing và responsive desktop/tablet/mobile cho Studio.
 - [x] Cập nhật regression, kiểm thử và lưu checkpoint phiên bản Studio tinh chỉnh.
+- [x] Rà soát chiều cao App Shell và nguyên nhân scrollbar ngoài ở desktop Studio.
+- [x] Giảm chiều cao Studio theo viewport còn lại, giữ cuộn nội bộ cho Sidebar, Editor và AI.
+- [x] Kiểm thử desktop/mobile, regression và lưu checkpoint cập nhật chiều cao Studio.
