@@ -63,8 +63,11 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByRole("button", { name: "Google" })).toBeTruthy();
     expect(screen.getByLabelText("Địa chỉ email")).toBeTruthy();
     expect(screen.getByLabelText("Mật khẩu")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Hiển thị Mật khẩu" })).toBeTruthy();
+    expect(screen.getByLabelText("Ghi nhớ đăng nhập")).toBeTruthy();
     await userEventApi.click(screen.getByRole("button", { name: "Đăng ký ngay" }));
     expect(screen.getByLabelText("Tên thành viên")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Hiển thị Xác nhận mật khẩu" })).toBeTruthy();
     expect(screen.getByText(/Tôi đồng ý với/)).toBeTruthy();
   });
 

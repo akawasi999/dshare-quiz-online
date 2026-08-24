@@ -627,3 +627,6 @@
 - [x] Căn chỉnh popup Login và Register theo thanh tiêu đề, form hai cột, social login ưu tiên và responsive mobile.
 - [x] Bảo đảm Email, Google và Manus liên kết về một User ID, giữ nguyên XP, Point, Level, lịch sử Quiz, thành tích và hồ sơ.
 - [x] Kiểm thử popup, liên kết tài khoản, trạng thái tải/lỗi/thành công và lưu checkpoint.
+- [x] Rà soát điều khiển hiện/ẩn mật khẩu, trạng thái submit và checkbox ghi nhớ hiện có.
+- [x] Tách điều khiển mắt cho từng trường mật khẩu, thêm spinner nút submit và hoàn thiện Ghi nhớ đăng nhập.
+- [x] Kiểm thử popup, responsive, hồi quy và lưu checkpoint vi tương tác xác thực.
