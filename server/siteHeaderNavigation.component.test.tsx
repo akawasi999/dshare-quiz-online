@@ -75,6 +75,9 @@ describe("SiteHeader navigation", () => {
     await userEventApi.click(screen.getByRole("button", { name: "Đăng ký ngay" }));
     expect(screen.getByLabelText("Tên thành viên")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Hiển thị Xác nhận mật khẩu" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Hiển thị Mật khẩu" }).className).toContain("right-3");
+    expect(screen.getByRole("button", { name: "Hiển thị Mật khẩu" }).className).toContain("-translate-y-1/2");
+    expect(screen.queryByText("Độ mạnh mật khẩu: Yếu")).toBeNull();
     expect(screen.getByLabelText("Đồng ý Điều khoản dịch vụ và Chính sách bảo mật")).toBeTruthy();
     expect(screen.getByText("Điều khoản dịch vụ")).toBeTruthy();
     expect(screen.getByText("Chính sách bảo mật")).toBeTruthy();

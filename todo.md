@@ -662,3 +662,6 @@
 - [x] Tái cấu trúc width, grid, wrap và breakpoint để popup không vượt viewport ở mọi kích thước.
 - [x] Kiểm thử không tràn ngang tại 320, 360, 375, 390, 414, 480, 768, 1024, 1280 và 1440px.
 - [x] Lưu checkpoint responsive popup không overflow.
+- [x] Rà soát vị trí icon mắt và trạng thái đánh giá mật khẩu mặc định.
+- [x] Căn icon mắt vào bên phải input mật khẩu và chỉ hiển thị đánh giá khi có ký tự.
+- [x] Kiểm thử popup và lưu checkpoint vi tương tác mật khẩu.
