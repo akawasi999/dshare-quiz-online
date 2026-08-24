@@ -1688,7 +1688,7 @@ export const appRouter = router({
         await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.approved ? "report.approved" : "report.rejected", entityType: "bug_report", entityId: report.id, metadata: { rewardPoints } });
         return { success: true };
       }),
-    users: adminProcedure.input(z.object({ search: z.string().trim().max(120).optional(), tier: z.enum(["basic", "pro", "premium"]).optional(), status: z.enum(["active", "banned"]).optional(), page: z.number().int().min(1).default(1), pageSize: z.number().int().min(5).max(50).default(12) }).optional())
+    users: adminProcedure.input(z.object({ search: z.string().trim().max(120).optional(), tier: z.enum(["basic", "pro", "premium"]).optional(), status: z.enum(["active", "suspended", "banned", "deactivated"]).optional(), page: z.number().int().min(1).default(1), pageSize: z.number().int().min(5).max(50).default(12) }).optional())
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return { items: [], total: 0, page: 1, pageSize: input?.pageSize ?? 12, totalPages: 0 };
@@ -1696,7 +1696,7 @@ export const appRouter = router({
         const pageSize = input?.pageSize ?? 12;
         const where = and(
           input?.tier ? eq(learnerProfiles.tier, input.tier) : undefined,
-          input?.status ? eq(learnerProfiles.isBanned, input.status === "banned") : undefined,
+          input?.status ? eq(users.accountStatus, input.status) : undefined,
           input?.search ? sql`(lower(coalesce(${users.name}, '')) like ${`%${input.search.toLowerCase()}%`} or lower(coalesce(${users.email}, '')) like ${`%${input.search.toLowerCase()}%`})` : undefined,
         );
         const rows = await db.select({ user: users, profile: learnerProfiles })
@@ -1887,17 +1887,23 @@ export const appRouter = router({
         await createInAppNotification(db, { userId: input.userId, type: "account_plan", title: "Gói tài khoản đã được cập nhật", body: `Quản trị viên đã cập nhật gói tài khoản của bạn thành ${input.tier.toUpperCase()}.`, href: "/ho-so", metadata: { tier: input.tier, source: "user-management" } });
         return { success: true };
       }),
-    updateUserStatus: adminProcedure.input(z.object({ userId: z.number().int().positive(), isBanned: z.boolean() }))
+    updateUserStatus: adminProcedure.input(z.object({ userId: z.number().int().positive(), status: z.enum(["active", "suspended", "banned", "deactivated"]).optional(), reason: z.string().trim().min(3, "Vui lòng nhập lý do tối thiểu 3 ký tự.").max(500).optional(), isBanned: z.boolean().optional() }).refine(input => input.status !== undefined || input.isBanned !== undefined, { message: "Vui lòng chọn trạng thái tài khoản." }))
       .mutation(async ({ ctx, input }) => {
-        if (input.userId === ctx.user.id) throw new TRPCError({ code: "BAD_REQUEST", message: "Không thể khóa tài khoản quản trị đang sử dụng." });
+        const status = input.status ?? (input.isBanned ? "banned" : "active");
+        const reason = input.reason ?? "Thay đổi trạng thái từ giao diện quản trị cũ.";
+        if (input.userId === ctx.user.id && status !== "active") throw new TRPCError({ code: "BAD_REQUEST", message: "Không thể thay đổi trạng thái tài khoản quản trị đang sử dụng." });
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const [account] = await db.select({ id: users.id, accountStatus: users.accountStatus }).from(users).where(eq(users.id, input.userId)).limit(1);
+        if (!account) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy người dùng." });
         const profile = await ensureLearnerProfile(input.userId);
         if (!profile) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy hồ sơ học viên." });
-        await db.update(users).set({ accountStatus: input.isBanned ? "banned" : "active" }).where(eq(users.id, input.userId));
-        await db.update(learnerProfiles).set({ isBanned: input.isBanned }).where(eq(learnerProfiles.id, profile.id));
-        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.isBanned ? "user.banned" : "user.unbanned", entityType: "user", entityId: input.userId, metadata: { accountStatus: input.isBanned ? "banned" : "active" } });
-        return { success: true };
+        await db.update(users).set({ accountStatus: status }).where(eq(users.id, input.userId));
+        await db.update(learnerProfiles).set({ isBanned: status === "banned" }).where(eq(learnerProfiles.id, profile.id));
+        const action = status === "active" ? "user.reactivated" : status === "suspended" ? "user.suspended" : status === "banned" ? "user.banned" : "user.deactivated";
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action, entityType: "user", entityId: input.userId, metadata: { previousStatus: account.accountStatus, accountStatus: status, reason } });
+        await createInAppNotification(db, { userId: input.userId, type: "account_permission", title: status === "active" ? "Tài khoản đã được kích hoạt lại" : "Trạng thái tài khoản đã thay đổi", body: status === "active" ? `Quản trị viên đã kích hoạt lại tài khoản của bạn. Lý do: ${reason}` : `Tài khoản của bạn đang ở trạng thái ${status}. Lý do: ${reason}`, href: "/support", metadata: { accountStatus: status, reason, source: "user-management" } });
+        return { success: true, status, previousStatus: account.accountStatus };
       }),
     adjustPoints: adminProcedure.input(z.object({ userId: z.number().int().positive(), amount: z.number().int().min(-100000).max(100000).refine(value => value !== 0), description: z.string().trim().min(4).max(500) }))
       .mutation(async ({ ctx, input }) => {

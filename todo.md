@@ -681,3 +681,7 @@
 - [x] Áp dụng guard hành động cho entry point quan trọng và đồng bộ UI Guest/User/Access Denied.
 - [x] Bổ sung regression chống bypass cho guest, thiếu quyền và ownership.
 - [x] Xác minh build, lưu checkpoint và báo cáo phạm vi authorization.
+- [x] Rà soát panel CPanel Người dùng và mutation cập nhật trạng thái tài khoản hiện có.
+- [x] Mở rộng API trạng thái tài khoản để yêu cầu lý do và lưu audit/notification an toàn.
+- [x] Xây dựng UI khóa, đình chỉ, kích hoạt lại cùng hộp thoại nhập lý do trong CPanel.
+- [x] Kiểm thử UI/API quản trị trạng thái và lưu checkpoint.

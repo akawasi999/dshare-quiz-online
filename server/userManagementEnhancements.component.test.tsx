@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   bulkMutate: vi.fn(),
+  statusMutate: vi.fn(),
   toast: { success: vi.fn(), error: vi.fn() },
   users: { data: { items: [{ user: { id: 9, name: "Người học mẫu", email: "learner@example.com", openId: "learner-9", createdAt: new Date() }, profile: { tier: "basic", pointBalance: 20, isBanned: false }, completedCount: 3 }], total: 25, page: 1, pageSize: 12, totalPages: 3 }, isLoading: false, refetch: vi.fn() },
   detail: { data: { user: { id: 9, name: "Người học mẫu", email: "learner@example.com", openId: "learner-9" }, profile: { tier: "pro", pointBalance: 170, isBanned: false }, activity: [], recentAttempts: [], recentTransactions: [], paymentOrders: [{ order: { id: 42, description: "Nâng cấp PRO", itemCode: "membership-2", payosOrderCode: 1787025000123, status: "paid", createdAt: new Date("2026-08-20T00:00:00Z") }, emailDeliveries: [{ id: 11, subject: "Xác nhận kích hoạt PRO · Dshare Quiz Online", recipient: "learner@example.com", status: "sent", errorMessage: null, createdAt: new Date("2026-08-20T00:02:00Z") }] }] }, isLoading: false },
@@ -15,7 +16,7 @@ vi.mock("@/lib/trpc", () => ({ trpc: { admin: {
   users: { useQuery: () => mocks.users },
   userDetail: { useQuery: () => mocks.detail },
   updateUserTier: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
-  updateUserStatus: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
+  updateUserStatus: { useMutation: () => ({ isPending: false, mutate: mocks.statusMutate }) },
   adjustPoints: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
   bulkUpdateUsers: { useMutation: () => ({ isPending: false, mutate: mocks.bulkMutate }) },
 } } }));
@@ -24,7 +25,7 @@ vi.mock("sonner", () => ({ toast: mocks.toast }));
 import UserManagementPanel from "../client/src/components/UserManagementPanel";
 
 describe("UserManagementPanel enhancements", () => {
-  beforeEach(() => mocks.bulkMutate.mockReset());
+  beforeEach(() => { mocks.bulkMutate.mockReset(); mocks.statusMutate.mockReset(); });
   afterEach(cleanup);
 
   it("hiển thị phân trang phía máy chủ", () => {
@@ -51,5 +52,17 @@ describe("UserManagementPanel enhancements", () => {
     expect(screen.getByText("Nâng cấp PRO")).toBeTruthy();
     expect(screen.getByText("Xác nhận kích hoạt PRO · Dshare Quiz Online")).toBeTruthy();
     expect(screen.getByText("Đã gửi")).toBeTruthy();
+  });
+
+  it("yêu cầu lý do trước khi đình chỉ và gửi trạng thái cụ thể tới máy chủ", async () => {
+    const user = userEvent.setup();
+    render(<UserManagementPanel />);
+    await user.click(screen.getAllByRole("button", { name: /Đình chỉ/ })[0]);
+    expect(screen.getAllByText("Đình chỉ").length).toBeGreaterThan(1);
+    const confirm = screen.getAllByRole("button", { name: "Đình chỉ" }).at(-1)!;
+    expect((confirm as HTMLButtonElement).disabled).toBe(true);
+    await user.type(screen.getByLabelText(/Lý do cụ thể/), "Cần xác minh hoạt động bất thường.");
+    await user.click(confirm);
+    expect(mocks.statusMutate).toHaveBeenCalledWith({ userId: 9, status: "suspended", reason: "Cần xác minh hoạt động bất thường." });
   });
 });
