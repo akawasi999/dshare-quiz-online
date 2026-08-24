@@ -71,6 +71,8 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByText(/Tôi đồng ý với/)).toBeTruthy();
     await userEventApi.type(screen.getByLabelText("Mật khẩu"), "MatKhauManh2026!");
     expect(screen.getByText("Độ mạnh mật khẩu: Mạnh")).toBeTruthy();
+    expect(screen.getByRole("list", { name: "Yêu cầu mật khẩu" })).toBeTruthy();
+    expect(screen.getByText("Tối thiểu 10 ký tự").className).toContain("text-emerald-700");
     await userEventApi.type(screen.getByLabelText("Địa chỉ email"), "minh@example.com");
     await userEventApi.click(screen.getByRole("button", { name: "Đăng nhập" }));
     expect((screen.getByLabelText("Địa chỉ email") as HTMLInputElement).value).toBe("minh@example.com");

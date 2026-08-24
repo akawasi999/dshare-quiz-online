@@ -30,6 +30,8 @@ export const userCredentials = mysqlTable("userCredentials", {
   passwordHash: varchar("passwordHash", { length: 512 }).notNull(),
   resetTokenHash: varchar("resetTokenHash", { length: 128 }),
   resetTokenExpiresAt: timestamp("resetTokenExpiresAt"),
+  failedLoginAttempts: int("failedLoginAttempts").default(0).notNull(),
+  loginLockedUntil: timestamp("loginLockedUntil"),
   passwordUpdatedAt: timestamp("passwordUpdatedAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => [uniqueIndex("user_credentials_user_unique").on(table.userId), index("user_credentials_reset_token_idx").on(table.resetTokenHash)]);

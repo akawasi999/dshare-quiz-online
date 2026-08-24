@@ -633,3 +633,7 @@
 - [x] Rà soát trạng thái form đăng ký/đăng nhập để đặt đánh giá mật khẩu và phản hồi lỗi.
 - [x] Thêm thanh độ mạnh mật khẩu, lỗi đỏ kèm shake animation và tự điền email khi chuyển mode.
 - [x] Kiểm thử popup, responsive, hồi quy và lưu checkpoint phản hồi biểu mẫu.
+- [x] Rà soát luồng đăng nhập, mô hình dữ liệu và xác định chính sách giới hạn thử sai.
+- [x] Hiển thị checklist yêu cầu mật khẩu theo thời gian thực trong popup đăng ký.
+- [x] Thêm giới hạn đăng nhập sai, thời gian chờ và phản hồi an toàn trên form.
+- [x] Kiểm thử bảo mật, hồi quy và lưu checkpoint giới hạn đăng nhập.

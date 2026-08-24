@@ -107,6 +107,7 @@ import { extractRemoteQuizSource } from "./remoteQuizExtraction";
 import { transcribeAudio } from "./_core/voiceTranscription";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
 import { hashPassword, hashToken, newOneTimeToken, normalizeEmail, verifyPassword } from "./localAuth";
+import { loginLockoutMessage, nextFailedLoginState } from "./loginThrottle";
 import { sdk } from "./_core/sdk";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
@@ -322,7 +323,13 @@ export const appRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
       const user = (await db.select().from(users).where(eq(users.email, normalizeEmail(input.email))).limit(1))[0];
       const credential = user ? (await db.select().from(userCredentials).where(eq(userCredentials.userId, user.id)).limit(1))[0] : undefined;
-      if (!user || !credential || !(await verifyPassword(input.password, credential.passwordHash))) throw new TRPCError({ code: "UNAUTHORIZED", message: "Email hoặc mật khẩu không đúng." });
+      const now = new Date();
+      if (credential?.loginLockedUntil && credential.loginLockedUntil > now) throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: loginLockoutMessage(credential.loginLockedUntil, now) });
+      if (!user || !credential || !(await verifyPassword(input.password, credential.passwordHash))) {
+        if (credential) await db.update(userCredentials).set(nextFailedLoginState(credential.failedLoginAttempts, now)).where(eq(userCredentials.id, credential.id));
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Email hoặc mật khẩu không đúng." });
+      }
+      await db.update(userCredentials).set({ failedLoginAttempts: 0, loginLockedUntil: null }).where(eq(userCredentials.id, credential.id));
       const expiresInMs = input.remember ? ONE_YEAR_MS : 24 * 60 * 60 * 1000;
       const session = await sdk.createSessionToken(user.openId, { name: user.name ?? "", expiresInMs });
       ctx.res.cookie(COOKIE_NAME, session, { ...getSessionCookieOptions(ctx.req), maxAge: expiresInMs });
@@ -349,7 +356,7 @@ export const appRouter = router({
       if (!credential) throw new TRPCError({ code: "BAD_REQUEST", message: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn." });
       const user = (await db.select().from(users).where(eq(users.id, credential.userId)).limit(1))[0];
       if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy tài khoản." });
-      await db.update(userCredentials).set({ passwordHash: await hashPassword(input.password), resetTokenHash: null, resetTokenExpiresAt: null, passwordUpdatedAt: new Date() }).where(eq(userCredentials.id, credential.id));
+      await db.update(userCredentials).set({ passwordHash: await hashPassword(input.password), resetTokenHash: null, resetTokenExpiresAt: null, failedLoginAttempts: 0, loginLockedUntil: null, passwordUpdatedAt: new Date() }).where(eq(userCredentials.id, credential.id));
       const session = await sdk.createSessionToken(user.openId, { name: user.name ?? "", expiresInMs: ONE_YEAR_MS });
       ctx.res.cookie(COOKIE_NAME, session, { ...getSessionCookieOptions(ctx.req), maxAge: ONE_YEAR_MS });
       return { success: true } as const;
