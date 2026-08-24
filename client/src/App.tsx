@@ -99,7 +99,7 @@ function LearnerAccountPage({ Page }: { Page: React.ComponentType }) {
 }
 
 function App() {
-  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><AppearanceStyleBridge /><Toaster /><GamificationCelebrationPopups /><AiPointPreflightNotice /><Router /></TooltipProvider></ThemeProvider></ErrorBoundary>;
+  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><AppearanceStyleBridge /><Toaster position="top-right" /><GamificationCelebrationPopups /><AiPointPreflightNotice /><Router /></TooltipProvider></ThemeProvider></ErrorBoundary>;
 }
 
 export default App;

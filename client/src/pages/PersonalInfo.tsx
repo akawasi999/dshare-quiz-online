@@ -25,11 +25,11 @@ export default function PersonalInfo() {
   const [pendingAvatar, setPendingAvatar] = useState<PendingAvatar | null>(null);
   const [cropZoom, setCropZoom] = useState(1);
   const updateProfile = trpc.learner.updateProfile.useMutation({
-    onSuccess: () => { summary.refetch(); toast.success("Đã cập nhật thông tin cá nhân."); },
+    onSuccess: () => { summary.refetch(); },
     onError: error => toast.error("Không thể lưu hồ sơ", { description: error.message }),
   });
   const uploadAvatar = trpc.learner.uploadAvatar.useMutation({
-    onSuccess: data => { setUploadedAvatarUrl(data.url); summary.refetch(); toast.success("Đã cập nhật ảnh đại diện."); },
+    onSuccess: data => { setUploadedAvatarUrl(data.url); summary.refetch(); toast.success("Đã tải ảnh đại diện thành công.", { description: "Ảnh mới đã được cắt tròn và cập nhật vào hồ sơ." }); },
     onError: error => toast.error("Không thể tải ảnh đại diện", { description: error.message }),
   });
 
@@ -89,7 +89,7 @@ export default function PersonalInfo() {
       bio: profile.bio ?? "",
       learningGoal: profile.learningGoal ?? "",
       notificationPreferences: profile.notificationPreferences ?? { studyReminders: true, resultUpdates: true, platformUpdates: true },
-    }, { onSuccess: () => setUploadedAvatarUrl("") });
+    }, { onSuccess: () => { setUploadedAvatarUrl(""); toast.success("Đã xóa ảnh đại diện.", { description: "Hồ sơ đang sử dụng ảnh mặc định." }); } });
   };
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -104,7 +104,7 @@ export default function PersonalInfo() {
         resultUpdates: form.get("resultUpdates") === "on",
         platformUpdates: form.get("platformUpdates") === "on",
       },
-    });
+    }, { onSuccess: () => toast.success("Đã cập nhật thông tin cá nhân.") });
   };
 
   return <AccountLayout>

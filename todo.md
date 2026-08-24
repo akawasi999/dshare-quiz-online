@@ -603,3 +603,7 @@
 - [x] Đối chiếu các nhãn mô tả Dashboard mà chỉnh sửa trực quan chưa áp dụng.
 - [x] Xóa các nhãn mô tả Point, XP, Danh hiệu và Hero theo yêu cầu.
 - [x] Kiểm thử hồi quy, xác minh trực quan và lưu checkpoint xác nhận chỉnh sửa Dashboard.
+- [x] Rà soát luồng tải/xóa avatar và trạng thái thành tích đã mở khóa.
+- [x] Bổ sung toast thành công cho tải lên và xóa avatar.
+- [x] Thêm hiệu ứng hover phóng to nhẹ, làm sáng icon thành tích đã mở khóa.
+- [x] Kiểm thử trực quan, hồi quy và lưu checkpoint phản hồi avatar/thành tích.

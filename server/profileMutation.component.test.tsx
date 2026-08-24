@@ -18,12 +18,13 @@ const mocks = vi.hoisted(() => ({
   referral: { data: { referralCode: "DS000001", invitations: [], totalRewarded: 0 }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
   quota: { data: null },
   update: { isPending: false },
+  updateShouldSucceed: false,
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name: "Học viên" }, loading: false }) }));
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, referral: { useQuery: () => mocks.referral }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void }) => ({ ...mocks.update, mutate: () => options.onError?.(new Error("Không thể kết nối")) }) }, uploadAvatar: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, leaderboard: { xp: { useQuery: () => mocks.leaderboard } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, referral: { useQuery: () => mocks.referral }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void; onSuccess?: () => void }) => ({ ...mocks.update, mutate: (_input: unknown, callbacks?: { onSuccess?: () => void }) => { if (mocks.updateShouldSucceed) { options.onSuccess?.(); callbacks?.onSuccess?.(); } else options.onError?.(new Error("Không thể kết nối")); } }) }, uploadAvatar: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, leaderboard: { xp: { useQuery: () => mocks.leaderboard } } } }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/ho-so", vi.fn()] }));
 
@@ -31,7 +32,7 @@ import Profile from "../client/src/pages/Profile";
 import PersonalInfo from "../client/src/pages/PersonalInfo";
 
 describe("Profile mutation feedback", () => {
-  beforeEach(() => { mocks.toast.error.mockReset(); mocks.summary.data.currentPlan = null; mocks.summary.data.upgradePlans = []; mocks.summary.data.profile.avatarUrl = ""; mocks.gamification.data.achievements = []; });
+  beforeEach(() => { mocks.toast.error.mockReset(); mocks.toast.success.mockReset(); mocks.updateShouldSucceed = false; mocks.summary.data.currentPlan = null; mocks.summary.data.upgradePlans = []; mocks.summary.data.profile.avatarUrl = ""; mocks.gamification.data.achievements = []; });
   afterEach(cleanup);
 
   it("công bố lỗi khi không thể lưu thiết lập hồ sơ", async () => {
@@ -49,6 +50,15 @@ describe("Profile mutation feedback", () => {
     render(<PersonalInfo />);
     expect(screen.getByRole("button", { name: "Xóa ảnh" })).toBeTruthy();
     expect(screen.getByLabelText("Chọn & cắt ảnh")).toBeTruthy();
+  });
+
+  it("hiển thị toast góc màn hình khi xóa avatar thành công", async () => {
+    mocks.summary.data.profile.avatarUrl = "/manus-storage/learner-avatars/1/avatar.png";
+    mocks.updateShouldSucceed = true;
+    const user = userEvent.setup();
+    render(<PersonalInfo />);
+    await user.click(screen.getByRole("button", { name: "Xóa ảnh" }));
+    expect(mocks.toast.success).toHaveBeenCalledWith("Đã xóa ảnh đại diện.", { description: "Hồ sơ đang sử dụng ảnh mặc định." });
   });
 
   it("không hiển thị thẻ gói và quota cố định ở hai góc giao diện", () => {
