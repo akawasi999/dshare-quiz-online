@@ -68,6 +68,10 @@ describe("Profile mutation feedback", () => {
     expect(screen.getByText("Thành tích")).toBeTruthy();
     expect(document.querySelector('img[src*="profile-achievement-trophy"]')).toBeTruthy();
     expect(screen.getByText("Bài Quiz đã làm")).toBeTruthy();
+    expect(screen.queryByText("Sẵn sàng dùng dịch vụ premium")).toBeNull();
+    expect(screen.queryByText(/XP tuần này/)).toBeNull();
+    expect(screen.queryByText(/huy hiệu đã được ghi nhận/)).toBeNull();
+    expect(screen.queryByText("Tiếp tục hành trình học tập mỗi ngày.")).toBeNull();
     expect(document.querySelector('img[src*="profile-hero-trophy"]')).toBeTruthy();
     expect(document.querySelector('img[src*="profile-point-coins"]')).toBeTruthy();
     expect(document.querySelector('img[src*="profile-achievement"]')).toBeTruthy();

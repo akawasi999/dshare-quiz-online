@@ -600,3 +600,6 @@
 - [x] Rà soát tiêu đề và các ô Thành tích để xác định các vị trí cần icon hình ảnh bổ sung.
 - [x] Thêm icon minh họa cho tiêu đề Thành tích và tăng khả năng nhận diện từng trạng thái badge.
 - [x] Kiểm thử trực quan, hồi quy và lưu checkpoint icon Thành tích mở rộng.
+- [x] Đối chiếu các nhãn mô tả Dashboard mà chỉnh sửa trực quan chưa áp dụng.
+- [x] Xóa các nhãn mô tả Point, XP, Danh hiệu và Hero theo yêu cầu.
+- [x] Kiểm thử hồi quy, xác minh trực quan và lưu checkpoint xác nhận chỉnh sửa Dashboard.
