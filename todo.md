@@ -630,3 +630,6 @@
 - [x] Rà soát điều khiển hiện/ẩn mật khẩu, trạng thái submit và checkbox ghi nhớ hiện có.
 - [x] Tách điều khiển mắt cho từng trường mật khẩu, thêm spinner nút submit và hoàn thiện Ghi nhớ đăng nhập.
 - [x] Kiểm thử popup, responsive, hồi quy và lưu checkpoint vi tương tác xác thực.
+- [x] Rà soát trạng thái form đăng ký/đăng nhập để đặt đánh giá mật khẩu và phản hồi lỗi.
+- [x] Thêm thanh độ mạnh mật khẩu, lỗi đỏ kèm shake animation và tự điền email khi chuyển mode.
+- [x] Kiểm thử popup, responsive, hồi quy và lưu checkpoint phản hồi biểu mẫu.

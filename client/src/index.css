@@ -285,6 +285,9 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); line-height: 1.3; }
 .reward-badge-reveal { animation: reward-badge-reveal 520ms var(--ease-out) both; }
 @keyframes reward-badge-reveal { 0% { opacity: .5; transform: translateY(5px) scale(.9); } 60% { opacity: 1; transform: translateY(-2px) scale(1.06); box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 12%, transparent); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .reward-badge-reveal { animation: none; } }
+@keyframes auth-form-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+.auth-form-shake { animation: auth-form-shake 320ms var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { .auth-form-shake { animation: none; } }
 ::selection { background: var(--primary-light); color: var(--text); }
 .cta-gradient { background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); box-shadow: 0 12px 28px color-mix(in srgb, var(--primary) 24%, transparent); }
 .cta-gradient:hover { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); }

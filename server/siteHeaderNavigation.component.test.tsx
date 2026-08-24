@@ -69,6 +69,11 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByLabelText("Tên thành viên")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Hiển thị Xác nhận mật khẩu" })).toBeTruthy();
     expect(screen.getByText(/Tôi đồng ý với/)).toBeTruthy();
+    await userEventApi.type(screen.getByLabelText("Mật khẩu"), "MatKhauManh2026!");
+    expect(screen.getByText("Độ mạnh mật khẩu: Mạnh")).toBeTruthy();
+    await userEventApi.type(screen.getByLabelText("Địa chỉ email"), "minh@example.com");
+    await userEventApi.click(screen.getByRole("button", { name: "Đăng nhập" }));
+    expect((screen.getByLabelText("Địa chỉ email") as HTMLInputElement).value).toBe("minh@example.com");
   });
 
   it("giữ dropdown Khám phá trong vùng đệm hover trước khi đóng", () => {
