@@ -671,3 +671,6 @@
 - [x] Rà soát tooltip và nhãn trợ năng của icon Hiển thị/Ẩn mật khẩu.
 - [x] Loại bỏ chú thích hover/focus nhưng giữ thao tác click và aria-label của icon.
 - [x] Kiểm thử popup và lưu checkpoint loại bỏ tooltip.
+- [x] Rà soát vòng đời popup và các chế độ đăng nhập/đăng ký cần tự focus email.
+- [x] Thêm tự focus email khi mở hoặc chuyển sang Đăng nhập/Đăng ký.
+- [x] Kiểm thử focus tự động và lưu checkpoint.

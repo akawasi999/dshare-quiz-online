@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -59,6 +59,7 @@ describe("SiteHeader navigation", () => {
     render(<SiteHeader />);
     await userEventApi.click(screen.getByRole("button", { name: "Đăng nhập" }));
     expect(screen.getByRole("dialog")).toBeTruthy();
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText("Địa chỉ email")));
     expect(screen.getByRole("button", { name: "Manus" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Google" })).toBeTruthy();
     expect(screen.getByLabelText("Địa chỉ email")).toBeTruthy();
@@ -73,6 +74,7 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByRole("dialog").className).toContain("overflow-x-clip");
     expect(screen.getByRole("dialog").className).toContain("w-[calc(100vw-2rem)]");
     await userEventApi.click(screen.getByRole("button", { name: "Đăng ký ngay" }));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText("Địa chỉ email")));
     expect(screen.getByLabelText("Tên thành viên")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Hiển thị Xác nhận mật khẩu" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Hiển thị Mật khẩu" }).className).toContain("password-toggle");
