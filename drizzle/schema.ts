@@ -47,6 +47,15 @@ export const emailDeliverySettings = mysqlTable("emailDeliverySettings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const oauthProviderSettings = mysqlTable("oauthProviderSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  provider: varchar("provider", { length: 40 }).notNull(),
+  clientId: varchar("clientId", { length: 320 }),
+  clientSecretCiphertext: text("clientSecretCiphertext"),
+  isEnabled: boolean("isEnabled").default(false).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("oauth_provider_settings_provider_unique").on(table.provider)]);
+
 export const seoSettings = mysqlTable("seoSettings", {
   id: int("id").autoincrement().primaryKey(),
   googleAnalyticsMeasurementId: varchar("googleAnalyticsMeasurementId", { length: 32 }),

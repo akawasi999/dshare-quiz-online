@@ -3,15 +3,19 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+
 const mutate = vi.fn();
 const siteSettingsData = { settings: { homePageUrl: "https://dsharequiz-jxleeaps.manus.space", boardTitle: "Dshare Quiz Online", metaDescription: "Nền tảng tạo Quiz, học tập và chia sẻ kiến thức trực tuyến.", defaultEmailAddress: "admin@dshare.net" }, navigation: [{ id: 1, label: "Trang chủ", url: "/", position: 1, isEnabled: true }] };
 const seoSettingsData = { googleAnalyticsMeasurementId: "G-TEST1234", googleSearchConsoleVerification: "verification-token", defaultQuizCoverUrl: null };
+const oauthSettingsData = { googleClientId: null, googleEnabled: false, hasGoogleClientSecret: false, updatedAt: null };
 vi.mock("../client/src/lib/trpc", () => ({
   trpc: {
     useUtils: () => ({ site: { navigation: { invalidate: vi.fn() }, legalSupport: { invalidate: vi.fn() }, supportFaqs: { invalidate: vi.fn() } }, admin: { siteSettings: { invalidate: vi.fn() }, supportFaqs: { invalidate: vi.fn() }, supportMessages: { invalidate: vi.fn() } } }),
     admin: {
       siteSettings: { useQuery: () => ({ data: siteSettingsData, isLoading: false, error: null, refetch: vi.fn() }) },
       seoSettings: { useQuery: () => ({ data: seoSettingsData, isLoading: false, error: null, refetch: vi.fn() }) },
+      oauthSettings: { useQuery: () => ({ data: oauthSettingsData, isLoading: false, error: null, refetch: vi.fn() }) },
       saveSiteSettings: { useMutation: () => ({ mutate, isPending: false }) },
       saveLegalContent: { useMutation: () => ({ mutate, isPending: false }) },
       saveSupportContent: { useMutation: () => ({ mutate, isPending: false }) },
@@ -22,6 +26,7 @@ vi.mock("../client/src/lib/trpc", () => ({
       supportMessages: { useQuery: () => ({ data: [], isLoading: false }) },
       updateSupportMessageStatus: { useMutation: () => ({ mutate, isPending: false }) },
       saveSeoSettings: { useMutation: () => ({ mutate, isPending: false }) },
+      saveGoogleOAuthSettings: { useMutation: () => ({ mutate, isPending: false }) },
       saveNavigationItem: { useMutation: () => ({ mutate, isPending: false }) },
       deleteNavigationItem: { useMutation: () => ({ mutate, isPending: false }) },
       reorderNavigation: { useMutation: () => ({ mutate, isPending: false }) },
@@ -39,6 +44,10 @@ describe("SystemSettingsPanel", () => {
     fireEvent.click(screen.getByRole("tab", { name: "SEO & Google" }));
     expect(screen.getByLabelText("Google Analytics Measurement ID")).toBeTruthy();
     expect(screen.getByLabelText("Google Search Console verification")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Đăng nhập & OAuth" }));
+    expect(screen.getByLabelText("Google OAuth Client ID")).toBeTruthy();
+    expect(screen.getByLabelText("Google OAuth Client Secret")).toBeTruthy();
+    expect(screen.getByRole("switch", { name: "Bật Google OAuth" })).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Pháp lý & Hỗ trợ" }));
     expect(screen.getByLabelText("Nội dung Điều khoản sử dụng")).toBeTruthy();
     expect(screen.getByLabelText("Email hỗ trợ")).toBeTruthy();

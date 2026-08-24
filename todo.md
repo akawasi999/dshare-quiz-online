@@ -615,3 +615,7 @@
 - [x] Lưu quốc gia, tỉnh thành và trạng thái/chờ xác nhận email liên hệ bằng migration, tRPC.
 - [x] Bổ sung dropdown Quốc gia–Tỉnh/Thành và giao diện phản hồi xác nhận email mới.
 - [x] Kiểm thử gửi email xác nhận, hồi quy, responsive và lưu checkpoint.
+- [x] Rà soát luồng xác thực hiện tại, điểm gọi đăng nhập và yêu cầu cấu hình Google OAuth.
+- [x] Thiết kế popup Đăng nhập/Đăng ký theo ảnh tham chiếu, có chuyển tab và hỗ trợ bàn phím.
+- [x] Kết nối nút Manus với OAuth hiện có và đưa cấu hình Google OAuth vào Cài đặt CPanel để thiết lập sau.
+- [x] Kiểm thử popup, CPanel, responsive, hồi quy và lưu checkpoint xác thực.

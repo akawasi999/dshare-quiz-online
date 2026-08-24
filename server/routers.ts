@@ -22,6 +22,7 @@ import {
   lessons,
   membershipGroupPermissions,
   missionDefinitions,
+  oauthProviderSettings,
   paymentEmailDeliveries,
   questionOptions,
   paymentRecords,
@@ -1302,6 +1303,24 @@ export const appRouter = router({
       else await db.insert(seoSettings).values(payload);
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "seo.google_settings_updated", entityType: "seo_settings", metadata: { analyticsConfigured: Boolean(payload.googleAnalyticsMeasurementId), searchConsoleConfigured: Boolean(payload.googleSearchConsoleVerification), defaultCoverConfigured: Boolean(payload.defaultQuizCoverUrl) } });
       return { success: true, ...payload };
+    }),
+    oauthSettings: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cấu hình OAuth." });
+      const google = (await db.select().from(oauthProviderSettings).where(eq(oauthProviderSettings.provider, "google")).limit(1))[0];
+      return { googleClientId: google?.clientId ?? null, googleEnabled: google?.isEnabled ?? false, hasGoogleClientSecret: Boolean(google?.clientSecretCiphertext), updatedAt: google?.updatedAt ?? null };
+    }),
+    saveGoogleOAuthSettings: adminProcedure.input(z.object({ googleClientId: z.string().trim().max(320).nullable(), googleClientSecret: z.string().trim().max(2048).optional(), googleEnabled: z.boolean() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu cấu hình OAuth." });
+      const current = (await db.select().from(oauthProviderSettings).where(eq(oauthProviderSettings.provider, "google")).limit(1))[0];
+      const clientId = input.googleClientId || null;
+      const clientSecretCiphertext = input.googleClientSecret ? encryptEmailApiKey(input.googleClientSecret) : current?.clientSecretCiphertext ?? null;
+      if (input.googleEnabled && (!clientId || !clientSecretCiphertext)) throw new TRPCError({ code: "BAD_REQUEST", message: "Cần Client ID và Client Secret trước khi bật Google OAuth." });
+      const payload = { provider: "google", clientId, clientSecretCiphertext, isEnabled: input.googleEnabled };
+      if (current) await db.update(oauthProviderSettings).set(payload).where(eq(oauthProviderSettings.id, current.id)); else await db.insert(oauthProviderSettings).values(payload);
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "auth.google_oauth_settings_updated", entityType: "oauth_provider_settings", entityId: current?.id ?? null, metadata: { configured: Boolean(clientId && clientSecretCiphertext), enabled: input.googleEnabled } });
+      return { success: true, googleClientId: clientId, googleEnabled: input.googleEnabled, hasGoogleClientSecret: Boolean(clientSecretCiphertext) };
     }),
     emailDeliverySettings: adminProcedure.query(async () => {
       const db = await getDb();

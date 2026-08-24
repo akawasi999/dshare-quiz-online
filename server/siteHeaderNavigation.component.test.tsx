@@ -54,6 +54,18 @@ describe("SiteHeader navigation", () => {
     expect(screen.queryByRole("link", { name: "Xếp hạng" })).toBeNull();
   });
 
+  it("mở popup xác thực và chuyển được giữa Đăng nhập và Đăng ký", async () => {
+    const userEventApi = userEvent.setup();
+    render(<SiteHeader />);
+    await userEventApi.click(screen.getByRole("button", { name: "Đăng nhập" }));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Đăng nhập với Manus" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Đăng nhập với Google" })).toBeTruthy();
+    await userEventApi.click(screen.getByRole("tab", { name: "Đăng ký" }));
+    expect(screen.getByRole("button", { name: "Đăng ký với Manus" })).toBeTruthy();
+    expect(screen.getByText(/Tôi đồng ý với/)).toBeTruthy();
+  });
+
   it("giữ dropdown Khám phá trong vùng đệm hover trước khi đóng", () => {
     vi.useFakeTimers();
     render(<SiteHeader />);

@@ -330,6 +330,13 @@
       "when": 1787533729571,
       "tag": "0046_dark_albert_cleary",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "5",
+      "when": 1787540344722,
+      "tag": "0047_shallow_thundra",
+      "breakpoints": true
     }
   ]
 }
