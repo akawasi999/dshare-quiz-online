@@ -113,7 +113,7 @@ describe("Quiz Creator theo đặc tả", () => {
     render(<UserQuizCreator />);
     await user.selectOptions(screen.getByRole("combobox", { name: "Loại câu hỏi 1" }), "true_false");
     expect((screen.getByRole("combobox", { name: "Loại câu hỏi 1" }) as HTMLSelectElement).value).toBe("true_false");
-    await user.click(screen.getByRole("button", { name: "Nhân bản câu hỏi 1" }));
+    await user.click(screen.getByRole("button", { name: "Sao chép câu hỏi 1" }));
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
   });
 
@@ -170,10 +170,13 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(statementInput.value).toContain("nguồn điện");
   });
 
-  it("hiển thị điều khiển media, điểm và Preview Sandbox trong luồng P0", async () => {
+  it("hiển thị ba khối media, điểm và Preview Sandbox trong luồng P0", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
-    expect(screen.getByRole("button", { name: /Đính kèm media/ })).toBeTruthy();
+    expect(screen.getByText("Media")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Tải Audio" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Tải Video" })).toBeTruthy();
+    expect(screen.getByText("JPG, PNG, WEBP tối đa 5MB")).toBeTruthy();
     expect(screen.getByRole("spinbutton", { name: "Điểm câu hỏi 1" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Xem trước Sandbox/ })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Cài đặt" }));

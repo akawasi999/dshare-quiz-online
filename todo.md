@@ -706,3 +706,7 @@
 - [x] Kiểm thử desktop/tablet/mobile, Chat AI, kéo-thả, regression và lưu checkpoint App Shell Studio.
 - [x] Bật lại Header website trên `/quiz/create` và điều chỉnh chiều cao App Shell tương ứng.
 - [x] Kiểm thử Header, Workspace và lưu checkpoint cập nhật.
+- [x] Rà soát card câu hỏi, khối media, đáp án và nhãn thao tác theo mẫu Studio mới.
+- [x] Tái bố cục card câu hỏi với phân cấp, media và đáp án gọn rõ; Việt hóa Sao chép/Xóa.
+- [x] Đồng bộ màu xanh thương hiệu, spacing và responsive desktop/tablet/mobile cho Studio.
+- [x] Cập nhật regression, kiểm thử và lưu checkpoint phiên bản Studio tinh chỉnh.
