@@ -668,3 +668,6 @@
 - [x] Rà soát wrapper mật khẩu và CSS có thể làm icon mắt lệch khỏi input.
 - [x] Chuẩn hóa wrapper relative, icon absolute bên phải và padding input cho mọi trường mật khẩu.
 - [x] Kiểm thử toggle mật khẩu, responsive và lưu checkpoint.
+- [x] Rà soát tooltip và nhãn trợ năng của icon Hiển thị/Ẩn mật khẩu.
+- [x] Loại bỏ chú thích hover/focus nhưng giữ thao tác click và aria-label của icon.
+- [x] Kiểm thử popup và lưu checkpoint loại bỏ tooltip.
