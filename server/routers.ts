@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
+import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import {
   aiAssistantConversations,
@@ -86,7 +87,7 @@ import {
 } from "./db";
 import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
-import { encryptEmailApiKey, sendTestEmail } from "./paymentConfirmationEmail";
+import { encryptEmailApiKey, sendContactEmailVerification, sendTestEmail } from "./paymentConfirmationEmail";
 import { decryptAiAssistantApiKey, discoverGeminiChatModel, encryptAiAssistantApiKey, generateAiAssistantReply } from "./aiAssistantService";
 import { analyzeAiAssistantImage } from "./aiAssistantMultimodal";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
@@ -112,6 +113,7 @@ const quizImageMimeTypes = ["image/jpeg", "image/png", "image/webp"] as const;
 const maxQuizImageBytes = 5 * 1024 * 1024;
 const avatarUploadInput = z.object({ fileName: z.string().trim().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(5_000_000) });
 const maxAvatarImageBytes = 3 * 1024 * 1024;
+const hashContactEmailVerificationToken = (token: string) => createHash("sha256").update(token).digest("hex");
 const safeUploadFileName = (fileName: string) => fileName.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-").slice(0, 120) || "image";
 const quizAssetUrlInput = z.string().trim().max(1024).refine(value => value.startsWith("/manus-storage/") || /^https?:\/\//i.test(value), { message: "URL ảnh phải là liên kết HTTPS/HTTP hoặc đường dẫn lưu trữ hợp lệ." });
 const decodeQuizImageUpload = (input: z.infer<typeof quizImageUploadInput>) => {
@@ -501,15 +503,33 @@ export const appRouter = router({
       await db.update(userNotifications).set({ isRead: true, readAt: new Date() }).where(and(eq(userNotifications.userId, ctx.user.id), eq(userNotifications.isRead, false)));
       return { success: true };
     }),
-    updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), learningGoal: z.string().trim().max(220).optional(), contactEmail: z.string().trim().email().max(320).optional().or(z.literal("")), birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")), address: z.string().trim().max(500).optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")), notificationPreferences: z.object({ studyReminders: z.boolean(), resultUpdates: z.boolean(), platformUpdates: z.boolean() }).optional() }))
+    updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), learningGoal: z.string().trim().max(220).optional(), contactEmail: z.string().trim().email().max(320).optional().or(z.literal("")), birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")), address: z.string().trim().max(500).optional(), countryCode: z.string().trim().length(2).optional().or(z.literal("")), province: z.string().trim().max(120).optional(), origin: z.string().url().optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")), notificationPreferences: z.object({ studyReminders: z.boolean(), resultUpdates: z.boolean(), platformUpdates: z.boolean() }).optional() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         const profile = await ensureLearnerProfile(ctx.user.id);
         if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-        await db.update(learnerProfiles).set({ bio: input.bio === undefined ? profile.bio : input.bio || null, learningGoal: input.learningGoal === undefined ? profile.learningGoal : input.learningGoal || null, contactEmail: input.contactEmail === undefined ? profile.contactEmail : input.contactEmail || null, birthDate: input.birthDate === undefined ? profile.birthDate : input.birthDate || null, address: input.address === undefined ? profile.address : input.address || null, avatarUrl: input.avatarUrl === undefined ? profile.avatarUrl : input.avatarUrl || null, notificationPreferences: input.notificationPreferences === undefined ? profile.notificationPreferences : input.notificationPreferences }).where(eq(learnerProfiles.id, profile.id));
-        return { success: true };
+        const requestedEmail = input.contactEmail?.trim().toLowerCase();
+        const requiresEmailConfirmation = Boolean(requestedEmail && requestedEmail !== profile.contactEmail);
+        const verificationToken = requiresEmailConfirmation ? randomBytes(32).toString("base64url") : null;
+        const verificationExpiresAt = requiresEmailConfirmation ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null;
+        await db.update(learnerProfiles).set({ bio: input.bio === undefined ? profile.bio : input.bio || null, learningGoal: input.learningGoal === undefined ? profile.learningGoal : input.learningGoal || null, contactEmail: input.contactEmail === "" ? null : profile.contactEmail, pendingContactEmail: requiresEmailConfirmation ? requestedEmail! : profile.pendingContactEmail, contactEmailVerificationTokenHash: requiresEmailConfirmation ? hashContactEmailVerificationToken(verificationToken!) : profile.contactEmailVerificationTokenHash, contactEmailVerificationExpiresAt: requiresEmailConfirmation ? verificationExpiresAt : profile.contactEmailVerificationExpiresAt, birthDate: input.birthDate === undefined ? profile.birthDate : input.birthDate || null, address: input.address === undefined ? profile.address : input.address || null, countryCode: input.countryCode === undefined ? profile.countryCode : input.countryCode || null, province: input.province === undefined ? profile.province : input.province || null, avatarUrl: input.avatarUrl === undefined ? profile.avatarUrl : input.avatarUrl || null, notificationPreferences: input.notificationPreferences === undefined ? profile.notificationPreferences : input.notificationPreferences }).where(eq(learnerProfiles.id, profile.id));
+        let emailDeliverySent = false;
+        if (requiresEmailConfirmation) {
+          const settings = (await db.select().from(emailDeliverySettings).limit(1))[0];
+          try { emailDeliverySent = Boolean(settings && (await sendContactEmailVerification(settings, { recipient: requestedEmail!, learnerName: ctx.user.name ?? null, verificationToken: verificationToken!, appOrigin: input.origin ?? "" })).sent); } catch (error) { console.error("[Profile Email] Verification email failed:", error); }
+        }
+        return { success: true, emailVerificationPending: requiresEmailConfirmation, emailDeliverySent };
       }),
+    confirmContactEmail: publicProcedure.input(z.object({ token: z.string().min(32).max(200) })).mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể xác nhận email lúc này." });
+      const tokenHash = hashContactEmailVerificationToken(input.token);
+      const profile = (await db.select().from(learnerProfiles).where(and(eq(learnerProfiles.contactEmailVerificationTokenHash, tokenHash), gt(learnerProfiles.contactEmailVerificationExpiresAt, new Date()))).limit(1))[0];
+      if (!profile?.pendingContactEmail) throw new TRPCError({ code: "BAD_REQUEST", message: "Liên kết xác nhận không hợp lệ hoặc đã hết hạn." });
+      await db.update(learnerProfiles).set({ contactEmail: profile.pendingContactEmail, pendingContactEmail: null, contactEmailVerificationTokenHash: null, contactEmailVerificationExpiresAt: null }).where(eq(learnerProfiles.id, profile.id));
+      return { success: true, contactEmail: profile.pendingContactEmail };
+    }),
     uploadAvatar: protectedProcedure.input(avatarUploadInput).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải ảnh đại diện lúc này." });

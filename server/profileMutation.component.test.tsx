@@ -18,13 +18,14 @@ const mocks = vi.hoisted(() => ({
   referral: { data: { referralCode: "DS000001", invitations: [], totalRewarded: 0 }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
   quota: { data: null },
   update: { isPending: false },
+  confirmContactEmail: { isPending: false, mutate: vi.fn() },
   updateShouldSucceed: false,
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name: "Học viên" }, loading: false }) }));
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, referral: { useQuery: () => mocks.referral }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void; onSuccess?: () => void }) => ({ ...mocks.update, mutate: (_input: unknown, callbacks?: { onSuccess?: () => void }) => { if (mocks.updateShouldSucceed) { options.onSuccess?.(); callbacks?.onSuccess?.(); } else options.onError?.(new Error("Không thể kết nối")); } }) }, uploadAvatar: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, leaderboard: { xp: { useQuery: () => mocks.leaderboard } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, referral: { useQuery: () => mocks.referral }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void; onSuccess?: () => void }) => ({ ...mocks.update, mutate: (_input: unknown, callbacks?: { onSuccess?: () => void }) => { if (mocks.updateShouldSucceed) { options.onSuccess?.(); callbacks?.onSuccess?.(); } else options.onError?.(new Error("Không thể kết nối")); } }) }, confirmContactEmail: { useMutation: () => mocks.confirmContactEmail }, uploadAvatar: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, leaderboard: { xp: { useQuery: () => mocks.leaderboard } } } }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/ho-so", vi.fn()] }));
 
@@ -46,6 +47,8 @@ describe("Profile mutation feedback", () => {
     expect(screen.getByLabelText("Email liên hệ")).toBeTruthy();
     expect(screen.getByLabelText("Ngày sinh")).toBeTruthy();
     expect(screen.getByLabelText("Địa chỉ")).toBeTruthy();
+    expect(screen.getByLabelText("Quốc gia")).toBeTruthy();
+    expect(screen.getByLabelText("Tỉnh/Thành phố")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Quản lý mật khẩu" })).toBeTruthy();
   });
 

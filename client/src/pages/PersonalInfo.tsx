@@ -6,7 +6,7 @@ import { startLogin } from "@/const";
 import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
 import { trpc } from "@/lib/trpc";
 import { BellRing, CalendarDays, CheckCircle2, Crop, ImagePlus, KeyRound, LoaderCircle, LogIn, Mail, MapPin, PencilLine, Trash2, UserRound } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const preferenceLabels = [
@@ -14,6 +14,9 @@ const preferenceLabels = [
   ["resultUpdates", "Kết quả bài làm", "Điểm số và lời giải sau khi nộp"],
   ["platformUpdates", "Cập nhật nền tảng", "Tính năng và nội dung mới"],
 ] as const;
+
+const countries = [{ code: "VN", label: "Việt Nam" }, { code: "SG", label: "Singapore" }, { code: "TH", label: "Thái Lan" }, { code: "JP", label: "Nhật Bản" }, { code: "KR", label: "Hàn Quốc" }, { code: "US", label: "Hoa Kỳ" }] as const;
+const provincesByCountry: Record<string, string[]> = { VN: ["An Giang", "Bắc Ninh", "Cao Bằng", "Cà Mau", "Cần Thơ", "Đà Nẵng", "Đắk Lắk", "Điện Biên", "Đồng Nai", "Đồng Tháp", "Gia Lai", "Hà Nội", "Hà Tĩnh", "Hải Phòng", "Hồ Chí Minh", "Hưng Yên", "Huế", "Khánh Hòa", "Lai Châu", "Lạng Sơn", "Lâm Đồng", "Lào Cai", "Nghệ An", "Ninh Bình", "Phú Thọ", "Quảng Ngãi", "Quảng Ninh", "Quảng Trị", "Sơn La", "Tây Ninh", "Thái Nguyên", "Thanh Hóa", "Tuyên Quang", "Vĩnh Long"] };
 
 type AvatarMimeType = "image/jpeg" | "image/png" | "image/webp";
 type PendingAvatar = { fileName: string; mimeType: AvatarMimeType; dataUrl: string };
@@ -24,6 +27,8 @@ export default function PersonalInfo() {
   const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null);
   const [pendingAvatar, setPendingAvatar] = useState<PendingAvatar | null>(null);
   const [cropZoom, setCropZoom] = useState(1);
+  const [countryCode, setCountryCode] = useState("VN");
+  const [province, setProvince] = useState("");
   const updateProfile = trpc.learner.updateProfile.useMutation({
     onSuccess: () => { summary.refetch(); },
     onError: error => toast.error("Không thể lưu hồ sơ", { description: error.message }),
@@ -32,6 +37,23 @@ export default function PersonalInfo() {
     onSuccess: data => { setUploadedAvatarUrl(data.url); summary.refetch(); toast.success("Đã tải ảnh đại diện thành công.", { description: "Ảnh mới đã được cắt tròn và cập nhật vào hồ sơ." }); },
     onError: error => toast.error("Không thể tải ảnh đại diện", { description: error.message }),
   });
+  const confirmContactEmail = trpc.learner.confirmContactEmail.useMutation({
+    onSuccess: data => { summary.refetch(); window.history.replaceState({}, "", window.location.pathname); toast.success("Đã xác nhận email liên hệ.", { description: `${data.contactEmail} hiện được dùng cho thông báo học tập.` }); },
+    onError: error => { window.history.replaceState({}, "", window.location.pathname); toast.error("Không thể xác nhận email", { description: error.message }); },
+  });
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("verifyContactEmail");
+    if (token) confirmContactEmail.mutate({ token });
+  // Chỉ kích hoạt một lần khi mở liên kết xác nhận từ email.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!summary.data?.profile) return;
+    setCountryCode(summary.data.profile.countryCode || "VN");
+    setProvince(summary.data.profile.province || "");
+  }, [summary.data?.profile.countryCode, summary.data?.profile.province]);
 
   if (loading || summary.isLoading) return <AccountLayout><main className="container py-8"><section className="animate-pulse rounded-2xl bg-muted p-6"><p role="status" className="text-sm text-text-secondary">Đang tải thông tin cá nhân…</p></section></main></AccountLayout>;
   if (!user) return <AccountLayout><main className="container grid min-h-[60vh] place-items-center py-10"><section className="max-w-md rounded-2xl border border-border bg-surface p-8 text-center"><LogIn className="mx-auto text-primary" /><h1 className="mt-4 text-2xl font-black">Đăng nhập để tiếp tục</h1><Button className="mt-5" onClick={() => startLogin()}>Đăng nhập</Button></section></main></AccountLayout>;
@@ -91,6 +113,8 @@ export default function PersonalInfo() {
       contactEmail: profile.contactEmail ?? "",
       birthDate: profile.birthDate ?? "",
       address: profile.address ?? "",
+      countryCode: profile.countryCode ?? "",
+      province: profile.province ?? "",
       notificationPreferences: profile.notificationPreferences ?? { studyReminders: true, resultUpdates: true, platformUpdates: true },
     }, { onSuccess: () => { setUploadedAvatarUrl(""); toast.success("Đã xóa ảnh đại diện.", { description: "Hồ sơ đang sử dụng ảnh mặc định." }); } });
   };
@@ -105,12 +129,15 @@ export default function PersonalInfo() {
       contactEmail: String(form.get("contactEmail") ?? ""),
       birthDate: String(form.get("birthDate") ?? ""),
       address: String(form.get("address") ?? ""),
+      countryCode,
+      province,
+      origin: window.location.origin,
       notificationPreferences: {
         studyReminders: form.get("studyReminders") === "on",
         resultUpdates: form.get("resultUpdates") === "on",
         platformUpdates: form.get("platformUpdates") === "on",
       },
-    }, { onSuccess: () => toast.success("Đã cập nhật thông tin cá nhân.") });
+    }, { onSuccess: data => { if (data.emailVerificationPending) { toast.success(data.emailDeliverySent ? "Đã gửi email xác nhận đến địa chỉ mới." : "Email mới đang chờ xác nhận.", { description: data.emailDeliverySent ? "Mở email và chọn Xác nhận email trong 24 giờ để hoàn tất thay đổi." : "Liên hệ quản trị viên để kiểm tra cấu hình gửi email." }); } else toast.success("Đã cập nhật thông tin cá nhân."); } });
   };
 
   return <AccountLayout>
@@ -136,9 +163,11 @@ export default function PersonalInfo() {
               </div>
             </Field>
             <Field label="Mục tiêu học tập" description="Tối đa 220 ký tự, hiển thị trên trang Tổng quan."><input id="learningGoal" name="learningGoal" defaultValue={profile.learningGoal ?? ""} maxLength={220} placeholder="Ví dụ: Đạt 7.0 IELTS trong 12 tuần" className="field" /></Field>
-            <Field label="Email liên hệ" description="Dùng để nhận thông báo học tập. Email đăng nhập vẫn do dịch vụ xác thực quản lý."><span className="relative block"><Mail aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} /><input aria-label="Email liên hệ" id="contactEmail" name="contactEmail" type="email" defaultValue={profile.contactEmail ?? user.email ?? ""} maxLength={320} placeholder="ban@example.com" className="field pl-10" /></span></Field>
+            <Field label="Email liên hệ" description="Địa chỉ mới chỉ được áp dụng sau khi bạn xác nhận qua email."><span className="relative block"><Mail aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} /><input aria-label="Email liên hệ" id="contactEmail" name="contactEmail" type="email" defaultValue={profile.contactEmail ?? user.email ?? ""} maxLength={320} placeholder="ban@example.com" className="field pl-10" /></span>{profile.pendingContactEmail ? <span role="status" className="mt-2 block rounded-md bg-amber-50 px-2 py-1.5 text-[11px] font-medium text-amber-700">Đang chờ xác nhận: {profile.pendingContactEmail}</span> : null}</Field>
             <Field label="Ngày sinh" description="Dùng để cá nhân hóa trải nghiệm học tập."><span className="relative block"><CalendarDays aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} /><input aria-label="Ngày sinh" id="birthDate" name="birthDate" type="date" defaultValue={profile.birthDate ?? ""} className="field pl-10" /></span></Field>
             <Field label="Giới thiệu bản thân" full description="Một vài dòng về điều bạn muốn chinh phục."><textarea id="bio" name="bio" defaultValue={profile.bio ?? ""} maxLength={500} placeholder="Mục tiêu học tập hoặc điều bạn muốn chinh phục…" className="field min-h-32 resize-y" /></Field>
+            <Field label="Quốc gia" description="Chọn quốc gia cư trú."><select aria-label="Quốc gia" name="countryCode" value={countryCode} onChange={event => { setCountryCode(event.target.value); setProvince(""); }} className="field bg-surface">{countries.map(country => <option key={country.code} value={country.code}>{country.label}</option>)}</select></Field>
+            <Field label="Tỉnh/Thành phố" description="Danh sách theo quốc gia đã chọn."><select aria-label="Tỉnh/Thành phố" name="province" value={province} onChange={event => setProvince(event.target.value)} className="field bg-surface"><option value="">Chọn Tỉnh/Thành phố</option>{(provincesByCountry[countryCode] ?? ["Khác"]).map(item => <option key={item} value={item}>{item}</option>)}</select></Field>
             <Field label="Địa chỉ" full description="Tùy chọn, dùng cho các hỗ trợ cần thiết của tài khoản."><span className="relative block"><MapPin aria-hidden="true" className="pointer-events-none absolute left-3 top-3 text-text-muted" size={16} /><textarea aria-label="Địa chỉ" id="address" name="address" defaultValue={profile.address ?? ""} maxLength={500} placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố" className="field min-h-20 resize-y pl-10" /></span></Field>
           </div>
           <section className="mt-6 rounded-xl border border-violet-100 bg-violet-50/45 p-4">

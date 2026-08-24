@@ -611,3 +611,7 @@
 - [x] Lưu email liên hệ, ngày sinh và địa chỉ trong hồ sơ người học bằng migration và tRPC.
 - [x] Bổ sung giao diện thay đổi email liên hệ, ngày sinh, địa chỉ và luồng quản lý mật khẩu OAuth.
 - [x] Kiểm thử bảo mật, hồi quy, responsive và lưu checkpoint Thông tin cá nhân mở rộng.
+- [x] Rà soát cấu hình gửi email và cấu trúc dữ liệu địa chỉ/xác nhận email hiện có.
+- [x] Lưu quốc gia, tỉnh thành và trạng thái/chờ xác nhận email liên hệ bằng migration, tRPC.
+- [x] Bổ sung dropdown Quốc gia–Tỉnh/Thành và giao diện phản hồi xác nhận email mới.
+- [x] Kiểm thử gửi email xác nhận, hồi quy, responsive và lưu checkpoint.
