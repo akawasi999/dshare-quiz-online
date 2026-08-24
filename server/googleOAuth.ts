@@ -8,6 +8,7 @@ import { getDb, ensureLearnerProfile } from "./db";
 import { decryptEmailApiKey } from "./paymentConfirmationEmail";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
+import { accountStatusMessage } from "../shared/accessControl";
 
 const STATE_COOKIE = "__Host-google_oauth_state";
 const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -67,6 +68,7 @@ export function registerGoogleOAuthRoutes(app: Express) {
         user = (await db.select().from(users).where(eq(users.openId, openId)).limit(1))[0];
       }
       if (!user) throw new Error("Không thể tạo tài khoản Google.");
+      if (user.accountStatus !== "active") return res.status(403).send(accountStatusMessage(user.accountStatus));
       await db.insert(userOAuthIdentities).values({ userId: user.id, provider: "google", providerSubject: profile.sub }).onDuplicateKeyUpdate({ set: { userId: user.id } });
       await ensureLearnerProfile(user.id);
       const session = await sdk.createSessionToken(user.openId, { name: user.name ?? "", expiresInMs: ONE_YEAR_MS });

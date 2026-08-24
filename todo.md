@@ -674,3 +674,10 @@
 - [x] Rà soát vòng đời popup và các chế độ đăng nhập/đăng ký cần tự focus email.
 - [x] Thêm tự focus email khi mở hoặc chuyển sang Đăng nhập/Đăng ký.
 - [x] Kiểm thử focus tự động và lưu checkpoint.
+- [x] Kiểm kê toàn bộ route, page, tRPC procedure và action có dữ liệu hoặc thao tác cá nhân.
+- [x] Thiết kế policy role/permission, ownership và phân loại public/authenticated/admin.
+- [x] Chuẩn hóa guard máy chủ cho xác thực, quyền và ownership tài nguyên trọng yếu.
+- [x] Thiết lập route guard và lớp requireAuth dùng chung với return URL/intended action.
+- [x] Áp dụng guard hành động cho entry point quan trọng và đồng bộ UI Guest/User/Access Denied.
+- [x] Bổ sung regression chống bypass cho guest, thiếu quyền và ownership.
+- [x] Xác minh build, lưu checkpoint và báo cáo phạm vi authorization.

@@ -8,7 +8,6 @@ import App from "./App";
 import IconTooltipEnhancer from "./components/IconTooltipEnhancer";
 import SharedDataSyncBridge from "./components/SharedDataSyncBridge";
 import GoogleAnalyticsTracker from "./components/GoogleAnalyticsTracker";
-import { startLogin } from "./const";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -17,11 +16,11 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
 
-  const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
+  const isUnauthorized = error.data?.code === "UNAUTHORIZED" || error.message === UNAUTHED_ERR_MSG;
 
   if (!isUnauthorized) return;
 
-  startLogin();
+  window.dispatchEvent(new CustomEvent("dshare:auth-required", { detail: { returnTo: `${window.location.pathname}${window.location.search}` } }));
 };
 
 queryClient.getQueryCache().subscribe(event => {

@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `accountStatus` enum('active','suspended','banned','deactivated') DEFAULT 'active' NOT NULL;

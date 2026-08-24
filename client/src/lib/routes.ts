@@ -43,6 +43,46 @@ export const ROUTES = {
   adminSettings: "/admin/settings",
 } as const;
 
+export type RouteAccessPolicy = "public" | "authenticated" | "admin";
+export type RoutePermission = "profile.view" | "learning.view" | "mission.view" | "achievement.view" | "point.view" | "point.topup" | "payment.view" | "payment.create" | "quiz.create" | "quiz.view" | "quiz.edit" | "result.view" | "ai.quiz.generate" | "admin.access";
+export type RouteMeta = { access: RouteAccessPolicy; permission?: RoutePermission };
+
+export const ROUTE_META: Partial<Record<(typeof ROUTES)[keyof typeof ROUTES], RouteMeta>> = {
+  [ROUTES.account]: { access: "authenticated", permission: "profile.view" },
+  [ROUTES.accountProfile]: { access: "authenticated", permission: "profile.view" },
+  [ROUTES.missions]: { access: "authenticated", permission: "mission.view" },
+  [ROUTES.achievements]: { access: "authenticated", permission: "achievement.view" },
+  [ROUTES.wallet]: { access: "authenticated", permission: "point.view" },
+  [ROUTES.referrals]: { access: "authenticated", permission: "profile.view" },
+  [ROUTES.billing]: { access: "authenticated", permission: "point.topup" },
+  [ROUTES.paymentStatus]: { access: "authenticated", permission: "payment.view" },
+  [ROUTES.practice]: { access: "authenticated", permission: "learning.view" },
+  [ROUTES.quizBuilder]: { access: "authenticated", permission: "quiz.create" },
+  [ROUTES.myQuizzes]: { access: "authenticated", permission: "quiz.view" },
+  [ROUTES.aiAssistant]: { access: "authenticated", permission: "ai.quiz.generate" },
+  [ROUTES.admin]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminDashboard]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminTopics]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminQuizzes]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminContent]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminQuestions]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminRandomGenerator]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminImportExport]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminPoints]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminXp]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminGamification]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminUsers]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminUserGroups]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminErrors]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminAnalytics]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminSeoPreview]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminMonitoring]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminLogs]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminAi]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminTheme]: { access: "admin", permission: "admin.access" },
+  [ROUTES.adminSettings]: { access: "admin", permission: "admin.access" },
+};
+
 export const LEGACY_ROUTE_MAP: Record<string, string> = {
   "/kham-pha": ROUTES.explore,
   "/bang-xep-hang": ROUTES.leaderboard,

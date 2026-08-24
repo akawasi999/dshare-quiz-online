@@ -68,7 +68,7 @@ import { getTrueFalseStatements, validateQuestionConfiguration } from "../shared
 import { notifyOwner } from "./_core/notification";
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { adminProcedure, permissionProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createAttempt,
   ensureLearnerProfile,
@@ -110,6 +110,7 @@ import { hashPassword, hashToken, newOneTimeToken, normalizeEmail, verifyPasswor
 import { LOGIN_CAPTCHA_THRESHOLD, loginLockoutMessage, nextFailedLoginState } from "./loginThrottle";
 import { createLoginCaptcha, LOGIN_CAPTCHA_COOKIE, LOGIN_CAPTCHA_MAX_AGE_MS, verifyLoginCaptcha } from "./loginCaptcha";
 import { sdk } from "./_core/sdk";
+import { accountStatusMessage } from "../shared/accessControl";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const defaultAiAssistantConfig = { provider: "manus" as const, model: "gpt-5-mini", isEnabled: false, welcomeMessage: "Chào bạn, tôi là Dshare AI Assistant. Tôi có thể giúp bạn lập kế hoạch ôn tập, giải thích khái niệm và gợi ý cách học hiệu quả." };
@@ -145,6 +146,18 @@ const decodeAvatarImageUpload = (input: z.infer<typeof avatarUploadInput>) => {
   if (!bytes.length) throw new TRPCError({ code: "BAD_REQUEST", message: "Ảnh đại diện trống hoặc không đọc được." });
   if (bytes.length > maxAvatarImageBytes) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Ảnh đại diện tối đa 3 MB." });
   return bytes;
+};
+const assertOwnedAttempt = async (userId: number, attemptId: number, questionId?: number) => {
+  const db = await getDb();
+  if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+  const [attempt] = await db.select({ id: attempts.id, quizId: attempts.quizId, status: attempts.status }).from(attempts).where(and(eq(attempts.id, attemptId), eq(attempts.userId, userId))).limit(1);
+  if (!attempt) throw new TRPCError({ code: "FORBIDDEN", message: "Bạn không có quyền thao tác lượt làm bài này." });
+  if (attempt.status !== "in_progress") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Lượt làm bài này không còn có thể chỉnh sửa." });
+  if (questionId) {
+    const [question] = await db.select({ questionId: quizQuestions.questionId }).from(quizQuestions).where(and(eq(quizQuestions.quizId, attempt.quizId), eq(quizQuestions.questionId, questionId))).limit(1);
+    if (!question) throw new TRPCError({ code: "FORBIDDEN", message: "Câu hỏi không thuộc lượt làm bài này." });
+  }
+  return attempt;
 };
 const csvEscape = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
 const membershipGroupPermissionInput = z.object({
@@ -296,7 +309,10 @@ export const parseCsv = (text: string) => text.trim().split(/\r?\n/).map(line =>
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(opts => {
+      if (opts.ctx.user && opts.ctx.user.accountStatus && opts.ctx.user.accountStatus !== "active") throw new TRPCError({ code: "FORBIDDEN", message: accountStatusMessage(opts.ctx.user.accountStatus) });
+      return opts.ctx.user;
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -340,6 +356,7 @@ export const appRouter = router({
         }
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Email hoặc mật khẩu không đúng." });
       }
+      if (user.accountStatus !== "active") throw new TRPCError({ code: "FORBIDDEN", message: accountStatusMessage(user.accountStatus) });
       await db.update(userCredentials).set({ failedLoginAttempts: 0, loginLockedUntil: null }).where(eq(userCredentials.id, credential.id));
       const expiresInMs = input.remember ? ONE_YEAR_MS : 24 * 60 * 60 * 1000;
       const session = await sdk.createSessionToken(user.openId, { name: user.name ?? "", expiresInMs });
@@ -367,6 +384,7 @@ export const appRouter = router({
       if (!credential) throw new TRPCError({ code: "BAD_REQUEST", message: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn." });
       const user = (await db.select().from(users).where(eq(users.id, credential.userId)).limit(1))[0];
       if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy tài khoản." });
+      if (user.accountStatus !== "active") throw new TRPCError({ code: "FORBIDDEN", message: accountStatusMessage(user.accountStatus) });
       await db.update(userCredentials).set({ passwordHash: await hashPassword(input.password), resetTokenHash: null, resetTokenExpiresAt: null, failedLoginAttempts: 0, loginLockedUntil: null, passwordUpdatedAt: new Date() }).where(eq(userCredentials.id, credential.id));
       const session = await sdk.createSessionToken(user.openId, { name: user.name ?? "", expiresInMs: ONE_YEAR_MS });
       ctx.res.cookie(COOKIE_NAME, session, { ...getSessionCookieOptions(ctx.req), maxAge: ONE_YEAR_MS });
@@ -848,20 +866,20 @@ export const appRouter = router({
         })),
       };
     }),
-    saveAnswer: protectedProcedure.input(z.object({ attemptId: z.number().int().positive(), questionId: z.number().int().positive(), selectedOptionIds: z.array(z.number().int().positive()).max(10), answerPayload: z.object({ statementAnswers: z.record(z.string().min(1).max(64), z.boolean()).refine(values => Object.keys(values).length <= 8, "Tối đa tám nhận định.") }).optional() }))
-      .mutation(({ input }) => saveAnswer(input)),
+    saveAnswer: permissionProcedure("quiz.submit").input(z.object({ attemptId: z.number().int().positive(), questionId: z.number().int().positive(), selectedOptionIds: z.array(z.number().int().positive()).max(10), answerPayload: z.object({ statementAnswers: z.record(z.string().min(1).max(64), z.boolean()).refine(values => Object.keys(values).length <= 8, "Tối đa tám nhận định.") }).optional() }))
+      .mutation(async ({ ctx, input }) => { await assertOwnedAttempt(ctx.user.id, input.attemptId, input.questionId); return saveAnswer(input); }),
     submit: protectedProcedure.input(z.object({ attemptId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const result = await submitAttempt(input.attemptId, ctx.user.id);
       const alert = buildAttemptMilestoneAlert({ learnerName: ctx.user.name ?? "Một học viên", quizTitle: result.quiz.title, scorePercent: result.scorePercent, passed: result.passed, isFirstCompletion: result.isFirstCompletion, isQuizRecord: result.isQuizRecord, isPersonalRecord: result.isPersonalRecord });
       try { await notifyOwner(alert); } catch (error) { console.warn("[Quiz notification] Delivery failed without affecting submission", error); }
       return result;
     }),
-    securityEvent: protectedProcedure.input(z.object({ attemptId: z.number().int().positive(), eventType: z.enum(["copy", "paste", "context_menu", "tab_hidden", "fullscreen_exit"]) }))
-      .mutation(({ input }) => logSecurityEvent(input.attemptId, input.eventType)),
+    securityEvent: permissionProcedure("quiz.submit").input(z.object({ attemptId: z.number().int().positive(), eventType: z.enum(["copy", "paste", "context_menu", "tab_hidden", "fullscreen_exit"]) }))
+      .mutation(async ({ ctx, input }) => { await assertOwnedAttempt(ctx.user.id, input.attemptId); return logSecurityEvent(input.attemptId, input.eventType); }),
   }),
 
   creator: router({
-    contentOptions: protectedProcedure.query(async () => {
+    contentOptions: permissionProcedure("quiz.create").query(async () => {
       const db = await getDb();
       if (!db) return { categories: [], subjects: [], lessons: [], topics: [] };
       const [categoryRows, subjectRows, lessonRows, topicRows] = await Promise.all([
@@ -872,17 +890,17 @@ export const appRouter = router({
       ]);
       return { categories: categoryRows, subjects: subjectRows, lessons: lessonRows, topics: topicRows };
     }),
-    uploadCover: protectedProcedure.input(quizImageUploadInput).mutation(async ({ ctx, input }) => {
+    uploadCover: permissionProcedure("quiz.create").input(quizImageUploadInput).mutation(async ({ ctx, input }) => {
       const bytes = decodeQuizImageUpload(input);
       const uploaded = await storagePut(`quiz-covers/${ctx.user.id}/${Date.now()}-${safeUploadFileName(input.fileName)}`, bytes, input.mimeType);
       return { url: uploaded.url };
     }),
-    uploadQuestionImage: protectedProcedure.input(quizImageUploadInput).mutation(async ({ ctx, input }) => {
+    uploadQuestionImage: permissionProcedure("quiz.create").input(quizImageUploadInput).mutation(async ({ ctx, input }) => {
       const bytes = decodeQuizImageUpload(input);
       const uploaded = await storagePut(`quiz-question-images/${ctx.user.id}/${Date.now()}-${safeUploadFileName(input.fileName)}`, bytes, input.mimeType);
       return { url: uploaded.url };
     }),
-    uploadQuestionMedia: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), kind: z.enum(["audio", "video"]), mimeType: z.enum(["audio/mpeg", "audio/mp4", "audio/x-m4a", "video/mp4", "video/webm"]), base64: z.string().min(20).max(72_000_000) })).mutation(async ({ ctx, input }) => {
+    uploadQuestionMedia: permissionProcedure("quiz.create").input(z.object({ fileName: z.string().min(1).max(160), kind: z.enum(["audio", "video"]), mimeType: z.enum(["audio/mpeg", "audio/mp4", "audio/x-m4a", "video/mp4", "video/webm"]), base64: z.string().min(20).max(72_000_000) })).mutation(async ({ ctx, input }) => {
       const bytes = Buffer.from(input.base64.split(",").pop() ?? "", "base64");
       const allowedMime = input.kind === "audio" ? ["audio/mpeg", "audio/mp4", "audio/x-m4a"] : ["video/mp4", "video/webm"];
       const maxBytes = input.kind === "audio" ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
@@ -891,16 +909,16 @@ export const appRouter = router({
       const uploaded = await storagePut(`quiz-media/${ctx.user.id}/${input.kind}/${input.fileName}`, bytes, input.mimeType);
       return { url: uploaded.url, kind: input.kind, fileName: input.fileName };
     }),
-    myQuizzes: protectedProcedure.query(async ({ ctx }) => {
+    myQuizzes: permissionProcedure("quiz.view").query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
       return db.select().from(quizzes).where(eq(quizzes.creatorUserId, ctx.user.id)).orderBy(desc(quizzes.updatedAt));
     }),
-    getQuizForEdit: protectedProcedure.input(quizIdInput).query(async ({ ctx, input }) => {
+    getQuizForEdit: permissionProcedure("quiz.edit").input(quizIdInput).query(async ({ ctx, input }) => {
       const draft = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       return { quiz: draft.quiz, questions: draft.questions };
     }),
-    quizAnalytics: protectedProcedure.input(quizIdInput).query(async ({ ctx, input }) => {
+    quizAnalytics: permissionProcedure("quiz.view").input(quizIdInput).query(async ({ ctx, input }) => {
       const analytics = await getOwnedQuizAnalytics(ctx.user.id, input.quizId);
       if (!analytics) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy Quiz thuộc quyền quản lý của bạn." });
       return analytics;
@@ -952,7 +970,7 @@ export const appRouter = router({
       await db.delete(quizCreatorDraftVersions).where(and(eq(quizCreatorDraftVersions.userId, ctx.user.id), eq(quizCreatorDraftVersions.draftKey, input.draftKey)));
       return { success: true };
     }),
-    duplicateQuiz: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
+    duplicateQuiz: permissionProcedure("quiz.create").input(quizIdInput).mutation(async ({ ctx, input }) => {
       await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
       await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "sao chép Quiz");
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
@@ -964,13 +982,13 @@ export const appRouter = router({
       for (let index = 0; index < source.questions.length; index += 1) { const item = source.questions[index]!; const copiedQuestion = await source.db.insert(questions).values({ lessonId: legacyLessonId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(copiedQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option: any, optionIndex: number) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: item.points }); }
       return { quizId, title };
     }),
-    deleteQuiz: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
+    deleteQuiz: permissionProcedure("quiz.delete").input(quizIdInput).mutation(async ({ ctx, input }) => {
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       await removeOwnedQuizQuestions(source.db, source.quiz.id, source.questions);
       await source.db.delete(quizzes).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
       return { success: true };
     }),
-    updateCover: protectedProcedure.input(z.object({ quizId: z.number().int().positive(), coverImageUrl: quizAssetUrlInput.nullable() })).mutation(async ({ ctx, input }) => {
+    updateCover: permissionProcedure("quiz.edit").input(z.object({ quizId: z.number().int().positive(), coverImageUrl: quizAssetUrlInput.nullable() })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật ảnh bìa lúc này." });
       const ownedQuiz = await db.select({ id: quizzes.id }).from(quizzes).where(and(eq(quizzes.id, input.quizId), eq(quizzes.creatorUserId, ctx.user.id))).limit(1);
@@ -978,7 +996,7 @@ export const appRouter = router({
       await db.update(quizzes).set({ coverImageUrl: input.coverImageUrl }).where(eq(quizzes.id, input.quizId));
       return { success: true, coverImageUrl: input.coverImageUrl };
     }),
-    createQuiz: protectedProcedure.input(z.object({
+    createQuiz: permissionProcedure("quiz.create").input(z.object({
       lessonId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440).default(15), maxAttempts: z.number().int().min(0).max(1000).default(0), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean().default(false), hideHintsAndExplanation: z.boolean().default(false), allowBackNavigation: z.boolean().default(true), requireRegistration: z.boolean().default(true), liveMonitoring: z.boolean().default(false), requireEmail: z.boolean().default(false), shuffleQuestions: z.boolean().default(false), shuffleAnswers: z.boolean().default(false), visibility: z.enum(["public", "private"]).default("public") }).default({ durationMinutes: 15, maxAttempts: 0, antiCheatMonitor: false, hideHintsAndExplanation: false, allowBackNavigation: true, requireRegistration: true, liveMonitoring: false, requireEmail: false, shuffleQuestions: false, shuffleAnswers: false, visibility: "public" }),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
@@ -1012,7 +1030,7 @@ export const appRouter = router({
       }
       return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: status === "published", status, visibility: input.settings.visibility };
     }),
-    updateQuiz: protectedProcedure.input(z.object({
+    updateQuiz: permissionProcedure("quiz.edit").input(z.object({
       quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean(), shuffleQuestions: z.boolean(), shuffleAnswers: z.boolean(), visibility: z.enum(["public", "private"]) }),
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
@@ -1031,7 +1049,7 @@ export const appRouter = router({
       for (let index = 0; index < input.questions.length; index += 1) { const item = input.questions[index]!; const createdQuestion = await source.db.insert(questions).values({ lessonId, topicId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(createdQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option, optionIndex) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId: source.quiz.id, questionId, sortOrder: index, points: item.points }); }
       return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length, isPublished: status === "published", status, visibility: input.settings.visibility };
     }),
-    generateQuestionAI: protectedProcedure.input(aiQuestionInputSchema.omit({ lessonId: true })).mutation(async ({ ctx, input }) => {
+    generateQuestionAI: permissionProcedure("ai.quiz.generate").input(aiQuestionInputSchema.omit({ lessonId: true })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi bằng AI");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       const db = await getDb();
@@ -1039,7 +1057,7 @@ export const appRouter = router({
       try { const charged = await runWithAiPointCharge(db, { userId: ctx.user.id, code: "ai_question_generation", requestKey: `question:${ctx.user.id}:${Date.now()}` }, async () => { const response = await invokeLLM({ messages: [{ role: "system", content: "Bạn là chuyên gia biên soạn câu hỏi bằng tiếng Việt. Chỉ trả về JSON hợp lệ, không có markdown." }, { role: "user", content: `Tạo một câu hỏi loại ${input.type}, độ khó ${input.difficulty}, chủ đề ${input.topic}. Ngữ cảnh: ${input.context ?? "Không có"}. Trả JSON gồm prompt, explanation, options và answerConfig. Với fill_blank dùng answerConfig.acceptedAnswers; matching dùng pairs {left,right}; true_false dùng Đúng/Sai; essay cần answerConfig.sampleOutline.` }], maxTokens: 1200, response_format: { type: "json_schema", json_schema: { name: "creator_question_draft", strict: true, schema: { type: "object", properties: { prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["prompt", "explanation", "options", "answerConfig"], additionalProperties: false } } } }); return parseAiQuestionDraft(response.choices[0]?.message.content, input.type); }); await recordAiUsage(ctx.user.id, "generate_question"); return { ...input, ...charged.value, quota: { used: quota.used + 1, limit: quota.limit }, pointCharge: charged.pointCharge }; }
       catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI tạo câu hỏi không hợp lệ: ${error.message}` : "AI tạo câu hỏi không hợp lệ." }); }
     }),
-    studioAiChat: protectedProcedure.input(quizStudioChatInputSchema).mutation(async ({ ctx, input }) => {
+    studioAiChat: permissionProcedure("ai.quiz.generate").input(quizStudioChatInputSchema).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng chat AI trong Studio");
       const response = await invokeLLM({ messages: buildQuizStudioChatMessages(input), maxTokens: 2_400, response_format: { type: "json_schema", json_schema: { name: "quiz_studio_chat", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["clarify", "generate"] }, reply: { type: "string" }, detected: { type: "object", properties: { topic: { type: ["string", "null"] }, type: { type: ["string", "null"] }, difficulty: { type: ["string", "null"] }, count: { type: ["integer", "null"] } }, required: ["topic", "type", "difficulty", "count"], additionalProperties: false }, questions: { type: "array", items: { type: "object", properties: { type: { type: "string" }, difficulty: { type: "string" }, prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "prompt", "explanation", "options", "answerConfig"], additionalProperties: false } }, suggestedPrompts: { type: "array", items: { type: "string" } } }, required: ["action", "reply", "detected", "questions", "suggestedPrompts"], additionalProperties: false } } } });
       try {
@@ -1053,7 +1071,7 @@ export const appRouter = router({
         return { ...result, quota: null };
       } catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI Studio chưa thể xử lý yêu cầu: ${error.message}` : "AI Studio chưa thể xử lý yêu cầu." }); }
     }),
-    enhanceQuestionAI: protectedProcedure.input(questionEnhancementInputSchema).mutation(async ({ ctx, input }) => {
+    enhanceQuestionAI: permissionProcedure("ai.quiz.generate").input(questionEnhancementInputSchema).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng công cụ AI cho câu hỏi");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       const db = await getDb();
@@ -1061,7 +1079,7 @@ export const appRouter = router({
       try { const charged = await runWithAiPointCharge(db, { userId: ctx.user.id, code: "ai_question_enhancement", requestKey: `enhancement:${ctx.user.id}:${Date.now()}` }, async () => { const response = await invokeLLM({ messages: buildQuestionEnhancementMessages(input), maxTokens: 1_600, response_format: { type: "json_schema", json_schema: { name: "quiz_question_enhancement", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["explain", "rephrase", "latex"] }, prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["action", "prompt", "explanation", "options", "answerConfig"], additionalProperties: false } } } }); return parseQuestionEnhancement(response.choices[0]?.message.content, input.question.type); }); await recordAiUsage(ctx.user.id, "generate_question"); return { ...charged.value, quota: { used: quota.used + 1, limit: quota.limit }, pointCharge: charged.pointCharge }; }
       catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI chưa thể nâng cấp câu hỏi: ${error.message}` : "AI chưa thể nâng cấp câu hỏi." }); }
     }),
-    generateQuestionsFromDocument: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]), base64: z.string().min(80).max(22_000_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
+    generateQuestionsFromDocument: permissionProcedure("ai.quiz.generate").input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]), base64: z.string().min(80).max(22_000_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi từ tài liệu bằng AI");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       if (quota.limit !== null && quota.used + input.questionCount > quota.limit) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn cần ${input.questionCount} AI Credits nhưng chỉ còn ${Math.max(0, quota.limit - quota.used)} Credit.` });
@@ -1876,8 +1894,9 @@ export const appRouter = router({
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         const profile = await ensureLearnerProfile(input.userId);
         if (!profile) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy hồ sơ học viên." });
+        await db.update(users).set({ accountStatus: input.isBanned ? "banned" : "active" }).where(eq(users.id, input.userId));
         await db.update(learnerProfiles).set({ isBanned: input.isBanned }).where(eq(learnerProfiles.id, profile.id));
-        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.isBanned ? "user.banned" : "user.unbanned", entityType: "user", entityId: input.userId });
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.isBanned ? "user.banned" : "user.unbanned", entityType: "user", entityId: input.userId, metadata: { accountStatus: input.isBanned ? "banned" : "active" } });
         return { success: true };
       }),
     adjustPoints: adminProcedure.input(z.object({ userId: z.number().int().positive(), amount: z.number().int().min(-100000).max(100000).refine(value => value !== 0), description: z.string().trim().min(4).max(500) }))

@@ -6,6 +6,7 @@ import { userOAuthIdentities } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { accountStatusMessage } from "../../shared/accessControl";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -49,6 +50,10 @@ export function registerOAuthRoutes(app: Express) {
         return db.getUserByOpenId(userInfo.openId);
       })());
       if (!account) throw new Error("Không thể đồng bộ tài khoản OAuth.");
+      if (account.accountStatus !== "active") {
+        res.status(403).send(accountStatusMessage(account.accountStatus));
+        return;
+      }
       const database = await getDb();
       if (database) await database.insert(userOAuthIdentities).values({ userId: account.id, provider: "manus", providerSubject: userInfo.openId }).onDuplicateKeyUpdate({ set: { userId: account.id } });
 

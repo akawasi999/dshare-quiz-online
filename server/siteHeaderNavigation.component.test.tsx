@@ -13,13 +13,16 @@ vi.mock("@/lib/trpc", () => ({ trpc: { useUtils: () => ({ auth: { me: { invalida
 vi.mock("wouter", () => ({ Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => <a href={href} {...props}>{children}</a>, useLocation: () => ["/"] }));
 
 import SiteHeader from "../client/src/components/SiteHeader";
+import { AuthGateProvider } from "../client/src/contexts/AuthGateContext";
+
+const renderHeader = () => render(<AuthGateProvider><SiteHeader /></AuthGateProvider>);
 
 describe("SiteHeader navigation", () => {
   afterEach(() => { cleanup(); mocks.user = null; mocks.logout.mockReset(); });
 
   it("hiển thị liên kết trực tiếp, dropdown chủ đề/hỗ trợ và không khôi phục lối vào Xếp hạng", async () => {
     const user = userEvent.setup();
-    render(<SiteHeader />);
+    renderHeader();
 
     expect(screen.getByRole("link", { name: "Giới thiệu về chúng tôi" }).getAttribute("href")).toBe("/#ve-dshare");
     expect(screen.getByRole("button", { name: "Khám phá" })).toBeTruthy();
@@ -56,7 +59,7 @@ describe("SiteHeader navigation", () => {
 
   it("mở popup xác thực và chuyển được giữa Đăng nhập và Đăng ký", async () => {
     const userEventApi = userEvent.setup();
-    render(<SiteHeader />);
+    renderHeader();
     await userEventApi.click(screen.getByRole("button", { name: "Đăng nhập" }));
     expect(screen.getByRole("dialog")).toBeTruthy();
     await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText("Địa chỉ email")));
@@ -102,7 +105,7 @@ describe("SiteHeader navigation", () => {
 
   it("giữ dropdown Khám phá trong vùng đệm hover trước khi đóng", () => {
     vi.useFakeTimers();
-    render(<SiteHeader />);
+    renderHeader();
     const trigger = screen.getByRole("button", { name: "Khám phá" });
     const dropdownZone = trigger.parentElement!;
     fireEvent.mouseEnter(dropdownZone);
@@ -120,7 +123,7 @@ describe("SiteHeader navigation", () => {
   it("hiển thị dropdown tài khoản cho người dùng và chỉ hiển thị Admin CPanel cho admin", async () => {
     const userEventApi = userEvent.setup();
     mocks.user = { id: 1, name: "Minh Nguyễn", role: "user" };
-    const { rerender } = render(<SiteHeader />);
+    const { rerender } = renderHeader();
     const accountTrigger = screen.getByRole("link", { name: /Tài khoản Minh/ });
     expect(accountTrigger.getAttribute("href")).toBe("/account");
     fireEvent.mouseEnter(accountTrigger.parentElement!);
@@ -134,7 +137,7 @@ describe("SiteHeader navigation", () => {
     expect(mocks.logout).toHaveBeenCalledTimes(1);
 
     mocks.user = { id: 2, name: "Quản trị", role: "admin" };
-    rerender(<SiteHeader />);
+    rerender(<AuthGateProvider><SiteHeader /></AuthGateProvider>);
     fireEvent.mouseEnter(screen.getByRole("link", { name: /Tài khoản Quản/ }).parentElement!);
     expect(screen.getByRole("menuitem", { name: "Admin CPanel" }).getAttribute("href")).toBe("/admin");
   });
@@ -142,7 +145,7 @@ describe("SiteHeader navigation", () => {
   it("hiển thị chuông với lịch sử thông báo và đánh dấu mục đã đọc", async () => {
     const userEventApi = userEvent.setup();
     mocks.user = { id: 1, name: "Minh Nguyễn", role: "user" };
-    render(<SiteHeader />);
+    renderHeader();
     await userEventApi.click(screen.getAllByRole("button", { name: /Mở thông báo, 1 chưa đọc/ })[0]!);
     expect(screen.getByRole("menu", { name: "Lịch sử thông báo" })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: /Quiz cần chỉnh sửa/ }).getAttribute("href")).toContain("status=rejected");
@@ -153,7 +156,7 @@ describe("SiteHeader navigation", () => {
   it("đóng menu thông báo khi người dùng nhấp ra ngoài", async () => {
     const userEventApi = userEvent.setup();
     mocks.user = { id: 1, name: "Minh Nguyễn", role: "user" };
-    render(<SiteHeader />);
+    renderHeader();
     await userEventApi.click(screen.getAllByRole("button", { name: /Mở thông báo, 1 chưa đọc/ })[0]!);
     expect(screen.getByRole("menu", { name: "Lịch sử thông báo" })).toBeTruthy();
     await userEventApi.click(document.body);
