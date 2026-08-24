@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), logout: vi.fn(), markRea
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: mocks.user, loading: false, logout: mocks.logout }) }));
 vi.mock("@/contexts/ThemeContext", () => ({ useTheme: () => ({ theme: "light", toggleTheme: mocks.toggleTheme }) }));
 vi.mock("@/components/BrandLogo", () => ({ default: () => <span>Dshare</span> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { catalog: { topics: { useQuery: () => ({ data: mocks.topics }) } }, site: { navigation: { useQuery: () => ({ data: [] }) } }, branding: { get: { useQuery: () => ({ data: null }) } }, learner: { summary: { useQuery: () => ({ data: mocks.summary }) }, notifications: { useQuery: () => ({ data: mocks.notifications, refetch: vi.fn() }) }, markNotificationRead: { useMutation: () => ({ mutate: mocks.markRead }) }, markAllNotificationsRead: { useMutation: () => ({ mutate: mocks.markAllRead }) } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { useUtils: () => ({ auth: { me: { invalidate: vi.fn() } } }), auth: { register: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, loginWithPassword: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, requestPasswordReset: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, resetPassword: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, catalog: { topics: { useQuery: () => ({ data: mocks.topics }) } }, site: { navigation: { useQuery: () => ({ data: [] }) } }, branding: { get: { useQuery: () => ({ data: null }) } }, learner: { summary: { useQuery: () => ({ data: mocks.summary }) }, notifications: { useQuery: () => ({ data: mocks.notifications, refetch: vi.fn() }) }, markNotificationRead: { useMutation: () => ({ mutate: mocks.markRead }) }, markAllNotificationsRead: { useMutation: () => ({ mutate: mocks.markAllRead }) } } } }));
 vi.mock("wouter", () => ({ Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => <a href={href} {...props}>{children}</a>, useLocation: () => ["/"] }));
 
 import SiteHeader from "../client/src/components/SiteHeader";
@@ -59,10 +59,12 @@ describe("SiteHeader navigation", () => {
     render(<SiteHeader />);
     await userEventApi.click(screen.getByRole("button", { name: "Đăng nhập" }));
     expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Đăng nhập với Manus" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Đăng nhập với Google" })).toBeTruthy();
-    await userEventApi.click(screen.getByRole("tab", { name: "Đăng ký" }));
-    expect(screen.getByRole("button", { name: "Đăng ký với Manus" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Manus" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Google" })).toBeTruthy();
+    expect(screen.getByLabelText("Địa chỉ email")).toBeTruthy();
+    expect(screen.getByLabelText("Mật khẩu")).toBeTruthy();
+    await userEventApi.click(screen.getByRole("button", { name: "Đăng ký ngay" }));
+    expect(screen.getByLabelText("Tên thành viên")).toBeTruthy();
     expect(screen.getByText(/Tôi đồng ý với/)).toBeTruthy();
   });
 

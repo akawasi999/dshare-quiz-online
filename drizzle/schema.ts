@@ -24,6 +24,25 @@ export const users = mysqlTable("users", {
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
+export const userCredentials = mysqlTable("userCredentials", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  passwordHash: varchar("passwordHash", { length: 512 }).notNull(),
+  resetTokenHash: varchar("resetTokenHash", { length: 128 }),
+  resetTokenExpiresAt: timestamp("resetTokenExpiresAt"),
+  passwordUpdatedAt: timestamp("passwordUpdatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("user_credentials_user_unique").on(table.userId), index("user_credentials_reset_token_idx").on(table.resetTokenHash)]);
+
+export const userOAuthIdentities = mysqlTable("userOAuthIdentities", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  provider: varchar("provider", { length: 40 }).notNull(),
+  providerSubject: varchar("providerSubject", { length: 320 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("oauth_identity_provider_subject_unique").on(table.provider, table.providerSubject), index("oauth_identity_user_idx").on(table.userId)]);
+
 export const brandSettings = mysqlTable("brandSettings", {
   id: int("id").autoincrement().primaryKey(),
   primaryColor: varchar("primaryColor", { length: 16 }).default("#065BE5").notNull(),

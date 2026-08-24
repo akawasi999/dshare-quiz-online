@@ -43,7 +43,9 @@ import {
   topics,
   userAchievements,
   userBadges,
+  userCredentials,
   userMissionAssignments,
+  userOAuthIdentities,
   userGroupMembers,
   userGroupPermissions,
   userGroups,
@@ -54,7 +56,7 @@ import {
   xpRules,
   xpTransactions,
 } from "../drizzle/schema";
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM, listLLMModels } from "./_core/llm";
 import { buildQuizAssistantMessages, type QuizAssistantIntent } from "./aiAssistant";
@@ -88,7 +90,7 @@ import {
 } from "./db";
 import { shuffledForAttempt } from "./quizEngine";
 import { buildPayosCallbackUrls, createPayosPaymentLink } from "./payosService";
-import { encryptEmailApiKey, sendContactEmailVerification, sendTestEmail } from "./paymentConfirmationEmail";
+import { encryptEmailApiKey, sendContactEmailVerification, sendPasswordResetEmail, sendTestEmail } from "./paymentConfirmationEmail";
 import { decryptAiAssistantApiKey, discoverGeminiChatModel, encryptAiAssistantApiKey, generateAiAssistantReply } from "./aiAssistantService";
 import { analyzeAiAssistantImage } from "./aiAssistantMultimodal";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
@@ -104,6 +106,8 @@ import { createInAppNotification } from "./inAppNotifications";
 import { extractRemoteQuizSource } from "./remoteQuizExtraction";
 import { transcribeAudio } from "./_core/voiceTranscription";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
+import { hashPassword, hashToken, newOneTimeToken, normalizeEmail, verifyPassword } from "./localAuth";
+import { sdk } from "./_core/sdk";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const defaultAiAssistantConfig = { provider: "manus" as const, model: "gpt-5-mini", isEnabled: false, welcomeMessage: "Chào bạn, tôi là Dshare AI Assistant. Tôi có thể giúp bạn lập kế hoạch ôn tập, giải thích khái niệm và gợi ý cách học hiệu quả." };
@@ -115,6 +119,13 @@ const maxQuizImageBytes = 5 * 1024 * 1024;
 const avatarUploadInput = z.object({ fileName: z.string().trim().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(5_000_000) });
 const maxAvatarImageBytes = 3 * 1024 * 1024;
 const hashContactEmailVerificationToken = (token: string) => createHash("sha256").update(token).digest("hex");
+const passwordInput = z.string().min(10, "Mật khẩu cần tối thiểu 10 ký tự.").max(128).refine(value => /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value), { message: "Mật khẩu cần gồm chữ hoa, chữ thường và số." });
+const requestOrigin = (req: { protocol?: string; get?: (header: string) => string | undefined; headers?: Record<string, unknown> }) => {
+  const forwarded = req.headers?.["x-forwarded-proto"];
+  const protocol = typeof forwarded === "string" ? forwarded.split(",")[0]?.trim() : req.protocol || "https";
+  const host = req.get?.("host") || (typeof req.headers?.host === "string" ? req.headers.host : "dsharequiz-jxleeaps.manus.space");
+  return `${protocol || "https"}://${host}`;
+};
 const safeUploadFileName = (fileName: string) => fileName.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-").slice(0, 120) || "image";
 const quizAssetUrlInput = z.string().trim().max(1024).refine(value => value.startsWith("/manus-storage/") || /^https?:\/\//i.test(value), { message: "URL ảnh phải là liên kết HTTPS/HTTP hoặc đường dẫn lưu trữ hợp lệ." });
 const decodeQuizImageUpload = (input: z.infer<typeof quizImageUploadInput>) => {
@@ -287,6 +298,60 @@ export const appRouter = router({
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      return { success: true } as const;
+    }),
+    register: publicProcedure.input(z.object({ name: z.string().trim().min(2).max(160), email: z.string().trim().email().max(320), password: passwordInput, acceptedTerms: z.literal(true) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+      const email = normalizeEmail(input.email);
+      const existing = (await db.select().from(users).where(eq(users.email, email)).limit(1))[0];
+      if (existing) throw new TRPCError({ code: "CONFLICT", message: "Email này đã được sử dụng. Hãy đăng nhập hoặc khôi phục mật khẩu." });
+      const openId = `local_${randomBytes(24).toString("base64url")}`.slice(0, 64);
+      const now = new Date();
+      await db.insert(users).values({ openId, name: input.name.trim(), email, loginMethod: "email", lastSignedIn: now });
+      const user = (await db.select().from(users).where(eq(users.openId, openId)).limit(1))[0];
+      if (!user) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo tài khoản." });
+      await db.insert(userCredentials).values({ userId: user.id, passwordHash: await hashPassword(input.password), passwordUpdatedAt: now });
+      await ensureLearnerProfile(user.id);
+      const session = await sdk.createSessionToken(user.openId, { name: user.name ?? "", expiresInMs: ONE_YEAR_MS });
+      ctx.res.cookie(COOKIE_NAME, session, { ...getSessionCookieOptions(ctx.req), maxAge: ONE_YEAR_MS });
+      return { success: true } as const;
+    }),
+    loginWithPassword: publicProcedure.input(z.object({ email: z.string().trim().email().max(320), password: z.string().min(1).max(128), remember: z.boolean().default(true) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+      const user = (await db.select().from(users).where(eq(users.email, normalizeEmail(input.email))).limit(1))[0];
+      const credential = user ? (await db.select().from(userCredentials).where(eq(userCredentials.userId, user.id)).limit(1))[0] : undefined;
+      if (!user || !credential || !(await verifyPassword(input.password, credential.passwordHash))) throw new TRPCError({ code: "UNAUTHORIZED", message: "Email hoặc mật khẩu không đúng." });
+      const expiresInMs = input.remember ? ONE_YEAR_MS : 24 * 60 * 60 * 1000;
+      const session = await sdk.createSessionToken(user.openId, { name: user.name ?? "", expiresInMs });
+      ctx.res.cookie(COOKIE_NAME, session, { ...getSessionCookieOptions(ctx.req), maxAge: expiresInMs });
+      return { success: true } as const;
+    }),
+    requestPasswordReset: publicProcedure.input(z.object({ email: z.string().trim().email().max(320) })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+      const email = normalizeEmail(input.email);
+      const user = (await db.select().from(users).where(eq(users.email, email)).limit(1))[0];
+      const credential = user ? (await db.select().from(userCredentials).where(eq(userCredentials.userId, user.id)).limit(1))[0] : undefined;
+      if (user && credential) {
+        const resetToken = newOneTimeToken();
+        await db.update(userCredentials).set({ resetTokenHash: hashToken(resetToken), resetTokenExpiresAt: new Date(Date.now() + 30 * 60 * 1000) }).where(eq(userCredentials.id, credential.id));
+        const delivery = (await db.select().from(emailDeliverySettings).limit(1))[0];
+        if (delivery) await sendPasswordResetEmail(delivery, { recipient: email, learnerName: user.name, resetToken, appOrigin: requestOrigin(ctx.req) });
+      }
+      return { success: true } as const;
+    }),
+    resetPassword: publicProcedure.input(z.object({ token: z.string().min(20).max(256), password: passwordInput })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Cơ sở dữ liệu chưa sẵn sàng." });
+      const credential = (await db.select().from(userCredentials).where(and(eq(userCredentials.resetTokenHash, hashToken(input.token)), gt(userCredentials.resetTokenExpiresAt, new Date()))).limit(1))[0];
+      if (!credential) throw new TRPCError({ code: "BAD_REQUEST", message: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn." });
+      const user = (await db.select().from(users).where(eq(users.id, credential.userId)).limit(1))[0];
+      if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy tài khoản." });
+      await db.update(userCredentials).set({ passwordHash: await hashPassword(input.password), resetTokenHash: null, resetTokenExpiresAt: null, passwordUpdatedAt: new Date() }).where(eq(userCredentials.id, credential.id));
+      const session = await sdk.createSessionToken(user.openId, { name: user.name ?? "", expiresInMs: ONE_YEAR_MS });
+      ctx.res.cookie(COOKIE_NAME, session, { ...getSessionCookieOptions(ctx.req), maxAge: ONE_YEAR_MS });
       return { success: true } as const;
     }),
   }),

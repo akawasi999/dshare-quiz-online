@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildContactEmailVerification, buildPaymentConfirmationEmail, decryptEmailApiKey, encryptEmailApiKey, isEmailDeliveryConfigured, sendPaymentConfirmationEmail } from "./paymentConfirmationEmail";
+import { buildContactEmailVerification, buildPasswordResetEmail, buildPaymentConfirmationEmail, decryptEmailApiKey, encryptEmailApiKey, isEmailDeliveryConfigured, sendPaymentConfirmationEmail } from "./paymentConfirmationEmail";
 
 describe("payment confirmation email", () => {
   it("mã hóa khóa API và chỉ giải mã được qua tiện ích máy chủ", () => {
@@ -27,5 +27,11 @@ describe("payment confirmation email", () => {
     expect(email.subject).toContain("Xác nhận email liên hệ mới");
     expect(email.html).toContain("https://quiz.example.vn/account/profile?verifyContactEmail=secure-token");
     expect(email.html).toContain("24 giờ");
+  });
+
+  it("tạo email đặt lại mật khẩu với token một lần và hạn 30 phút", () => {
+    const email = buildPasswordResetEmail({ recipient: "user@example.com", learnerName: "Học viên", resetToken: "reset-token", appOrigin: "https://quiz.example.vn" });
+    expect(email.html).toContain("https://quiz.example.vn/?resetPassword=reset-token");
+    expect(email.html).toContain("30 phút");
   });
 });

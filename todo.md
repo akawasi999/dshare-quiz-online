@@ -619,3 +619,11 @@
 - [x] Thiết kế popup Đăng nhập/Đăng ký theo ảnh tham chiếu, có chuyển tab và hỗ trợ bàn phím.
 - [x] Kết nối nút Manus với OAuth hiện có và đưa cấu hình Google OAuth vào Cài đặt CPanel để thiết lập sau.
 - [x] Kiểm thử popup, CPanel, responsive, hồi quy và lưu checkpoint xác thực.
+- [x] Rà soát schema người dùng, callback OAuth và dịch vụ email để triển khai Google OAuth và khôi phục mật khẩu an toàn.
+- [x] Bổ sung dữ liệu, token một lần và endpoint xử lý callback Google OAuth cùng khôi phục mật khẩu.
+- [x] Hoàn thiện giao diện Quên mật khẩu/Đặt lại mật khẩu trong popup đăng nhập.
+- [x] Kiểm thử bảo mật, callback, email, responsive, hồi quy và lưu checkpoint.
+- [x] Đối chiếu cấu trúc Login/Register với ảnh tham chiếu và xác định các khác biệt bố cục trọng yếu.
+- [x] Căn chỉnh popup Login và Register theo thanh tiêu đề, form hai cột, social login ưu tiên và responsive mobile.
+- [x] Bảo đảm Email, Google và Manus liên kết về một User ID, giữ nguyên XP, Point, Level, lịch sử Quiz, thành tích và hồ sơ.
+- [x] Kiểm thử popup, liên kết tài khoản, trạng thái tải/lỗi/thành công và lưu checkpoint.
