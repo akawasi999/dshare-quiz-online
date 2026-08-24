@@ -652,3 +652,6 @@
 - [x] Rà soát spinner submit, checkbox điều khoản và trạng thái kiểm tra email hiện có.
 - [x] Chuẩn hóa phản hồi loading, nội dung điều khoản và kiểm tra định dạng email trực tiếp.
 - [x] Kiểm thử biểu mẫu đăng nhập/đăng ký và lưu checkpoint.
+- [x] Rà soát validation điều khoản và trải nghiệm trường email hiện có.
+- [x] Thêm toast khi chưa đồng ý điều khoản, check email hợp lệ và gợi ý đuôi email.
+- [x] Kiểm thử đăng ký, gợi ý email và lưu checkpoint.

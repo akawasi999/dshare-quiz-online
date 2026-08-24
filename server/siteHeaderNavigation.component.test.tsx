@@ -77,6 +77,10 @@ describe("SiteHeader navigation", () => {
     await userEventApi.type(screen.getByLabelText("Địa chỉ email"), "minh@");
     expect(screen.getByText("Email chưa đúng định dạng. Ví dụ: ten@domain.com")).toBeTruthy();
     expect(screen.getByLabelText("Địa chỉ email").getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByRole("button", { name: "@gmail.com" })).toBeTruthy();
+    await userEventApi.click(screen.getByRole("button", { name: "@gmail.com" }));
+    expect((screen.getByLabelText("Địa chỉ email") as HTMLInputElement).value).toBe("minh@gmail.com");
+    expect(screen.getByLabelText("Email hợp lệ")).toBeTruthy();
     await userEventApi.clear(screen.getByLabelText("Địa chỉ email"));
     await userEventApi.type(screen.getByLabelText("Mật khẩu"), "MatKhauManh2026!");
     expect(screen.getByText("Độ mạnh mật khẩu: Mạnh")).toBeTruthy();
