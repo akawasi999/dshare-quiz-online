@@ -699,3 +699,8 @@
 - [x] Kiểm tra, tối ưu layout và interaction của chế độ Chat AI trong luồng cuộn chung.
 - [x] Sắp xếp lại các nhóm nút thao tác chính của Studio theo ưu tiên và breakpoint responsive.
 - [x] Kiểm thử desktop/tablet/mobile, regression và lưu checkpoint cải tiến UX Studio.
+- [x] Ẩn footer Landing Page và áp dụng App Shell `100vh` riêng cho `/quiz/create`.
+- [x] Xây dựng header 60px, sidebar câu hỏi 260px, editor cuộn độc lập và panel AI 360px khi mở.
+- [x] Chuẩn hóa sidebar dạng danh sách dọc, card câu hỏi trung tâm và sticky bar AI nhanh.
+- [x] Bảo toàn/tối ưu kéo-thả sắp xếp, nút nhân bản-xóa và trạng thái câu hỏi đang chọn.
+- [x] Kiểm thử desktop/tablet/mobile, Chat AI, kéo-thả, regression và lưu checkpoint App Shell Studio.
