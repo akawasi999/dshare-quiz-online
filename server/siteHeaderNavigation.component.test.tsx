@@ -68,6 +68,8 @@ describe("SiteHeader navigation", () => {
     expect(screen.getByLabelText("Ghi nhớ đăng nhập")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Facebook" })).toBeTruthy();
     expect(screen.getByRole("dialog").className).toContain("max-w-[800px]");
+    expect(screen.getByRole("dialog").className).toContain("max-h-[calc(100dvh-1rem)]");
+    expect(screen.getByRole("dialog").className).toContain("overflow-y-auto");
     await userEventApi.click(screen.getByRole("button", { name: "Đăng ký ngay" }));
     expect(screen.getByLabelText("Tên thành viên")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Hiển thị Xác nhận mật khẩu" })).toBeTruthy();

@@ -655,3 +655,6 @@
 - [x] Rà soát validation điều khoản và trải nghiệm trường email hiện có.
 - [x] Thêm toast khi chưa đồng ý điều khoản, check email hợp lệ và gợi ý đuôi email.
 - [x] Kiểm thử đăng ký, gợi ý email và lưu checkpoint.
+- [x] Rà soát giới hạn chiều cao và nền ngoài của popup trên màn hình thấp/tablet.
+- [x] Tăng vùng hiển thị popup, thêm cuộn nội bộ và bảo toàn khả năng thao tác toàn bộ nội dung.
+- [x] Kiểm thử popup tại các kích thước màn hình và lưu checkpoint.
