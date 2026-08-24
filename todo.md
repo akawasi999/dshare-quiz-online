@@ -646,3 +646,6 @@
 - [x] Rà soát vị trí điều khiển mật khẩu và breakpoint tablet trong popup hiện có.
 - [x] Đưa icon hiện/ẩn vào trong input, tối ưu tablet 768px và thêm transition hover/focus.
 - [x] Kiểm thử desktop/tablet/mobile, hồi quy và lưu checkpoint cải thiện popup.
+- [x] Rà soát checkbox Ghi nhớ đăng nhập, social login và icon mật khẩu hiện có.
+- [x] Thêm Facebook ở cuối form đăng nhập và tooltip Hiển thị/Ẩn mật khẩu.
+- [x] Kiểm thử popup, trạng thái chưa cấu hình Facebook và lưu checkpoint.
