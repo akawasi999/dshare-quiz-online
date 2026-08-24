@@ -23,7 +23,6 @@ import AIStudyAssistant from "@/pages/AIStudyAssistant";
 import Missions from "@/pages/Missions";
 import Achievements from "@/pages/Achievements";
 import AccountLayout from "@/components/AccountLayout";
-import AiPointPreflightNotice from "@/components/AiPointPreflightNotice";
 import AppearanceStyleBridge from "@/components/AppearanceStyleBridge";
 import GamificationCelebrationPopups from "@/components/GamificationCelebrationPopups";
 import PublicSiteFooter from "@/components/PublicSiteFooter";
@@ -106,7 +105,7 @@ function LearnerAccountPage({ Page, access }: { Page: React.ComponentType; acces
 }
 
 function App() {
-  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><AuthGateProvider><AppearanceStyleBridge /><Toaster position="top-right" /><GamificationCelebrationPopups /><AiPointPreflightNotice /><Router /></AuthGateProvider></TooltipProvider></ThemeProvider></ErrorBoundary>;
+  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><AuthGateProvider><AppearanceStyleBridge /><Toaster position="top-right" /><GamificationCelebrationPopups /><Router /></AuthGateProvider></TooltipProvider></ThemeProvider></ErrorBoundary>;
 }
 
 export default App;
