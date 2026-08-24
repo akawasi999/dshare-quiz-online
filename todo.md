@@ -715,3 +715,7 @@
 - [x] Kiểm thử desktop/mobile, regression và lưu checkpoint cập nhật chiều cao Studio.
 - [x] Ẩn Header website trên `/quiz/create` và giữ App Shell khít viewport.
 - [x] Kiểm thử Studio, cập nhật regression và lưu checkpoint sau khi ẩn Header.
+- [x] Thêm khoảng cách đáy 50px cho thanh thêm câu hỏi thủ công.
+- [x] Chuyển nút xem trước sang bên trái Xuất bản và đánh dấu Cài đặt khi thiếu chủ đề.
+- [x] Cuộn Editor tới card tương ứng khi chọn câu trong Sidebar và sửa nút quay lại.
+- [x] Kiểm thử interaction, regression và lưu checkpoint các tinh chỉnh thao tác Studio.

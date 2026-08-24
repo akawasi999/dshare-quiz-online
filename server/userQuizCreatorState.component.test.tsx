@@ -33,6 +33,11 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByText("Nhập chủ đề")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Lịch sử bản nháp" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Xem trước Sandbox" }).textContent).toBe("");
+    expect(screen.getByTestId("settings-topic-required")).toBeTruthy();
+    expect(screen.getByTestId("manual-question-bar").className).toContain("mb-[50px]");
+    const preview = screen.getByRole("button", { name: "Xem trước Sandbox" });
+    const publish = screen.getByRole("button", { name: /Xuất bản/ });
+    expect(preview.compareDocumentPosition(publish) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByTestId("question-navigator").className).toContain("editor-question-navigator");
     expect(screen.getByTestId("question-navigator-scroll").className).toContain("flex-col");
     expect(screen.queryByTestId("floating-toolbar")).toBeNull();
@@ -69,6 +74,7 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByRole("option", { name: "Tin học văn phòng" })).toBeTruthy();
     expect(screen.queryByText("Bản đồ Game")).toBeNull();
     await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề" }), "24");
+    expect(screen.queryByTestId("settings-topic-required")).toBeNull();
     expect(screen.getByRole("combobox", { name: "Chủ đề con cấp 2" })).toBeTruthy();
     await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề con cấp 2" }), "25");
     expect(screen.getByRole("combobox", { name: "Chủ đề con cấp 3" })).toBeTruthy();
@@ -159,6 +165,17 @@ describe("Quiz Creator theo đặc tả", () => {
     fireEvent.drop(cardsBefore[1]!);
     const cardsAfter = sidebar.querySelectorAll("button");
     expect(cardsAfter[0]!.textContent).toContain("Đúng / Sai");
+  });
+
+  it("cuộn tới card tương ứng khi chọn câu hỏi trong Sidebar", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "+ Đúng / Sai" }));
+    const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-question-id]"));
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(cards[1]!, "scrollIntoView", { value: scrollIntoView });
+    await user.click(screen.getByTestId("question-navigator-scroll").querySelectorAll("button")[1]!);
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
   });
 
   it("tạo được câu nhận định Có/Không với bảng nhiều hàng", async () => {
