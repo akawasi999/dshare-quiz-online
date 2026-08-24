@@ -649,3 +649,6 @@
 - [x] Rà soát checkbox Ghi nhớ đăng nhập, social login và icon mật khẩu hiện có.
 - [x] Thêm Facebook ở cuối form đăng nhập và tooltip Hiển thị/Ẩn mật khẩu.
 - [x] Kiểm thử popup, trạng thái chưa cấu hình Facebook và lưu checkpoint.
+- [x] Rà soát spinner submit, checkbox điều khoản và trạng thái kiểm tra email hiện có.
+- [x] Chuẩn hóa phản hồi loading, nội dung điều khoản và kiểm tra định dạng email trực tiếp.
+- [x] Kiểm thử biểu mẫu đăng nhập/đăng ký và lưu checkpoint.

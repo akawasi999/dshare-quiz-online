@@ -71,7 +71,13 @@ describe("SiteHeader navigation", () => {
     await userEventApi.click(screen.getByRole("button", { name: "Đăng ký ngay" }));
     expect(screen.getByLabelText("Tên thành viên")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Hiển thị Xác nhận mật khẩu" })).toBeTruthy();
-    expect(screen.getByText(/Tôi đồng ý với/)).toBeTruthy();
+    expect(screen.getByLabelText("Đồng ý Điều khoản dịch vụ và Chính sách bảo mật")).toBeTruthy();
+    expect(screen.getByText("Điều khoản dịch vụ")).toBeTruthy();
+    expect(screen.getByText("Chính sách bảo mật")).toBeTruthy();
+    await userEventApi.type(screen.getByLabelText("Địa chỉ email"), "minh@");
+    expect(screen.getByText("Email chưa đúng định dạng. Ví dụ: ten@domain.com")).toBeTruthy();
+    expect(screen.getByLabelText("Địa chỉ email").getAttribute("aria-invalid")).toBe("true");
+    await userEventApi.clear(screen.getByLabelText("Địa chỉ email"));
     await userEventApi.type(screen.getByLabelText("Mật khẩu"), "MatKhauManh2026!");
     expect(screen.getByText("Độ mạnh mật khẩu: Mạnh")).toBeTruthy();
     expect(screen.getByRole("list", { name: "Yêu cầu mật khẩu" })).toBeTruthy();
