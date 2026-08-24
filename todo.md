@@ -665,3 +665,6 @@
 - [x] Rà soát vị trí icon mắt và trạng thái đánh giá mật khẩu mặc định.
 - [x] Căn icon mắt vào bên phải input mật khẩu và chỉ hiển thị đánh giá khi có ký tự.
 - [x] Kiểm thử popup và lưu checkpoint vi tương tác mật khẩu.
+- [x] Rà soát wrapper mật khẩu và CSS có thể làm icon mắt lệch khỏi input.
+- [x] Chuẩn hóa wrapper relative, icon absolute bên phải và padding input cho mọi trường mật khẩu.
+- [x] Kiểm thử toggle mật khẩu, responsive và lưu checkpoint.
