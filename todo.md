@@ -693,3 +693,5 @@
 - [x] Chuyển header Studio, danh sách câu hỏi, thanh công cụ và workspace sang luồng cuộn đồng bộ theo trang.
 - [x] Kiểm thử cuộn đồng bộ desktop/tablet/mobile, interaction và regression trang Tạo Quiz.
 - [x] Lưu checkpoint bố cục Quiz Studio không còn vùng cố định.
+- [x] Gỡ khối liên kết, AI nâng cao, Ví Point và Áp dụng vào trò chơi khỏi `/quiz/create`.
+- [x] Cập nhật regression, kiểm tra trực quan và lưu checkpoint sau khi gỡ khối AI/Point Studio.
