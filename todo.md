@@ -640,3 +640,6 @@
 - [x] Rà soát mô hình đếm lỗi và chọn CAPTCHA phù hợp sau ba lần đăng nhập sai.
 - [x] Thêm CAPTCHA có xác thực máy chủ, nút Quên mật khẩu khi khóa tài khoản và phản hồi lỗi form hoàn chỉnh.
 - [x] Kiểm thử bảo mật, giao diện và lưu checkpoint CAPTCHA đăng nhập.
+- [x] Rà soát kích thước popup và lưới hai cột đăng ký/đăng nhập hiện có.
+- [x] Cập nhật popup tối đa 800px, cột mô tả 300px và cột nhập liệu 500px trên desktop.
+- [x] Kiểm thử responsive, hồi quy và lưu checkpoint bố cục popup 800px.
