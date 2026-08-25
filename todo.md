@@ -750,3 +750,4 @@
 - [x] Tinh gọn thẻ Quiz: gỡ thông tin thừa, hiển thị đủ đường dẫn Chủ đề, làm nổi bật tag hạng và nút Làm bài.
 - [x] Đồng bộ màu nhãn Dễ/Trung bình/Nâng cao trên thẻ Quiz với bộ lọc Khám phá.
 - [x] Hiển thị tối đa 9 thẻ Quiz mỗi trang và thêm phân trang Trước/Sau theo mẫu.
+- [x] Thiết kế lại Quiz Runner chuyên nghiệp và đồng bộ đường dẫn Chủ đề CPanel trong luồng làm bài.

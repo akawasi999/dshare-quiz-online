@@ -114,11 +114,11 @@ export async function attachSeoMetadata(req: Request, res: Response, next: NextF
       const detail = await getQuizDetail(Number(match[1]));
       if (detail?.quiz.isPublished && detail.quiz.visibility === "public") {
         const quiz = detail.quiz;
-        const rawImage = quiz.coverImageUrl ?? detail.category.coverImageUrl ?? settings.defaultQuizCoverUrl ?? DEFAULT_QUIZ_COVER_URL;
-        const imageVersion = quiz.coverImageUrl ? quiz.updatedAt : detail.category.coverImageUrl ? detail.category.updatedAt : settings.updatedAt;
+        const rawImage = quiz.coverImageUrl ?? detail.category?.coverImageUrl ?? settings.defaultQuizCoverUrl ?? DEFAULT_QUIZ_COVER_URL;
+        const imageVersion = quiz.coverImageUrl ? quiz.updatedAt : detail.category?.coverImageUrl ? detail.category.updatedAt : settings.updatedAt;
         const image = withImageCacheVersion(rawImage, imageVersion);
         const questions = await getQuizQuestionSet(quiz.id);
-        const jsonLd = buildQuizJsonLd({ quizId: quiz.id, title: quiz.title, summary: quiz.summary, image, datePublished: quiz.publishedAt ?? quiz.createdAt, category: detail.category.title, questions: questions.map(item => ({ prompt: item.question.prompt })) });
+        const jsonLd = buildQuizJsonLd({ quizId: quiz.id, title: quiz.title, summary: quiz.summary, image, datePublished: quiz.publishedAt ?? quiz.createdAt, category: detail.topicPath ?? detail.topic?.name ?? detail.category?.title ?? "Quiz", questions: questions.map(item => ({ prompt: item.question.prompt })) });
         res.locals.seoHead = buildSeoHead({ title: `${quiz.title} · ${basicSettings.boardTitle}`, description: quiz.summary || `Làm Quiz ${quiz.title} trên ${basicSettings.boardTitle}.`, canonicalPath: `${ROUTES.quiz}/${quiz.id}`, image, type: "article", publishedAt: quiz.publishedAt ?? quiz.createdAt, jsonLd: combineJsonLd(buildBreadcrumbJsonLd(`${ROUTES.quiz}/${quiz.id}`, quiz.title), jsonLd) }, settings, basicSettings.boardTitle);
       } else {
         res.locals.seoHead = buildSeoHead({ title: `Quiz không khả dụng · ${basicSettings.boardTitle}`, description: "Quiz này không còn công khai hoặc đã được di chuyển.", canonicalPath: req.path, noindex: true }, settings, basicSettings.boardTitle);

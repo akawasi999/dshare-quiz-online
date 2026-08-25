@@ -424,9 +424,9 @@ export const appRouter = router({
       const selectedQuiz = input.context?.quizId ? await getQuizDetail(input.context.quizId) : undefined;
       if (input.context?.quizId && (!selectedQuiz || !selectedQuiz.quiz.isPublished)) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy bộ đề công khai để đặt làm ngữ cảnh." });
       const studyContext = input.context?.subject || selectedQuiz ? {
-        subject: selectedQuiz?.subject.title ?? input.context?.subject ?? null,
-        categoryTitle: selectedQuiz?.category.title ?? null,
-        lessonTitle: selectedQuiz?.lesson.title ?? null,
+        subject: selectedQuiz?.topic?.name ?? selectedQuiz?.subject?.title ?? input.context?.subject ?? null,
+        categoryTitle: selectedQuiz?.topicPath ?? selectedQuiz?.category?.title ?? null,
+        lessonTitle: selectedQuiz?.lesson?.title ?? null,
         quizTitle: selectedQuiz?.quiz.title ?? null,
         quizSummary: selectedQuiz?.quiz.summary ?? null,
         difficulty: selectedQuiz?.quiz.difficulty ?? null, mode: input.context?.mode,
@@ -846,7 +846,11 @@ export const appRouter = router({
       return {
         attemptId,
         quiz: detail.quiz,
-        hierarchy: { category: detail.category.title, subject: detail.subject.title, lesson: detail.lesson.title },
+        hierarchy: {
+          category: detail.topicPath ?? detail.category?.title ?? "Chưa phân loại",
+          subject: detail.topic?.name ?? detail.subject?.title ?? "",
+          lesson: detail.lesson?.title ?? "",
+        },
         questions: ordered.map((item, questionIndex) => ({
           id: item.question.id,
           prompt: item.question.prompt,

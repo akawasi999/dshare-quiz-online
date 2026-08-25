@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  detail: { data: undefined, isLoading: false, isError: true, error: new Error("Catalog tạm thời không phản hồi"), refetch: vi.fn() },
+  detail: { data: undefined as any, isLoading: false, isError: true, error: new Error("Catalog tạm thời không phản hồi"), refetch: vi.fn() },
 }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1 }, loading: false }) }));
@@ -17,7 +17,7 @@ vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: 
 import QuizRunner from "../client/src/pages/QuizRunner";
 
 describe("QuizRunner data state", () => {
-  beforeEach(() => { mocks.detail.refetch.mockReset(); sessionStorage.clear(); window.history.replaceState({}, "", "/quiz/999"); });
+  beforeEach(() => { mocks.detail.data = undefined; mocks.detail.isLoading = false; mocks.detail.isError = true; mocks.detail.error = new Error("Catalog tạm thời không phản hồi"); mocks.detail.refetch.mockReset(); sessionStorage.clear(); window.history.replaceState({}, "", "/quiz/999"); });
   afterEach(cleanup);
 
   it("công bố lỗi chi tiết bộ đề và cho phép thử lại", async () => {
@@ -63,5 +63,23 @@ describe("QuizRunner data state", () => {
     await user.click(screen.getAllByRole("button", { name: "Không" })[1]!);
     expect(screen.getByRole("progressbar", { name: "Tiến độ làm bài" }).getAttribute("aria-valuenow")).toBe("1");
     expect(screen.getByText("Chính xác! Bạn có thể chuyển sang câu tiếp theo.")).toBeTruthy();
+  });
+
+  it("hiển thị đường dẫn Chủ đề CPanel trên màn hình chuẩn bị Quiz", () => {
+    mocks.detail.data = {
+      quiz: { id: 999, title: "Kiểm tra Tin học", summary: "Bộ đề theo Chủ đề mới.", mode: "training", difficulty: "medium", durationSeconds: 900, questionCount: 12, entryPointCost: 0, completionReward: 15 },
+      category: null,
+      subject: null,
+      lesson: null,
+      topic: { id: 32, name: "Tin học" },
+      topicPath: "Tiểu học › Lớp 5 › Tin học",
+    };
+    mocks.detail.isError = false;
+
+    render(<QuizRunner />);
+
+    expect(screen.getByText("Tiểu học › Lớp 5 › Tin học")).toBeTruthy();
+    expect(screen.getByText("Không gian làm bài")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Bắt đầu làm bài" })).toBeTruthy();
   });
 });

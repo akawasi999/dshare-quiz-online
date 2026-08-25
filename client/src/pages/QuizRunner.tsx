@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  BookOpenCheck,
   Check,
   ChevronLeft,
   CircleCheck,
@@ -19,10 +20,12 @@ import {
   Clock3,
   Flag,
   Loader2,
+  ListChecks,
   Maximize,
   Save,
   ShieldCheck,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -84,6 +87,7 @@ export default function QuizRunner() {
             category: "Studio",
             subject: "Xem trước",
             lesson: "Sandbox",
+            topicPath: "Studio › Sandbox",
             summary:
               sandboxPreview.summary ||
               "Bạn đang xem trước Quiz trong môi trường Sandbox.",
@@ -98,9 +102,18 @@ export default function QuizRunner() {
           ? {
               id: detail.data.quiz.id,
               title: detail.data.quiz.title,
-              category: detail.data.category.title,
-              subject: detail.data.subject.title,
-              lesson: detail.data.lesson.title,
+              category: detail.data.topic?.name ?? detail.data.category?.title ?? "Chưa phân loại",
+              subject: detail.data.subject?.title ?? "",
+              lesson: detail.data.lesson?.title ?? "",
+              topicPath:
+                detail.data.topicPath ??
+                [
+                  detail.data.category?.title,
+                  detail.data.subject?.title,
+                  detail.data.lesson?.title,
+                ]
+                  .filter(Boolean)
+                  .join(" › "),
               summary:
                 detail.data.quiz.summary ??
                 "Bộ đề đã được biên soạn trong Dshare.",
@@ -121,6 +134,12 @@ export default function QuizRunner() {
           : demoFallback,
     [detail.data, demoFallback, isSandbox, sandboxPreview]
   );
+  const topicPath =
+    "topicPath" in fallback && fallback.topicPath
+      ? fallback.topicPath
+      : [fallback.category, fallback.subject, fallback.lesson]
+          .filter(Boolean)
+          .join(" › ");
   const start = trpc.quiz.start.useMutation();
   const saveAnswer = trpc.quiz.saveAnswer.useMutation();
   const submit = trpc.quiz.submit.useMutation();
@@ -393,63 +412,70 @@ export default function QuizRunner() {
     );
   if (phase === "ready")
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[radial-gradient(circle_at_12%_8%,color-mix(in_srgb,var(--primary)_10%,transparent),transparent_34%),radial-gradient(circle_at_88%_28%,color-mix(in_srgb,var(--accent)_12%,transparent),transparent_32%),var(--background)]">
         <SiteHeader />
-        <main className="container py-10 lg:py-16">
+        <main className="container py-8 lg:py-12">
           <Link
             href={isSandbox ? ROUTES.quizBuilder : ROUTES.explore}
-            className="inline-flex min-h-11 items-center gap-2 text-xs font-bold text-text-secondary hover:text-primary"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-surface px-4 text-xs font-bold text-text-secondary shadow-[var(--shadow-sm)] transition-[transform,border-color,color] hover:-translate-y-0.5 hover:border-primary/35 hover:text-primary"
           >
             <ArrowLeft size={15} />
             {isSandbox ? "Quay lại Studio" : "Trở về thư viện"}
           </Link>
-          <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_.65fr]">
-            <div className="rounded-[var(--radius-xl-token)] bg-[linear-gradient(135deg,var(--primary)_0%,var(--accent)_100%)] p-7 text-white shadow-[var(--shadow-md)] sm:p-10">
-              <p className="text-[10px] font-bold uppercase tracking-[.17em] text-white/75">
-                {isSandbox
-                  ? "Preview Sandbox · Không ghi dữ liệu"
-                  : `${fallback.category} · ${fallback.subject} · ${fallback.lesson}`}
-              </p>
-              <h1 className="mt-4 max-w-2xl text-[clamp(2.4rem,5vw,3.6rem)] font-bold leading-[1.08] tracking-[-.05em] text-white">
+          <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_390px] xl:gap-7">
+            <div className="relative overflow-hidden rounded-[28px] border border-primary/20 bg-[linear-gradient(135deg,var(--primary)_0%,#2857c8_52%,var(--accent)_100%)] p-7 text-white shadow-[0_24px_64px_color-mix(in_srgb,var(--primary)_28%,transparent)] sm:p-10">
+              <div aria-hidden="true" className="absolute -right-24 -top-24 size-72 rounded-full bg-white/10 blur-2xl" />
+              <div aria-hidden="true" className="absolute -bottom-20 left-1/3 size-64 rounded-full border-[32px] border-white/10" />
+              <div className="relative">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.13em] text-white backdrop-blur">
+                    <BookOpenCheck size={13} />
+                    {isSandbox ? "Preview Sandbox" : "Không gian làm bài"}
+                  </span>
+                  {isSandbox ? <span className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold text-white/85">Không ghi dữ liệu</span> : null}
+                </div>
+                <p className="mt-6 flex max-w-2xl items-center gap-2 text-xs font-semibold text-white/80">
+                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-white/12"><Sparkles size={13} /></span>
+                  <span className="truncate">{topicPath || "Chủ đề đang cập nhật"}</span>
+                </p>
+                <h1 className="mt-4 max-w-2xl text-[clamp(2.3rem,5vw,3.85rem)] font-bold leading-[1.06] tracking-[-.055em] text-white">
                 {fallback.title}
-              </h1>
-              <p className="mt-6 max-w-xl text-sm leading-6 text-white/80">
-                {fallback.summary}
-              </p>
-              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Stat label="Câu hỏi" value={`${fallback.questionCount}`} />
-                <Stat label="Thời gian" value={fallback.duration} />
-                <Stat label="Ngưỡng đạt" value="70 điểm" />
-                <Stat
-                  label="Chế độ"
-                  value={isSandbox ? "Sandbox" : fallback.mode}
-                />
+                </h1>
+                <p className="mt-5 max-w-2xl text-sm leading-7 text-white/80 sm:text-[15px]">
+                  {fallback.summary}
+                </p>
+                <div className="mt-9 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <Stat label="Câu hỏi" value={`${fallback.questionCount}`} />
+                  <Stat label="Thời gian" value={fallback.duration} />
+                  <Stat label="Ngưỡng đạt" value="70 điểm" />
+                  <Stat label="Chế độ" value={isSandbox ? "Sandbox" : fallback.mode} />
+                </div>
               </div>
             </div>
-            <aside className="rounded-[var(--radius-xl-token)] border border-border bg-surface p-7 shadow-[var(--shadow-sm)]">
-              <p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">
+            <aside className="rounded-[28px] border border-border bg-surface p-6 shadow-[0_18px_42px_color-mix(in_srgb,var(--foreground)_7%,transparent)] sm:p-7">
+              <p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-primary">
                 {isSandbox ? "Xem trước Quiz" : "Xác nhận trước khi bắt đầu"}
               </p>
-              <h2 className="mt-3 text-2xl font-bold leading-tight text-foreground">
+              <h2 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-[-.035em] text-foreground">
                 {isSandbox
                   ? "Trải nghiệm Quiz như người học."
                   : "Một lượt làm bài tập trung."}
               </h2>
-              <div className="mt-6 space-y-4 text-xs leading-5 text-text-secondary">
-                <p className="flex gap-3">
-                  <ShieldCheck className="shrink-0 text-primary" size={18} />
+              <div className="mt-6 space-y-3">
+                <p className="flex gap-3 rounded-[var(--radius-md-token)] bg-muted/70 p-3.5 text-xs leading-5 text-text-secondary">
+                  <ShieldCheck className="mt-0.5 shrink-0 text-primary" size={18} />
                   {isSandbox
                     ? "Không tạo attempt, không lưu điểm hoặc thống kê."
                     : "Thứ tự câu hỏi và đáp án được xáo trộn theo từng lượt làm."}
                 </p>
-                <p className="flex gap-3">
-                  <Clock3 className="shrink-0 text-primary" size={18} />
+                <p className="flex gap-3 rounded-[var(--radius-md-token)] bg-muted/70 p-3.5 text-xs leading-5 text-text-secondary">
+                  <Clock3 className="mt-0.5 shrink-0 text-primary" size={18} />
                   Bài sẽ tự động nộp khi đồng hồ về 00:00.
                 </p>
               </div>
               {fallback.mode === "Kiểm tra" ? (
-                <div className="mt-6 rounded-[var(--radius-md-token)] bg-warning/10 p-4 text-xs leading-5 text-warning">
-                  <Sparkles className="mb-2" size={16} />
+                <div className="mt-5 rounded-[var(--radius-md-token)] border border-warning/20 bg-warning/10 p-4 text-xs leading-5 text-warning">
+                  <Trophy className="mb-2" size={16} />
                   Lệ phí: <strong>{fallback.points} Point</strong>. Đạt từ 70
                   điểm để nhận <strong>{fallback.reward} Point</strong> thưởng.
                 </div>
@@ -459,7 +485,7 @@ export default function QuizRunner() {
                 disabled={start.isPending}
                 aria-busy={start.isPending}
                 size="lg"
-                className="mt-7 w-full rounded-full"
+                className="cta-gradient mt-7 h-12 w-full rounded-xl text-sm font-extrabold shadow-[0_12px_24px_color-mix(in_srgb,var(--primary)_28%,transparent)]"
               >
                 {start.isPending ? (
                   <Loader2 className="animate-spin" size={16} />
@@ -492,29 +518,29 @@ export default function QuizRunner() {
   const selected = answers[current.id] ?? [];
   const selectedStatements = statementAnswers[current.id] ?? {};
   return (
-    <div className="min-h-screen bg-background select-none">
+    <div className="min-h-screen select-none bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_5%,transparent)_0%,var(--background)_30%)]">
       <QuizSecurityGuard active onEvent={onSecurityEvent} />
-      <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur">
-        <div className="container flex h-[72px] items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 border-b border-border bg-surface/90 shadow-[0_8px_24px_color-mix(in_srgb,var(--foreground)_5%,transparent)] backdrop-blur-xl">
+        <div className="container flex h-[76px] items-center justify-between gap-3">
           <Link
             href={ROUTES.explore}
-            className="flex min-h-11 items-center gap-2 text-xs font-bold text-text-secondary hover:text-primary"
+            className="flex min-h-10 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-xs font-bold text-text-secondary transition-colors hover:border-primary/35 hover:text-primary"
           >
             <ChevronLeft size={17} />
-            Thoát bài
+            <span className="hidden sm:inline">Thoát bài</span>
           </Link>
           <div className="hidden min-w-0 text-center sm:block">
             <p className="truncate text-xs font-bold text-foreground">
               {fallback.title}
             </p>
-            <p className="mt-1 text-[10px] text-text-secondary">
-              Câu {currentIndex + 1} / {questions.length}
+            <p className="mt-1 truncate text-[10px] font-medium text-text-secondary">
+              {topicPath || "Chủ đề đang cập nhật"} · Câu {currentIndex + 1}/{questions.length}
             </p>
           </div>
           <div
             className={cn(
-              "flex items-center gap-3 rounded-full px-4 py-2 text-white",
-              timeLeft <= 60 ? "bg-danger" : "bg-primary"
+              "flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-white shadow-[var(--shadow-sm)]",
+              timeLeft <= 60 ? "bg-danger" : "bg-[linear-gradient(135deg,var(--primary),var(--accent))]"
             )}
           >
             <Clock3 size={15} />
@@ -524,16 +550,21 @@ export default function QuizRunner() {
           </div>
         </div>
       </header>
-      <main className="container py-6 lg:py-9">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <main className="container py-6 lg:py-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_310px]">
           <section
             key={current.id}
-            className="quiz-question-enter mx-auto w-full max-w-[960px] rounded-[var(--radius-xl-token)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)] sm:p-8"
+            className="quiz-question-enter mx-auto w-full max-w-[960px] rounded-[28px] border border-border bg-surface p-5 shadow-[0_18px_44px_color-mix(in_srgb,var(--foreground)_7%,transparent)] sm:p-8"
           >
             <div className="flex items-center justify-between gap-3">
-              <span className="rounded-full bg-primary-light px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.13em] text-primary">
-                {current.difficulty}
-              </span>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.13em] text-primary">
+                  <ListChecks size={13} /> Câu {currentIndex + 1}
+                </span>
+                <span className="rounded-full bg-muted px-3 py-1.5 text-[10px] font-bold text-text-secondary">
+                  {current.difficulty}
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() =>
@@ -548,7 +579,7 @@ export default function QuizRunner() {
                 Báo lỗi
               </button>
             </div>
-            <p className="mt-7 text-[clamp(1.5rem,3vw,2.1rem)] font-bold leading-[1.3] tracking-[-.025em] text-foreground">
+            <p className="mt-7 text-[clamp(1.5rem,3vw,2.25rem)] font-bold leading-[1.28] tracking-[-.035em] text-foreground">
               {current.prompt}
             </p>
             {current.imageUrl ? (
@@ -681,7 +712,7 @@ export default function QuizRunner() {
                 </div>
               ) : null}
             </div>
-            <div className="mt-5 flex justify-between border-t border-border-light pt-5">
+            <div className="mt-7 flex justify-between border-t border-border-light pt-5">
               <Button
                 variant="ghost"
                 disabled={currentIndex === 0}
@@ -715,8 +746,8 @@ export default function QuizRunner() {
               )}
             </div>
           </section>
-          <aside className="h-fit rounded-[var(--radius-lg-token)] border border-border bg-surface p-5 shadow-[var(--shadow-sm)]">
-            <p className="text-[10px] font-bold uppercase tracking-[.15em] text-primary">
+          <aside className="h-fit rounded-[24px] border border-border bg-surface p-5 shadow-[0_14px_34px_color-mix(in_srgb,var(--foreground)_6%,transparent)] lg:sticky lg:top-24">
+            <p className="text-[10px] font-extrabold uppercase tracking-[.15em] text-primary">
               Tiến độ làm bài
             </p>
             <div className="mt-4 flex items-end justify-between">
@@ -743,7 +774,7 @@ export default function QuizRunner() {
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <div className="mt-5 grid grid-cols-5 gap-2">
+            <div className="mt-5 grid grid-cols-5 gap-2 rounded-[var(--radius-md-token)] bg-muted/65 p-2">
               {questions.map((question, index) => (
                 <button
                   type="button"
@@ -755,7 +786,7 @@ export default function QuizRunner() {
                   aria-label={`Đi đến câu ${index + 1}`}
                   aria-current={index === currentIndex ? "step" : undefined}
                   className={cn(
-                    "grid aspect-square place-items-center rounded-[var(--radius-sm-token)] text-xs font-bold",
+                    "grid aspect-square place-items-center rounded-[var(--radius-sm-token)] text-xs font-bold transition-[transform,background-color,color] hover:-translate-y-0.5",
                     index === currentIndex
                       ? "bg-primary text-primary-foreground"
                       : hasAnswer(question)
@@ -767,7 +798,7 @@ export default function QuizRunner() {
                 </button>
               ))}
             </div>
-            <div className="mt-6 rounded-[var(--radius-md-token)] bg-primary-light p-4">
+            <div className="mt-6 rounded-[var(--radius-md-token)] border border-primary/10 bg-primary-light p-4">
               <Maximize size={16} className="text-primary" />
               <p className="mt-3 text-xs font-bold text-foreground">
                 Phiên làm bài tập trung

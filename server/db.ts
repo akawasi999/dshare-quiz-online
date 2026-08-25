@@ -229,17 +229,50 @@ export async function listCategories() {
 export async function getQuizDetail(quizId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const quizRows = await db.select({
-    quiz: quizzes,
-    lesson: lessons,
-    subject: subjects,
-    category: categories,
-  }).from(quizzes)
-    .innerJoin(lessons, eq(quizzes.lessonId, lessons.id))
-    .innerJoin(subjects, eq(lessons.subjectId, subjects.id))
-    .innerJoin(categories, eq(subjects.categoryId, categories.id))
-    .where(and(eq(quizzes.id, quizId), isNull(quizzes.deletedAt))).limit(1);
-  return quizRows[0];
+  const activeTopics = await db
+    .select({ id: topics.id, name: topics.name, parentId: topics.parentId })
+    .from(topics)
+    .where(and(eq(topics.status, "active"), isNull(topics.deletedAt)));
+  const topicsById = new Map(activeTopics.map(topic => [topic.id, topic]));
+  const quizRows = await db
+    .select({
+      quiz: quizzes,
+      lesson: lessons,
+      subject: subjects,
+      category: categories,
+      topic: topics,
+    })
+    .from(quizzes)
+    .leftJoin(lessons, eq(quizzes.lessonId, lessons.id))
+    .leftJoin(subjects, eq(lessons.subjectId, subjects.id))
+    .leftJoin(categories, eq(subjects.categoryId, categories.id))
+    .leftJoin(
+      topics,
+      and(
+        eq(quizzes.topicId, topics.id),
+        eq(topics.status, "active"),
+        isNull(topics.deletedAt)
+      )
+    )
+    .where(and(eq(quizzes.id, quizId), isNull(quizzes.deletedAt)))
+    .limit(1);
+  const detail = quizRows[0];
+  if (!detail || (detail.quiz.topicId && !detail.topic)) return undefined;
+  if (!detail.topic) return { ...detail, topicPath: null };
+
+  const pathNames = [detail.topic.name];
+  let current: { id: number; name: string; parentId: number | null } = detail.topic;
+  const visited = new Set<number>();
+  while (
+    current.parentId &&
+    topicsById.has(current.parentId) &&
+    !visited.has(current.id)
+  ) {
+    visited.add(current.id);
+    current = topicsById.get(current.parentId)!;
+    pathNames.unshift(current.name);
+  }
+  return { ...detail, topicPath: pathNames.join(" › ") };
 }
 
 export async function getOwnedQuizAnalytics(userId: number, quizId: number) {
