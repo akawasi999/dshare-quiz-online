@@ -36,7 +36,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 
 function Router() {
   const [location] = useLocation();
-  const accountWorkspaceRoutes = [ROUTES.account, ROUTES.accountProfile, ROUTES.explore, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant];
+  const accountWorkspaceRoutes = [ROUTES.account, ROUTES.dashboard, ROUTES.accountProfile, ROUTES.explore, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant];
   const hidePublicFooter = location.startsWith("/admin") || accountWorkspaceRoutes.some(route => location === route) || location === ROUTES.quizBuilder || location.startsWith(`${ROUTES.quiz}/`) || location.startsWith(ROUTES.results) || location.startsWith(ROUTES.practice);
   return <><Switch>
     <Route path={ROUTES.home} component={Home} />
@@ -47,6 +47,7 @@ function Router() {
     <Route path={ROUTES.leaderboard}>{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
     <Route path={ROUTES.pricing} component={Pricing} />
     <Route path={ROUTES.account}>{() => <ProtectedPage Page={Profile} />}</Route>
+    <Route path={ROUTES.dashboard}>{() => <ProtectedPage Page={Profile} />}</Route>
     <Route path={ROUTES.accountProfile}>{() => <ProtectedPage Page={PersonalInfo} />}</Route>
     <Route path={ROUTES.missions}>{() => <LearnerAccountPage Page={Missions} access="authenticated" />}</Route>
     <Route path={ROUTES.achievements}>{() => <LearnerAccountPage Page={Achievements} access="authenticated" />}</Route>

@@ -6,6 +6,7 @@ export const ROUTES = {
   leaderboard: "/leaderboard",
   pricing: "/pricing",
   account: "/account",
+  dashboard: "/dashboard",
   accountProfile: "/account/profile",
   missions: "/missions",
   achievements: "/achievements",
@@ -49,6 +50,7 @@ export type RouteMeta = { access: RouteAccessPolicy; permission?: RoutePermissio
 
 export const ROUTE_META: Partial<Record<(typeof ROUTES)[keyof typeof ROUTES], RouteMeta>> = {
   [ROUTES.account]: { access: "authenticated", permission: "profile.view" },
+  [ROUTES.dashboard]: { access: "authenticated", permission: "profile.view" },
   [ROUTES.accountProfile]: { access: "authenticated", permission: "profile.view" },
   [ROUTES.missions]: { access: "authenticated", permission: "mission.view" },
   [ROUTES.achievements]: { access: "authenticated", permission: "achievement.view" },

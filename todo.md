@@ -721,3 +721,6 @@
 - [x] Kiểm thử interaction, regression và lưu checkpoint các tinh chỉnh thao tác Studio.
 - [x] Khôi phục Header Studio trên `/quiz/create` trong khi Header website vẫn ẩn.
 - [x] Kiểm thử Header Studio, viewport và lưu checkpoint bản sửa.
+- [x] Rà soát route và liên kết `/dashboard` đang dẫn tới 404.
+- [x] Khôi phục trang Bảng điều khiển tại `/dashboard` và cập nhật điều hướng liên quan.
+- [x] Kiểm thử route Dashboard, regression và lưu checkpoint bản sửa 404.
