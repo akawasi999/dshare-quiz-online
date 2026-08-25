@@ -7,6 +7,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/routes";
+import { getQuizDifficultyTone } from "@/lib/quizDifficulty";
 import { trpc } from "@/lib/trpc";
 import {
   AlertTriangle,
@@ -146,6 +147,7 @@ export default function QuizRunner() {
       : [fallback.category, fallback.subject, fallback.lesson]
           .filter(Boolean)
           .join(" › ");
+  const fallbackDifficulty = getQuizDifficultyTone(fallback.difficulty);
   const start = trpc.quiz.start.useMutation();
   const saveAnswer = trpc.quiz.saveAnswer.useMutation();
   const submit = trpc.quiz.submit.useMutation();
@@ -459,7 +461,7 @@ export default function QuizRunner() {
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div><p className="text-[10px] font-bold uppercase tracking-wide text-text-secondary">Dạng câu hỏi</p><p className="mt-1 text-xs font-bold text-foreground">Trắc nghiệm</p></div>
                     <div className="border-border-light sm:border-l sm:pl-4"><p className="text-[10px] font-bold uppercase tracking-wide text-text-secondary">Số câu hỏi</p><p className="mt-1 text-xs font-bold text-foreground">{fallback.questionCount} câu</p></div>
-                    <div className="border-border-light sm:border-l sm:pl-4"><p className="text-[10px] font-bold uppercase tracking-wide text-text-secondary">Độ khó</p><span className="mt-1 inline-flex rounded-full bg-success/12 px-2 py-0.5 text-[10px] font-bold text-success">{fallback.difficulty}</span></div>
+                    <div className="border-border-light sm:border-l sm:pl-4"><p className="text-[10px] font-bold uppercase tracking-wide text-text-secondary">Độ khó</p><span className={cn("mt-1 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold", fallbackDifficulty.badgeClass)}><i aria-hidden="true" className={cn("size-1.5 rounded-full", fallbackDifficulty.dotClass)} />{fallbackDifficulty.label}</span></div>
                   </div>
                 </InfoPanel>
                 <InfoPanel icon={<AlertTriangle size={21} />} title="Lưu ý khi làm bài">
@@ -512,6 +514,7 @@ export default function QuizRunner() {
   const feedbackForCurrent =
     feedback?.questionId === current.id ? feedback.status : null;
   const selected = answers[current.id] ?? [];
+  const currentDifficulty = getQuizDifficultyTone(current.difficulty);
   const selectedStatements = statementAnswers[current.id] ?? {};
   return (
     <div className="min-h-screen select-none bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_5%,transparent)_0%,var(--background)_30%)]">
@@ -557,8 +560,9 @@ export default function QuizRunner() {
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.13em] text-primary">
                   <ListChecks size={13} /> Câu {currentIndex + 1}
                 </span>
-                <span className="rounded-full bg-muted px-3 py-1.5 text-[10px] font-bold text-text-secondary">
-                  {current.difficulty}
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold", currentDifficulty.badgeClass)}>
+                  <i aria-hidden="true" className={cn("size-1.5 rounded-full", currentDifficulty.dotClass)} />
+                  {currentDifficulty.label}
                 </span>
               </div>
               <button

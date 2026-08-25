@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import AuthActionLink from "@/components/AuthActionLink";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ShowcaseQuiz } from "@/data/demo";
+import { getQuizDifficultyTone } from "@/lib/quizDifficulty";
 import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { formatPublicationDateTime, isQuizNew } from "@shared/quizFreshness";
@@ -15,8 +16,7 @@ export default function QuizCard({ quiz, compact = false }: { quiz: ShowcaseQuiz
   const publicationDateTime = formatPublicationDateTime(quiz.createdAt);
   const [coverLoaded, setCoverLoaded] = useState(!quiz.coverImage);
   const topicPath = quiz.topicPath || [quiz.category, quiz.subject, quiz.lesson].filter(Boolean).join(" › ");
-  const difficultyTone = quiz.difficulty === "Dễ" ? "bg-success/12 text-success" : quiz.difficulty === "Trung bình" ? "bg-warning/10 text-warning" : "bg-danger/10 text-danger";
-  const difficultyDot = quiz.difficulty === "Dễ" ? "bg-success" : quiz.difficulty === "Trung bình" ? "bg-warning" : "bg-danger";
+  const difficultyTone = getQuizDifficultyTone(quiz.difficulty);
   useEffect(() => { setCoverLoaded(!quiz.coverImage); }, [quiz.coverImage]);
   const newBadge = isNew ? <Tooltip><TooltipTrigger asChild><span tabIndex={0} className="cursor-help rounded-full bg-danger px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[.12em] text-white shadow-[var(--shadow-sm)] outline-none focus-visible:ring-4 focus-visible:ring-danger/20">Mới</span></TooltipTrigger><TooltipContent side="top" sideOffset={7} className="max-w-60 bg-foreground text-background">Công bố lúc {publicationDateTime}</TooltipContent></Tooltip> : null;
   const trendingBadge = quiz.isTrending ? <Badge variant="warning" className="border-0 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[.1em] shadow-[var(--shadow-sm)]"><Flame size={12} /> Thịnh hành</Badge> : null;
@@ -29,7 +29,7 @@ export default function QuizCard({ quiz, compact = false }: { quiz: ShowcaseQuiz
         {!quiz.coverImage ? <div className="mb-4 flex items-start justify-between gap-3"><p className="min-w-0 truncate text-[10px] font-bold tracking-[.12em] text-primary">{topicPath}</p><div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">{newBadge}{trendingBadge}{tierBadge}</div></div> : null}
         <h3 className="text-xl font-bold leading-tight tracking-[-.025em] text-foreground transition-colors group-hover:text-primary">{quiz.title}</h3>
         {!compact ? <p className="mt-3 line-clamp-2 min-h-10 text-[13px] leading-5 text-text-secondary">{quiz.summary}</p> : null}
-        <div className="mt-5 flex flex-wrap gap-2 text-[11px] font-medium text-text-secondary"><span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold", difficultyTone)}><i aria-hidden="true" className={cn("size-2 rounded-full", difficultyDot)} />{quiz.difficulty}</span><span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1"><Clock3 size={12} /> {quiz.duration}</span><span className="rounded-full bg-muted px-2.5 py-1">{quiz.questionCount} câu</span><span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1"><UsersRound size={12} /> {typeof quiz.attemptCount === "number" ? `${quiz.attemptCount.toLocaleString("vi-VN")} lượt làm` : "Mới phát hành"}</span></div>
+        <div className="mt-5 flex flex-wrap gap-2 text-[11px] font-medium text-text-secondary"><span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold", difficultyTone.badgeClass)}><i aria-hidden="true" className={cn("size-2 rounded-full", difficultyTone.dotClass)} />{difficultyTone.label}</span><span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1"><Clock3 size={12} /> {quiz.duration}</span><span className="rounded-full bg-muted px-2.5 py-1">{quiz.questionCount} câu</span><span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1"><UsersRound size={12} /> {typeof quiz.attemptCount === "number" ? `${quiz.attemptCount.toLocaleString("vi-VN")} lượt làm` : "Mới phát hành"}</span></div>
         <div className="mt-6 flex items-center justify-between gap-3 border-t border-border-light pt-4"><p className="inline-flex items-center gap-1 rounded-full bg-success/12 px-3 py-1.5 text-xs font-bold text-success"><Award size={13} /> {isTesting ? `Phí vào ${quiz.points} Point` : `Thưởng ${quiz.reward} Point`}</p><Button asChild size="sm" className="cta-gradient shrink-0 rounded-full px-4 text-xs font-extrabold shadow-[0_8px_18px_color-mix(in_srgb,var(--primary)_28%,transparent)]"><AuthActionLink href={`${ROUTES.quiz}/${quiz.id}`} aria-label={`Làm bài: ${quiz.title}`}>Làm bài <ArrowUpRight size={15} /></AuthActionLink></Button></div>
       </div>
     </article>

@@ -761,3 +761,4 @@
 - [x] Tăng kích thước chữ phần lưu ý và bảng thông số xác nhận trong Quiz Runner.
 - [x] Tăng kích thước chữ mô tả trong dải Cam kết chất lượng của Quiz Runner.
 - [x] Đổi tiêu đề Quiz hero thành chữ trắng không nền, tự xuống dòng và giãn cách theo nội dung dài.
+- [x] Chuẩn hóa màu nhãn độ khó toàn hệ thống: Dễ xanh lá, Trung bình cam, Nâng cao hồng.
