@@ -40,6 +40,8 @@ describe("QuizCard", () => {
     expect(screen.queryByText("Ôn tập")).toBeNull();
     expect(screen.queryByText("GS6 Spark")).toBeNull();
     expect(screen.queryByText("TRAINING 01")).toBeNull();
+    expect(screen.getByText("Trung bình").className).toContain("bg-warning/10");
+    expect(screen.getByText("Trung bình").className).toContain("text-warning");
     expect(screen.getByRole("link", { name: /làm bài/i }).getAttribute("href")).toBe("/quiz/77");
   });
 });
