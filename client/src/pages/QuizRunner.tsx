@@ -70,6 +70,8 @@ export default function QuizRunner() {
   const { user } = useAuth();
   const isSandbox =
     new URLSearchParams(window.location.search).get("sandbox") === "1";
+  const [accessCode, setAccessCode] = useState("");
+  const [accessPassword, setAccessPassword] = useState("");
   const sandboxPreview = useMemo<SandboxPreview | null>(() => {
     try {
       const raw = isSandbox
@@ -81,7 +83,7 @@ export default function QuizRunner() {
     }
   }, [isSandbox]);
   const detail = trpc.catalog.detail.useQuery(
-    { quizId },
+    { quizId, accessCode: accessCode || undefined, accessPassword: accessPassword || undefined },
     { enabled: !isSandbox && Number.isInteger(quizId) && quizId > 0 }
   );
   const demoFallback =
@@ -276,7 +278,7 @@ export default function QuizRunner() {
       return;
     }
     try {
-      const response = await start.mutateAsync({ quizId });
+      const response = await start.mutateAsync({ quizId, accessCode: accessCode || undefined, accessPassword: accessPassword || undefined });
       resetSession(
         response.questions,
         response.attemptId,
@@ -507,14 +509,7 @@ export default function QuizRunner() {
         icon={<AlertTriangle className="text-warning" size={30} />}
         title="Chưa tải được bộ đề"
         description={detail.error.message || "Kết nối tạm thời gặp sự cố."}
-        actions={
-          <>
-            <Button onClick={() => detail.refetch()}>Thử lại</Button>
-            <Button asChild variant="outline">
-              <Link href={ROUTES.explore}>Quay lại thư viện</Link>
-            </Button>
-          </>
-        }
+        actions={<div className="flex w-full max-w-sm flex-col gap-2"><input aria-label="Mã truy cập Quiz" value={accessCode} onChange={event => setAccessCode(event.target.value)} placeholder="Mã truy cập (nếu có)" className="h-10 rounded-lg border border-border bg-surface px-3 text-sm" /><input aria-label="Mật khẩu Quiz" type="password" value={accessPassword} onChange={event => setAccessPassword(event.target.value)} placeholder="Mật khẩu (nếu có)" className="h-10 rounded-lg border border-border bg-surface px-3 text-sm" /><div className="flex gap-2"><Button onClick={() => detail.refetch()}>Xác nhận quyền truy cập</Button><Button asChild variant="outline"><Link href={ROUTES.explore}>Quay lại thư viện</Link></Button></div></div>}
       />
     );
   if (phase === "ready")

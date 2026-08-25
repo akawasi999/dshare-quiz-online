@@ -121,6 +121,18 @@ const protectCreatorSettings = (settings: Record<string, unknown>, previous?: Re
   const password = typeof accessPassword === "string" ? accessPassword.trim() : "";
   return { ...safeSettings, accessPasswordHash: password ? createHash("sha256").update(password).digest("hex") : previous?.accessPasswordHash ?? null };
 };
+const hasQuizAccess = (quiz: { creatorUserId: number | null; visibility: string; creatorSettings: Record<string, unknown> | null }, user: { id: number; email?: string | null } | null | undefined, credentials?: { accessCode?: string; accessPassword?: string }) => {
+  if (quiz.creatorUserId === user?.id) return true;
+  const settings = quiz.creatorSettings ?? {};
+  const policy = typeof settings.accessPolicy === "string" ? settings.accessPolicy : quiz.visibility === "private" ? "self" : "everyone";
+  if (quiz.visibility !== "private" && ["everyone", "link"].includes(policy)) return true;
+  if (policy === "invited") return typeof user?.email === "string" && String(settings.invitees ?? "").split(/[\s,;]+/).map(value => value.trim().toLowerCase()).filter(Boolean).includes(user.email.toLowerCase());
+  if (policy !== "code") return false;
+  const codeMatches = typeof settings.accessCode === "string" && Boolean(credentials?.accessCode?.trim()) && credentials?.accessCode?.trim() === settings.accessCode;
+  const storedHash = typeof settings.accessPasswordHash === "string" ? settings.accessPasswordHash : "";
+  const passwordMatches = !storedHash || (typeof credentials?.accessPassword === "string" && createHash("sha256").update(credentials.accessPassword.trim()).digest("hex") === storedHash);
+  return codeMatches && passwordMatches;
+};
 const quizImageUploadInput = z.object({ fileName: z.string().trim().min(1).max(160), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), base64: z.string().min(20).max(8_000_000) });
 const quizImageMimeTypes = ["image/jpeg", "image/png", "image/webp"] as const;
 const maxQuizImageBytes = 5 * 1024 * 1024;
@@ -539,10 +551,10 @@ export const appRouter = router({
     }),
     list: publicProcedure.input(z.object({ search: z.string().trim().max(120).optional(), categoryId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional() }).optional())
       .query(({ input }) => listPublishedCatalog(input?.search, input?.categoryId, input?.topicId)),
-    detail: publicProcedure.input(quizIdInput).query(async ({ ctx, input }) => {
+    detail: publicProcedure.input(quizIdInput.extend({ accessCode: z.string().trim().max(64).optional(), accessPassword: z.string().max(160).optional() })).query(async ({ ctx, input }) => {
       const detail = await getQuizDetail(input.quizId);
       if (!detail || !detail.quiz.isPublished) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy bộ đề." });
-      if (detail.quiz.visibility === "private" && detail.quiz.creatorUserId !== ctx.user?.id) throw new TRPCError({ code: "FORBIDDEN", message: "Quiz riêng tư chỉ dành cho chủ sở hữu." });
+      if (!hasQuizAccess(detail.quiz, ctx.user, input)) throw new TRPCError({ code: "FORBIDDEN", message: "Quiz này yêu cầu quyền truy cập, mã hoặc mật khẩu hợp lệ." });
       return detail;
     }),
   }),
@@ -803,10 +815,10 @@ export const appRouter = router({
       await db.update(learnerProfiles).set({ lastPracticeCategoryId: category.categoryId }).where(eq(learnerProfiles.id, profile.id));
       return { category };
     }),
-    start: protectedProcedure.input(quizIdInput).mutation(async ({ ctx, input }) => {
+    start: protectedProcedure.input(quizIdInput.extend({ accessCode: z.string().trim().max(64).optional(), accessPassword: z.string().max(160).optional() })).mutation(async ({ ctx, input }) => {
       const detail = await getQuizDetail(input.quizId);
       if (!detail || (!detail.quiz.isPublished && detail.quiz.creatorUserId !== ctx.user.id)) throw new TRPCError({ code: "NOT_FOUND", message: "Bộ đề chưa sẵn sàng." });
-      if (detail.quiz.visibility === "private" && detail.quiz.creatorUserId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Quiz riêng tư chỉ dành cho chủ sở hữu." });
+      if (!hasQuizAccess(detail.quiz, ctx.user, input)) throw new TRPCError({ code: "FORBIDDEN", message: "Quiz này yêu cầu quyền truy cập, mã hoặc mật khẩu hợp lệ." });
       const profile = await ensureLearnerProfile(ctx.user.id);
       if (!profile || profile.isBanned) throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản hiện không thể tham gia bài thi." });
       const runtimeSettings = (detail.quiz.creatorSettings ?? {}) as { maxAttempts?: number; expiresAt?: string };

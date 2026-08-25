@@ -769,7 +769,7 @@
 - [ ] Phân tích và triển khai các yêu cầu nâng cấp mới theo tài liệu update.pdf.
 - [ ] Mở rộng mô hình câu hỏi Premium và quyền sử dụng theo gói/nhóm người dùng.
 - [x] Tạo nền tảng dữ liệu, Studio, Runner và engine cho Ordering, Hotspot, Media Question và biến thể AI.
-- [ ] Hoàn thiện quyền riêng tư Quiz: Public, Unlisted, Private, mật khẩu và danh sách người được mời.
+- [x] Hoàn thiện quyền riêng tư Quiz: Public, Unlisted, Private, mật khẩu và danh sách người được mời.
 - [ ] Bổ sung xuất Quiz PDF theo bản học viên, đáp án và bản giáo viên.
 - [ ] Xây dựng Báo cáo Quiz cho giáo viên: tổng quan, học sinh, câu hỏi và biểu đồ tiến độ.
 - [ ] Xây dựng Quiz AI Workspace: tạo đáp án/câu tương tự, giải thích, dịch, kiểm tra chất lượng và hiển thị chi phí Point.
