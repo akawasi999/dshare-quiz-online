@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { LEGACY_ROUTE_MAP, ROUTES } from "../client/src/lib/routes";
+import { ROUTES } from "../client/src/lib/routes";
 
 describe("URL routing", () => {
   it("công bố các URL chính bằng tiếng Anh", () => {
     expect(ROUTES.explore).toBe("/quiz");
-    expect(ROUTES.exploreLegacy).toBe("/explore");
     expect(ROUTES.quizBuilder).toBe("/quiz/create");
     expect(ROUTES.practice).toBe("/practice");
     expect(ROUTES.practiceReview).toBe("/practice/review");
@@ -14,11 +13,11 @@ describe("URL routing", () => {
     expect(ROUTES.adminTopics).toBe("/admin/learning/topics");
   });
 
-  it("giữ ánh xạ tương thích từ URL tiếng Việt sang URL tiếng Anh", () => {
-    expect(LEGACY_ROUTE_MAP["/kham-pha"]).toBe(ROUTES.explore);
-    expect(LEGACY_ROUTE_MAP["/explore"]).toBe(ROUTES.explore);
-    expect(LEGACY_ROUTE_MAP["/tao-quiz"]).toBe(ROUTES.quizBuilder);
-    expect(LEGACY_ROUTE_MAP["/thanh-toan"]).toBe(ROUTES.paymentStatus);
-    expect(LEGACY_ROUTE_MAP["/quan-tri/nhom-nguoi-dung"]).toBe(ROUTES.adminUserGroups);
+  it("không công bố URL điều hướng cũ", () => {
+    const routes = Object.values(ROUTES);
+    expect(routes).not.toContain("/explore");
+    expect(routes).not.toContain("/kham-pha");
+    expect(routes).not.toContain("/ho-so");
+    expect(routes).not.toContain("/quan-tri");
   });
 });

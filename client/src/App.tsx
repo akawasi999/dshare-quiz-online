@@ -28,15 +28,15 @@ import GamificationCelebrationPopups from "@/components/GamificationCelebrationP
 import PublicSiteFooter from "@/components/PublicSiteFooter";
 import RouteAccessGuard, { type RouteAccess } from "@/components/RouteAccessGuard";
 import { AuthGateProvider } from "@/contexts/AuthGateContext";
-import { LEGACY_ROUTE_MAP, ROUTES } from "@/lib/routes";
-import { Route, Switch, useLocation, useSearch } from "wouter";
+import { ROUTES } from "@/lib/routes";
+import { Route, Switch, useLocation } from "wouter";
 import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 function Router() {
   const [location] = useLocation();
-  const accountWorkspaceRoutes = [ROUTES.account, ROUTES.dashboard, ROUTES.accountProfile, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant, ROUTES.practice, ROUTES.practiceReview];
+  const accountWorkspaceRoutes = [ROUTES.account, ROUTES.dashboard, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant, ROUTES.practice, ROUTES.practiceReview];
   const hidePublicFooter = location.startsWith("/admin") || accountWorkspaceRoutes.some(route => location === route) || location === ROUTES.quizBuilder || location.startsWith(`${ROUTES.quiz}/`) || location.startsWith(ROUTES.results) || location.startsWith(ROUTES.practice);
   return <><Switch>
     <Route path={ROUTES.home} component={Home} />
@@ -48,7 +48,6 @@ function Router() {
     <Route path={ROUTES.pricing} component={Pricing} />
     <Route path={ROUTES.account}>{() => <ProtectedPage Page={PersonalInfo} />}</Route>
     <Route path={ROUTES.dashboard}>{() => <ProtectedPage Page={Profile} />}</Route>
-    <Route path={ROUTES.accountProfile}>{() => <LegacyRedirect to={ROUTES.account} />}</Route>
     <Route path={ROUTES.missions}>{() => <LearnerAccountPage Page={Missions} access="authenticated" />}</Route>
     <Route path={ROUTES.achievements}>{() => <LearnerAccountPage Page={Achievements} access="authenticated" />}</Route>
     <Route path={ROUTES.wallet}>{() => <LearnerAccountPage Page={Wallet} access="authenticated" />}</Route>
@@ -83,18 +82,9 @@ function Router() {
     <Route path={ROUTES.adminAi}>{() => <ProtectedPage Page={Admin} access="admin" />}</Route>
     <Route path={ROUTES.adminTheme}>{() => <ProtectedPage Page={Admin} access="admin" />}</Route>
     <Route path={ROUTES.adminSettings}>{() => <ProtectedPage Page={Admin} access="admin" />}</Route>
-    <Route path="/ket-qua/:id">{params => <LegacyRedirect to={`${ROUTES.results}/${params.id}`} />}</Route>
-    {Object.entries(LEGACY_ROUTE_MAP).map(([legacyPath, target]) => <Route key={legacyPath} path={legacyPath}>{() => <LegacyRedirect to={target} />}</Route>)}
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>{!hidePublicFooter ? <PublicSiteFooter /> : null}</>;
-}
-
-function LegacyRedirect({ to }: { to: string }) {
-  const [, setLocation] = useLocation();
-  const search = useSearch();
-  useEffect(() => { setLocation(`${to}${search}`, { replace: true }); }, [search, setLocation, to]);
-  return null;
 }
 
 function ProtectedPage({ Page, access = "authenticated" }: { Page: React.ComponentType; access?: RouteAccess }) {
@@ -110,8 +100,39 @@ function PracticeQuizLibrary() {
   return <QuizLibrary embedded />;
 }
 
+const deprecatedHrefTargets: Record<string, string> = {
+  "/explore": ROUTES.explore, "/kham-pha": ROUTES.explore, "/bang-xep-hang": ROUTES.leaderboard, "/xep-hang": ROUTES.leaderboard, "/bang-gia": ROUTES.pricing,
+  "/ho-so": ROUTES.dashboard, "/nhiem-vu": ROUTES.missions, "/thanh-tich": ROUTES.achievements, "/vi": ROUTES.wallet, "/vi-point": ROUTES.wallet,
+  "/gioi-thieu": ROUTES.referrals, "/nap-point": ROUTES.billing, "/thanh-toan": ROUTES.paymentStatus, "/luyen-tap": ROUTES.practice,
+  "/tao-quiz": ROUTES.quizBuilder, "/quiz-cua-toi": ROUTES.myQuizzes, "/tro-ly-ai": ROUTES.aiAssistant, "/ket-qua": ROUTES.results,
+  "/quan-tri": ROUTES.admin, "/quan-tri/chu-de": ROUTES.adminTopics, "/quan-tri/quiz-system": ROUTES.adminQuizzes, "/quan-tri/nguoi-dung": ROUTES.adminUsers,
+  "/quan-tri/nhom-nguoi-dung": ROUTES.adminUserGroups, "/quan-tri/point": ROUTES.adminPoints, "/quan-tri/xp": ROUTES.adminXp,
+  "/quan-tri/gamification": ROUTES.adminGamification, "/quan-tri/bao-cao": ROUTES.adminAnalytics, "/quan-tri/seo-preview": ROUTES.adminSeoPreview,
+  "/quan-tri/live-monitoring": ROUTES.adminMonitoring, "/quan-tri/bao-loi": ROUTES.adminErrors, "/quan-tri/nhat-ky": ROUTES.adminLogs,
+  "/quan-tri/thuong-hieu": ROUTES.adminTheme, "/quan-tri/ai-assistant": ROUTES.adminAi, "/quan-tri/cai-dat": ROUTES.adminSettings,
+};
+
+function DirectLinkNormalizer() {
+  useEffect(() => {
+    const normalize = (href: string) => {
+      if (!href.startsWith("/")) return href;
+      const [pathname, suffix = ""] = href.split(/(?=[?#])/);
+      return `${deprecatedHrefTargets[pathname] ?? pathname}${suffix}`;
+    };
+    const update = (root: ParentNode = document) => root.querySelectorAll<HTMLAnchorElement>("a[href]").forEach(anchor => {
+      const nextHref = normalize(anchor.getAttribute("href") ?? "");
+      if (nextHref !== anchor.getAttribute("href")) anchor.setAttribute("href", nextHref);
+    });
+    update();
+    const observer = new MutationObserver(() => update());
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+  return null;
+}
+
 function App() {
-  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><AuthGateProvider><AppearanceStyleBridge /><Toaster position="top-right" /><GamificationCelebrationPopups /><Router /></AuthGateProvider></TooltipProvider></ThemeProvider></ErrorBoundary>;
+  return <ErrorBoundary><ThemeProvider defaultTheme="light" switchable><TooltipProvider><AuthGateProvider><AppearanceStyleBridge /><Toaster position="top-right" /><GamificationCelebrationPopups /><DirectLinkNormalizer /><Router /></AuthGateProvider></TooltipProvider></ThemeProvider></ErrorBoundary>;
 }
 
 export default App;

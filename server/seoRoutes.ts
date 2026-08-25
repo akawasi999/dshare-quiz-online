@@ -1,5 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
-import { LEGACY_ROUTE_MAP, ROUTES } from "../client/src/lib/routes";
+import { ROUTES } from "../client/src/lib/routes";
 import { DEFAULT_QUIZ_COVER_URL, getDb, getQuizDetail, getQuizQuestionSet, listPublishedCatalog, withImageCacheVersion } from "./db";
 import { seoSettings, siteSettings } from "../drizzle/schema";
 
@@ -133,28 +133,7 @@ export async function attachSeoMetadata(req: Request, res: Response, next: NextF
   }
 }
 
-export function resolveLegacyRedirect(pathname: string) {
-  const staticTarget = LEGACY_ROUTE_MAP[pathname];
-  if (staticTarget) return staticTarget;
-  const resultMatch = pathname.match(/^\/ket-qua\/([^/]+)$/);
-  if (resultMatch?.[1]) return `${ROUTES.results}/${encodeURIComponent(resultMatch[1])}`;
-  return null;
-}
-
-function requestQuery(req: Request) {
-  const queryIndex = req.originalUrl.indexOf("?");
-  return queryIndex === -1 ? "" : req.originalUrl.slice(queryIndex);
-}
-
-export function legacyRedirectMiddleware(req: Request, res: Response, next: NextFunction) {
-  if (req.method !== "GET" && req.method !== "HEAD") return next();
-  const target = resolveLegacyRedirect(req.path);
-  if (!target) return next();
-  return res.redirect(301, `${target}${requestQuery(req)}`);
-}
-
 export function registerSeoRoutes(app: Express) {
-  app.use(legacyRedirectMiddleware);
   app.get("/sitemap.xml", async (_req, res, next) => {
     try {
       const quizzes = await listPublishedCatalog();

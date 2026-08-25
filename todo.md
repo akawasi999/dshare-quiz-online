@@ -740,3 +740,7 @@
 - [x] Kiểm thử danh sách Quiz, hoàn tất Sidebar và sẵn sàng lưu checkpoint.
 - [x] Xóa banner Theo dõi lộ trình và banner Luyện câu sai khỏi danh sách Quiz.
 - [x] Cập nhật regression danh sách Quiz và kiểm thử sau khi xóa banner.
+- [x] Kiểm kê toàn bộ route, redirect và liên kết còn dùng đường dẫn cũ.
+- [x] Loại bỏ route/redirect cũ và chuẩn hóa hằng số điều hướng về URL trực tiếp mới.
+- [x] Cập nhật liên kết giao diện, sitemap và các điểm deep-link về URL chuẩn.
+- [x] Kiểm thử điều hướng, deep-link và regression toàn hệ thống.
