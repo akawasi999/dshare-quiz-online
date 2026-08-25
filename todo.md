@@ -733,3 +733,10 @@
 - [x] Bắt buộc Auth Gate khi guest bắt đầu làm Quiz từ Khám phá.
 - [x] Giữ `/practice` trong Profile với Sidebar và danh sách Quiz riêng.
 - [x] Kiểm thử guest/authenticated, responsive, regression và lưu checkpoint tách Khám phá-Làm Quiz.
+- [x] Xóa mục Khám phá và Luyện câu sai khỏi Sidebar Profile.
+- [x] Cập nhật regression Sidebar và kiểm thử.
+- [x] Xác định nguồn catalog của bộ đề IC3 GS6 Spark – Training 01 cần loại bỏ.
+- [x] Loại bỏ bộ đề này khỏi danh sách Quiz hiển thị và cập nhật điều kiện xóa mềm của catalog.
+- [x] Kiểm thử danh sách Quiz, hoàn tất Sidebar và sẵn sàng lưu checkpoint.
+- [x] Xóa banner Theo dõi lộ trình và banner Luyện câu sai khỏi danh sách Quiz.
+- [x] Cập nhật regression danh sách Quiz và kiểm thử sau khi xóa banner.

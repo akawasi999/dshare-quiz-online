@@ -70,4 +70,14 @@ describe("QuizLibrary component", () => {
     rerender(<QuizLibrary embedded />);
     expect(screen.queryByTestId("site-header")).toBeNull();
   });
+
+  it("loại bỏ banner theo lộ trình và luyện câu sai ở cả hai biến thể thư viện", () => {
+    const { rerender } = render(<QuizLibrary />);
+    expect(screen.queryByText("Theo dõi lộ trình để nhận đề phù hợp.")).toBeNull();
+    expect(screen.queryByRole("link", { name: /mở hồ sơ học tập/i })).toBeNull();
+
+    rerender(<QuizLibrary embedded />);
+    expect(screen.queryByText("Ôn lại những câu bạn chưa đúng.")).toBeNull();
+    expect(screen.queryByRole("link", { name: /luyện câu sai/i })).toBeNull();
+  });
 });

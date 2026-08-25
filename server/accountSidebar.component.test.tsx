@@ -16,9 +16,10 @@ describe("AccountSidebar", () => {
   it("giữ menu tối giản theo nhóm và không còn hiển thị các trang đã nằm trong Tổng quan", () => {
     render(<AccountSidebar />);
     expect(screen.getByRole("button", { name: "Tổng quan" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Khám phá" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Làm Quiz" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Quiz của tôi" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Khám phá" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Luyện câu sai" })).toBeNull();
     expect(screen.queryByRole("button", { name: "AI Assistant" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Nhiệm vụ" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Thành tích" })).toBeNull();

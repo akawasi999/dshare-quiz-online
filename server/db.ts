@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
 	attempts,
@@ -153,6 +153,7 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
     .where(and(
       eq(quizzes.isPublished, true),
       eq(quizzes.visibility, "public"),
+      isNull(quizzes.deletedAt),
       categoryId ? eq(categories.id, categoryId) : undefined,
       search ? sql`lower(${quizzes.title}) like ${`%${search.toLowerCase()}%`}` : undefined,
     ))
@@ -205,7 +206,7 @@ export async function getQuizDetail(quizId: number) {
     .innerJoin(lessons, eq(quizzes.lessonId, lessons.id))
     .innerJoin(subjects, eq(lessons.subjectId, subjects.id))
     .innerJoin(categories, eq(subjects.categoryId, categories.id))
-    .where(eq(quizzes.id, quizId)).limit(1);
+    .where(and(eq(quizzes.id, quizId), isNull(quizzes.deletedAt))).limit(1);
   return quizRows[0];
 }
 
