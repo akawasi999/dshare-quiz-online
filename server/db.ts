@@ -128,14 +128,18 @@ export async function listPublishedCatalog(search?: string, categoryId?: number,
     .where(and(eq(topics.status, "active"), isNull(topics.deletedAt)));
   const topicsById = new Map(activeTopics.map(topic => [topic.id, topic]));
   const rootTopicById = new Map<number, { id: number; name: string }>();
+  const topicPathById = new Map<number, string>();
   for (const topic of activeTopics) {
     let current = topic;
+    const pathNames = [topic.name];
     const visited = new Set<number>();
     while (current.parentId && topicsById.has(current.parentId) && !visited.has(current.id)) {
       visited.add(current.id);
       current = topicsById.get(current.parentId)!;
+      pathNames.unshift(current.name);
     }
     rootTopicById.set(topic.id, { id: current.id, name: current.name });
+    topicPathById.set(topic.id, pathNames.join(" › "));
   }
   const rows = await db.select({
     quizId: quizzes.id,
@@ -210,6 +214,7 @@ export async function listPublishedCatalog(search?: string, categoryId?: number,
       ...row,
       rootTopicId: rootTopic?.id ?? null,
       rootTopicTitle: rootTopic?.name ?? null,
+      topicPath: row.topicId ? topicPathById.get(row.topicId) ?? row.topicTitle : null,
       coverImageUrl: withImageCacheVersion(row.coverImageUrl || defaultCoverUrl, version),
     };
   }).filter(row => !rootTopicId || row.rootTopicId === rootTopicId);

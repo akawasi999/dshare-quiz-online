@@ -5,6 +5,7 @@ export type ShowcaseQuiz = {
   category: string;
   subject: string;
   lesson: string;
+  topicPath?: string;
   difficulty: "Dễ" | "Trung bình" | "Nâng cao";
   mode: "Ôn tập" | "Kiểm tra";
   questionCount: number;

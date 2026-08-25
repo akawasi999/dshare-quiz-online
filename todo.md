@@ -747,3 +747,4 @@
 - [x] Kiểm kê href hard-code và điểm tiêu thụ dữ liệu Chủ đề trong Khám phá.
 - [x] Chuẩn hóa href component theo cấu hình ROUTES dùng chung.
 - [x] Đồng bộ Khám phá với Chủ đề đang hoạt động từ CPanel, kiểm thử và lưu checkpoint.
+- [x] Tinh gọn thẻ Quiz: gỡ thông tin thừa, hiển thị đủ đường dẫn Chủ đề, làm nổi bật tag hạng và nút Làm bài.
