@@ -532,8 +532,8 @@ export const appRouter = router({
       if (!db) return [];
       return db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, true)).orderBy(asc(subscriptionPlans.displayOrder), subscriptionPlans.name);
     }),
-    list: publicProcedure.input(z.object({ search: z.string().trim().max(120).optional(), categoryId: z.number().int().positive().optional() }).optional())
-      .query(({ input }) => listPublishedCatalog(input?.search, input?.categoryId)),
+    list: publicProcedure.input(z.object({ search: z.string().trim().max(120).optional(), categoryId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional() }).optional())
+      .query(({ input }) => listPublishedCatalog(input?.search, input?.categoryId, input?.topicId)),
     detail: publicProcedure.input(quizIdInput).query(async ({ ctx, input }) => {
       const detail = await getQuizDetail(input.quizId);
       if (!detail || !detail.quiz.isPublished) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy bộ đề." });

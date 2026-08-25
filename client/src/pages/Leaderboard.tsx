@@ -1,5 +1,6 @@
 import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/routes";
 import { trpc } from "@/lib/trpc";
 import { createLeaderboardInput, getLeaderboardHeading, type LeaderboardScope } from "@/lib/leaderboardUtils";
 import { Award, Crown, Loader2, Medal, Sparkles, Target, Trophy } from "lucide-react";
@@ -70,7 +71,7 @@ function ScopePrompt() {
 }
 
 function EmptyLeaderboard({ isQuizScope }: { isQuizScope: boolean }) {
-  return <div className="py-16 text-center"><Award className="mx-auto text-primary" size={30} /><h3 className="mt-4 font-serif text-2xl font-semibold text-foreground">{isQuizScope ? "Bộ đề này đang chờ dấu mốc đầu tiên" : "Bảng thành tích đang chờ dấu mốc đầu tiên"}</h3><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-text-secondary">Hoàn thành một bài kiểm tra để xuất hiện trong bảng xếp hạng của Dshare.</p><Button asChild className="mt-6 rounded-full"><Link href="/kham-pha">Khám phá bộ đề</Link></Button></div>;
+  return <div className="py-16 text-center"><Award className="mx-auto text-primary" size={30} /><h3 className="mt-4 font-serif text-2xl font-semibold text-foreground">{isQuizScope ? "Bộ đề này đang chờ dấu mốc đầu tiên" : "Bảng thành tích đang chờ dấu mốc đầu tiên"}</h3><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-text-secondary">Hoàn thành một bài kiểm tra để xuất hiện trong bảng xếp hạng của Dshare.</p><Button asChild className="mt-6 rounded-full"><Link href={ROUTES.explore}>Khám phá bộ đề</Link></Button></div>;
 }
 
 function CircleAlertIcon() {

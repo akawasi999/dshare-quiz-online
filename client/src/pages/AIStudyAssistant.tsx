@@ -22,13 +22,13 @@ export default function AIStudyAssistant() {
   const [essayQuestion, setEssayQuestion] = useState(""); const [essayAnswer, setEssayAnswer] = useState(""); const [rubric, setRubric] = useState("");
   const imageInputRef = useRef<HTMLInputElement>(null); const voiceInputRef = useRef<HTMLInputElement>(null);
   const selectedQuiz = catalog.data?.find(item => item.quizId === Number(quizId));
-  const context = subject.trim() || quizId ? { subject: subject.trim() || selectedQuiz?.subjectTitle, quizId: quizId ? Number(quizId) : undefined, mode } : { mode };
+  const context = subject.trim() || quizId ? { subject: subject.trim() || selectedQuiz?.subjectTitle || undefined, quizId: quizId ? Number(quizId) : undefined, mode } : { mode };
   const chat = trpc.aiAssistant.chat.useMutation({ onSuccess: () => { setPendingMessage(null); history.refetch(); }, onError: error => { setPendingMessage(null); toast.error("AI Assistant chưa thể phản hồi", { description: error.message }); } });
   const clear = trpc.aiAssistant.clearHistory.useMutation({ onSuccess: () => { history.refetch(); toast.success("Đã xóa lịch sử hội thoại."); }, onError: error => toast.error("Không thể xóa lịch sử", { description: error.message }) });
   const gradeEssay = trpc.aiAssistant.gradeEssay.useMutation({ onSuccess: () => { setPendingMessage(null); history.refetch(); toast.success("Đã tạo nhận xét theo rubric."); }, onError: error => { setPendingMessage(null); toast.error("Chưa thể nhận xét bài tự luận", { description: error.message }); } });
   const analyzeImage = trpc.aiAssistant.analyzeImage.useMutation({ onSuccess: () => { setPendingMessage(null); history.refetch(); toast.success("AI đã phân tích ảnh học tập."); }, onError: error => { setPendingMessage(null); toast.error("Chưa thể phân tích ảnh", { description: error.message }); } });
   const transcribeVoice = trpc.aiAssistant.transcribeVoice.useMutation({ onSuccess: result => { toast.success("Đã chuyển giọng nói thành văn bản."); sendMessage(result.text); }, onError: error => toast.error("Chưa thể chuyển giọng nói", { description: error.message }) });
-  const suggestedPrompts = buildAiAssistantPrompts({ subject, quiz: selectedQuiz ? { title: selectedQuiz.title, subjectTitle: selectedQuiz.subjectTitle, lessonTitle: selectedQuiz.lessonTitle } : undefined });
+  const suggestedPrompts = buildAiAssistantPrompts({ subject, quiz: selectedQuiz ? { title: selectedQuiz.title, subjectTitle: selectedQuiz.subjectTitle ?? "", lessonTitle: selectedQuiz.lessonTitle ?? "" } : undefined });
   const messages: Message[] = [...(history.data ?? []).map(item => ({ role: item.role, content: item.content } as Message)), ...(pendingMessage ? [{ role: "user" as const, content: pendingMessage }] : [])];
   const latestAssistantAnswer = [...(history.data ?? [])].reverse().find(item => item.role === "assistant")?.content ?? "";
   const followUpPrompts = buildAiAssistantFollowUpPrompts(latestAssistantAnswer);

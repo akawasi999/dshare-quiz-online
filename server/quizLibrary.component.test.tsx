@@ -29,6 +29,7 @@ import QuizLibrary from "../client/src/pages/QuizLibrary";
 
 describe("QuizLibrary component", () => {
   beforeEach(() => {
+    window.localStorage.clear();
     mocks.catalog.data = [];
     mocks.catalog.isLoading = false;
     mocks.catalog.error = null;
@@ -60,7 +61,7 @@ describe("QuizLibrary component", () => {
   it("hiển thị CTA nâng cấp khi quota lượt làm sắp hết", () => {
     mocks.quota.data = { limits: { attemptsPerMonth: 20 }, usage: { attempts: 18 }, remaining: { attempts: 2 }, tier: "basic" };
     render(<QuizLibrary />);
-    expect(screen.getByRole("link", { name: /nâng cấp ngay/i }).getAttribute("href")).toBe("/bang-gia");
+    expect(screen.getByRole("link", { name: /nâng cấp ngay/i }).getAttribute("href")).toBe("/pricing");
     expect(screen.queryByText("Tiến độ")).toBeNull();
   });
 
@@ -80,5 +81,75 @@ describe("QuizLibrary component", () => {
     rerender(<QuizLibrary embedded />);
     expect(screen.queryByText("Ôn lại những câu bạn chưa đúng.")).toBeNull();
     expect(screen.queryByRole("link", { name: /luyện câu sai/i })).toBeNull();
+  });
+
+  it("chỉ hiển thị Chủ đề gốc CPanel và lọc Quiz bằng rootTopicId thay vì tên legacy", async () => {
+    const user = userEvent.setup();
+    mocks.categories.data = [
+      { id: 10, name: "Công nghệ thông tin", slug: "cong-nghe-thong-tin", parentId: null, depth: 0 },
+      { id: 11, name: "Lập trình Python", slug: "lap-trinh-python", parentId: 10, depth: 1 },
+      { id: 20, name: "Ngoại ngữ", slug: "ngoai-ngu", parentId: null, depth: 0 },
+    ];
+    mocks.catalog.data = [
+      {
+        quizId: 101,
+        title: "Python cơ bản",
+        summary: null,
+        mode: "training",
+        difficulty: "easy",
+        accessTier: "basic",
+        durationSeconds: 900,
+        questionCount: 10,
+        entryPointCost: 0,
+        completionReward: 10,
+        attemptCount: 0,
+        recentAttemptCount: 0,
+        createdAt: new Date("2026-08-01T00:00:00.000Z"),
+        coverImageUrl: null,
+        topicId: 11,
+        topicTitle: "Lập trình Python",
+        rootTopicId: 10,
+        rootTopicTitle: "Công nghệ thông tin",
+        categoryTitle: "Danh mục cũ không khớp",
+        subjectTitle: "Python",
+        lessonTitle: "Cơ bản",
+      },
+      {
+        quizId: 102,
+        title: "Tiếng Anh giao tiếp",
+        summary: null,
+        mode: "training",
+        difficulty: "easy",
+        accessTier: "basic",
+        durationSeconds: 900,
+        questionCount: 10,
+        entryPointCost: 0,
+        completionReward: 10,
+        attemptCount: 0,
+        recentAttemptCount: 0,
+        createdAt: new Date("2026-08-02T00:00:00.000Z"),
+        coverImageUrl: null,
+        topicId: 20,
+        topicTitle: "Ngoại ngữ",
+        rootTopicId: 20,
+        rootTopicTitle: "Ngoại ngữ",
+        categoryTitle: "Danh mục cũ khác",
+        subjectTitle: "Tiếng Anh",
+        lessonTitle: "Giao tiếp",
+      },
+    ];
+
+    render(<QuizLibrary />);
+
+    const topicButtons = screen.getAllByRole("button");
+    const technologyChip = topicButtons.find(button => button.textContent?.includes("Công nghệ thông tin"));
+    expect(technologyChip).toBeTruthy();
+    expect(topicButtons.some(button => button.textContent?.includes("Lập trình Python"))).toBe(false);
+    expect(screen.getByText("Python cơ bản")).toBeTruthy();
+    expect(screen.getByText("Tiếng Anh giao tiếp")).toBeTruthy();
+
+    await user.click(technologyChip!);
+    expect(screen.getByText("Python cơ bản")).toBeTruthy();
+    expect(screen.queryByText("Tiếng Anh giao tiếp")).toBeNull();
   });
 });

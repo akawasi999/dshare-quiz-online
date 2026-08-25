@@ -16,6 +16,7 @@ import {
 	seoSettings,
 	subscriptionPlans,
 	subjects,
+	topics,
 	  users,
 	  walletTransactions,
 	  xpLevels,
@@ -117,11 +118,25 @@ export async function getLearnerSummary(userId: number) {
   return { profile, stats: stats[0] ?? { completed: 0, averageScore: 0, passedCount: 0 }, currentPlan, upgradePlans };
 }
 
-export async function listPublishedCatalog(search?: string, categoryId?: number) {
+export async function listPublishedCatalog(search?: string, categoryId?: number, rootTopicId?: number) {
   const db = await getDb();
   if (!db) return [];
   const seoConfig = (await db.select({ defaultQuizCoverUrl: seoSettings.defaultQuizCoverUrl, updatedAt: seoSettings.updatedAt }).from(seoSettings).limit(1))[0];
   const defaultCoverUrl = seoConfig?.defaultQuizCoverUrl || DEFAULT_QUIZ_COVER_URL;
+  const activeTopics = await db.select({ id: topics.id, name: topics.name, parentId: topics.parentId })
+    .from(topics)
+    .where(and(eq(topics.status, "active"), isNull(topics.deletedAt)));
+  const topicsById = new Map(activeTopics.map(topic => [topic.id, topic]));
+  const rootTopicById = new Map<number, { id: number; name: string }>();
+  for (const topic of activeTopics) {
+    let current = topic;
+    const visited = new Set<number>();
+    while (current.parentId && topicsById.has(current.parentId) && !visited.has(current.id)) {
+      visited.add(current.id);
+      current = topicsById.get(current.parentId)!;
+    }
+    rootTopicById.set(topic.id, { id: current.id, name: current.name });
+  }
   const rows = await db.select({
     quizId: quizzes.id,
     title: quizzes.title,
@@ -141,19 +156,23 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
     categoryUpdatedAt: categories.updatedAt,
     attemptCount: sql<number>`count(${attempts.id})`,
     recentAttemptCount: sql<number>`sum(case when ${attempts.completedAt} >= date_sub(now(), interval 24 hour) then 1 else 0 end)`,
+    topicId: quizzes.topicId,
+    topicTitle: topics.name,
     categoryId: categories.id,
     categoryTitle: categories.title,
     subjectTitle: subjects.title,
     lessonTitle: lessons.title,
   }).from(quizzes)
-    .innerJoin(lessons, eq(quizzes.lessonId, lessons.id))
-    .innerJoin(subjects, eq(lessons.subjectId, subjects.id))
-    .innerJoin(categories, eq(subjects.categoryId, categories.id))
+    .leftJoin(lessons, eq(quizzes.lessonId, lessons.id))
+    .leftJoin(subjects, eq(lessons.subjectId, subjects.id))
+    .leftJoin(categories, eq(subjects.categoryId, categories.id))
+    .leftJoin(topics, and(eq(quizzes.topicId, topics.id), eq(topics.status, "active"), isNull(topics.deletedAt)))
     .leftJoin(attempts, and(eq(attempts.quizId, quizzes.id), eq(attempts.status, "submitted")))
     .where(and(
       eq(quizzes.isPublished, true),
       eq(quizzes.visibility, "public"),
       isNull(quizzes.deletedAt),
+      sql`(${quizzes.topicId} is null or ${topics.id} is not null)`,
       categoryId ? eq(categories.id, categoryId) : undefined,
       search ? sql`lower(${quizzes.title}) like ${`%${search.toLowerCase()}%`}` : undefined,
     ))
@@ -171,10 +190,12 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
       quizzes.completionReward,
       quizzes.questionCount,
       quizzes.coverImageUrl,
+      quizzes.topicId,
       categories.coverImageUrl,
       quizzes.updatedAt,
       categories.updatedAt,
       quizzes.createdAt,
+      topics.name,
       categories.id,
       categories.title,
       subjects.title,
@@ -184,8 +205,14 @@ export async function listPublishedCatalog(search?: string, categoryId?: number)
   return rows.map(row => {
     const inheritedCategoryCover = !row.coverImageUrl && Boolean(row.categoryUpdatedAt);
     const version = row.coverImageUrl ? row.quizUpdatedAt : inheritedCategoryCover ? row.categoryUpdatedAt : seoConfig?.updatedAt;
-    return { ...row, coverImageUrl: withImageCacheVersion(row.coverImageUrl || defaultCoverUrl, version) };
-  });
+    const rootTopic = row.topicId ? rootTopicById.get(row.topicId) : undefined;
+    return {
+      ...row,
+      rootTopicId: rootTopic?.id ?? null,
+      rootTopicTitle: rootTopic?.name ?? null,
+      coverImageUrl: withImageCacheVersion(row.coverImageUrl || defaultCoverUrl, version),
+    };
+  }).filter(row => !rootTopicId || row.rootTopicId === rootTopicId);
 }
 
 export async function listCategories() {
