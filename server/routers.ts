@@ -64,7 +64,7 @@ import { buildAttemptMilestoneAlert } from "./attemptNotifications";
 import { getReferralValidationError, normalizeReferralCode } from "./referralUtils";
 import { richTextToPlainText, sanitizeRichTextHtml } from "../shared/richText";
 import { allocateQuestionCounts } from "./randomQuiz";
-import { getAcceptedAnswers, getMatchingPairs, getTrueFalseStatements, validateQuestionConfiguration } from "../shared/questionValidation";
+import { getAcceptedAnswers, getHotspots, getMatchingPairs, getOrderingItems, getTrueFalseStatements, validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
@@ -861,8 +861,10 @@ export const appRouter = router({
           media: ((item.question.answerConfig as { media?: unknown } | null)?.media ?? null) as { url: string; kind: "audio" | "video"; fileName: string } | null,
           statements: item.question.type === "true_false_statements" ? getTrueFalseStatements(item.question.answerConfig ?? {}).map(statement => ({ id: statement.id, text: statement.text })) : [],
           matchingPairs: item.question.type === "matching" ? getMatchingPairs(item.question.answerConfig ?? {}) : [],
-          acceptedAnswers: item.question.type === "fill_blank" ? getAcceptedAnswers(item.question.answerConfig ?? {}) : [],
-          sampleOutline: item.question.type === "essay" ? String((item.question.answerConfig as { sampleOutline?: unknown } | null)?.sampleOutline ?? "") : "",
+          orderingItems: item.question.type === "ordering" ? getOrderingItems(item.question.answerConfig ?? {}) : [],
+          hotspots: item.question.type === "hotspot" ? getHotspots(item.question.answerConfig ?? {}) : [],
+          acceptedAnswers: ["fill_blank", "short_answer_ai"].includes(item.question.type) ? getAcceptedAnswers(item.question.answerConfig ?? {}) : [],
+          sampleOutline: ["essay", "essay_ai"].includes(item.question.type) ? String((item.question.answerConfig as { sampleOutline?: unknown } | null)?.sampleOutline ?? "") : "",
           questionIndex,
           options: detail.quiz.randomizeOptions
             ? shuffledForAttempt(item.options, attemptId + item.question.id)
@@ -873,7 +875,7 @@ export const appRouter = router({
         })),
       };
     }),
-    saveAnswer: permissionProcedure("quiz.submit").input(z.object({ attemptId: z.number().int().positive(), questionId: z.number().int().positive(), selectedOptionIds: z.array(z.number().int().positive()).max(10), answerPayload: z.object({ statementAnswers: z.record(z.string().min(1).max(64), z.boolean()).refine(values => Object.keys(values).length <= 8, "Tối đa tám nhận định.").optional(), matchingAnswers: z.record(z.string().regex(/^\d+$/), z.string().min(1).max(500)).refine(values => Object.keys(values).length <= 50, "Tối đa năm mươi cặp ghép nối.").optional(), textAnswer: z.string().max(5000).optional() }).optional() }))
+    saveAnswer: permissionProcedure("quiz.submit").input(z.object({ attemptId: z.number().int().positive(), questionId: z.number().int().positive(), selectedOptionIds: z.array(z.number().int().positive()).max(10), answerPayload: z.object({ statementAnswers: z.record(z.string().min(1).max(64), z.boolean()).refine(values => Object.keys(values).length <= 8, "Tối đa tám nhận định.").optional(), matchingAnswers: z.record(z.string().regex(/^\d+$/), z.string().min(1).max(500)).refine(values => Object.keys(values).length <= 50, "Tối đa năm mươi cặp ghép nối.").optional(), orderingIds: z.array(z.string().min(1).max(80)).min(2).max(10).optional(), hotspot: z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100) }).optional(), textAnswer: z.string().max(5000).optional() }).optional() }))
       .mutation(async ({ ctx, input }) => { await assertOwnedAttempt(ctx.user.id, input.attemptId, input.questionId); return saveAnswer(input); }),
     submit: protectedProcedure.input(z.object({ attemptId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const result = await submitAttempt(input.attemptId, ctx.user.id);
@@ -1005,8 +1007,8 @@ export const appRouter = router({
     }),
     createQuiz: permissionProcedure("quiz.create").input(z.object({
       lessonId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
-      settings: z.object({ durationMinutes: z.number().int().min(1).max(1440).default(15), maxAttempts: z.number().int().min(0).max(1000).default(0), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean().default(false), hideHintsAndExplanation: z.boolean().default(false), allowBackNavigation: z.boolean().default(true), requireRegistration: z.boolean().default(true), liveMonitoring: z.boolean().default(false), requireEmail: z.boolean().default(false), shuffleQuestions: z.boolean().default(false), shuffleAnswers: z.boolean().default(false), visibility: z.enum(["public", "private"]).default("public") }).default({ durationMinutes: 15, maxAttempts: 0, antiCheatMonitor: false, hideHintsAndExplanation: false, allowBackNavigation: true, requireRegistration: true, liveMonitoring: false, requireEmail: false, shuffleQuestions: false, shuffleAnswers: false, visibility: "public" }),
-      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
+      settings: z.object({ durationMinutes: z.number().int().min(1).max(1440).default(15), maxAttempts: z.number().int().min(0).max(1000).default(0), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean().default(false), hideHintsAndExplanation: z.boolean().default(false), allowBackNavigation: z.boolean().default(true), requireRegistration: z.boolean().default(true), liveMonitoring: z.boolean().default(false), requireEmail: z.boolean().default(false), shuffleQuestions: z.boolean().default(false), shuffleAnswers: z.boolean().default(false), visibility: z.enum(["public", "unlisted", "private"]).default("public") }).default({ durationMinutes: 15, maxAttempts: 0, antiCheatMonitor: false, hideHintsAndExplanation: false, allowBackNavigation: true, requireRegistration: true, liveMonitoring: false, requireEmail: false, shuffleQuestions: false, shuffleAnswers: false, visibility: "public" }),
+      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "audio", "video", "hotspot", "short_answer_ai", "essay", "essay_ai"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo quiz lúc này." });
@@ -1039,8 +1041,8 @@ export const appRouter = router({
     }),
     updateQuiz: permissionProcedure("quiz.edit").input(z.object({
       quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
-      settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean(), shuffleQuestions: z.boolean(), shuffleAnswers: z.boolean(), visibility: z.enum(["public", "private"]) }),
-      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
+      settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean(), shuffleQuestions: z.boolean(), shuffleAnswers: z.boolean(), visibility: z.enum(["public", "unlisted", "private"]) }),
+      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "audio", "video", "hotspot", "short_answer_ai", "essay", "essay_ai"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       for (const item of input.questions) { const error = validateQuestionConfiguration({ type: item.type, options: item.options, answerConfig: item.answerConfig, imageUrl: item.imageUrl ?? null }); if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` }); }
@@ -1595,7 +1597,7 @@ export const appRouter = router({
       lessonId: z.number().int().positive(),
       quizId: z.number().int().positive().optional(),
       prompt: z.string().trim().min(8).max(5000),
-      type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "essay"]),
+      type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "audio", "video", "hotspot", "short_answer_ai", "essay", "essay_ai"]),
       difficulty: z.enum(["easy", "medium", "hard"]),
       explanation: z.string().trim().max(5000).optional(),
       tags: z.array(z.string().trim().min(1).max(40)).min(1).max(12),

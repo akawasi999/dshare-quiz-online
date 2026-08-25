@@ -26,7 +26,14 @@ const typeLabels = {
   fill_blank: "Điền đáp án",
   image: "Quan sát hình ảnh",
   matching: "Ghép nối",
+  ordering: "Sắp xếp thứ tự",
+  image_choice: "Chọn bằng hình ảnh",
+  audio: "Câu hỏi âm thanh",
+  video: "Câu hỏi video",
+  hotspot: "Chọn vị trí trên ảnh",
+  short_answer_ai: "Trả lời ngắn AI",
   essay: "Tự luận",
+  essay_ai: "Tự luận AI",
 } as const;
 
 export default function Practice() {
@@ -109,7 +116,7 @@ export default function Practice() {
     }
     advanceQuestion();
   };
-  const typeLabel = typeLabels[item.question.type];
+  const typeLabel = typeLabels[item.question.type as keyof typeof typeLabels] ?? "Câu hỏi Premium";
 
   return <PracticeShell>
     <main className="container max-w-4xl py-10 sm:py-14">

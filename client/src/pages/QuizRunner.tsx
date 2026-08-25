@@ -47,6 +47,8 @@ type ActiveQuestion = {
   statements?: Array<{ id: string; text: string; correct?: boolean }>;
   matchingPairs?: Array<{ left: string; right: string }>;
   acceptedAnswers?: string[];
+  orderingItems?: Array<{ id: string; text: string }>;
+  hotspots?: Array<{ x: number; y: number; radius: number }>;
   sampleOutline?: string;
   media?: { url: string; kind: "audio" | "video"; fileName: string } | null;
 };
@@ -185,6 +187,8 @@ export default function QuizRunner() {
   >({});
   const [matchingAnswers, setMatchingAnswers] = useState<Record<number, Record<string, string>>>({});
   const [textAnswers, setTextAnswers] = useState<Record<number, string>>({});
+  const [orderingAnswers, setOrderingAnswers] = useState<Record<number, string[]>>({});
+  const [hotspotAnswers, setHotspotAnswers] = useState<Record<number, { x: number; y: number }>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(900);
   const [totalDuration, setTotalDuration] = useState(900);
@@ -195,7 +199,11 @@ export default function QuizRunner() {
       ? Object.keys(statementAnswers[question.id] ?? {}).length === (question.statements?.length ?? 0) && (question.statements?.length ?? 0) > 0
       : question.type === "matching"
         ? Object.keys(matchingAnswers[question.id] ?? {}).length === (question.matchingPairs?.length ?? 0) && (question.matchingPairs?.length ?? 0) > 0
-        : ["fill_blank", "essay"].includes(question.type)
+        : question.type === "ordering"
+          ? (orderingAnswers[question.id]?.length ?? 0) === (question.orderingItems?.length ?? 0) && (question.orderingItems?.length ?? 0) > 0
+          : question.type === "hotspot"
+            ? Boolean(hotspotAnswers[question.id])
+        : ["fill_blank", "short_answer_ai", "essay", "essay_ai"].includes(question.type)
           ? Boolean(textAnswers[question.id]?.trim())
           : Boolean(answers[question.id]?.length);
   const answeredCount = questions.filter(hasAnswer).length;
@@ -235,6 +243,8 @@ export default function QuizRunner() {
     setStatementAnswers({});
     setMatchingAnswers({});
     setTextAnswers({});
+    setOrderingAnswers(Object.fromEntries(nextQuestions.filter(question => question.type === "ordering").map(question => [question.id, [...(question.orderingItems ?? [])].map(item => item.id).reverse()])));
+    setHotspotAnswers({});
     setFeedback(null);
     setCurrentIndex(0);
   };
@@ -355,8 +365,26 @@ export default function QuizRunner() {
     if (!textAnswer) return;
     if (attemptId && attemptId > 0) saveAnswer.mutate({ attemptId, questionId: current.id, selectedOptionIds: [], answerPayload: { textAnswer } });
     const normalized = textAnswer.toLocaleLowerCase("vi-VN").replace(/\s+/g, " ");
-    const isCorrect = current.type === "fill_blank" && (current.acceptedAnswers ?? []).some(answer => answer.trim().toLocaleLowerCase("vi-VN").replace(/\s+/g, " ") === normalized);
-    setFeedback({ questionId: current.id, status: isLocalPreview && current.type === "fill_blank" ? (isCorrect ? "correct" : "incorrect") : "saved" });
+    const isCorrect = ["fill_blank", "short_answer_ai"].includes(current.type) && (current.acceptedAnswers ?? []).some(answer => answer.trim().toLocaleLowerCase("vi-VN").replace(/\s+/g, " ") === normalized);
+    setFeedback({ questionId: current.id, status: isLocalPreview && ["fill_blank", "short_answer_ai"].includes(current.type) ? (isCorrect ? "correct" : "incorrect") : "saved" });
+  };
+  const moveOrderingItem = (from: number, direction: -1 | 1) => {
+    if (!current) return;
+    const values = [...(orderingAnswers[current.id] ?? [])]; const target = from + direction;
+    if (target < 0 || target >= values.length) return;
+    [values[from], values[target]] = [values[target]!, values[from]!];
+    setOrderingAnswers(currentValues => ({ ...currentValues, [current.id]: values }));
+    if (attemptId && attemptId > 0) saveAnswer.mutate({ attemptId, questionId: current.id, selectedOptionIds: [], answerPayload: { orderingIds: values } });
+    const correct = (current.orderingItems ?? []).map(item => item.id);
+    setFeedback({ questionId: current.id, status: isLocalPreview ? (correct.every((id, index) => values[index] === id) ? "correct" : "incorrect") : "saved" });
+  };
+  const chooseHotspot = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!current) return;
+    const bounds = event.currentTarget.getBoundingClientRect(); const point = { x: Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100)), y: Math.max(0, Math.min(100, ((event.clientY - bounds.top) / bounds.height) * 100)) };
+    setHotspotAnswers(values => ({ ...values, [current.id]: point }));
+    if (attemptId && attemptId > 0) saveAnswer.mutate({ attemptId, questionId: current.id, selectedOptionIds: [], answerPayload: { hotspot: point } });
+    const correct = (current.hotspots ?? []).some(spot => Math.hypot(point.x - spot.x, point.y - spot.y) <= spot.radius);
+    setFeedback({ questionId: current.id, status: isLocalPreview ? (correct ? "correct" : "incorrect") : "saved" });
   };
   const finish = async () => {
     if (!attemptId) return;
@@ -368,6 +396,8 @@ export default function QuizRunner() {
           const selectedStatementAnswers = statementAnswers[question.id] ?? {};
           const selectedMatchingAnswers = matchingAnswers[question.id] ?? {};
           const selectedTextAnswer = textAnswers[question.id]?.trim() ?? "";
+          const selectedOrderingIds = orderingAnswers[question.id] ?? [];
+          const selectedHotspot = hotspotAnswers[question.id] ?? null;
           const expected = Object.fromEntries(
             (question.statements ?? []).map(statement => [
               statement.id,
@@ -376,8 +406,10 @@ export default function QuizRunner() {
           );
           const isStatement = question.type === "true_false_statements";
           const isMatching = question.type === "matching";
-          const isFillBlank = question.type === "fill_blank";
-          const isEssay = question.type === "essay";
+          const isOrdering = question.type === "ordering";
+          const isHotspot = question.type === "hotspot";
+          const isFillBlank = ["fill_blank", "short_answer_ai"].includes(question.type);
+          const isEssay = ["essay", "essay_ai"].includes(question.type);
           const normalizedTextAnswer = selectedTextAnswer.toLocaleLowerCase("vi-VN").replace(/\s+/g, " ");
           return {
             questionId: question.id,
@@ -389,6 +421,8 @@ export default function QuizRunner() {
             selectedStatementAnswers,
             selectedMatchingAnswers,
             selectedTextAnswer,
+            selectedOrderingIds,
+            selectedHotspot,
             selectedOptionIds: answers[question.id] ?? [],
             correctOptionIds: question.correctOptionIds ?? [],
             isCorrect: isStatement
@@ -399,6 +433,10 @@ export default function QuizRunner() {
                 )
               : isMatching
                 ? (question.matchingPairs ?? []).length > 0 && (question.matchingPairs ?? []).every((pair, index) => selectedMatchingAnswers[String(index)] === pair.right)
+                : isOrdering
+                  ? (question.orderingItems ?? []).length > 1 && (question.orderingItems ?? []).every((item, index) => selectedOrderingIds[index] === item.id)
+                  : isHotspot
+                    ? Boolean(selectedHotspot) && (question.hotspots ?? []).some(spot => Math.hypot((selectedHotspot?.x ?? -1000) - spot.x, (selectedHotspot?.y ?? -1000) - spot.y) <= spot.radius)
                 : isFillBlank
                   ? (question.acceptedAnswers ?? []).some(answer => answer.trim().toLocaleLowerCase("vi-VN").replace(/\s+/g, " ") === normalizedTextAnswer)
                   : isEssay
@@ -574,6 +612,8 @@ export default function QuizRunner() {
   const selectedMatching = matchingAnswers[current.id] ?? {};
   const matchingChoices = Array.from(new Set((current.matchingPairs ?? []).map(pair => pair.right))).sort((left, right) => left.localeCompare(right, "vi-VN"));
   const textAnswer = textAnswers[current.id] ?? "";
+  const selectedOrdering = orderingAnswers[current.id] ?? [];
+  const selectedHotspot = hotspotAnswers[current.id] ?? null;
   return (
     <div className="min-h-screen select-none bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_5%,transparent)_0%,var(--background)_30%)]">
       <QuizSecurityGuard active onEvent={onSecurityEvent} />
@@ -694,13 +734,19 @@ export default function QuizRunner() {
                 </div>
               </section>
             ) : null}
-            {current.type === "fill_blank" ? (
+            {current.type === "ordering" ? (
+              <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5"><p className="text-sm font-bold text-foreground">Sắp xếp theo đúng trình tự</p><p className="mt-1 text-xs text-text-secondary">Dùng nút mũi tên để thay đổi vị trí từng mục.</p><div className="mt-4 space-y-2">{selectedOrdering.map((id, index) => { const item = (current.orderingItems ?? []).find(candidate => candidate.id === id); return <div key={id} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary-light text-xs font-black text-primary">{index + 1}</span><p className="min-w-0 flex-1 text-sm font-semibold text-foreground">{item?.text || "Mục chưa xác định"}</p><div className="flex gap-1"><Button type="button" variant="outline" size="icon" disabled={index === 0} onClick={() => moveOrderingItem(index, -1)} aria-label={`Đưa mục ${index + 1} lên`} className="size-8">↑</Button><Button type="button" variant="outline" size="icon" disabled={index === selectedOrdering.length - 1} onClick={() => moveOrderingItem(index, 1)} aria-label={`Đưa mục ${index + 1} xuống`} className="size-8">↓</Button></div></div>; })}</div></section>
+            ) : null}
+            {current.type === "hotspot" && current.imageUrl ? (
+              <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5"><p className="text-sm font-bold text-foreground">Chọn đúng vị trí trên hình</p><p className="mt-1 text-xs text-text-secondary">Chạm hoặc nhấp vào vị trí bạn cho là đáp án.</p><div role="button" tabIndex={0} aria-label="Chọn vị trí đáp án trên ảnh" onClick={chooseHotspot} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") event.preventDefault(); }} className="relative mt-4 cursor-crosshair overflow-hidden rounded-xl border border-border bg-surface"><img src={current.imageUrl} alt="Hình chọn Hotspot" className="block max-h-[480px] w-full object-contain" />{selectedHotspot ? <span aria-hidden="true" className="absolute size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-danger shadow-lg" style={{ left: `${selectedHotspot.x}%`, top: `${selectedHotspot.y}%` }} /> : null}</div></section>
+            ) : null}
+            {["fill_blank", "short_answer_ai"].includes(current.type) ? (
               <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5">
                 <p className="text-sm font-bold text-foreground">Nhập câu trả lời của bạn</p><p className="mt-1 text-xs text-text-secondary">Câu trả lời được so sánh không phân biệt hoa thường hoặc khoảng trắng thừa.</p>
                 <input aria-label="Câu trả lời ngắn" value={textAnswer} onChange={event => setTextAnswers(values => ({ ...values, [current.id]: event.target.value }))} onBlur={saveTextAnswer} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); saveTextAnswer(); } }} placeholder="Nhập câu trả lời…" className="mt-4 h-12 w-full rounded-xl border border-border bg-surface px-4 text-sm font-medium text-foreground outline-none transition placeholder:text-text-secondary focus:border-primary focus:ring-4 focus:ring-primary/10" />
               </section>
             ) : null}
-            {current.type === "essay" ? (
+            {["essay", "essay_ai"].includes(current.type) ? (
               <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5">
                 <p className="text-sm font-bold text-foreground">Trình bày câu trả lời</p><p className="mt-1 text-xs text-text-secondary">Bài tự luận được lưu để giảng viên hoặc hệ thống đánh giá sau.</p>
                 <textarea aria-label="Câu trả lời tự luận" value={textAnswer} onChange={event => setTextAnswers(values => ({ ...values, [current.id]: event.target.value }))} onBlur={saveTextAnswer} placeholder="Viết câu trả lời của bạn…" className="mt-4 min-h-40 w-full resize-y rounded-xl border border-border bg-surface p-4 text-sm leading-6 text-foreground outline-none transition placeholder:text-text-secondary focus:border-primary focus:ring-4 focus:ring-primary/10" />
@@ -710,7 +756,7 @@ export default function QuizRunner() {
             <div
               className={cn(
                 "mt-8 space-y-3",
-                ["true_false_statements", "matching", "fill_blank", "essay"].includes(current.type) && "hidden"
+                ["true_false_statements", "matching", "ordering", "hotspot", "fill_blank", "short_answer_ai", "essay", "essay_ai"].includes(current.type) && "hidden"
               )}
             >
               {current.options.map((option, index) => {

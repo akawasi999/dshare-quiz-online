@@ -25,7 +25,7 @@ import {
 import { ENV } from "./_core/env";
 import { sortLeaderboardEntries } from "./leaderboard";
 import { scoreQuiz } from "./quizEngine";
-import { getAcceptedAnswers, getMatchingPairs, getTrueFalseStatements } from "../shared/questionValidation";
+import { getAcceptedAnswers, getHotspots, getMatchingPairs, getOrderingItems, getTrueFalseStatements } from "../shared/questionValidation";
 import { getEffectiveTier } from "./membershipUtils";
 import { processGamificationForAttempt } from "./gamification";
 import { getQuotaPeriod } from "./quotaUtils";
@@ -316,6 +316,12 @@ export async function getOwnedQuizAnalytics(userId: number, quizId: number) {
     .groupBy(questions.id, questions.prompt, questions.type, quizQuestions.points, quizQuestions.sortOrder)
     .orderBy(asc(quizQuestions.sortOrder));
 
+  const [distributionRows, recentAttempts] = await Promise.all([
+    db.select({ below50: sql<number>`coalesce(sum(case when ${attempts.score} < 50 then 1 else 0 end), 0)`, from50To69: sql<number>`coalesce(sum(case when ${attempts.score} >= 50 and ${attempts.score} < 70 then 1 else 0 end), 0)`, from70To84: sql<number>`coalesce(sum(case when ${attempts.score} >= 70 and ${attempts.score} < 85 then 1 else 0 end), 0)`, from85: sql<number>`coalesce(sum(case when ${attempts.score} >= 85 then 1 else 0 end), 0)` }).from(attempts).where(and(eq(attempts.quizId, quizId), eq(attempts.status, "submitted"))),
+    db.select({ attemptId: attempts.id, learnerName: users.name, learnerEmail: users.email, score: attempts.score, passed: attempts.passed, completedAt: attempts.completedAt, violationCount: attempts.violationCount }).from(attempts).innerJoin(users, eq(attempts.userId, users.id)).where(and(eq(attempts.quizId, quizId), eq(attempts.status, "submitted"))).orderBy(desc(attempts.completedAt)).limit(30),
+  ]);
+
+  const distributionRow = distributionRows[0];
   const completedAttempts = Number(summaryRow?.completedAttempts ?? 0);
   const passedAttempts = Number(summaryRow?.passedAttempts ?? 0);
   return {
@@ -326,6 +332,8 @@ export async function getOwnedQuizAnalytics(userId: number, quizId: number) {
       passRate: completedAttempts ? Math.round((passedAttempts / completedAttempts) * 100) : 0,
       latestCompletedAt: summaryRow?.latestCompletedAt ?? null,
     },
+    distribution: { below50: Number(distributionRow?.below50 ?? 0), from50To69: Number(distributionRow?.from50To69 ?? 0), from70To84: Number(distributionRow?.from70To84 ?? 0), from85: Number(distributionRow?.from85 ?? 0) },
+    learners: recentAttempts.map(row => ({ ...row, score: Number(row.score), violationCount: Number(row.violationCount ?? 0) })),
     questions: questionRows.map(row => {
       const answerCount = Number(row.answerCount ?? 0);
       const correctCount = Number(row.correctCount ?? 0);
@@ -417,7 +425,9 @@ export async function submitAttempt(attemptId: number, userId: number) {
       type: row.question.type,
       statementAnswers: row.question.type === "true_false_statements" ? Object.fromEntries(getTrueFalseStatements(row.question.answerConfig ?? {}).map(statement => [statement.id, statement.correct])) : undefined,
       matchingPairs: row.question.type === "matching" ? getMatchingPairs(row.question.answerConfig ?? {}) : undefined,
-      acceptedAnswers: row.question.type === "fill_blank" ? getAcceptedAnswers(row.question.answerConfig ?? {}) : undefined,
+      orderingItems: row.question.type === "ordering" ? getOrderingItems(row.question.answerConfig ?? {}) : undefined,
+      hotspots: row.question.type === "hotspot" ? getHotspots(row.question.answerConfig ?? {}) : undefined,
+      acceptedAnswers: ["fill_blank", "short_answer_ai"].includes(row.question.type) ? getAcceptedAnswers(row.question.answerConfig ?? {}) : undefined,
       points: row.points,
     })),
     answers.map(answer => ({ questionId: answer.questionId, selectedOptionIds: answer.selectedOptionIds, answerPayload: answer.answerPayload }))

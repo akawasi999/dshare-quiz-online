@@ -1,0 +1,2 @@
+ALTER TABLE `questions` MODIFY COLUMN `type` enum('single','multiple','true_false','true_false_statements','fill_blank','image','matching','ordering','image_choice','audio','video','hotspot','short_answer_ai','essay','essay_ai') NOT NULL DEFAULT 'single';--> statement-breakpoint
+ALTER TABLE `quizzes` MODIFY COLUMN `visibility` enum('public','unlisted','private') NOT NULL DEFAULT 'public';

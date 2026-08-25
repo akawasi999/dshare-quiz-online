@@ -140,7 +140,7 @@ export const supportMessages = mysqlTable("supportMessages", {
 export const accountTierValues = ["basic", "pro", "premium"] as const;
 export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "expired"] as const;
 export const quizModeValues = ["training", "testing"] as const;
-export const questionTypeValues = ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "essay"] as const;
+export const questionTypeValues = ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "audio", "video", "hotspot", "short_answer_ai", "essay", "essay_ai"] as const;
 export const difficultyValues = ["easy", "medium", "hard"] as const;
 export const topicStatusValues = ["active", "archived"] as const;
 export const quizLifecycleStatusValues = ["draft", "pending_review", "rejected", "published", "locked", "archived"] as const;
@@ -559,7 +559,7 @@ export const quizzes = mysqlTable("quizzes", {
   questionCount: int("questionCount").default(0).notNull(),
   randomizeQuestions: boolean("randomizeQuestions").default(true).notNull(),
   randomizeOptions: boolean("randomizeOptions").default(true).notNull(),
-  visibility: mysqlEnum("visibility", ["public", "private"]).default("public").notNull(),
+  visibility: mysqlEnum("visibility", ["public", "unlisted", "private"]).default("public").notNull(),
   creatorSettings: json("creatorSettings").$type<Record<string, unknown>>(),
   isPublished: boolean("isPublished").default(false).notNull(),
   status: mysqlEnum("status", quizLifecycleStatusValues).default("draft").notNull(),
