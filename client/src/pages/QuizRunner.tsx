@@ -877,12 +877,14 @@ function HeroStat({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl bg-white/12 p-3.5 backdrop-blur-sm lg:rounded-lg lg:p-2.5">
-      <div className="flex items-center gap-2 text-white/80">
+    <div className="flex min-h-16 items-center gap-2.5 rounded-2xl bg-white/12 px-3.5 py-2.5 backdrop-blur-sm lg:min-h-14 lg:rounded-lg lg:px-3 lg:py-2">
+      <span className="grid size-8 shrink-0 place-items-center text-white/85 lg:size-7">
         {icon}
-        <p className="text-[10px] font-bold uppercase tracking-[.11em]">{label}</p>
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 text-left">
+        <p className="text-[10px] font-bold uppercase tracking-[.11em] text-white/70">{label}</p>
+        <p className="text-sm font-bold leading-tight text-white lg:text-xs">{value}</p>
       </div>
-      <p className="mt-2 text-sm font-bold text-white lg:mt-1 lg:text-xs">{value}</p>
     </div>
   );
 }
