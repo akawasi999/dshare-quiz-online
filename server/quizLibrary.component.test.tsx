@@ -18,6 +18,7 @@ vi.mock("@/lib/trpc", () => ({
     learner: { summary: { useQuery: () => mocks.learner }, quota: { useQuery: () => mocks.quota } },
     catalog: {
       categories: { useQuery: () => mocks.categories },
+      topics: { useQuery: () => mocks.categories },
       list: { useQuery: () => mocks.catalog },
     },
   },

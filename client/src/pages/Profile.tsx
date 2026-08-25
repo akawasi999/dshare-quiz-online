@@ -3,6 +3,7 @@ import AccountLayout from "@/components/AccountLayout";
 import { Button } from "@/components/ui/button";
 import { startLogin } from "@/const";
 import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
+import { ROUTES } from "@/lib/routes";
 import { trpc } from "@/lib/trpc";
 import {
   ArrowRight,
@@ -121,9 +122,9 @@ export default function Profile() {
         </section>
 
         <section aria-label="Chỉ số học tập" className="mt-3 grid gap-3 md:grid-cols-3">
-          <DashboardStat spriteSrc={sprite.coins} label="Ví Point" value={formatNumber(profile.pointBalance)} suffix="Point" note="" href="/wallet" action="Nạp Point" />
-          <DashboardStat spriteSrc={sprite.xp} label="Tổng XP" value={formatNumber(xpBalance)} suffix="XP" note="" href="/achievements" action="Xem tiến trình" tone="violet" />
-          <DashboardStat spriteSrc={sprite.award} label="Danh hiệu" value={formatNumber(unlockedAchievements || badges.length)} suffix="Danh hiệu" note="" href="/achievements" action="Xem tất cả" tone="amber" compactBadges />
+          <DashboardStat spriteSrc={sprite.coins} label="Ví Point" value={formatNumber(profile.pointBalance)} suffix="Point" note="" href={ROUTES.wallet} action="Nạp Point" />
+          <DashboardStat spriteSrc={sprite.xp} label="Tổng XP" value={formatNumber(xpBalance)} suffix="XP" note="" href={ROUTES.achievements} action="Xem tiến trình" tone="violet" />
+          <DashboardStat spriteSrc={sprite.award} label="Danh hiệu" value={formatNumber(unlockedAchievements || badges.length)} suffix="Danh hiệu" note="" href={ROUTES.achievements} action="Xem tất cả" tone="amber" compactBadges />
         </section>
 
         <section className="mt-3 grid gap-3 xl:grid-cols-[1.02fr_1.35fr]">
@@ -146,7 +147,7 @@ export default function Profile() {
               {referral.isLoading ? <BlockLoading label="Đang tải mã giới thiệu…" /> : referral.error ? <BlockError label="Chưa tải được dữ liệu giới thiệu" onRetry={() => referral.refetch()} /> : <>
                 <div className="mt-3 flex items-center gap-2 rounded-lg border border-primary/15 bg-surface/95 p-2"><code className="min-w-0 flex-1 truncate text-xs font-extrabold tracking-[.11em] text-primary">{referralData?.referralCode ?? "Đang chuẩn bị mã"}</code><Button size="sm" variant="outline" onClick={copyReferral} disabled={!referralData?.referralCode} className="h-8 shrink-0 rounded-md border-primary/20 bg-primary px-3 text-xs text-primary-foreground hover:bg-primary/90">{copied ? <Check size={13} /> : <Copy size={13} />}{copied ? "Đã sao chép" : "Sao chép"}</Button></div>
                 <div className="mt-2 grid gap-1.5 text-[11px] text-text-secondary"><span>◌ Bạn đã giới thiệu: <strong className="text-foreground">{referralData?.invitations?.length ?? 0} người</strong></span><span>◌ Phần thưởng nhận được: <strong className="text-foreground">{formatNumber(referralData?.totalRewarded ?? 0)} Point</strong></span></div>
-                <Link href="/referrals" className="mt-3 inline-flex items-center gap-1 rounded-md border border-primary/20 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary-light">Mời bạn bè ngay <ArrowRight size={13} /></Link>
+                <Link href={ROUTES.referrals} className="mt-3 inline-flex items-center gap-1 rounded-md border border-primary/20 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary-light">Mời bạn bè ngay <ArrowRight size={13} /></Link>
               </>}
             </div>
           </section>
@@ -156,7 +157,7 @@ export default function Profile() {
           <section className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-sm)]">
             <SectionHeader title="Nhiệm vụ hôm nay" icon={Target} actionHref="/missions" action="Xem tất cả" />
             <div className="mt-3 space-y-2">{missions.length ? missions.slice(0, 3).map(item => <QuestItem key={item.assignment.id} item={item} />) : <DashboardEmpty icon={Target} title="Chưa có nhiệm vụ phù hợp" text="Nhiệm vụ mới sẽ xuất hiện theo nhịp học." />}</div>
-            <Link href="/missions" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Xem tất cả nhiệm vụ <ArrowRight size={13} /> <span className="sr-only">Đã hoàn thành {missionDone} nhiệm vụ</span></Link>
+            <Link href={ROUTES.missions} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Xem tất cả nhiệm vụ <ArrowRight size={13} /> <span className="sr-only">Đã hoàn thành {missionDone} nhiệm vụ</span></Link>
           </section>
 
           <section className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--shadow-sm)]">
@@ -204,4 +205,4 @@ function DashboardEmpty({ icon: Icon, title, text }: { icon: typeof Target; titl
 function SignInState() { return <main className="container grid min-h-[calc(100vh-76px)] place-items-center py-12"><section className="max-w-md rounded-[28px] border border-border bg-surface p-8 text-center shadow-[var(--shadow-md)]"><span className="mx-auto grid size-12 place-items-center rounded-[var(--radius-md-token)] bg-primary-light text-primary"><LogIn size={21} /></span><h1 className="mt-6 text-3xl font-black tracking-[-.04em] text-foreground">Trung tâm học tập của bạn</h1><p className="mt-3 text-sm leading-6 text-text-secondary">Đăng nhập để lưu kết quả, theo dõi tiến độ và quản lý hành trình học tập cá nhân.</p><Button onClick={() => startLogin()} className="mt-7 rounded-full">Đăng nhập để tiếp tục <ArrowRight size={15} /></Button></section></main>; }
 function ProfileLoadingState({ label }: { label: string }) { return <main className="container py-8"><section className="animate-pulse rounded-[28px] bg-muted/70 p-7 sm:p-9"><p role="status" aria-live="polite" className="text-sm font-medium text-text-secondary">{label}</p><div className="mt-6 grid gap-3 sm:grid-cols-3"><span className="h-24 rounded-[var(--radius-lg-token)] bg-surface/80" /><span className="h-24 rounded-[var(--radius-lg-token)] bg-surface/80" /><span className="h-24 rounded-[var(--radius-lg-token)] bg-surface/80" /></div></section></main>; }
 function ProfileErrorState({ message, onRetry }: { message?: string; onRetry: () => void }) { return <main className="container grid min-h-[70vh] place-items-center py-12"><section className="max-w-md rounded-[var(--radius-xl-token)] border border-danger/20 bg-surface p-8 text-center shadow-[var(--shadow-sm)]"><h1 className="text-2xl font-black text-foreground">Chưa tải được Dashboard</h1><p className="mt-3 text-sm leading-6 text-text-secondary">{message ?? "Vui lòng kiểm tra kết nối rồi thử lại."}</p><Button onClick={onRetry} className="mt-6 rounded-full">Thử lại</Button></section></main>; }
-function EmptyActivity() { return <div className="mt-3 rounded-lg border border-dashed border-border bg-muted/50 p-4 text-center"><BookOpenCheck className="mx-auto text-primary" size={20} /><p className="mt-2 text-xs font-bold text-foreground">Bạn chưa có lượt làm bài được lưu</p><p className="mt-1 text-[10px] leading-4 text-text-secondary">Chọn một bộ đề để bắt đầu hành trình.</p><Button asChild variant="outline" className="mt-3 h-8 rounded-full text-xs"><Link href="/quiz">Khám phá bộ đề <ArrowRight size={13} /></Link></Button></div>; }
+function EmptyActivity() { return <div className="mt-3 rounded-lg border border-dashed border-border bg-muted/50 p-4 text-center"><BookOpenCheck className="mx-auto text-primary" size={20} /><p className="mt-2 text-xs font-bold text-foreground">Bạn chưa có lượt làm bài được lưu</p><p className="mt-1 text-[10px] leading-4 text-text-secondary">Chọn một bộ đề để bắt đầu hành trình.</p><Button asChild variant="outline" className="mt-3 h-8 rounded-full text-xs"><Link href={ROUTES.explore}>Khám phá bộ đề <ArrowRight size={13} /></Link></Button></div>; }

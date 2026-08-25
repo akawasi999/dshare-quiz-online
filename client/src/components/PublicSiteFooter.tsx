@@ -2,6 +2,7 @@ import BrandLogo from "@/components/BrandLogo";
 import { FooterLinkIconGlyph, FooterSocialIcon, socialColorPresets, socialPlatformLabels } from "@/components/FooterIcons";
 import type { AppearanceConfig } from "@/lib/appearanceConfig";
 import { mergeAppearanceConfig } from "@/lib/appearanceConfig";
+import { ROUTES } from "@/lib/routes";
 import { trpc } from "@/lib/trpc";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -33,7 +34,7 @@ export default function PublicSiteFooter() {
         <div><div className="public-site-footer-groups">{groups.map(group => <section key={group.id}><h2 className="text-sm font-bold text-white">{group.title || "Liên kết"}</h2><nav aria-label={`Liên kết ${group.title || "Footer"}`} className="mt-4 space-y-2.5">{group.links.filter(link => link.enabled).map(link => <a key={`${link.label}-${link.url}`} href={link.url} className="flex items-center gap-2 text-sm text-white/65 transition-colors hover:text-white focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"><FooterLinkIconGlyph icon={link.icon} /><span>{link.label}</span></a>)}</nav></section>)}</div><SocialIconList links={navigationSocialLinks} footer={footer} className="mt-6" /></div>
       </div>
       <div className="mt-9 flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-5 text-xs text-white/55">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2"><span>{footer.copyright}</span><nav aria-label="Thông tin Footer" className="flex items-center gap-3"><a href="/terms" className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Điều khoản sử dụng</a><a href="/privacy" className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Chính sách bảo mật</a><a href="/support" className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Liên hệ & Hỗ trợ</a></nav></div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2"><span>{footer.copyright}</span><nav aria-label="Thông tin Footer" className="flex items-center gap-3"><a href={ROUTES.terms} className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Điều khoản sử dụng</a><a href={ROUTES.privacy} className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Chính sách bảo mật</a><a href={ROUTES.support} className="transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Liên hệ & Hỗ trợ</a></nav></div>
         <SocialIconList links={bottomSocialLinks} footer={footer} />
         {footer.showThemeSwitcher ? <span>Học tập rõ ràng hơn mỗi ngày.</span> : null}
       </div>

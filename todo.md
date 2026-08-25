@@ -744,3 +744,6 @@
 - [x] Loại bỏ route/redirect cũ và chuẩn hóa hằng số điều hướng về URL trực tiếp mới.
 - [x] Cập nhật liên kết giao diện, sitemap và các điểm deep-link về URL chuẩn.
 - [x] Kiểm thử điều hướng, deep-link và regression toàn hệ thống.
+- [x] Kiểm kê href hard-code và điểm tiêu thụ dữ liệu Chủ đề trong Khám phá.
+- [ ] Chuẩn hóa href component theo cấu hình ROUTES dùng chung.
+- [ ] Đồng bộ Khám phá với Chủ đề đang hoạt động từ CPanel, kiểm thử và lưu checkpoint.

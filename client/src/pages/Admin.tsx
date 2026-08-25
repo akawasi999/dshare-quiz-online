@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ROUTES } from "@/lib/routes";
 import { trpc } from "@/lib/trpc";
 import { AlertTriangle, BarChart3, BookOpenCheck, CircleHelp, Download, Layers3, Loader2, Plus, Save, ShieldAlert, Upload, UsersRound } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -35,45 +36,27 @@ import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
-const legacyLearningRedirects: Record<string, string> = {
-  "/quan-tri/noi-dung": "/quan-tri/chu-de",
-  "/quan-tri/cau-hoi": "/quan-tri/quiz-system",
-  "/quan-tri/tao-de-ngau-nhien": "/quan-tri/quiz-system",
-  "/quan-tri/import-xuat": "/quan-tri/quiz-system",
-  "/admin/learning/content": "/quan-tri/chu-de",
-  "/admin/learning/questions": "/quan-tri/quiz-system",
-  "/admin/learning/random-generator": "/quan-tri/quiz-system",
-  "/admin/learning/import-export": "/quan-tri/quiz-system",
-};
-
 export default function Admin() {
   const { user, loading } = useAuth();
-  const [location, setLocation] = useLocation();
-  const legacyDestination = legacyLearningRedirects[location];
-  useEffect(() => {
-    if (legacyDestination) setLocation(legacyDestination, { replace: true });
-  }, [legacyDestination, setLocation]);
+  const [location] = useLocation();
   if (loading) return <main className="grid min-h-screen place-items-center bg-[#ebf8ff] p-6"><p role="status" aria-live="polite" className="text-sm font-medium text-[#617786]">Đang kiểm tra quyền truy cập quản trị…</p></main>;
   if (user?.role !== "admin") return <main className="grid min-h-screen place-items-center bg-[#f4f7ff] p-6"><div className="max-w-md rounded-[28px] bg-white p-8 text-center shadow-sm"><ShieldAlert className="mx-auto text-[#b66b59]" size={30} /><h1 className="mt-4 font-serif text-3xl font-semibold text-[#172554]">Khu vực hạn chế</h1><p className="mt-3 text-sm leading-6 text-[#617786]">Chỉ tài khoản quản trị có quyền truy cập vào trung tâm điều hành Dshare.</p></div></main>;
-  const canonicalLocation = {
-    "/admin": "/quan-tri", "/admin/dashboard": "/quan-tri", "/admin/learning/topics": "/quan-tri/chu-de", "/admin/learning/quizzes": "/quan-tri/quiz-system", "/admin/gamification/points": "/quan-tri/point", "/admin/gamification/xp": "/quan-tri/xp", "/admin/gamification": "/quan-tri/gamification", "/admin/users": "/quan-tri/nguoi-dung", "/admin/users/groups": "/quan-tri/nhom-nguoi-dung", "/admin/moderation/errors": "/quan-tri/bao-loi", "/admin/analytics": "/quan-tri/bao-cao", "/admin/seo-preview": "/quan-tri/seo-preview", "/admin/system/monitoring": "/quan-tri/live-monitoring", "/admin/system/logs": "/quan-tri/nhat-ky", "/admin/appearance/theme": "/quan-tri/thuong-hieu", "/admin/settings": "/quan-tri/cai-dat",
-  }[location] ?? location;
   let content = <AdminOperationsDashboard />;
-  if (canonicalLocation === "/quan-tri/chu-de") content = <TopicManagementPanel />;
-  if (canonicalLocation === "/quan-tri/quiz-system") content = <QuizSystemPanel />;
-  if (canonicalLocation === "/quan-tri/nguoi-dung") content = <UserManagementPanel />;
-  if (canonicalLocation === "/quan-tri/nhom-nguoi-dung") content = <MembershipGroupPermissionsPanel />;
-  if (canonicalLocation === "/quan-tri/bao-cao") content = <AnalyticsControlPanel />;
-  if (canonicalLocation === "/quan-tri/seo-preview") content = <OpenGraphPreviewPanel />;
-  if (canonicalLocation === "/quan-tri/live-monitoring") content = <LiveMonitoringPanel />;
-  if (canonicalLocation === "/quan-tri/bao-loi") content = <AdminBugReportsPanel />;
-  if (canonicalLocation === "/quan-tri/point") content = <AdminPointLedgerPanel />;
-  if (canonicalLocation === "/quan-tri/xp") content = <XpProgressionPanel />;
-  if (canonicalLocation === "/quan-tri/gamification") content = <><GamificationControlPanel /><GamificationCampaignPanel /></>;
-  if (canonicalLocation === "/quan-tri/nhat-ky") content = <AuditTrail />;
-  if (canonicalLocation === "/quan-tri/thuong-hieu") content = <BrandSettingsPanel />;
-  if (canonicalLocation === "/quan-tri/cai-dat") content = <SystemSettingsPanel />;
-  if (canonicalLocation === "/quan-tri/ai-assistant") content = <AdminAiAssistantPanel />;
+  if (location === ROUTES.adminTopics) content = <TopicManagementPanel />;
+  if (location === ROUTES.adminQuizzes) content = <QuizSystemPanel />;
+  if (location === ROUTES.adminUsers) content = <UserManagementPanel />;
+  if (location === ROUTES.adminUserGroups) content = <MembershipGroupPermissionsPanel />;
+  if (location === ROUTES.adminAnalytics) content = <AnalyticsControlPanel />;
+  if (location === ROUTES.adminSeoPreview) content = <OpenGraphPreviewPanel />;
+  if (location === ROUTES.adminMonitoring) content = <LiveMonitoringPanel />;
+  if (location === ROUTES.adminErrors) content = <AdminBugReportsPanel />;
+  if (location === ROUTES.adminPoints) content = <AdminPointLedgerPanel />;
+  if (location === ROUTES.adminXp) content = <XpProgressionPanel />;
+  if (location === ROUTES.adminGamification) content = <><GamificationControlPanel /><GamificationCampaignPanel /></>;
+  if (location === ROUTES.adminLogs) content = <AuditTrail />;
+  if (location === ROUTES.adminTheme) content = <BrandSettingsPanel />;
+  if (location === ROUTES.adminSettings) content = <SystemSettingsPanel />;
+  if (location === ROUTES.adminAi) content = <AdminAiAssistantPanel />;
   return <DashboardLayout>{content}</DashboardLayout>;
 }
 

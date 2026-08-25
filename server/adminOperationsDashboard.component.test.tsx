@@ -27,7 +27,7 @@ describe("AdminOperationsDashboard", () => {
     expect(screen.getByText("Point economy, tách biệt với XP")).toBeTruthy();
     expect(screen.getByText("Hệ XP, nhiệm vụ, streak và achievement chưa được khởi tạo dữ liệu; dashboard không hiển thị số liệu thay thế.")).toBeTruthy();
     expect(screen.getAllByText("120").length).toBeGreaterThan(0);
-    expect(screen.getByRole("link", { name: /Xem báo cáo/i }).getAttribute("href")).toBe("/quan-tri/bao-cao");
-    expect(screen.getAllByRole("link", { name: /Chờ duyệt|Quiz chờ duyệt/i }).some(link => link.getAttribute("href") === "/quan-tri/quiz-system?status=pending_review")).toBe(true);
+    expect(screen.getByRole("link", { name: /Xem báo cáo/i }).getAttribute("href")).toBe("/admin/analytics");
+    expect(screen.getAllByRole("link", { name: /Chờ duyệt|Quiz chờ duyệt/i }).some(link => link.getAttribute("href") === "/admin/learning/quizzes?status=pending_review")).toBe(true);
   });
 });

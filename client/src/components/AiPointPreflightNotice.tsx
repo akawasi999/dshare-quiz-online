@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { ROUTES } from "@/lib/routes";
 import { CheckCircle2, CircleAlert, Coins, Sparkles } from "lucide-react";
 
 type PointRule = { code: string; name: string; pointCost: number; canAfford: boolean };
@@ -30,9 +31,9 @@ export default function AiPointPreflightNotice({
       <section className="min-w-0 border-b border-[#172554]/8 pb-5 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-5">
         <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#71838d]">Liên kết</p>
         <nav aria-label="Liên kết pháp lý" className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-          <a href="/terms" className="text-xs font-semibold text-[#065be5] hover:underline">Điều khoản</a>
-          <a href="/support" className="text-xs font-semibold text-[#065be5] hover:underline">Liên hệ</a>
-          <a href="/privacy" className="text-xs font-semibold text-[#065be5] hover:underline">Bảo mật</a>
+          <a href={ROUTES.terms} className="text-xs font-semibold text-[#065be5] hover:underline">Điều khoản</a>
+          <a href={ROUTES.support} className="text-xs font-semibold text-[#065be5] hover:underline">Liên hệ</a>
+          <a href={ROUTES.privacy} className="text-xs font-semibold text-[#065be5] hover:underline">Bảo mật</a>
         </nav>
       </section>
       <section className="min-w-0 border-b border-[#172554]/8 pb-5 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-5">
@@ -49,7 +50,7 @@ export default function AiPointPreflightNotice({
         <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#71838d]">Ví Point</p>
         <div className="mt-3 flex items-center gap-2">
           <span className={`grid size-9 shrink-0 place-items-center rounded-xl ${affordable ? "bg-[#eef4ff] text-[#065be5]" : "bg-[#fff1f6] text-[#de1264]"}`}>{affordable ? <Coins size={18} /> : <CircleAlert size={18} />}</span>
-          <div><p className="text-sm font-black text-[#172554]">{balance === undefined ? "—" : balance.toLocaleString("vi-VN")} Point</p><a href="/billing" className="mt-0.5 inline-block text-[11px] font-bold text-[#065be5] hover:underline">Nạp Point</a></div>
+          <div><p className="text-sm font-black text-[#172554]">{balance === undefined ? "—" : balance.toLocaleString("vi-VN")} Point</p><a href={ROUTES.billing} className="mt-0.5 inline-block text-[11px] font-bold text-[#065be5] hover:underline">Nạp Point</a></div>
         </div>
       </section>
       {showApplyAction ? <section className="min-w-0">
