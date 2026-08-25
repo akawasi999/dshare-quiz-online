@@ -440,10 +440,8 @@ export default function QuizRunner() {
                     </span>
                     {isSandbox ? <span className="rounded-full bg-white/12 px-3 py-2 text-[10px] font-bold text-white/85">Sandbox</span> : null}
                   </div>
-                  <h1 className="mt-5 text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.03] tracking-[-.06em] lg:mt-2 lg:text-[1.75rem]">
-                    <span className="inline-block rounded-xl bg-white px-3 py-1.5 text-[#0b3ea8] shadow-[0_10px_24px_rgba(5,23,89,.24)] lg:rounded-lg lg:px-2.5 lg:py-1">
-                      {fallback.title}
-                    </span>
+                  <h1 className="mt-5 max-w-[18ch] break-words text-balance text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.12] tracking-[-.05em] !text-white drop-shadow-[0_3px_8px_rgba(5,23,89,.38)] lg:mt-2 lg:text-[2rem]">
+                    {fallback.title}
                   </h1>
                 </div>
                 <div className="relative mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:mt-2 lg:gap-1.5">
@@ -875,7 +873,7 @@ function HeroStat({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/12 p-3.5 backdrop-blur-sm lg:rounded-xl lg:p-2">
+    <div className="rounded-2xl bg-white/12 p-3.5 backdrop-blur-sm lg:rounded-lg lg:p-2.5">
       <div className="flex items-center gap-2 text-white/80">
         {icon}
         <p className="text-[10px] font-bold uppercase tracking-[.11em]">{label}</p>
