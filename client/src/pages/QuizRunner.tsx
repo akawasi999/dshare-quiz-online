@@ -417,7 +417,7 @@ export default function QuizRunner() {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_12%_8%,color-mix(in_srgb,var(--primary)_10%,transparent),transparent_34%),radial-gradient(circle_at_88%_28%,color-mix(in_srgb,var(--accent)_12%,transparent),transparent_32%),var(--background)]">
         <SiteHeader />
-        <main className="container py-8 lg:py-12">
+        <main className="container py-4 lg:py-5">
           <Link
             href={isSandbox ? ROUTES.quizBuilder : ROUTES.explore}
             className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-surface px-4 text-xs font-bold text-text-secondary shadow-[var(--shadow-sm)] transition-[transform,border-color,color] hover:-translate-y-0.5 hover:border-primary/35 hover:text-primary"
@@ -429,7 +429,6 @@ export default function QuizRunner() {
             <div className="overflow-hidden rounded-[26px] border border-border bg-surface shadow-[0_20px_56px_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
               <div className="relative min-h-[330px] overflow-hidden bg-[linear-gradient(135deg,#085ef0_0%,#184bd6_52%,#5935dc_100%)] p-7 text-white sm:p-9">
                 <div aria-hidden="true" className="absolute -left-12 -top-20 size-72 rounded-full bg-white/8" />
-                <div aria-hidden="true" className="absolute -bottom-28 right-1/4 size-80 rounded-full border-[42px] border-white/8" />
                 <div aria-hidden="true" className="absolute right-8 top-10 hidden size-36 rotate-6 place-items-center rounded-[30px] border border-white/35 bg-white/15 shadow-[0_20px_35px_rgba(10,32,117,.25)] backdrop-blur md:grid">
                   <ClipboardCheck size={78} strokeWidth={1.35} className="text-white" />
                 </div>

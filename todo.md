@@ -752,3 +752,4 @@
 - [x] Hiển thị tối đa 9 thẻ Quiz mỗi trang và thêm phân trang Trước/Sau theo mẫu.
 - [x] Thiết kế lại Quiz Runner chuyên nghiệp và đồng bộ đường dẫn Chủ đề CPanel trong luồng làm bài.
 - [x] Thiết kế lại màn hình chuẩn bị Quiz Runner theo bố cục trực quan tham chiếu, giữ đồng bộ Chủ đề CPanel.
+- [x] Tinh gọn hero Runner: bỏ khoảng trống phía trên liên kết quay lại và vòng tròn trang trí trắng.
