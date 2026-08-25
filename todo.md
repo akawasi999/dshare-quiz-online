@@ -719,3 +719,5 @@
 - [x] Chuyển nút xem trước sang bên trái Xuất bản và đánh dấu Cài đặt khi thiếu chủ đề.
 - [x] Cuộn Editor tới card tương ứng khi chọn câu trong Sidebar và sửa nút quay lại.
 - [x] Kiểm thử interaction, regression và lưu checkpoint các tinh chỉnh thao tác Studio.
+- [x] Khôi phục Header Studio trên `/quiz/create` trong khi Header website vẫn ẩn.
+- [x] Kiểm thử Header Studio, viewport và lưu checkpoint bản sửa.

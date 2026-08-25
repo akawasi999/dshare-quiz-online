@@ -8,7 +8,7 @@ export default function AccountLayout({ children, hideSidebar = false, hideHeade
     <div className={compactViewport ? (hideSidebar ? "block min-h-0 flex-1" : "flex min-h-0 flex-1 flex-col") : (hideSidebar ? "block min-h-[calc(100dvh-76px)]" : "flex min-h-[calc(100dvh-76px)] flex-1 flex-col")}>
       <div className={`mx-auto w-full ${compactViewport ? "h-full min-h-0" : "min-h-[calc(100dvh-76px)]"} ${hideSidebar ? "block max-w-none" : "flex items-stretch max-w-[1600px]"}`}>
         {hideSidebar ? null : <AccountSidebar />}
-        <div className="min-w-0 flex-1">{children}</div>
+        <div className={`min-w-0 flex-1 ${compactViewport && hideSidebar ? "h-full min-h-0" : ""}`}>{children}</div>
       </div>
     </div>
     {hideFooter ? null : <PublicSiteFooter />}

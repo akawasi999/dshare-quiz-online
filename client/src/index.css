@@ -414,6 +414,35 @@ button:active { transform: scale(.97); }
   main:has(> [data-testid="spec-quiz-workspace"]) > [data-testid="spec-quiz-workspace"] > aside > section { height: 100%; }
 }
 
+/* Studio owns the viewport beneath the account shell. Reserve 60px for its own
+   header instead of allowing the workspace to consume and clip that header. */
+main.quiz-create-page:has(> [data-testid="spec-quiz-workspace"]) {
+  display: flex;
+  height: 100% !important;
+  min-height: 0 !important;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+main.quiz-create-page:has(> [data-testid="spec-quiz-workspace"]) > .editor-header {
+  height: 60px;
+  min-height: 60px;
+  flex: 0 0 60px;
+}
+
+main.quiz-create-page:has(> [data-testid="spec-quiz-workspace"]) > [data-testid="spec-quiz-workspace"] {
+  height: auto !important;
+  min-height: 0 !important;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+main.quiz-create-page:has(> [data-testid="spec-quiz-workspace"]) > [data-testid="spec-quiz-workspace"] > aside,
+main.quiz-create-page:has(> [data-testid="spec-quiz-workspace"]) > [data-testid="spec-quiz-workspace"] > aside > section {
+  height: auto !important;
+  min-height: 0;
+}
+
 html:has(main[data-ai-viewport="true"]),
 body:has(main[data-ai-viewport="true"]) {
   height: 100vh;
