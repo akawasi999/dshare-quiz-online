@@ -758,3 +758,5 @@
 - [x] Tăng độ tương phản và làm nổi bật tiêu đề Quiz trong hero Runner.
 - [x] Loại bỏ mô tả phía dưới tiêu đề Quiz trong hero Runner.
 - [x] Loại bỏ minh họa clipboard phía trên khu vực Chế độ trong hero Runner.
+- [x] Tăng kích thước chữ phần lưu ý và bảng thông số xác nhận trong Quiz Runner.
+- [x] Tăng kích thước chữ mô tả trong dải Cam kết chất lượng của Quiz Runner.

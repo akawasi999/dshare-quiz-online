@@ -465,7 +465,7 @@ export default function QuizRunner() {
                   </div>
                 </InfoPanel>
                 <InfoPanel icon={<AlertTriangle size={21} />} title="Lưu ý khi làm bài">
-                  <ul className="space-y-1.5 text-xs leading-5 text-text-secondary lg:grid lg:grid-cols-3 lg:gap-2 lg:space-y-0 lg:text-[10px] lg:leading-4">
+                  <ul className="space-y-1.5 text-xs leading-5 text-text-secondary lg:grid lg:grid-cols-3 lg:gap-2 lg:space-y-0 lg:text-xs lg:leading-4">
                     <li className="flex gap-2"><CircleCheck size={14} className="mt-0.5 shrink-0 text-primary" />Duy trì kết nối ổn định trong suốt quá trình làm bài.</li>
                     <li className="flex gap-2"><CircleCheck size={14} className="mt-0.5 shrink-0 text-primary" />Kết quả được tính ngay sau khi bạn nộp bài.</li>
                     <li className="flex gap-2"><CircleCheck size={14} className="mt-0.5 shrink-0 text-primary" />Bạn có thể xem lại đáp án và giải thích sau khi hoàn thành.</li>
@@ -920,11 +920,11 @@ function ConfirmMetric({
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-5 lg:py-3">
-      <span className="flex min-w-0 items-center gap-3 text-sm text-text-secondary lg:gap-2 lg:text-xs">
+      <span className="flex min-w-0 items-center gap-3 text-sm text-text-secondary lg:gap-2 lg:text-sm">
         <span className="text-primary">{icon}</span>
         <span>{label}</span>
       </span>
-      <strong className="shrink-0 text-sm text-foreground lg:text-xs">{value}</strong>
+      <strong className="shrink-0 text-sm text-foreground lg:text-sm">{value}</strong>
     </div>
   );
 }
@@ -943,7 +943,7 @@ function TrustItem({
       <span className="mt-0.5 text-primary">{icon}</span>
       <div>
         <h3 className="text-xs font-bold text-foreground lg:text-[11px]">{title}</h3>
-        <p className="mt-1 text-[11px] leading-5 text-text-secondary lg:leading-4">{description}</p>
+        <p className="mt-1 text-[13px] leading-5 text-text-secondary lg:text-[13px] lg:leading-5">{description}</p>
       </div>
     </div>
   );
