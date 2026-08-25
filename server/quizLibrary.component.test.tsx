@@ -152,4 +152,44 @@ describe("QuizLibrary component", () => {
     expect(screen.getByText("Python cơ bản")).toBeTruthy();
     expect(screen.queryByText("Tiếng Anh giao tiếp")).toBeNull();
   });
+
+  it("hiển thị tối đa 9 thẻ mỗi trang và chuyển trang bằng điều khiển Trước/Sau", async () => {
+    const user = userEvent.setup();
+    mocks.catalog.data = Array.from({ length: 10 }, (_, index) => ({
+      quizId: index + 1,
+      title: `Bộ đề ${index + 1}`,
+      summary: null,
+      mode: "training",
+      difficulty: "easy",
+      accessTier: "basic",
+      durationSeconds: 900,
+      questionCount: 10,
+      entryPointCost: 0,
+      completionReward: 10,
+      attemptCount: 0,
+      recentAttemptCount: 0,
+      createdAt: new Date(`2026-08-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`),
+      coverImageUrl: null,
+      topicId: 10,
+      topicTitle: "Tiểu học",
+      rootTopicId: 10,
+      rootTopicTitle: "Tiểu học",
+      topicPath: "Tiểu học › Lớp 5",
+      categoryTitle: "Danh mục cũ",
+      subjectTitle: "",
+      lessonTitle: "",
+    }));
+
+    render(<QuizLibrary />);
+
+    expect(screen.getByText("Bộ đề 10")).toBeTruthy();
+    expect(screen.queryByText("Bộ đề 1")).toBeNull();
+    expect(screen.queryByText("Tải thêm bộ đề")).toBeNull();
+    expect(screen.getByRole("link", { name: "Trang trước" }).getAttribute("aria-disabled")).toBe("true");
+
+    await user.click(screen.getByRole("link", { name: "Trang sau" }));
+    expect(screen.getByText("Bộ đề 1")).toBeTruthy();
+    expect(screen.queryByText("Bộ đề 10")).toBeNull();
+    expect(screen.getByRole("link", { name: "Trang sau" }).getAttribute("aria-disabled")).toBe("true");
+  });
 });
