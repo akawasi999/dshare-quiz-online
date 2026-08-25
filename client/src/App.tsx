@@ -36,14 +36,14 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 
 function Router() {
   const [location] = useLocation();
-  const accountWorkspaceRoutes = [ROUTES.account, ROUTES.dashboard, ROUTES.accountProfile, ROUTES.explore, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant];
+  const accountWorkspaceRoutes = [ROUTES.account, ROUTES.dashboard, ROUTES.accountProfile, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant, ROUTES.practice, ROUTES.practiceReview];
   const hidePublicFooter = location.startsWith("/admin") || accountWorkspaceRoutes.some(route => location === route) || location === ROUTES.quizBuilder || location.startsWith(`${ROUTES.quiz}/`) || location.startsWith(ROUTES.results) || location.startsWith(ROUTES.practice);
   return <><Switch>
     <Route path={ROUTES.home} component={Home} />
-    <Route path={ROUTES.explore}>{() => <LearnerAccountPage Page={QuizLibrary} />}</Route>
+    <Route path={ROUTES.explore}>{() => <QuizLibrary />}</Route>
     <Route path={ROUTES.quizBuilder}>{() => <ProtectedPage Page={UserQuizCreator} />}</Route>
     <Route path={`${ROUTES.results}/:id`}>{() => <ProtectedPage Page={QuizResult} />}</Route>
-    <Route path={`${ROUTES.quiz}/:id`} component={QuizRunner} />
+    <Route path={`${ROUTES.quiz}/:id`}>{() => <ProtectedPage Page={QuizRunner} />}</Route>
     <Route path={ROUTES.leaderboard}>{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
     <Route path={ROUTES.pricing} component={Pricing} />
     <Route path={ROUTES.account}>{() => <ProtectedPage Page={PersonalInfo} />}</Route>
@@ -55,7 +55,8 @@ function Router() {
     <Route path={ROUTES.referrals}>{() => <LearnerAccountPage Page={Referral} access="authenticated" />}</Route>
     <Route path={ROUTES.billing}>{() => <LearnerAccountPage Page={TopUp} access="authenticated" />}</Route>
     <Route path={ROUTES.paymentStatus}>{() => <ProtectedPage Page={PaymentStatus} />}</Route>
-    <Route path={ROUTES.practice}>{() => <ProtectedPage Page={Practice} />}</Route>
+    <Route path={ROUTES.practiceReview}>{() => <LearnerAccountPage Page={Practice} access="authenticated" />}</Route>
+    <Route path={ROUTES.practice}>{() => <LearnerAccountPage Page={PracticeQuizLibrary} access="authenticated" />}</Route>
     <Route path={ROUTES.myQuizzes}>{() => <ProtectedPage Page={MyQuizzes} />}</Route>
     <Route path={ROUTES.aiAssistant}>{() => <LearnerAccountPage Page={AIStudyAssistant} access="authenticated" />}</Route>
     <Route path={ROUTES.terms}>{() => <Legal document="terms" />}</Route>
@@ -103,6 +104,10 @@ function ProtectedPage({ Page, access = "authenticated" }: { Page: React.Compone
 function LearnerAccountPage({ Page, access }: { Page: React.ComponentType; access?: RouteAccess }) {
   const body = <AccountLayout><div className="account-embedded"><Page /></div></AccountLayout>;
   return access ? <RouteAccessGuard access={access}>{body}</RouteAccessGuard> : body;
+}
+
+function PracticeQuizLibrary() {
+  return <QuizLibrary embedded />;
 }
 
 function App() {

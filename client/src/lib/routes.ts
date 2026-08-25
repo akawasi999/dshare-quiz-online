@@ -16,6 +16,7 @@ export const ROUTES = {
   billing: "/billing",
   paymentStatus: "/payment-status",
   practice: "/practice",
+  practiceReview: "/practice/review",
   quizBuilder: "/quiz/create",
   myQuizzes: "/my-quizzes",
   aiAssistant: "/ai-assistant",

@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
-vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
+vi.mock("@/components/SiteHeader", () => ({ default: () => <header data-testid="site-header">Header</header> }));
 vi.mock("@/lib/trpc", () => ({
   trpc: {
     learner: { summary: { useQuery: () => mocks.learner }, quota: { useQuery: () => mocks.quota } },
@@ -61,5 +61,13 @@ describe("QuizLibrary component", () => {
     render(<QuizLibrary />);
     expect(screen.getByRole("link", { name: /nâng cấp ngay/i }).getAttribute("href")).toBe("/bang-gia");
     expect(screen.queryByText("Tiến độ")).toBeNull();
+  });
+
+  it("giữ Khám phá công khai có Header nhưng ẩn Header khi được nhúng vào không gian Làm Quiz", () => {
+    const { rerender } = render(<QuizLibrary />);
+    expect(screen.getByTestId("site-header")).toBeTruthy();
+
+    rerender(<QuizLibrary embedded />);
+    expect(screen.queryByTestId("site-header")).toBeNull();
   });
 });

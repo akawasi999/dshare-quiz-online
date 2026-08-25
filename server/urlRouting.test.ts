@@ -6,6 +6,8 @@ describe("URL routing", () => {
     expect(ROUTES.explore).toBe("/quiz");
     expect(ROUTES.exploreLegacy).toBe("/explore");
     expect(ROUTES.quizBuilder).toBe("/quiz/create");
+    expect(ROUTES.practice).toBe("/practice");
+    expect(ROUTES.practiceReview).toBe("/practice/review");
     expect(ROUTES.account).toBe("/account");
     expect(ROUTES.dashboard).toBe("/dashboard");
     expect(ROUTES.paymentStatus).toBe("/payment-status");

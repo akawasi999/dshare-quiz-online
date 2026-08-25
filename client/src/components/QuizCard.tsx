@@ -1,12 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import AuthActionLink from "@/components/AuthActionLink";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ShowcaseQuiz } from "@/data/demo";
 import { cn } from "@/lib/utils";
 import { formatPublicationDateTime, isQuizNew } from "@shared/quizFreshness";
 import { ArrowUpRight, Award, Clock3, Flame, LockKeyhole, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "wouter";
 
 export default function QuizCard({ quiz, compact = false }: { quiz: ShowcaseQuiz; compact?: boolean }) {
   const isTesting = quiz.mode === "Kiểm tra";
@@ -26,7 +26,7 @@ export default function QuizCard({ quiz, compact = false }: { quiz: ShowcaseQuiz
         <h3 className="text-xl font-bold leading-tight tracking-[-.025em] text-foreground transition-colors group-hover:text-primary">{quiz.title}</h3>
         {!compact ? <p className="mt-3 line-clamp-2 min-h-10 text-[13px] leading-5 text-text-secondary">{quiz.summary}</p> : null}
         <div className="mt-5 flex flex-wrap gap-2 text-[11px] font-medium text-text-secondary"><span className="rounded-full bg-muted px-2.5 py-1">{quiz.difficulty}</span><span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1"><Clock3 size={12} /> {quiz.duration}</span><span className="rounded-full bg-muted px-2.5 py-1">{quiz.questionCount} câu</span><span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1"><UsersRound size={12} /> {typeof quiz.attemptCount === "number" ? `${quiz.attemptCount.toLocaleString("vi-VN")} lượt làm` : "Mới phát hành"}</span></div>
-        <div className="mt-6 flex items-center justify-between border-t border-border-light pt-4"><div><p className="inline-flex items-center gap-1 rounded-full bg-success/12 px-3 py-1.5 text-xs font-bold text-success"><Award size={13} /> {isTesting ? `Phí vào ${quiz.points} Point` : `Thưởng ${quiz.reward} Point`}</p><p className="mt-2 flex items-center gap-1 text-[10px] text-text-muted">{quiz.tier !== "Basic" ? <LockKeyhole size={10} /> : null}{quiz.tier}</p></div><Button asChild variant="ghost" size="sm" className="rounded-full px-3 text-xs font-bold"><Link href={`/quiz/${quiz.id}`} aria-label={`Mở ${quiz.title}`}>Làm bài <ArrowUpRight size={15} /></Link></Button></div>
+        <div className="mt-6 flex items-center justify-between border-t border-border-light pt-4"><div><p className="inline-flex items-center gap-1 rounded-full bg-success/12 px-3 py-1.5 text-xs font-bold text-success"><Award size={13} /> {isTesting ? `Phí vào ${quiz.points} Point` : `Thưởng ${quiz.reward} Point`}</p><p className="mt-2 flex items-center gap-1 text-[10px] text-text-muted">{quiz.tier !== "Basic" ? <LockKeyhole size={10} /> : null}{quiz.tier}</p></div><Button asChild variant="ghost" size="sm" className="rounded-full px-3 text-xs font-bold"><AuthActionLink href={`/quiz/${quiz.id}`} aria-label={`Mở ${quiz.title}`}>Làm bài <ArrowUpRight size={15} /></AuthActionLink></Button></div>
       </div>
     </article>
   );

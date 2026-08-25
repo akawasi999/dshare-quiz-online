@@ -728,3 +728,8 @@
 - [x] Chuẩn hóa Tổng quan `/dashboard`, Thông tin cá nhân `/account`, Khám phá `/quiz` và tách Làm Quiz riêng.
 - [x] Cập nhật mọi liên kết cũ trỏ về `/dashboard` và bảo đảm deep-link sau đăng nhập quay về đúng đích.
 - [x] Kiểm thử routing, deep-link, regression và lưu checkpoint điều hướng mới.
+- [x] Rà soát layout, danh sách Quiz và gate bắt đầu làm bài của Khám phá/Làm Quiz.
+- [x] Tách `/quiz` thành trang Khám phá công khai không có Sidebar Profile, cho phép guest xem danh sách.
+- [x] Bắt buộc Auth Gate khi guest bắt đầu làm Quiz từ Khám phá.
+- [x] Giữ `/practice` trong Profile với Sidebar và danh sách Quiz riêng.
+- [x] Kiểm thử guest/authenticated, responsive, regression và lưu checkpoint tách Khám phá-Làm Quiz.
