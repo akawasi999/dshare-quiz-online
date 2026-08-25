@@ -87,4 +87,25 @@ describe("QuizRunner data state", () => {
     expect(screen.getByText("Kiểm tra Tin học")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Bắt đầu làm bài" })).toBeTruthy();
   });
+
+  it("ẩn thẻ thông số không có dữ liệu trên màn hình chuẩn bị Quiz", () => {
+    mocks.detail.data = {
+      quiz: { id: 999, title: "Quiz không có thông số", summary: "", mode: "training", difficulty: "medium", durationSeconds: 0, questionCount: 0, entryPointCost: 0, completionReward: 0 },
+      category: null,
+      subject: null,
+      lesson: null,
+      topic: { id: 32, name: "Tin học" },
+      topicPath: "Tiểu học › Lớp 5 › Tin học",
+      rootTopicId: 10,
+      rootTopicTitle: "Tiểu học",
+    };
+    mocks.detail.isError = false;
+
+    render(<QuizRunner />);
+
+    expect(screen.queryByText("Thời gian làm bài")).toBeNull();
+    expect(screen.queryByText("Điểm tối đa")).toBeNull();
+    expect(screen.queryByText("0 phút")).toBeNull();
+    expect(screen.getAllByText("Chế độ")).toHaveLength(2);
+  });
 });

@@ -148,6 +148,27 @@ export default function QuizRunner() {
           .filter(Boolean)
           .join(" › ");
   const fallbackDifficulty = getQuizDifficultyTone(fallback.difficulty);
+  const hasDisplayValue = (value: string | number | null | undefined) => {
+    const normalized = String(value ?? "").trim();
+    return normalized !== "" && !["0", "0 phút", "0 giây"].includes(normalized);
+  };
+  const maximumScore = fallback.questionCount > 0 ? "70 điểm" : null;
+  const runnerMode = isSandbox ? "Sandbox" : fallback.mode;
+  const runnerMetrics = [
+    hasDisplayValue(fallback.questionCount)
+      ? { key: "questions", icon: <CircleHelp size={22} />, label: "Câu hỏi", value: `${fallback.questionCount} câu` }
+      : null,
+    hasDisplayValue(fallback.duration)
+      ? { key: "duration", icon: <Clock3 size={22} />, label: "Thời gian", value: fallback.duration }
+      : null,
+    hasDisplayValue(maximumScore)
+      ? { key: "score", icon: <Trophy size={22} />, label: "Điểm tối đa", value: maximumScore }
+      : null,
+    hasDisplayValue(runnerMode)
+      ? { key: "mode", icon: <ListTodo size={22} />, label: "Chế độ", value: runnerMode }
+      : null,
+  ].filter(Boolean) as Array<{ key: string; icon: React.ReactNode; label: string; value: string }>;
+  const runnerMetricColumns = runnerMetrics.length <= 2 ? "sm:grid-cols-2" : runnerMetrics.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-4";
   const start = trpc.quiz.start.useMutation();
   const saveAnswer = trpc.quiz.saveAnswer.useMutation();
   const submit = trpc.quiz.submit.useMutation();
@@ -446,12 +467,9 @@ export default function QuizRunner() {
                     {fallback.title}
                   </h1>
                 </div>
-                <div className="relative mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:mt-2 lg:gap-1.5">
-                  <HeroStat icon={<CircleHelp size={22} />} label="Câu hỏi" value={`${fallback.questionCount} câu`} />
-                  <HeroStat icon={<Clock3 size={22} />} label="Thời gian" value={fallback.duration} />
-                  <HeroStat icon={<Trophy size={22} />} label="Điểm tối đa" value="70 điểm" />
-                  <HeroStat icon={<ListTodo size={22} />} label="Chế độ" value={isSandbox ? "Sandbox" : fallback.mode} />
-                </div>
+                {runnerMetrics.length ? <div className={cn("relative mt-5 grid grid-cols-2 gap-2.5 lg:mt-2 lg:gap-1.5", runnerMetricColumns)}>
+                  {runnerMetrics.map(metric => <HeroStat key={metric.key} icon={metric.icon} label={metric.label} value={metric.value} />)}
+                </div> : null}
               </div>
               <div className="space-y-2.5 p-4 sm:p-5 lg:space-y-1.5 lg:p-3">
                 <InfoPanel icon={<BookOpenCheck size={21} />} title="Nội dung bài tập">
@@ -478,10 +496,7 @@ export default function QuizRunner() {
               <h2 className="mt-3 text-[clamp(1.75rem,3vw,2.35rem)] font-bold leading-[1.14] tracking-[-.05em] text-foreground lg:mt-2 lg:text-[1.65rem]">{isSandbox ? "Sẵn sàng xem trước Quiz?" : "Sẵn sàng chinh phục bài tập này?"}</h2>
               <p className="mt-3 text-sm leading-6 text-text-secondary lg:mt-2 lg:text-xs lg:leading-5">Kiểm tra lại thông tin bên dưới trước khi bắt đầu làm bài.</p>
               <div className="mt-4 divide-y divide-dashed divide-border-light border-y border-dashed border-border-light lg:mt-3">
-                <ConfirmMetric icon={<CircleHelp size={21} />} label="Số câu hỏi" value={`${fallback.questionCount} câu`} />
-                <ConfirmMetric icon={<Clock3 size={21} />} label="Thời gian làm bài" value={fallback.duration} />
-                <ConfirmMetric icon={<Trophy size={21} />} label="Điểm tối đa" value="70 điểm" />
-                <ConfirmMetric icon={<ListTodo size={21} />} label="Chế độ" value={isSandbox ? "Sandbox" : fallback.mode} />
+                {runnerMetrics.map(metric => <ConfirmMetric key={metric.key} icon={metric.key === "questions" ? <CircleHelp size={21} /> : metric.key === "duration" ? <Clock3 size={21} /> : metric.key === "score" ? <Trophy size={21} /> : <ListTodo size={21} />} label={metric.key === "questions" ? "Số câu hỏi" : metric.key === "duration" ? "Thời gian làm bài" : metric.label} value={metric.value} />)}
               </div>
               {fallback.mode === "Kiểm tra" ? <div className="mt-5 rounded-xl border border-warning/20 bg-warning/10 p-3 text-xs leading-5 text-warning"><Sparkles className="mr-1 inline" size={14} />Lệ phí <strong>{fallback.points} Point</strong>; đạt từ 70 điểm để nhận <strong>{fallback.reward} Point</strong>.</div> : null}
               <Button onClick={begin} disabled={start.isPending} aria-busy={start.isPending} size="lg" className="cta-gradient mt-5 h-12 w-full rounded-xl text-sm font-extrabold shadow-[0_12px_24px_color-mix(in_srgb,var(--primary)_28%,transparent)] transition-[transform,box-shadow,filter] hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_16px_30px_color-mix(in_srgb,var(--primary)_34%,transparent)] active:translate-y-0 active:scale-[.98] lg:mt-3 lg:h-10 lg:text-xs">

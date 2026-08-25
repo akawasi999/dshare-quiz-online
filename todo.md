@@ -763,3 +763,4 @@
 - [x] Đổi tiêu đề Quiz hero thành chữ trắng không nền, tự xuống dòng và giãn cách theo nội dung dài.
 - [x] Chuẩn hóa màu nhãn độ khó toàn hệ thống: Dễ xanh lá, Trung bình cam, Nâng cao hồng.
 - [x] Căn icon trái, nội dung giữa và chiều dọc đồng đều cho bốn thẻ thông số hero Runner.
+- [x] Tự động ẩn thẻ thông số hero Quiz Runner khi không có dữ liệu hiển thị.
