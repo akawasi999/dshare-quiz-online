@@ -754,3 +754,7 @@
 - [x] Thiết kế lại màn hình chuẩn bị Quiz Runner theo bố cục trực quan tham chiếu, giữ đồng bộ Chủ đề CPanel.
 - [x] Tinh gọn hero Runner: bỏ khoảng trống phía trên liên kết quay lại và vòng tròn trang trí trắng.
 - [x] Tối ưu mật độ Runner desktop/tablet/mobile, thêm hover CTA và breadcrumb quay lại Chủ đề CPanel.
+- [x] Gỡ breadcrumb và nén màn hình chuẩn bị Runner để vừa viewport desktop không có thanh cuộn ngoài.
+- [x] Tăng độ tương phản và làm nổi bật tiêu đề Quiz trong hero Runner.
+- [x] Loại bỏ mô tả phía dưới tiêu đề Quiz trong hero Runner.
+- [x] Loại bỏ minh họa clipboard phía trên khu vực Chế độ trong hero Runner.
