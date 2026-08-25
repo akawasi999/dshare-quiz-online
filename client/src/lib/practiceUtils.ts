@@ -53,4 +53,4 @@ export function getPracticeTransition(input: { questionIndex: number; questionCo
   return input.questionIndex < input.questionCount - 1 ? "next-question" : "complete-session";
 }
 
-export const practiceCompletionDestination = "/explore";
+export const practiceCompletionDestination = "/quiz";

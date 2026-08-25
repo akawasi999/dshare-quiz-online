@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({ user: null as null | { id: number; role: "user
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: mocks.user, loading: mocks.loading, error: mocks.error }) }));
 vi.mock("@/contexts/AuthGateContext", () => ({ useAuthGate: () => ({ openAuth: mocks.openAuth, requireAuth: vi.fn(), isAuthenticated: Boolean(mocks.user) }) }));
-vi.mock("wouter", () => ({ useLocation: () => ["/account", mocks.setLocation] }));
+vi.mock("wouter", () => ({ useLocation: () => ["/dashboard", mocks.setLocation] }));
 
 import RouteAccessGuard from "../client/src/components/RouteAccessGuard";
 
@@ -16,7 +16,7 @@ describe("RouteAccessGuard", () => {
 
   it("mở Auth Gate và không render dữ liệu nhạy cảm khi guest truy cập route protected", async () => {
     render(<RouteAccessGuard access="authenticated"><p>Dữ liệu riêng tư</p></RouteAccessGuard>);
-    await waitFor(() => expect(mocks.openAuth).toHaveBeenCalledWith({ mode: "login", returnTo: "/account" }));
+    await waitFor(() => expect(mocks.openAuth).toHaveBeenCalledWith({ mode: "login", returnTo: "/dashboard" }));
     expect(screen.queryByText("Dữ liệu riêng tư")).toBeNull();
     expect(screen.getByText("Đăng nhập để tiếp tục")).toBeTruthy();
   });

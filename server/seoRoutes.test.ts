@@ -6,7 +6,7 @@ import { withImageCacheVersion } from "./db";
 
 describe("SEO routes", () => {
   it("chuyển URL tiếng Việt cũ sang route tiếng Anh, kể cả trang kết quả động", () => {
-    expect(resolveLegacyRedirect("/kham-pha")).toBe("/explore");
+    expect(resolveLegacyRedirect("/kham-pha")).toBe("/quiz");
     expect(resolveLegacyRedirect("/quan-tri/chu-de")).toBe("/admin/learning/topics");
     expect(resolveLegacyRedirect("/ket-qua/42")).toBe("/results/42");
     expect(resolveLegacyRedirect("/api/trpc")).toBeNull();

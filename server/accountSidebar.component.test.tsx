@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name: "Học viên" }, logout: vi.fn() }) }));
-vi.mock("wouter", () => ({ useLocation: () => ["/ho-so", vi.fn()] }));
+vi.mock("wouter", () => ({ useLocation: () => ["/dashboard", vi.fn()] }));
 
 import AccountSidebar from "../client/src/components/AccountSidebar";
 
@@ -16,6 +16,8 @@ describe("AccountSidebar", () => {
   it("giữ menu tối giản theo nhóm và không còn hiển thị các trang đã nằm trong Tổng quan", () => {
     render(<AccountSidebar />);
     expect(screen.getByRole("button", { name: "Tổng quan" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Khám phá" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Làm Quiz" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Quiz của tôi" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "AI Assistant" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Nhiệm vụ" })).toBeNull();

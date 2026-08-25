@@ -67,7 +67,7 @@ describe("Practice component", () => {
     setPractice([]);
     render(<Practice />);
     expect(screen.getByRole("heading", { name: "Chưa có câu cần ôn" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Khám phá bộ đề" }).getAttribute("href")).toBe("/explore");
+    expect(screen.getByRole("link", { name: "Khám phá bộ đề" }).getAttribute("href")).toBe("/quiz");
   });
 
   it("chấm ngay single và hiển thị thẻ hoàn thành cùng CTA điều hướng", async () => {
@@ -79,7 +79,7 @@ describe("Practice component", () => {
     await user.click(screen.getByRole("button", { name: /Hoàn tất luyện tập/ }));
     expect(mocks.completePractice.mutate).toHaveBeenCalledWith({ questionId: 101 }, expect.any(Object));
     expect(screen.getByRole("heading", { name: "Bạn đã hoàn thành phiên luyện tập" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Khám phá bộ đề/ }).getAttribute("href")).toBe("/explore");
+    expect(screen.getByRole("link", { name: /Khám phá bộ đề/ }).getAttribute("href")).toBe("/quiz");
   });
 
   it("yêu cầu xác nhận câu multiple trước khi phản hồi đáp án", async () => {

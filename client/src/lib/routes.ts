@@ -1,6 +1,7 @@
 export const ROUTES = {
   home: "/",
-  explore: "/explore",
+  explore: "/quiz",
+  exploreLegacy: "/explore",
   quiz: "/quiz",
   results: "/results",
   leaderboard: "/leaderboard",
@@ -86,11 +87,12 @@ export const ROUTE_META: Partial<Record<(typeof ROUTES)[keyof typeof ROUTES], Ro
 };
 
 export const LEGACY_ROUTE_MAP: Record<string, string> = {
+  [ROUTES.exploreLegacy]: ROUTES.explore,
   "/kham-pha": ROUTES.explore,
   "/bang-xep-hang": ROUTES.leaderboard,
   "/xep-hang": ROUTES.leaderboard,
   "/bang-gia": ROUTES.pricing,
-  "/ho-so": ROUTES.account,
+  "/ho-so": ROUTES.dashboard,
   "/nhiem-vu": ROUTES.missions,
   "/thanh-tich": ROUTES.achievements,
   "/vi": ROUTES.wallet,

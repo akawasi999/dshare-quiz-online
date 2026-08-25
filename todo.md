@@ -724,3 +724,7 @@
 - [x] Rà soát route và liên kết `/dashboard` đang dẫn tới 404.
 - [x] Khôi phục trang Bảng điều khiển tại `/dashboard` và cập nhật điều hướng liên quan.
 - [x] Kiểm thử route Dashboard, regression và lưu checkpoint bản sửa 404.
+- [x] Kiểm kê route, menu và liên kết hiện dùng `/dashboard`, `/account`, Khám phá hoặc Làm Quiz.
+- [x] Chuẩn hóa Tổng quan `/dashboard`, Thông tin cá nhân `/account`, Khám phá `/quiz` và tách Làm Quiz riêng.
+- [x] Cập nhật mọi liên kết cũ trỏ về `/dashboard` và bảo đảm deep-link sau đăng nhập quay về đúng đích.
+- [x] Kiểm thử routing, deep-link, regression và lưu checkpoint điều hướng mới.

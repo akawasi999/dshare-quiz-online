@@ -15,7 +15,7 @@ describe("NotFound", () => {
     render(<NotFound />);
     expect(screen.getByRole("heading", { name: "Không tìm thấy trang này" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Về trang chủ" }).getAttribute("href")).toBe("/");
-    expect(screen.getByRole("link", { name: "Khám phá Quiz" }).getAttribute("href")).toBe("/explore");
+    expect(screen.getByRole("link", { name: "Khám phá Quiz" }).getAttribute("href")).toBe("/quiz");
     expect(screen.getByRole("link", { name: "Xem bảng giá" }).getAttribute("href")).toBe("/pricing");
   });
 });

@@ -20,32 +20,24 @@ const renderHeader = () => render(<AuthGateProvider><SiteHeader /></AuthGateProv
 describe("SiteHeader navigation", () => {
   afterEach(() => { cleanup(); mocks.user = null; mocks.logout.mockReset(); });
 
-  it("hiển thị liên kết trực tiếp, dropdown chủ đề/hỗ trợ và không khôi phục lối vào Xếp hạng", async () => {
+  it("hiển thị Khám phá trực tiếp tới Quiz, dropdown hỗ trợ và không khôi phục lối vào Xếp hạng", async () => {
     const user = userEvent.setup();
     renderHeader();
 
     expect(screen.getByRole("link", { name: "Giới thiệu về chúng tôi" }).getAttribute("href")).toBe("/#ve-dshare");
-    expect(screen.getByRole("button", { name: "Khám phá" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Khám phá" }).getAttribute("href")).toBe("/quiz");
     expect(screen.getByRole("link", { name: "Bảng giá" }).getAttribute("href")).toBe("/pricing");
-    expect(screen.getByRole("link", { name: "Blog" }).getAttribute("href")).toBe("/explore");
+    expect(screen.getByRole("link", { name: "Blog" }).getAttribute("href")).toBe("/quiz");
     expect(screen.getByRole("button", { name: "Hỗ trợ khách hàng" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Bắt đầu" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Đăng nhập" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Bảng giá" }).className).toContain("site-header-text");
     expect(screen.getByRole("link", { name: "Giới thiệu về chúng tôi" }).className).toContain("site-header-nav-item");
-    const exploreTrigger = screen.getByRole("button", { name: "Khám phá" });
-    expect(exploreTrigger.className).toContain("site-header-nav-item");
-    expect(exploreTrigger.querySelector(".site-header-nav-label")?.className).toContain("site-header-nav-label");
-    expect(exploreTrigger.querySelector(".site-header-nav-chevron")?.getAttribute("class")).toContain("site-header-nav-chevron");
+    const exploreLink = screen.getByRole("link", { name: "Khám phá" });
+    expect(exploreLink.className).toContain("site-header-nav-item");
+    expect(exploreLink.querySelector(".site-header-nav-label")?.className).toContain("site-header-nav-label");
     expect(screen.getByRole("button", { name: "Bắt đầu" }).className).toContain("site-header-text");
     expect(screen.queryByRole("link", { name: "Xếp hạng" })).toBeNull();
-
-    await user.click(screen.getByRole("button", { name: "Khám phá" }));
-    expect(screen.getByRole("menuitem", { name: /Tiểu học/ }).getAttribute("href")).toContain("topic=tieu-hoc");
-    expect(screen.queryByRole("menuitem", { name: /Lớp 1/ })).toBeNull();
-    expect(screen.queryByText("Chủ đề", { selector: "p" })).toBeNull();
-    expect(screen.queryByText("Khám phá Quiz theo Chủ đề")).toBeNull();
-    expect(screen.queryByRole("menuitem", { name: /Xem tất cả chủ đề/ })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Hỗ trợ khách hàng" }));
     expect(screen.getByRole("menuitem", { name: "Câu hỏi thường gặp" })).toBeTruthy();
@@ -103,10 +95,10 @@ describe("SiteHeader navigation", () => {
     expect((screen.getByLabelText("Địa chỉ email") as HTMLInputElement).value).toBe("minh@example.com");
   });
 
-  it("giữ dropdown Khám phá trong vùng đệm hover trước khi đóng", () => {
+  it("giữ dropdown Hỗ trợ trong vùng đệm hover trước khi đóng", () => {
     vi.useFakeTimers();
     renderHeader();
-    const trigger = screen.getByRole("button", { name: "Khám phá" });
+    const trigger = screen.getByRole("button", { name: "Hỗ trợ khách hàng" });
     const dropdownZone = trigger.parentElement!;
     fireEvent.mouseEnter(dropdownZone);
     expect(screen.getByRole("menu").className).toContain("top-[calc(100%+0.25rem)]");
@@ -125,10 +117,10 @@ describe("SiteHeader navigation", () => {
     mocks.user = { id: 1, name: "Minh Nguyễn", role: "user" };
     const { rerender } = renderHeader();
     const accountTrigger = screen.getByRole("link", { name: /Tài khoản Minh/ });
-    expect(accountTrigger.getAttribute("href")).toBe("/account");
+    expect(accountTrigger.getAttribute("href")).toBe("/dashboard");
     fireEvent.mouseEnter(accountTrigger.parentElement!);
     expect(screen.getByAltText("Ảnh đại diện của Minh").getAttribute("src")).toBe("https://example.com/minh.png");
-    expect(screen.getByRole("menuitem", { name: "Bảng điều khiển" }).getAttribute("href")).toBe("/account");
+    expect(screen.getByRole("menuitem", { name: "Bảng điều khiển" }).getAttribute("href")).toBe("/dashboard");
     expect(screen.getByRole("menuitem", { name: /Ví Point/ }).textContent).toContain("1.250");
     expect(screen.getByRole("menu").className).toContain("account-dropdown");
     expect(screen.getByRole("menuitem", { name: "Đăng xuất" })).toBeTruthy();

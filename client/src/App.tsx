@@ -46,9 +46,9 @@ function Router() {
     <Route path={`${ROUTES.quiz}/:id`} component={QuizRunner} />
     <Route path={ROUTES.leaderboard}>{() => <LearnerAccountPage Page={Leaderboard} />}</Route>
     <Route path={ROUTES.pricing} component={Pricing} />
-    <Route path={ROUTES.account}>{() => <ProtectedPage Page={Profile} />}</Route>
+    <Route path={ROUTES.account}>{() => <ProtectedPage Page={PersonalInfo} />}</Route>
     <Route path={ROUTES.dashboard}>{() => <ProtectedPage Page={Profile} />}</Route>
-    <Route path={ROUTES.accountProfile}>{() => <ProtectedPage Page={PersonalInfo} />}</Route>
+    <Route path={ROUTES.accountProfile}>{() => <LegacyRedirect to={ROUTES.account} />}</Route>
     <Route path={ROUTES.missions}>{() => <LearnerAccountPage Page={Missions} access="authenticated" />}</Route>
     <Route path={ROUTES.achievements}>{() => <LearnerAccountPage Page={Achievements} access="authenticated" />}</Route>
     <Route path={ROUTES.wallet}>{() => <LearnerAccountPage Page={Wallet} access="authenticated" />}</Route>
