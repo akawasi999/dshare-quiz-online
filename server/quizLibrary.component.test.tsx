@@ -23,7 +23,7 @@ vi.mock("@/lib/trpc", () => ({
     },
   },
 }));
-vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
+vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/quiz", vi.fn()] }));
 
 import QuizLibrary from "../client/src/pages/QuizLibrary";
 

@@ -753,3 +753,4 @@
 - [x] Thiết kế lại Quiz Runner chuyên nghiệp và đồng bộ đường dẫn Chủ đề CPanel trong luồng làm bài.
 - [x] Thiết kế lại màn hình chuẩn bị Quiz Runner theo bố cục trực quan tham chiếu, giữ đồng bộ Chủ đề CPanel.
 - [x] Tinh gọn hero Runner: bỏ khoảng trống phía trên liên kết quay lại và vòng tròn trang trí trắng.
+- [x] Tối ưu mật độ Runner desktop/tablet/mobile, thêm hover CTA và breadcrumb quay lại Chủ đề CPanel.

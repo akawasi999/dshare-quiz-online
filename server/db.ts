@@ -258,7 +258,13 @@ export async function getQuizDetail(quizId: number) {
     .limit(1);
   const detail = quizRows[0];
   if (!detail || (detail.quiz.topicId && !detail.topic)) return undefined;
-  if (!detail.topic) return { ...detail, topicPath: null };
+  if (!detail.topic)
+    return {
+      ...detail,
+      topicPath: null,
+      rootTopicId: null,
+      rootTopicTitle: null,
+    };
 
   const pathNames = [detail.topic.name];
   let current: { id: number; name: string; parentId: number | null } = detail.topic;
@@ -272,7 +278,12 @@ export async function getQuizDetail(quizId: number) {
     current = topicsById.get(current.parentId)!;
     pathNames.unshift(current.name);
   }
-  return { ...detail, topicPath: pathNames.join(" › ") };
+  return {
+    ...detail,
+    topicPath: pathNames.join(" › "),
+    rootTopicId: current.id,
+    rootTopicTitle: current.name,
+  };
 }
 
 export async function getOwnedQuizAnalytics(userId: number, quizId: number) {

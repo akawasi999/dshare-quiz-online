@@ -73,6 +73,8 @@ describe("QuizRunner data state", () => {
       lesson: null,
       topic: { id: 32, name: "Tin học" },
       topicPath: "Tiểu học › Lớp 5 › Tin học",
+      rootTopicId: 10,
+      rootTopicTitle: "Tiểu học",
     };
     mocks.detail.isError = false;
 
@@ -82,6 +84,7 @@ describe("QuizRunner data state", () => {
     expect(screen.getByText("Sẵn sàng chinh phục bài tập này?")).toBeTruthy();
     expect(screen.getByText("Cấu trúc bài tập")).toBeTruthy();
     expect(screen.getByText("Cam kết chất lượng")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Tiểu học" }).getAttribute("href")).toBe("/quiz?topic=10");
     expect(screen.getByRole("button", { name: "Bắt đầu làm bài" })).toBeTruthy();
   });
 });

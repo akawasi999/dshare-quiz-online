@@ -28,7 +28,7 @@ import {
   Target,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 const difficultyLabels = {
   easy: "Dễ",
@@ -111,12 +111,22 @@ function loadLibraryPreferences() {
   }
 }
 
+function getTopicIdFromLocation(location: string) {
+  const topicValue = new URLSearchParams(location.split("?")[1] ?? "").get(
+    "topic"
+  );
+  const topicId = Number(topicValue);
+  return Number.isInteger(topicId) && topicId > 0 ? topicId : null;
+}
+
 export default function QuizLibrary({
   embedded = false,
 }: {
   embedded?: boolean;
 }) {
   const savedPreferences = loadLibraryPreferences();
+  const [location] = useLocation();
+  const requestedTopicId = getTopicIdFromLocation(location);
   const { user } = useAuth();
   const learner = trpc.learner.summary.useQuery(undefined, {
     enabled: Boolean(user),
@@ -134,7 +144,7 @@ export default function QuizLibrary({
   );
   const catalog = trpc.catalog.list.useQuery(undefined, sharedDataQueryOptions);
   const [selectedTopicId, setSelectedTopicId] = useState(
-    savedPreferences.topicId
+    requestedTopicId ?? savedPreferences.topicId
   );
   const [difficulty, setDifficulty] = useState(savedPreferences.difficulty);
   const [currentPage, setCurrentPage] = useState(1);
@@ -151,6 +161,13 @@ export default function QuizLibrary({
     item => item.id === learner.data?.profile.lastPracticeCategoryId
   );
   const topicFilters = (categories.data ?? []).filter(item => item.depth === 0);
+  useEffect(() => {
+    if (
+      requestedTopicId !== null &&
+      topicFilters.some(topic => topic.id === requestedTopicId)
+    )
+      setSelectedTopicId(requestedTopicId);
+  }, [requestedTopicId, topicFilters]);
   const attemptLimit = quota.data?.limits.attemptsPerMonth;
   const usedAttempts = quota.data?.usage.attempts ?? 0;
   const hasUnlimitedAttempts = attemptLimit === null;

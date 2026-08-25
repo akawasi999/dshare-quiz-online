@@ -6,7 +6,7 @@ import { showcaseQuizzes } from "@/data/demo";
 import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { ROUTES } from "@/lib/routes";
+import { getExploreTopicRoute, ROUTES } from "@/lib/routes";
 import { trpc } from "@/lib/trpc";
 import {
   AlertTriangle,
@@ -91,6 +91,8 @@ export default function QuizRunner() {
             subject: "Xem trước",
             lesson: "Sandbox",
             topicPath: "Studio › Sandbox",
+            rootTopicId: null,
+            rootTopicTitle: null,
             summary:
               sandboxPreview.summary ||
               "Bạn đang xem trước Quiz trong môi trường Sandbox.",
@@ -117,6 +119,8 @@ export default function QuizRunner() {
                 ]
                   .filter(Boolean)
                   .join(" › "),
+              rootTopicId: detail.data.rootTopicId,
+              rootTopicTitle: detail.data.rootTopicTitle,
               summary:
                 detail.data.quiz.summary ??
                 "Bộ đề đã được biên soạn trong Dshare.",
@@ -143,6 +147,12 @@ export default function QuizRunner() {
       : [fallback.category, fallback.subject, fallback.lesson]
           .filter(Boolean)
           .join(" › ");
+  const rootTopicId =
+    "rootTopicId" in fallback ? fallback.rootTopicId ?? null : null;
+  const rootTopicTitle =
+    "rootTopicTitle" in fallback
+      ? fallback.rootTopicTitle ?? topicPath
+      : topicPath;
   const start = trpc.quiz.start.useMutation();
   const saveAnswer = trpc.quiz.saveAnswer.useMutation();
   const submit = trpc.quiz.submit.useMutation();
@@ -417,17 +427,24 @@ export default function QuizRunner() {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_12%_8%,color-mix(in_srgb,var(--primary)_10%,transparent),transparent_34%),radial-gradient(circle_at_88%_28%,color-mix(in_srgb,var(--accent)_12%,transparent),transparent_32%),var(--background)]">
         <SiteHeader />
-        <main className="container py-4 lg:py-5">
+        <main className="container py-3 lg:py-4">
+          <nav aria-label="Đường dẫn Chủ đề" className="mb-2 flex min-h-6 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11px] font-medium text-text-secondary">
+            <Link href={ROUTES.explore} className="shrink-0 transition-colors hover:text-primary">Khám phá</Link>
+            <span aria-hidden="true">/</span>
+            <Link href={getExploreTopicRoute(rootTopicId)} className="max-w-[42%] truncate text-primary transition-colors hover:text-primary/75">{rootTopicTitle || "Chủ đề"}</Link>
+            <span aria-hidden="true">/</span>
+            <span className="truncate text-foreground">{fallback.title}</span>
+          </nav>
           <Link
             href={isSandbox ? ROUTES.quizBuilder : ROUTES.explore}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-surface px-4 text-xs font-bold text-text-secondary shadow-[var(--shadow-sm)] transition-[transform,border-color,color] hover:-translate-y-0.5 hover:border-primary/35 hover:text-primary"
+            className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-surface px-3.5 text-xs font-bold text-text-secondary shadow-[var(--shadow-sm)] transition-[transform,border-color,color] hover:-translate-y-0.5 hover:border-primary/35 hover:text-primary"
           >
             <ArrowLeft size={15} />
             {isSandbox ? "Quay lại Studio" : "Trở về thư viện"}
           </Link>
-          <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_410px] xl:gap-7">
+          <section className="mt-3 grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_390px] xl:gap-6">
             <div className="overflow-hidden rounded-[26px] border border-border bg-surface shadow-[0_20px_56px_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
-              <div className="relative min-h-[330px] overflow-hidden bg-[linear-gradient(135deg,#085ef0_0%,#184bd6_52%,#5935dc_100%)] p-7 text-white sm:p-9">
+              <div className="relative min-h-[270px] overflow-hidden bg-[linear-gradient(135deg,#085ef0_0%,#184bd6_52%,#5935dc_100%)] p-5 text-white sm:p-6">
                 <div aria-hidden="true" className="absolute -left-12 -top-20 size-72 rounded-full bg-white/8" />
                 <div aria-hidden="true" className="absolute right-8 top-10 hidden size-36 rotate-6 place-items-center rounded-[30px] border border-white/35 bg-white/15 shadow-[0_20px_35px_rgba(10,32,117,.25)] backdrop-blur md:grid">
                   <ClipboardCheck size={78} strokeWidth={1.35} className="text-white" />
@@ -440,21 +457,21 @@ export default function QuizRunner() {
                     </span>
                     {isSandbox ? <span className="rounded-full bg-white/12 px-3 py-2 text-[10px] font-bold text-white/85">Sandbox</span> : null}
                   </div>
-                  <h1 className="mt-7 text-[clamp(2.45rem,5vw,4rem)] font-bold leading-[1.03] tracking-[-.06em] text-white">
+                  <h1 className="mt-5 text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[1.03] tracking-[-.06em] text-white">
                     {fallback.title}
                   </h1>
-                  <p className="mt-4 max-w-xl text-sm leading-7 text-white/85 sm:text-[15px]">
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-white/85">
                     {fallback.summary}
                   </p>
                 </div>
-                <div className="relative mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="relative mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                   <HeroStat icon={<CircleHelp size={22} />} label="Câu hỏi" value={`${fallback.questionCount} câu`} />
                   <HeroStat icon={<Clock3 size={22} />} label="Thời gian" value={fallback.duration} />
                   <HeroStat icon={<Trophy size={22} />} label="Điểm tối đa" value="70 điểm" />
                   <HeroStat icon={<ListTodo size={22} />} label="Chế độ" value={isSandbox ? "Sandbox" : fallback.mode} />
                 </div>
               </div>
-              <div className="space-y-3 p-5 sm:p-6">
+              <div className="space-y-2.5 p-4 sm:p-5">
                 <InfoPanel icon={<BookOpenCheck size={21} />} title="Nội dung bài tập">
                   {fallback.summary || "Bài tập gồm các câu hỏi giúp bạn kiểm tra và củng cố kiến thức theo Chủ đề đã chọn."}
                 </InfoPanel>
@@ -474,24 +491,24 @@ export default function QuizRunner() {
                 </InfoPanel>
               </div>
             </div>
-            <aside className="rounded-[26px] border border-border bg-surface p-6 shadow-[0_20px_56px_color-mix(in_srgb,var(--foreground)_8%,transparent)] sm:p-8">
+            <aside className="rounded-[26px] border border-border bg-surface p-5 shadow-[0_20px_56px_color-mix(in_srgb,var(--foreground)_8%,transparent)] sm:p-6">
               <p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.15em] text-primary"><Trophy size={15} />{isSandbox ? "Xem trước Quiz" : "Xác nhận trước khi bắt đầu"}</p>
-              <h2 className="mt-5 text-[clamp(2rem,3vw,2.65rem)] font-bold leading-[1.14] tracking-[-.05em] text-foreground">{isSandbox ? "Sẵn sàng xem trước Quiz?" : "Sẵn sàng chinh phục bài tập này?"}</h2>
-              <p className="mt-4 text-sm leading-6 text-text-secondary">Kiểm tra lại thông tin bên dưới trước khi bắt đầu làm bài.</p>
-              <div className="mt-6 divide-y divide-dashed divide-border-light border-y border-dashed border-border-light">
+              <h2 className="mt-3 text-[clamp(1.75rem,3vw,2.35rem)] font-bold leading-[1.14] tracking-[-.05em] text-foreground">{isSandbox ? "Sẵn sàng xem trước Quiz?" : "Sẵn sàng chinh phục bài tập này?"}</h2>
+              <p className="mt-3 text-sm leading-6 text-text-secondary">Kiểm tra lại thông tin bên dưới trước khi bắt đầu làm bài.</p>
+              <div className="mt-4 divide-y divide-dashed divide-border-light border-y border-dashed border-border-light">
                 <ConfirmMetric icon={<CircleHelp size={21} />} label="Số câu hỏi" value={`${fallback.questionCount} câu`} />
                 <ConfirmMetric icon={<Clock3 size={21} />} label="Thời gian làm bài" value={fallback.duration} />
                 <ConfirmMetric icon={<Trophy size={21} />} label="Điểm tối đa" value="70 điểm" />
                 <ConfirmMetric icon={<ListTodo size={21} />} label="Chế độ" value={isSandbox ? "Sandbox" : fallback.mode} />
               </div>
               {fallback.mode === "Kiểm tra" ? <div className="mt-5 rounded-xl border border-warning/20 bg-warning/10 p-3 text-xs leading-5 text-warning"><Sparkles className="mr-1 inline" size={14} />Lệ phí <strong>{fallback.points} Point</strong>; đạt từ 70 điểm để nhận <strong>{fallback.reward} Point</strong>.</div> : null}
-              <Button onClick={begin} disabled={start.isPending} aria-busy={start.isPending} size="lg" className="cta-gradient mt-7 h-14 w-full rounded-xl text-sm font-extrabold shadow-[0_12px_24px_color-mix(in_srgb,var(--primary)_28%,transparent)]">
+              <Button onClick={begin} disabled={start.isPending} aria-busy={start.isPending} size="lg" className="cta-gradient mt-5 h-12 w-full rounded-xl text-sm font-extrabold shadow-[0_12px_24px_color-mix(in_srgb,var(--primary)_28%,transparent)] transition-[transform,box-shadow,filter] hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_16px_30px_color-mix(in_srgb,var(--primary)_34%,transparent)] active:translate-y-0 active:scale-[.98]">
                 {start.isPending ? <Loader2 className="animate-spin" size={16} /> : isSandbox ? "Bắt đầu xem trước" : "Bắt đầu làm bài"}<ArrowRight className="ml-1" size={19} />
               </Button>
               <p className="mt-4 flex items-center justify-center gap-2 text-[11px] font-medium text-text-secondary"><ShieldCheck size={14} className="text-primary" />Phiên làm bài được bảo vệ an toàn.</p>
             </aside>
           </section>
-          <section className="mt-5 grid divide-y divide-border rounded-[20px] border border-border bg-surface px-5 py-2 shadow-[var(--shadow-sm)] sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-6">
+          <section className="mt-4 grid divide-y divide-border rounded-[20px] border border-border bg-surface px-4 py-1 shadow-[var(--shadow-sm)] sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-5">
             <TrustItem icon={<ShieldCheck size={22} />} title="Cam kết chất lượng" description="Bài tập được biên soạn và kiểm duyệt trước khi công bố." />
             <TrustItem icon={<CircleCheck size={22} />} title="Chính xác" description="Nội dung được kiểm tra để hỗ trợ việc học hiệu quả." />
             <TrustItem icon={<Clock3 size={22} />} title="Cập nhật" description="Ngân hàng bài tập được bổ sung theo Chủ đề mới." />

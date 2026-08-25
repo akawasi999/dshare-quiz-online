@@ -44,6 +44,12 @@ export const ROUTES = {
   adminSettings: "/admin/settings",
 } as const;
 
+export function getExploreTopicRoute(topicId?: number | null) {
+  return topicId && topicId > 0
+    ? `${ROUTES.explore}?topic=${encodeURIComponent(topicId)}`
+    : ROUTES.explore;
+}
+
 export type RouteAccessPolicy = "public" | "authenticated" | "admin";
 export type RoutePermission = "profile.view" | "learning.view" | "mission.view" | "achievement.view" | "point.view" | "point.topup" | "payment.view" | "payment.create" | "quiz.create" | "quiz.view" | "quiz.edit" | "result.view" | "ai.quiz.generate" | "admin.access";
 export type RouteMeta = { access: RouteAccessPolicy; permission?: RoutePermission };
