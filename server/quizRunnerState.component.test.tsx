@@ -79,7 +79,9 @@ describe("QuizRunner data state", () => {
     render(<QuizRunner />);
 
     expect(screen.getByText("Tiểu học › Lớp 5 › Tin học")).toBeTruthy();
-    expect(screen.getByText("Không gian làm bài")).toBeTruthy();
+    expect(screen.getByText("Sẵn sàng chinh phục bài tập này?")).toBeTruthy();
+    expect(screen.getByText("Cấu trúc bài tập")).toBeTruthy();
+    expect(screen.getByText("Cam kết chất lượng")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Bắt đầu làm bài" })).toBeTruthy();
   });
 });

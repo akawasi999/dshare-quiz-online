@@ -13,14 +13,17 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpenCheck,
+  ClipboardCheck,
   Check,
   ChevronLeft,
   CircleCheck,
+  CircleHelp,
   CircleX,
   Clock3,
   Flag,
   Loader2,
   ListChecks,
+  ListTodo,
   Maximize,
   Save,
   ShieldCheck,
@@ -422,80 +425,77 @@ export default function QuizRunner() {
             <ArrowLeft size={15} />
             {isSandbox ? "Quay lại Studio" : "Trở về thư viện"}
           </Link>
-          <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_390px] xl:gap-7">
-            <div className="relative overflow-hidden rounded-[28px] border border-primary/20 bg-[linear-gradient(135deg,var(--primary)_0%,#2857c8_52%,var(--accent)_100%)] p-7 text-white shadow-[0_24px_64px_color-mix(in_srgb,var(--primary)_28%,transparent)] sm:p-10">
-              <div aria-hidden="true" className="absolute -right-24 -top-24 size-72 rounded-full bg-white/10 blur-2xl" />
-              <div aria-hidden="true" className="absolute -bottom-20 left-1/3 size-64 rounded-full border-[32px] border-white/10" />
-              <div className="relative">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.13em] text-white backdrop-blur">
-                    <BookOpenCheck size={13} />
-                    {isSandbox ? "Preview Sandbox" : "Không gian làm bài"}
-                  </span>
-                  {isSandbox ? <span className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold text-white/85">Không ghi dữ liệu</span> : null}
+          <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_410px] xl:gap-7">
+            <div className="overflow-hidden rounded-[26px] border border-border bg-surface shadow-[0_20px_56px_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+              <div className="relative min-h-[330px] overflow-hidden bg-[linear-gradient(135deg,#085ef0_0%,#184bd6_52%,#5935dc_100%)] p-7 text-white sm:p-9">
+                <div aria-hidden="true" className="absolute -left-12 -top-20 size-72 rounded-full bg-white/8" />
+                <div aria-hidden="true" className="absolute -bottom-28 right-1/4 size-80 rounded-full border-[42px] border-white/8" />
+                <div aria-hidden="true" className="absolute right-8 top-10 hidden size-36 rotate-6 place-items-center rounded-[30px] border border-white/35 bg-white/15 shadow-[0_20px_35px_rgba(10,32,117,.25)] backdrop-blur md:grid">
+                  <ClipboardCheck size={78} strokeWidth={1.35} className="text-white" />
                 </div>
-                <p className="mt-6 flex max-w-2xl items-center gap-2 text-xs font-semibold text-white/80">
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-white/12"><Sparkles size={13} /></span>
-                  <span className="truncate">{topicPath || "Chủ đề đang cập nhật"}</span>
-                </p>
-                <h1 className="mt-4 max-w-2xl text-[clamp(2.3rem,5vw,3.85rem)] font-bold leading-[1.06] tracking-[-.055em] text-white">
-                {fallback.title}
-                </h1>
-                <p className="mt-5 max-w-2xl text-sm leading-7 text-white/80 sm:text-[15px]">
-                  {fallback.summary}
-                </p>
-                <div className="mt-9 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <Stat label="Câu hỏi" value={`${fallback.questionCount}`} />
-                  <Stat label="Thời gian" value={fallback.duration} />
-                  <Stat label="Ngưỡng đạt" value="70 điểm" />
-                  <Stat label="Chế độ" value={isSandbox ? "Sandbox" : fallback.mode} />
+                <div className="relative max-w-[620px]">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-[10px] font-extrabold uppercase tracking-[.12em] text-white backdrop-blur">
+                      <BookOpenCheck size={13} />
+                      <span className="truncate">{topicPath || "Chủ đề đang cập nhật"}</span>
+                    </span>
+                    {isSandbox ? <span className="rounded-full bg-white/12 px-3 py-2 text-[10px] font-bold text-white/85">Sandbox</span> : null}
+                  </div>
+                  <h1 className="mt-7 text-[clamp(2.45rem,5vw,4rem)] font-bold leading-[1.03] tracking-[-.06em] text-white">
+                    {fallback.title}
+                  </h1>
+                  <p className="mt-4 max-w-xl text-sm leading-7 text-white/85 sm:text-[15px]">
+                    {fallback.summary}
+                  </p>
                 </div>
+                <div className="relative mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <HeroStat icon={<CircleHelp size={22} />} label="Câu hỏi" value={`${fallback.questionCount} câu`} />
+                  <HeroStat icon={<Clock3 size={22} />} label="Thời gian" value={fallback.duration} />
+                  <HeroStat icon={<Trophy size={22} />} label="Điểm tối đa" value="70 điểm" />
+                  <HeroStat icon={<ListTodo size={22} />} label="Chế độ" value={isSandbox ? "Sandbox" : fallback.mode} />
+                </div>
+              </div>
+              <div className="space-y-3 p-5 sm:p-6">
+                <InfoPanel icon={<BookOpenCheck size={21} />} title="Nội dung bài tập">
+                  {fallback.summary || "Bài tập gồm các câu hỏi giúp bạn kiểm tra và củng cố kiến thức theo Chủ đề đã chọn."}
+                </InfoPanel>
+                <InfoPanel icon={<ListChecks size={21} />} title="Cấu trúc bài tập">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div><p className="text-[10px] font-bold uppercase tracking-wide text-text-secondary">Dạng câu hỏi</p><p className="mt-1 text-xs font-bold text-foreground">Trắc nghiệm</p></div>
+                    <div className="border-border-light sm:border-l sm:pl-4"><p className="text-[10px] font-bold uppercase tracking-wide text-text-secondary">Số câu hỏi</p><p className="mt-1 text-xs font-bold text-foreground">{fallback.questionCount} câu</p></div>
+                    <div className="border-border-light sm:border-l sm:pl-4"><p className="text-[10px] font-bold uppercase tracking-wide text-text-secondary">Độ khó</p><span className="mt-1 inline-flex rounded-full bg-success/12 px-2 py-0.5 text-[10px] font-bold text-success">{fallback.difficulty}</span></div>
+                  </div>
+                </InfoPanel>
+                <InfoPanel icon={<AlertTriangle size={21} />} title="Lưu ý khi làm bài">
+                  <ul className="space-y-1.5 text-xs leading-5 text-text-secondary">
+                    <li className="flex gap-2"><CircleCheck size={14} className="mt-0.5 shrink-0 text-primary" />Duy trì kết nối ổn định trong suốt quá trình làm bài.</li>
+                    <li className="flex gap-2"><CircleCheck size={14} className="mt-0.5 shrink-0 text-primary" />Kết quả được tính ngay sau khi bạn nộp bài.</li>
+                    <li className="flex gap-2"><CircleCheck size={14} className="mt-0.5 shrink-0 text-primary" />Bạn có thể xem lại đáp án và giải thích sau khi hoàn thành.</li>
+                  </ul>
+                </InfoPanel>
               </div>
             </div>
-            <aside className="rounded-[28px] border border-border bg-surface p-6 shadow-[0_18px_42px_color-mix(in_srgb,var(--foreground)_7%,transparent)] sm:p-7">
-              <p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-primary">
-                {isSandbox ? "Xem trước Quiz" : "Xác nhận trước khi bắt đầu"}
-              </p>
-              <h2 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-[-.035em] text-foreground">
-                {isSandbox
-                  ? "Trải nghiệm Quiz như người học."
-                  : "Một lượt làm bài tập trung."}
-              </h2>
-              <div className="mt-6 space-y-3">
-                <p className="flex gap-3 rounded-[var(--radius-md-token)] bg-muted/70 p-3.5 text-xs leading-5 text-text-secondary">
-                  <ShieldCheck className="mt-0.5 shrink-0 text-primary" size={18} />
-                  {isSandbox
-                    ? "Không tạo attempt, không lưu điểm hoặc thống kê."
-                    : "Thứ tự câu hỏi và đáp án được xáo trộn theo từng lượt làm."}
-                </p>
-                <p className="flex gap-3 rounded-[var(--radius-md-token)] bg-muted/70 p-3.5 text-xs leading-5 text-text-secondary">
-                  <Clock3 className="mt-0.5 shrink-0 text-primary" size={18} />
-                  Bài sẽ tự động nộp khi đồng hồ về 00:00.
-                </p>
+            <aside className="rounded-[26px] border border-border bg-surface p-6 shadow-[0_20px_56px_color-mix(in_srgb,var(--foreground)_8%,transparent)] sm:p-8">
+              <p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.15em] text-primary"><Trophy size={15} />{isSandbox ? "Xem trước Quiz" : "Xác nhận trước khi bắt đầu"}</p>
+              <h2 className="mt-5 text-[clamp(2rem,3vw,2.65rem)] font-bold leading-[1.14] tracking-[-.05em] text-foreground">{isSandbox ? "Sẵn sàng xem trước Quiz?" : "Sẵn sàng chinh phục bài tập này?"}</h2>
+              <p className="mt-4 text-sm leading-6 text-text-secondary">Kiểm tra lại thông tin bên dưới trước khi bắt đầu làm bài.</p>
+              <div className="mt-6 divide-y divide-dashed divide-border-light border-y border-dashed border-border-light">
+                <ConfirmMetric icon={<CircleHelp size={21} />} label="Số câu hỏi" value={`${fallback.questionCount} câu`} />
+                <ConfirmMetric icon={<Clock3 size={21} />} label="Thời gian làm bài" value={fallback.duration} />
+                <ConfirmMetric icon={<Trophy size={21} />} label="Điểm tối đa" value="70 điểm" />
+                <ConfirmMetric icon={<ListTodo size={21} />} label="Chế độ" value={isSandbox ? "Sandbox" : fallback.mode} />
               </div>
-              {fallback.mode === "Kiểm tra" ? (
-                <div className="mt-5 rounded-[var(--radius-md-token)] border border-warning/20 bg-warning/10 p-4 text-xs leading-5 text-warning">
-                  <Trophy className="mb-2" size={16} />
-                  Lệ phí: <strong>{fallback.points} Point</strong>. Đạt từ 70
-                  điểm để nhận <strong>{fallback.reward} Point</strong> thưởng.
-                </div>
-              ) : null}
-              <Button
-                onClick={begin}
-                disabled={start.isPending}
-                aria-busy={start.isPending}
-                size="lg"
-                className="cta-gradient mt-7 h-12 w-full rounded-xl text-sm font-extrabold shadow-[0_12px_24px_color-mix(in_srgb,var(--primary)_28%,transparent)]"
-              >
-                {start.isPending ? (
-                  <Loader2 className="animate-spin" size={16} />
-                ) : isSandbox ? (
-                  "Bắt đầu xem trước"
-                ) : (
-                  "Bắt đầu làm bài"
-                )}
+              {fallback.mode === "Kiểm tra" ? <div className="mt-5 rounded-xl border border-warning/20 bg-warning/10 p-3 text-xs leading-5 text-warning"><Sparkles className="mr-1 inline" size={14} />Lệ phí <strong>{fallback.points} Point</strong>; đạt từ 70 điểm để nhận <strong>{fallback.reward} Point</strong>.</div> : null}
+              <Button onClick={begin} disabled={start.isPending} aria-busy={start.isPending} size="lg" className="cta-gradient mt-7 h-14 w-full rounded-xl text-sm font-extrabold shadow-[0_12px_24px_color-mix(in_srgb,var(--primary)_28%,transparent)]">
+                {start.isPending ? <Loader2 className="animate-spin" size={16} /> : isSandbox ? "Bắt đầu xem trước" : "Bắt đầu làm bài"}<ArrowRight className="ml-1" size={19} />
               </Button>
+              <p className="mt-4 flex items-center justify-center gap-2 text-[11px] font-medium text-text-secondary"><ShieldCheck size={14} className="text-primary" />Phiên làm bài được bảo vệ an toàn.</p>
             </aside>
+          </section>
+          <section className="mt-5 grid divide-y divide-border rounded-[20px] border border-border bg-surface px-5 py-2 shadow-[var(--shadow-sm)] sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-6">
+            <TrustItem icon={<ShieldCheck size={22} />} title="Cam kết chất lượng" description="Bài tập được biên soạn và kiểm duyệt trước khi công bố." />
+            <TrustItem icon={<CircleCheck size={22} />} title="Chính xác" description="Nội dung được kiểm tra để hỗ trợ việc học hiệu quả." />
+            <TrustItem icon={<Clock3 size={22} />} title="Cập nhật" description="Ngân hàng bài tập được bổ sung theo Chủ đề mới." />
           </section>
         </main>
       </div>
@@ -863,6 +863,90 @@ function Stat({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="mt-2 text-sm font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function HeroStat({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/12 p-3.5 backdrop-blur-sm">
+      <div className="flex items-center gap-2 text-white/80">
+        {icon}
+        <p className="text-[10px] font-bold uppercase tracking-[.11em]">{label}</p>
+      </div>
+      <p className="mt-2 text-sm font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function InfoPanel({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-border bg-surface px-4 py-4 sm:px-5">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl bg-primary-light text-primary">
+          {icon}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-bold text-foreground">{title}</h3>
+          <div className="mt-2">{children}</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ConfirmMetric({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-5">
+      <span className="flex min-w-0 items-center gap-3 text-sm text-text-secondary">
+        <span className="text-primary">{icon}</span>
+        <span>{label}</span>
+      </span>
+      <strong className="shrink-0 text-sm text-foreground">{value}</strong>
+    </div>
+  );
+}
+
+function TrustItem({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex gap-3 py-4 sm:px-5">
+      <span className="mt-0.5 text-primary">{icon}</span>
+      <div>
+        <h3 className="text-xs font-bold text-foreground">{title}</h3>
+        <p className="mt-1 text-[11px] leading-5 text-text-secondary">{description}</p>
+      </div>
     </div>
   );
 }
