@@ -64,7 +64,7 @@ import { buildAttemptMilestoneAlert } from "./attemptNotifications";
 import { getReferralValidationError, normalizeReferralCode } from "./referralUtils";
 import { richTextToPlainText, sanitizeRichTextHtml } from "../shared/richText";
 import { allocateQuestionCounts } from "./randomQuiz";
-import { getTrueFalseStatements, validateQuestionConfiguration } from "../shared/questionValidation";
+import { getAcceptedAnswers, getMatchingPairs, getTrueFalseStatements, validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
@@ -860,6 +860,9 @@ export const appRouter = router({
           imageUrl: item.question.imageUrl,
           media: ((item.question.answerConfig as { media?: unknown } | null)?.media ?? null) as { url: string; kind: "audio" | "video"; fileName: string } | null,
           statements: item.question.type === "true_false_statements" ? getTrueFalseStatements(item.question.answerConfig ?? {}).map(statement => ({ id: statement.id, text: statement.text })) : [],
+          matchingPairs: item.question.type === "matching" ? getMatchingPairs(item.question.answerConfig ?? {}) : [],
+          acceptedAnswers: item.question.type === "fill_blank" ? getAcceptedAnswers(item.question.answerConfig ?? {}) : [],
+          sampleOutline: item.question.type === "essay" ? String((item.question.answerConfig as { sampleOutline?: unknown } | null)?.sampleOutline ?? "") : "",
           questionIndex,
           options: detail.quiz.randomizeOptions
             ? shuffledForAttempt(item.options, attemptId + item.question.id)
@@ -870,7 +873,7 @@ export const appRouter = router({
         })),
       };
     }),
-    saveAnswer: permissionProcedure("quiz.submit").input(z.object({ attemptId: z.number().int().positive(), questionId: z.number().int().positive(), selectedOptionIds: z.array(z.number().int().positive()).max(10), answerPayload: z.object({ statementAnswers: z.record(z.string().min(1).max(64), z.boolean()).refine(values => Object.keys(values).length <= 8, "Tối đa tám nhận định.") }).optional() }))
+    saveAnswer: permissionProcedure("quiz.submit").input(z.object({ attemptId: z.number().int().positive(), questionId: z.number().int().positive(), selectedOptionIds: z.array(z.number().int().positive()).max(10), answerPayload: z.object({ statementAnswers: z.record(z.string().min(1).max(64), z.boolean()).refine(values => Object.keys(values).length <= 8, "Tối đa tám nhận định.").optional(), matchingAnswers: z.record(z.string().regex(/^\d+$/), z.string().min(1).max(500)).refine(values => Object.keys(values).length <= 50, "Tối đa năm mươi cặp ghép nối.").optional(), textAnswer: z.string().max(5000).optional() }).optional() }))
       .mutation(async ({ ctx, input }) => { await assertOwnedAttempt(ctx.user.id, input.attemptId, input.questionId); return saveAnswer(input); }),
     submit: protectedProcedure.input(z.object({ attemptId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const result = await submitAttempt(input.attemptId, ctx.user.id);

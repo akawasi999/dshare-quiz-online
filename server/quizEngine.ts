@@ -4,6 +4,8 @@ export type QuestionAnswerKey = {
   correctOptionIds: number[];
   type?: string;
   statementAnswers?: Record<string, boolean>;
+  matchingPairs?: Array<{ left: string; right: string }>;
+  acceptedAnswers?: string[];
   points: number;
 };
 
@@ -37,15 +39,38 @@ export function areSameStatementSelections(answerKey: Record<string, boolean>, a
   return ids.length === Object.keys(values).length && ids.every(id => values[id] === answerKey[id]);
 }
 
+const normalizeTextAnswer = (value: string) => value.trim().toLocaleLowerCase("vi-VN").replace(/\s+/g, " ");
+
+export function isAcceptedTextAnswer(acceptedAnswers: string[], answerPayload?: Record<string, unknown> | null) {
+  const submitted = answerPayload?.textAnswer;
+  if (typeof submitted !== "string" || !submitted.trim()) return false;
+  const normalized = normalizeTextAnswer(submitted);
+  return acceptedAnswers.some(answer => normalizeTextAnswer(answer) === normalized);
+}
+
+export function areSameMatchingSelections(answerKey: Array<{ left: string; right: string }>, answerPayload?: Record<string, unknown> | null) {
+  const submitted = answerPayload?.matchingAnswers;
+  if (!submitted || typeof submitted !== "object" || Array.isArray(submitted)) return false;
+  const values = submitted as Record<string, unknown>;
+  return answerKey.length > 0 && answerKey.every((pair, index) => values[String(index)] === pair.right);
+}
+
 export function scoreQuiz(answerKey: QuestionAnswerKey[], submittedAnswers: SubmittedAnswer[]): ScoreSummary {
   const submittedMap = new Map(submittedAnswers.map(answer => [answer.questionId, answer.selectedOptionIds]));
   const submittedPayloadMap = new Map(submittedAnswers.map(answer => [answer.questionId, answer.answerPayload]));
   let earnedPoints = 0;
   let correctCount = 0;
   const answerResults = answerKey.map(question => {
+    const payload = submittedPayloadMap.get(question.questionId);
     const isCorrect = question.type === "true_false_statements"
-      ? areSameStatementSelections(question.statementAnswers ?? {}, submittedPayloadMap.get(question.questionId))
-      : areSameSelections(submittedMap.get(question.questionId) ?? [], question.correctOptionIds);
+      ? areSameStatementSelections(question.statementAnswers ?? {}, payload)
+      : question.type === "matching"
+        ? areSameMatchingSelections(question.matchingPairs ?? [], payload)
+        : question.type === "fill_blank"
+          ? isAcceptedTextAnswer(question.acceptedAnswers ?? [], payload)
+          : question.type === "essay"
+            ? false
+            : areSameSelections(submittedMap.get(question.questionId) ?? [], question.correctOptionIds);
     if (isCorrect) { earnedPoints += question.points; correctCount += 1; }
     return { questionId: question.questionId, isCorrect };
   });

@@ -1,6 +1,7 @@
 export type QuestionValidationType = "single" | "multiple" | "true_false" | "true_false_statements" | "fill_blank" | "image" | "matching" | "essay";
 
 export type TrueFalseStatement = { id: string; text: string; correct: boolean };
+export type MatchingPair = { left: string; right: string };
 
 export function getTrueFalseStatements(answerConfig?: Record<string, unknown>): TrueFalseStatement[] {
   const values = answerConfig?.statements;
@@ -11,6 +12,27 @@ export function getTrueFalseStatements(answerConfig?: Record<string, unknown>): 
     if (typeof statement.id !== "string" || typeof statement.text !== "string" || typeof statement.correct !== "boolean") return [];
     return [{ id: statement.id, text: statement.text, correct: statement.correct }];
   });
+}
+
+export function getMatchingPairs(answerConfig?: Record<string, unknown>): MatchingPair[] {
+  const values = answerConfig?.pairs;
+  if (!Array.isArray(values)) return [];
+  return values.flatMap(value => {
+    if (!value || typeof value !== "object") return [];
+    const pair = value as Record<string, unknown>;
+    if (typeof pair.left !== "string" || typeof pair.right !== "string") return [];
+    const left = pair.left.trim();
+    const right = pair.right.trim();
+    return left && right ? [{ left, right }] : [];
+  });
+}
+
+export function getAcceptedAnswers(answerConfig?: Record<string, unknown>) {
+  const values = answerConfig?.acceptedAnswers;
+  if (!Array.isArray(values)) return [];
+  return values
+    .filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
+    .map(value => value.trim());
 }
 
 export type EditableQuestionConfig = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areSameSelections, areSameStatementSelections, scoreQuiz, shuffledForAttempt } from "./quizEngine";
+import { areSameMatchingSelections, areSameSelections, areSameStatementSelections, isAcceptedTextAnswer, scoreQuiz, shuffledForAttempt } from "./quizEngine";
 
 describe("quiz scoring engine", () => {
   it("requires the exact set of options for a multi-choice answer", () => {
@@ -29,6 +29,24 @@ describe("quiz scoring engine", () => {
     expect(areSameStatementSelections(answerKey, { statementAnswers: { s1: true, s2: true, s3: true } })).toBe(false);
     const result = scoreQuiz([{ questionId: 7, optionIds: [], correctOptionIds: [], type: "true_false_statements", statementAnswers: answerKey, points: 4 }], [{ questionId: 7, selectedOptionIds: [], answerPayload: { statementAnswers: { s1: true, s2: true, s3: true } } }]);
     expect(result).toMatchObject({ earnedPoints: 0, availablePoints: 4, correctCount: 0 });
+  });
+
+  it("chấm Ghép nối và điền từ theo answerPayload đã lưu", () => {
+    const pairs = [{ left: "Hà Nội", right: "Việt Nam" }, { left: "Tokyo", right: "Nhật Bản" }];
+    expect(areSameMatchingSelections(pairs, { matchingAnswers: { 0: "Việt Nam", 1: "Nhật Bản" } })).toBe(true);
+    expect(areSameMatchingSelections(pairs, { matchingAnswers: { 0: "Nhật Bản", 1: "Việt Nam" } })).toBe(false);
+    expect(isAcceptedTextAnswer(["Dshare Quiz", "Dshare"], { textAnswer: "  dshare   quiz " })).toBe(true);
+    const result = scoreQuiz(
+      [
+        { questionId: 8, optionIds: [], correctOptionIds: [], type: "matching", matchingPairs: pairs, points: 2 },
+        { questionId: 9, optionIds: [], correctOptionIds: [], type: "fill_blank", acceptedAnswers: ["Dshare Quiz"], points: 3 },
+      ],
+      [
+        { questionId: 8, selectedOptionIds: [], answerPayload: { matchingAnswers: { 0: "Việt Nam", 1: "Nhật Bản" } } },
+        { questionId: 9, selectedOptionIds: [], answerPayload: { textAnswer: "dshare quiz" } },
+      ],
+    );
+    expect(result).toMatchObject({ earnedPoints: 5, availablePoints: 5, scorePercent: 100, correctCount: 2 });
   });
 
   it("keeps a deterministic but non-mutating shuffled order", () => {

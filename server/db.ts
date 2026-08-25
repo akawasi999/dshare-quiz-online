@@ -25,7 +25,7 @@ import {
 import { ENV } from "./_core/env";
 import { sortLeaderboardEntries } from "./leaderboard";
 import { scoreQuiz } from "./quizEngine";
-import { getTrueFalseStatements } from "../shared/questionValidation";
+import { getAcceptedAnswers, getMatchingPairs, getTrueFalseStatements } from "../shared/questionValidation";
 import { getEffectiveTier } from "./membershipUtils";
 import { processGamificationForAttempt } from "./gamification";
 import { getQuotaPeriod } from "./quotaUtils";
@@ -416,6 +416,8 @@ export async function submitAttempt(attemptId: number, userId: number) {
       correctOptionIds: row.options.filter(option => option.isCorrect).map(option => option.id),
       type: row.question.type,
       statementAnswers: row.question.type === "true_false_statements" ? Object.fromEntries(getTrueFalseStatements(row.question.answerConfig ?? {}).map(statement => [statement.id, statement.correct])) : undefined,
+      matchingPairs: row.question.type === "matching" ? getMatchingPairs(row.question.answerConfig ?? {}) : undefined,
+      acceptedAnswers: row.question.type === "fill_blank" ? getAcceptedAnswers(row.question.answerConfig ?? {}) : undefined,
       points: row.points,
     })),
     answers.map(answer => ({ questionId: answer.questionId, selectedOptionIds: answer.selectedOptionIds, answerPayload: answer.answerPayload }))
@@ -484,7 +486,12 @@ export async function submitAttempt(attemptId: number, userId: number) {
     type: row.question.type,
     selectedOptionIds: selectedByQuestion.get(row.question.id) ?? [],
     selectedStatementAnswers: (payloadByQuestion.get(row.question.id) as { statementAnswers?: Record<string, boolean> } | null)?.statementAnswers ?? {},
+    selectedMatchingAnswers: (payloadByQuestion.get(row.question.id) as { matchingAnswers?: Record<string, string> } | null)?.matchingAnswers ?? {},
+    selectedTextAnswer: (payloadByQuestion.get(row.question.id) as { textAnswer?: string } | null)?.textAnswer ?? "",
     statements: row.question.type === "true_false_statements" ? getTrueFalseStatements(row.question.answerConfig ?? {}).map(statement => ({ id: statement.id, text: statement.text, correct: statement.correct })) : [],
+    matchingPairs: row.question.type === "matching" ? getMatchingPairs(row.question.answerConfig ?? {}) : [],
+    acceptedAnswers: row.question.type === "fill_blank" ? getAcceptedAnswers(row.question.answerConfig ?? {}) : [],
+    sampleOutline: row.question.type === "essay" ? String((row.question.answerConfig as { sampleOutline?: unknown } | null)?.sampleOutline ?? "") : "",
     correctOptionIds: row.options.filter(option => option.isCorrect).map(option => option.id),
     isCorrect: correctnessByQuestion.get(row.question.id) ?? false,
     options: row.options.map(option => ({ id: option.id, body: option.body })),

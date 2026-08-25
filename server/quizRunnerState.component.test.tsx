@@ -52,6 +52,29 @@ describe("QuizRunner data state", () => {
     expect(container.querySelector("video")?.getAttribute("src")).toBe("/manus-storage/explain.webm");
   });
 
+  it("hiển thị và chấm Ghép nối trong Sandbox", async () => {
+    const user = userEvent.setup();
+    sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox ghép nối", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Ghép thủ đô với quốc gia", type: "matching", difficulty: "medium", tags: ["Sandbox"], matchingPairs: [{ left: "Hà Nội", right: "Việt Nam" }, { left: "Tokyo", right: "Nhật Bản" }], options: [], correctOptionIds: [] }] }));
+    window.history.replaceState({}, "", `${window.location.origin}/quiz/0?sandbox=1`);
+    render(<QuizRunner />);
+    await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
+    expect(screen.getByText("Ghép nối các cặp tương ứng")).toBeTruthy();
+    await user.selectOptions(screen.getByLabelText("Ghép nối cho Hà Nội"), "Việt Nam");
+    await user.selectOptions(screen.getByLabelText("Ghép nối cho Tokyo"), "Nhật Bản");
+    expect(screen.getByText("Chính xác! Bạn có thể chuyển sang câu tiếp theo.")).toBeTruthy();
+  });
+
+  it("hiển thị và chấm điền từ trong Sandbox", async () => {
+    const user = userEvent.setup();
+    sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox điền từ", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Tên nền tảng là gì?", type: "fill_blank", difficulty: "easy", tags: ["Sandbox"], acceptedAnswers: ["Dshare Quiz"], options: [], correctOptionIds: [] }] }));
+    window.history.replaceState({}, "", `${window.location.origin}/quiz/0?sandbox=1`);
+    render(<QuizRunner />);
+    await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
+    await user.type(screen.getByLabelText("Câu trả lời ngắn"), "dshare quiz");
+    await user.tab();
+    expect(screen.getByText("Chính xác! Bạn có thể chuyển sang câu tiếp theo.")).toBeTruthy();
+  });
+
   it("chấm nhận định Có/Không khi người học trả lời đủ từng hàng", async () => {
     const user = userEvent.setup();
     sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox nhận định", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Chọn Có hoặc Không cho từng nhận định.", type: "true_false_statements", difficulty: "medium", tags: ["Sandbox"], statements: [{ id: "a", text: "Nhận định thứ nhất", correct: true }, { id: "b", text: "Nhận định thứ hai", correct: false }], options: [], correctOptionIds: [] }] }));

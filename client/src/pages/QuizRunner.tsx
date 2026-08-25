@@ -45,6 +45,9 @@ type ActiveQuestion = {
   options: { id: number; body: string }[];
   correctOptionIds?: number[];
   statements?: Array<{ id: string; text: string; correct?: boolean }>;
+  matchingPairs?: Array<{ left: string; right: string }>;
+  acceptedAnswers?: string[];
+  sampleOutline?: string;
   media?: { url: string; kind: "audio" | "video"; fileName: string } | null;
 };
 type SandboxPreview = {
@@ -180,6 +183,8 @@ export default function QuizRunner() {
   const [statementAnswers, setStatementAnswers] = useState<
     Record<number, Record<string, boolean>>
   >({});
+  const [matchingAnswers, setMatchingAnswers] = useState<Record<number, Record<string, string>>>({});
+  const [textAnswers, setTextAnswers] = useState<Record<number, string>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(900);
   const [totalDuration, setTotalDuration] = useState(900);
@@ -187,10 +192,12 @@ export default function QuizRunner() {
   const current = questions[currentIndex];
   const hasAnswer = (question: ActiveQuestion) =>
     question.type === "true_false_statements"
-      ? Object.keys(statementAnswers[question.id] ?? {}).length ===
-          (question.statements?.length ?? 0) &&
-        (question.statements?.length ?? 0) > 0
-      : Boolean(answers[question.id]?.length);
+      ? Object.keys(statementAnswers[question.id] ?? {}).length === (question.statements?.length ?? 0) && (question.statements?.length ?? 0) > 0
+      : question.type === "matching"
+        ? Object.keys(matchingAnswers[question.id] ?? {}).length === (question.matchingPairs?.length ?? 0) && (question.matchingPairs?.length ?? 0) > 0
+        : ["fill_blank", "essay"].includes(question.type)
+          ? Boolean(textAnswers[question.id]?.trim())
+          : Boolean(answers[question.id]?.length);
   const answeredCount = questions.filter(hasAnswer).length;
   const progressPercent = questions.length
     ? Math.round((answeredCount / questions.length) * 100)
@@ -226,6 +233,8 @@ export default function QuizRunner() {
     setTotalDuration(seconds);
     setAnswers({});
     setStatementAnswers({});
+    setMatchingAnswers({});
+    setTextAnswers({});
     setFeedback(null);
     setCurrentIndex(0);
   };
@@ -331,6 +340,24 @@ export default function QuizRunner() {
           : "saved",
     });
   };
+  const chooseMatching = (pairIndex: number, value: string) => {
+    if (!current) return;
+    const next = { ...(matchingAnswers[current.id] ?? {}), [String(pairIndex)]: value };
+    setMatchingAnswers(values => ({ ...values, [current.id]: next }));
+    if (attemptId && attemptId > 0) saveAnswer.mutate({ attemptId, questionId: current.id, selectedOptionIds: [], answerPayload: { matchingAnswers: next } });
+    const complete = Object.keys(next).length === (current.matchingPairs?.length ?? 0);
+    const isCorrect = complete && (current.matchingPairs ?? []).every((pair, index) => next[String(index)] === pair.right);
+    setFeedback({ questionId: current.id, status: isLocalPreview && complete ? (isCorrect ? "correct" : "incorrect") : "saved" });
+  };
+  const saveTextAnswer = () => {
+    if (!current) return;
+    const textAnswer = textAnswers[current.id]?.trim() ?? "";
+    if (!textAnswer) return;
+    if (attemptId && attemptId > 0) saveAnswer.mutate({ attemptId, questionId: current.id, selectedOptionIds: [], answerPayload: { textAnswer } });
+    const normalized = textAnswer.toLocaleLowerCase("vi-VN").replace(/\s+/g, " ");
+    const isCorrect = current.type === "fill_blank" && (current.acceptedAnswers ?? []).some(answer => answer.trim().toLocaleLowerCase("vi-VN").replace(/\s+/g, " ") === normalized);
+    setFeedback({ questionId: current.id, status: isLocalPreview && current.type === "fill_blank" ? (isCorrect ? "correct" : "incorrect") : "saved" });
+  };
   const finish = async () => {
     if (!attemptId) return;
     try {
@@ -339,6 +366,8 @@ export default function QuizRunner() {
       else {
         const review = questions.map(question => {
           const selectedStatementAnswers = statementAnswers[question.id] ?? {};
+          const selectedMatchingAnswers = matchingAnswers[question.id] ?? {};
+          const selectedTextAnswer = textAnswers[question.id]?.trim() ?? "";
           const expected = Object.fromEntries(
             (question.statements ?? []).map(statement => [
               statement.id,
@@ -346,6 +375,10 @@ export default function QuizRunner() {
             ])
           );
           const isStatement = question.type === "true_false_statements";
+          const isMatching = question.type === "matching";
+          const isFillBlank = question.type === "fill_blank";
+          const isEssay = question.type === "essay";
+          const normalizedTextAnswer = selectedTextAnswer.toLocaleLowerCase("vi-VN").replace(/\s+/g, " ");
           return {
             questionId: question.id,
             prompt: question.prompt,
@@ -354,6 +387,8 @@ export default function QuizRunner() {
             options: question.options,
             statements: question.statements ?? [],
             selectedStatementAnswers,
+            selectedMatchingAnswers,
+            selectedTextAnswer,
             selectedOptionIds: answers[question.id] ?? [],
             correctOptionIds: question.correctOptionIds ?? [],
             isCorrect: isStatement
@@ -362,8 +397,13 @@ export default function QuizRunner() {
                 Object.keys(expected).every(
                   id => selectedStatementAnswers[id] === expected[id]
                 )
-              : JSON.stringify([...(answers[question.id] ?? [])].sort()) ===
-                JSON.stringify([...(question.correctOptionIds ?? [])].sort()),
+              : isMatching
+                ? (question.matchingPairs ?? []).length > 0 && (question.matchingPairs ?? []).every((pair, index) => selectedMatchingAnswers[String(index)] === pair.right)
+                : isFillBlank
+                  ? (question.acceptedAnswers ?? []).some(answer => answer.trim().toLocaleLowerCase("vi-VN").replace(/\s+/g, " ") === normalizedTextAnswer)
+                  : isEssay
+                    ? false
+                    : JSON.stringify([...(answers[question.id] ?? [])].sort()) === JSON.stringify([...(question.correctOptionIds ?? [])].sort()),
           };
         });
         const correctCount = review.filter(
@@ -531,6 +571,9 @@ export default function QuizRunner() {
   const selected = answers[current.id] ?? [];
   const currentDifficulty = getQuizDifficultyTone(current.difficulty);
   const selectedStatements = statementAnswers[current.id] ?? {};
+  const selectedMatching = matchingAnswers[current.id] ?? {};
+  const matchingChoices = Array.from(new Set((current.matchingPairs ?? []).map(pair => pair.right))).sort((left, right) => left.localeCompare(right, "vi-VN"));
+  const textAnswer = textAnswers[current.id] ?? "";
   return (
     <div className="min-h-screen select-none bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary)_5%,transparent)_0%,var(--background)_30%)]">
       <QuizSecurityGuard active onEvent={onSecurityEvent} />
@@ -637,10 +680,37 @@ export default function QuizRunner() {
                 reveal={isLocalPreview && Boolean(feedbackForCurrent)}
               />
             ) : null}
+            {current.type === "matching" ? (
+              <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div><p className="text-sm font-bold text-foreground">Ghép nối các cặp tương ứng</p><p className="mt-1 text-xs text-text-secondary">Chọn đáp án phù hợp cho từng nội dung ở cột bên trái.</p></div>
+                  <span className="rounded-full bg-primary-light px-2.5 py-1 text-[10px] font-bold text-primary">{Object.keys(selectedMatching).length}/{current.matchingPairs?.length ?? 0} cặp</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {(current.matchingPairs ?? []).map((pair, index) => <div key={`${pair.left}-${index}`} className="grid gap-2 rounded-xl border border-border bg-surface p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center">
+                    <p className="text-sm font-semibold leading-6 text-foreground"><span className="mr-2 inline-grid size-6 place-items-center rounded-full bg-primary-light text-[11px] font-extrabold text-primary">{index + 1}</span>{pair.left}</p>
+                    <select aria-label={`Ghép nối cho ${pair.left}`} value={selectedMatching[String(index)] ?? ""} onChange={event => chooseMatching(index, event.target.value)} className="h-11 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"><option value="">Chọn đáp án phù hợp</option>{matchingChoices.map(choice => <option key={choice} value={choice}>{choice}</option>)}</select>
+                  </div>)}
+                </div>
+              </section>
+            ) : null}
+            {current.type === "fill_blank" ? (
+              <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5">
+                <p className="text-sm font-bold text-foreground">Nhập câu trả lời của bạn</p><p className="mt-1 text-xs text-text-secondary">Câu trả lời được so sánh không phân biệt hoa thường hoặc khoảng trắng thừa.</p>
+                <input aria-label="Câu trả lời ngắn" value={textAnswer} onChange={event => setTextAnswers(values => ({ ...values, [current.id]: event.target.value }))} onBlur={saveTextAnswer} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); saveTextAnswer(); } }} placeholder="Nhập câu trả lời…" className="mt-4 h-12 w-full rounded-xl border border-border bg-surface px-4 text-sm font-medium text-foreground outline-none transition placeholder:text-text-secondary focus:border-primary focus:ring-4 focus:ring-primary/10" />
+              </section>
+            ) : null}
+            {current.type === "essay" ? (
+              <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5">
+                <p className="text-sm font-bold text-foreground">Trình bày câu trả lời</p><p className="mt-1 text-xs text-text-secondary">Bài tự luận được lưu để giảng viên hoặc hệ thống đánh giá sau.</p>
+                <textarea aria-label="Câu trả lời tự luận" value={textAnswer} onChange={event => setTextAnswers(values => ({ ...values, [current.id]: event.target.value }))} onBlur={saveTextAnswer} placeholder="Viết câu trả lời của bạn…" className="mt-4 min-h-40 w-full resize-y rounded-xl border border-border bg-surface p-4 text-sm leading-6 text-foreground outline-none transition placeholder:text-text-secondary focus:border-primary focus:ring-4 focus:ring-primary/10" />
+                {current.sampleOutline ? <details className="mt-3 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text-secondary"><summary className="cursor-pointer font-semibold text-primary">Gợi ý cấu trúc trả lời</summary><p className="mt-2 leading-5">{current.sampleOutline}</p></details> : null}
+              </section>
+            ) : null}
             <div
               className={cn(
                 "mt-8 space-y-3",
-                current.type === "true_false_statements" && "hidden"
+                ["true_false_statements", "matching", "fill_blank", "essay"].includes(current.type) && "hidden"
               )}
             >
               {current.options.map((option, index) => {

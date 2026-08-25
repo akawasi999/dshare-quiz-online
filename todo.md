@@ -764,3 +764,5 @@
 - [x] Chuẩn hóa màu nhãn độ khó toàn hệ thống: Dễ xanh lá, Trung bình cam, Nâng cao hồng.
 - [x] Căn icon trái, nội dung giữa và chiều dọc đồng đều cho bốn thẻ thông số hero Runner.
 - [x] Tự động ẩn thẻ thông số hero Quiz Runner khi không có dữ liệu hiển thị.
+- [x] Đồng bộ dữ liệu Quiz Studio với Runner, hoàn thiện hiển thị/chấm các loại câu hỏi gồm Ghép nối.
+- [x] Nâng cấp giao diện làm bài Quiz Runner và phản hồi tương tác theo hướng chuyên nghiệp.

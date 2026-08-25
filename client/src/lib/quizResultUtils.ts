@@ -7,7 +7,7 @@ export type StoredQuizResult = {
   durationSeconds?: number;
   totalDurationSeconds?: number;
   quiz: { title: string; completionReward?: number; passingScore: number };
-  review: Array<{ questionId: number; prompt: string; explanation?: string | null; type?: string; selectedOptionIds: number[]; correctOptionIds: number[]; selectedStatementAnswers?: Record<string, boolean>; statements?: Array<{ id: string; text: string; correct: boolean }>; isCorrect: boolean; options: { id: number; body: string }[] }>;
+  review: Array<{ questionId: number; prompt: string; explanation?: string | null; type?: string; selectedOptionIds: number[]; correctOptionIds: number[]; selectedStatementAnswers?: Record<string, boolean>; statements?: Array<{ id: string; text: string; correct: boolean }>; matchingPairs?: Array<{ left: string; right: string }>; selectedMatchingAnswers?: Record<string, string>; selectedTextAnswer?: string; acceptedAnswers?: string[]; sampleOutline?: string; isCorrect: boolean; options: { id: number; body: string }[] }>;
 };
 
 export function parseStoredQuizResult(raw: string | null): StoredQuizResult | null {
