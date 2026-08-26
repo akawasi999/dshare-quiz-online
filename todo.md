@@ -784,3 +784,6 @@
 - [x] Bảo đảm mọi tài khoản có thể tạo và làm Quiz, chỉ giới hạn quyền theo gói đăng ký.
 - [x] Loại bỏ toàn bộ Zelly, “Tiếp tục bài kiểm tra tiếp theo” và “Bản đồ cao cấp”.
 - [x] Viết regression, xác minh giao diện và lưu checkpoint cho đợt chuẩn hóa vai trò/tính năng.
+- [x] Kiểm kê và chuẩn hóa dần các tên kỹ thuật legacy hướng tới thuật ngữ tài khoản/người làm bài, giữ tương thích dữ liệu hiện có.
+- [x] Bổ sung API và màn hình audit thay đổi quyền theo từng tài khoản trong CPanel.
+- [x] Viết regression, xác minh giao diện và lưu checkpoint cho đợt chuẩn hóa legacy/audit quyền.

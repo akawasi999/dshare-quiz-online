@@ -101,7 +101,7 @@ import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from ".
 import { getEffectiveTier } from "./membershipUtils";
 import { getLearnerGamificationSummary } from "./gamification";
 import { getAiPointQuotes, runWithAiPointCharge } from "./aiPointPricing";
-import { getUserEntitlements, requirePermission } from "./permissionService";
+import { getAccountEntitlements, requirePermission } from "./permissionService";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
 import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse, questionEnhancementInputSchema, quizStudioChatInputSchema } from "./quizStudioChat";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
@@ -591,7 +591,7 @@ export const appRouter = router({
     entitlements: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải quyền truy cập." });
-      try { return await getUserEntitlements(db, ctx.user.id); }
+      try { return await getAccountEntitlements(db, ctx.user.id); }
       catch (error) { throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error instanceof Error ? error.message : "Không thể tải quyền truy cập." }); }
     }),
     gamification: protectedProcedure.query(async ({ ctx }) => {
@@ -1812,6 +1812,16 @@ export const appRouter = router({
       emailDeliveries.forEach(delivery => { if (delivery.paymentRecordId) emailsByPayment.set(delivery.paymentRecordId, [...(emailsByPayment.get(delivery.paymentRecordId) ?? []), delivery]); });
       return { ...account, activity, recentAttempts, recentTransactions, membership, effectivePermissions, paymentOrders: paymentOrders.map(order => ({ order, emailDeliveries: emailsByPayment.get(order.id) ?? [] })) };
     }),
+    userPermissionAudit: adminProcedure.input(z.object({ userId: z.number().int().positive() })).query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải lịch sử quyền." });
+      const permissionActions = ["user.tier_updated", "user_group.member_assigned", "user_group.member_removed", "user.permission_override_updated"];
+      const entries = await db.select().from(auditLogs).where(and(eq(auditLogs.entityType, "user"), eq(auditLogs.entityId, input.userId), inArray(auditLogs.action, permissionActions))).orderBy(desc(auditLogs.createdAt)).limit(50);
+      const actorIds = Array.from(new Set(entries.map(entry => entry.actorUserId).filter((id): id is number => typeof id === "number")));
+      const actors = actorIds.length ? await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(inArray(users.id, actorIds)) : [];
+      const actorById = new Map(actors.map(actor => [actor.id, actor]));
+      return entries.map(entry => ({ ...entry, actor: entry.actorUserId ? actorById.get(entry.actorUserId) ?? null : null }));
+    }),
     bulkUpdateUsers: adminProcedure.input(z.object({ userIds: z.array(z.number().int().positive()).min(1).max(50), tier: z.enum(["basic", "pro", "premium"]).optional(), isBanned: z.boolean().optional() }).refine(input => input.tier !== undefined || input.isBanned !== undefined, { message: "Cần chọn thay đổi hạng hoặc trạng thái." }))
       .mutation(async ({ ctx, input }) => {
         const uniqueUserIds = Array.from(new Set(input.userIds));
@@ -1943,12 +1953,13 @@ export const appRouter = router({
       const group = groupRows[0];
       if (!user[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy thành viên." });
       if (!group?.group) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy nhóm người dùng." });
+      const previousMembership = (await db.select({ groupId: userGroupMembers.groupId }).from(userGroupMembers).where(eq(userGroupMembers.userId, input.userId)).limit(1))[0];
       await db.insert(userGroupMembers).values(input).onDuplicateKeyUpdate({ set: { groupId: input.groupId, updatedAt: new Date() } });
       if (group.plan) {
         const profile = await ensureLearnerProfile(input.userId);
         if (profile) await db.update(learnerProfiles).set({ tier: group.plan.tier }).where(eq(learnerProfiles.id, profile.id));
       }
-      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user_group.member_assigned", entityType: "user", entityId: input.userId, metadata: { groupId: input.groupId } });
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user_group.member_assigned", entityType: "user", entityId: input.userId, metadata: { groupId: input.groupId, groupName: group.group.name, planName: group.plan?.name ?? null, previousGroupId: previousMembership?.groupId ?? null } });
       await createInAppNotification(db, { userId: input.userId, type: "account_permission", title: "Quyền truy cập đã được cập nhật", body: `Bạn đã được đưa vào nhóm “${group.group.name}”${group.plan ? `, liên kết gói ${group.plan.name}` : ""}.`, href: "/ho-so", metadata: { groupId: input.groupId, planId: group.plan?.id ?? null } });
       return { success: true };
     }),
@@ -1966,7 +1977,7 @@ export const appRouter = router({
         const profile = await ensureLearnerProfile(input.userId);
         if (!profile) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy hồ sơ học viên." });
         await db.update(learnerProfiles).set({ tier: input.tier }).where(eq(learnerProfiles.id, profile.id));
-        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user.tier_updated", entityType: "user", entityId: input.userId, metadata: { tier: input.tier } });
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user.tier_updated", entityType: "user", entityId: input.userId, metadata: { previousTier: profile.tier, tier: input.tier } });
         await createInAppNotification(db, { userId: input.userId, type: "account_plan", title: "Gói tài khoản đã được cập nhật", body: `Quản trị viên đã cập nhật gói tài khoản của bạn thành ${input.tier.toUpperCase()}.`, href: "/ho-so", metadata: { tier: input.tier, source: "user-management" } });
         return { success: true };
       }),

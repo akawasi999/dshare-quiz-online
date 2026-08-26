@@ -1,5 +1,5 @@
 import { and, eq, gt, isNull, or } from "drizzle-orm";
-import { learnerProfiles, permissionRegistry, subscriptionPlanPermissions, subscriptionPlans, userPermissionOverrides } from "../drizzle/schema";
+import { accountProfiles, permissionRegistry, subscriptionPlanPermissions, subscriptionPlans, userPermissionOverrides } from "../drizzle/schema";
 import { getEffectiveTier } from "./membershipUtils";
 
 type DbExecutor = any;
@@ -16,8 +16,8 @@ export type PermissionEntitlement = {
   requiredPlan: string | null;
 };
 
-export async function getUserEntitlements(db: DbExecutor, userId: number) {
-  const [profile] = await db.select().from(learnerProfiles).where(eq(learnerProfiles.userId, userId)).limit(1);
+export async function getAccountEntitlements(db: DbExecutor, userId: number) {
+  const [profile] = await db.select().from(accountProfiles).where(eq(accountProfiles.userId, userId)).limit(1);
   if (!profile) throw new Error("Không tìm thấy hồ sơ thành viên.");
   const tier = getEffectiveTier({ tier: profile.tier as "basic" | "pro" | "premium", tierExpiresAt: profile.tierExpiresAt });
   const [plan] = await db.select().from(subscriptionPlans).where(and(eq(subscriptionPlans.tier, tier), eq(subscriptionPlans.isActive, true))).limit(1);
@@ -43,7 +43,7 @@ export async function getUserEntitlements(db: DbExecutor, userId: number) {
 }
 
 export async function requirePermission(db: DbExecutor, userId: number, key: string) {
-  const data = await getUserEntitlements(db, userId);
+  const data = await getAccountEntitlements(db, userId);
   const permission = data.entitlements.find(item => item.key === key);
   if (!permission?.enabled) {
     const error = new Error(`FEATURE_NOT_AVAILABLE:${key}`) as Error & { permission?: string; requiredPlan?: string | null };
@@ -53,3 +53,6 @@ export async function requirePermission(db: DbExecutor, userId: number, key: str
   }
   return permission;
 }
+
+/** @deprecated Dùng getAccountEntitlements cho mã mới. */
+export const getUserEntitlements = getAccountEntitlements;

@@ -189,6 +189,12 @@ export const learnerProfiles = mysqlTable("learnerProfiles", {
   uniqueIndex("learner_profiles_referral_unique").on(table.referralCode),
 ]);
 
+/**
+ * Tên miền trung tính dùng cho mã mới. Bảng MySQL giữ tên cũ trong giai đoạn
+ * chuyển đổi để không làm gián đoạn dữ liệu, migration hoặc tích hợp đang dùng.
+ */
+export const accountProfiles = learnerProfiles;
+
 export const userNotifications = mysqlTable("userNotifications", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),

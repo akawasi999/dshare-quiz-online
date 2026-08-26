@@ -27,4 +27,10 @@ describe("admin access", () => {
       code: "FORBIDDEN",
     });
   });
+
+  it("rejects an ordinary user before reading account permission audit", async () => {
+    await expect(callerFor("user").admin.userPermissionAudit({ userId: 9 })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+  });
 });

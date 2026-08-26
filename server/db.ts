@@ -100,6 +100,9 @@ export async function ensureLearnerProfile(userId: number) {
   return profile;
 }
 
+/** @deprecated Dùng ensureAccountProfile cho mã mới; giữ lại để không phá các luồng hiện hữu. */
+export const ensureAccountProfile = ensureLearnerProfile;
+
 export async function getLearnerSummary(userId: number) {
   const db = await getDb();
   if (!db) return undefined;
