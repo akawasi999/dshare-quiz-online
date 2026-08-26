@@ -52,6 +52,17 @@ describe("QuizRunner data state", () => {
     expect(container.querySelector("video")?.getAttribute("src")).toBe("/manus-storage/explain.webm");
   });
 
+  it("khóa điều hướng lùi trong Sandbox khi Studio tắt quyền quay lại", async () => {
+    const user = userEvent.setup();
+    sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox giới hạn quay lại", summary: "", durationSeconds: 900, allowBacktrack: false, questions: [{ id: -1, prompt: "Câu hỏi thứ nhất hợp lệ", type: "single", difficulty: "medium", tags: ["Sandbox"], options: [{ id: 1, body: "Đúng" }, { id: 2, body: "Sai" }], correctOptionIds: [1] }, { id: -2, prompt: "Câu hỏi thứ hai hợp lệ", type: "single", difficulty: "medium", tags: ["Sandbox"], options: [{ id: 3, body: "Đúng" }, { id: 4, body: "Sai" }], correctOptionIds: [3] }] }));
+    window.history.replaceState({}, "", `${window.location.origin}/quiz/0?sandbox=1`);
+    render(<QuizRunner />);
+    await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
+    await user.click(screen.getByRole("button", { name: /Câu tiếp theo/ }));
+    expect(screen.getByRole("button", { name: "Quay lại" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("button", { name: "Đi đến câu 1" }).hasAttribute("disabled")).toBe(true);
+  });
+
   it("hiển thị và chấm Ghép nối trong Sandbox", async () => {
     const user = userEvent.setup();
     sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox ghép nối", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Ghép thủ đô với quốc gia", type: "matching", difficulty: "medium", tags: ["Sandbox"], matchingPairs: [{ left: "Hà Nội", right: "Việt Nam" }, { left: "Tokyo", right: "Nhật Bản" }], options: [], correctOptionIds: [] }] }));

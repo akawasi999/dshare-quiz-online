@@ -56,6 +56,7 @@ type SandboxPreview = {
   title: string;
   summary: string;
   durationSeconds: number;
+  allowBacktrack?: boolean;
   questions: ActiveQuestion[];
 };
 type AnswerFeedback = {
@@ -191,6 +192,7 @@ export default function QuizRunner() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(900);
   const [totalDuration, setTotalDuration] = useState(900);
+  const [allowBacktrack, setAllowBacktrack] = useState(true);
   const [feedback, setFeedback] = useState<AnswerFeedback>(null);
   const current = questions[currentIndex];
   const hasAnswer = (question: ActiveQuestion) =>
@@ -231,13 +233,15 @@ export default function QuizRunner() {
   const resetSession = (
     nextQuestions: ActiveQuestion[],
     nextAttempt: number,
-    seconds: number
+    seconds: number,
+    canBacktrack = true
   ) => {
     setQuestions(nextQuestions);
     setAttemptId(nextAttempt);
     setPhase("active");
     setTimeLeft(seconds);
     setTotalDuration(seconds);
+    setAllowBacktrack(canBacktrack);
     setAnswers({});
     setStatementAnswers({});
     setMatchingAnswers({});
@@ -263,7 +267,8 @@ export default function QuizRunner() {
       resetSession(
         sandboxPreview.questions,
         -Date.now(),
-        sandboxPreview.durationSeconds
+        sandboxPreview.durationSeconds,
+        sandboxPreview.allowBacktrack !== false
       );
       toast.info("Đang xem trước Sandbox", {
         description: "Kết quả không được lưu vào lịch sử hoặc thống kê.",
@@ -279,7 +284,8 @@ export default function QuizRunner() {
       resetSession(
         response.questions,
         response.attemptId,
-        response.quiz.durationSeconds
+        response.quiz.durationSeconds,
+        (response.quiz.creatorSettings as { allowBackNavigation?: boolean } | null | undefined)?.allowBackNavigation !== false
       );
       document.documentElement.requestFullscreen?.().catch(() => undefined);
     } catch {
@@ -838,7 +844,7 @@ export default function QuizRunner() {
             <div className="mt-7 flex justify-between border-t border-border-light pt-5">
               <Button
                 variant="ghost"
-                disabled={currentIndex === 0}
+                disabled={currentIndex === 0 || !allowBacktrack}
                 onClick={() => {
                   setFeedback(null);
                   setCurrentIndex(index => index - 1);
@@ -901,6 +907,7 @@ export default function QuizRunner() {
               {questions.map((question, index) => (
                 <button
                   type="button"
+                  disabled={!allowBacktrack && index < currentIndex}
                   onClick={() => {
                     setFeedback(null);
                     setCurrentIndex(index);
@@ -909,7 +916,7 @@ export default function QuizRunner() {
                   aria-label={`Đi đến câu ${index + 1}`}
                   aria-current={index === currentIndex ? "step" : undefined}
                   className={cn(
-                    "grid aspect-square place-items-center rounded-[var(--radius-sm-token)] text-xs font-bold transition-[transform,background-color,color] hover:-translate-y-0.5",
+                    "grid aspect-square place-items-center rounded-[var(--radius-sm-token)] text-xs font-bold transition-[transform,background-color,color] hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45",
                     index === currentIndex
                       ? "bg-primary text-primary-foreground"
                       : hasAnswer(question)

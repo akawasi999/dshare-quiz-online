@@ -823,3 +823,9 @@
 - [x] Kiểm kê trang Quiz của tôi và tái sử dụng ngôn ngữ card/bố cục từ Khám phá.
 - [x] Đồng bộ card Quiz của tôi với Khám phá, giữ chỉnh sửa, sao chép, xóa và thống kê của chủ sở hữu.
 - [x] Viết regression, xác minh responsive và lưu checkpoint cho giao diện Quiz của tôi đồng bộ.
+- [x] Audit toàn bộ UI, handler, API và trạng thái lỗi/tải của Quiz Studio tại /build.
+- [x] Hoàn thiện thao tác thêm, sửa, xóa, sắp xếp và xác thực tất cả dạng câu hỏi trong Studio.
+- [x] Hoàn thiện upload/chèn media, lưu nháp, khôi phục, xem trước Sandbox và xuất bản Quiz.
+- [x] Hoàn thiện cấu hình chủ đề, quyền truy cập, thời lượng, ảnh bìa và metadata Quiz.
+- [x] Tinh chỉnh UX/UI Studio desktop/mobile, phản hồi thao tác và khả năng truy cập.
+- [x] Viết regression, xác minh trực quan và lưu checkpoint cho Quiz Studio hoàn chỉnh.
