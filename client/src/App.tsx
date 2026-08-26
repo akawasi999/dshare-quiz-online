@@ -37,10 +37,11 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 function Router() {
   const [location] = useLocation();
   const accountWorkspaceRoutes = [ROUTES.account, ROUTES.dashboard, ROUTES.leaderboard, ROUTES.missions, ROUTES.achievements, ROUTES.wallet, ROUTES.referrals, ROUTES.billing, ROUTES.myQuizzes, ROUTES.aiAssistant, ROUTES.practice, ROUTES.practiceReview];
-  const hidePublicFooter = location.startsWith("/admin") || accountWorkspaceRoutes.some(route => location === route) || location === ROUTES.quizBuilder || location.startsWith(`${ROUTES.quiz}/`) || location.startsWith(ROUTES.results) || location.startsWith(ROUTES.practice);
+  const hidePublicFooter = location.startsWith("/admin") || accountWorkspaceRoutes.some(route => location === route) || location === ROUTES.quizBuilder || location === "/quiz/create" || location.startsWith(`${ROUTES.quiz}/`) || location.startsWith(ROUTES.results) || location.startsWith(ROUTES.practice);
   return <><Switch>
     <Route path={ROUTES.home} component={Home} />
     <Route path={ROUTES.explore}>{() => <QuizLibrary />}</Route>
+    <Route path="/quiz/create">{() => <LegacyQuizBuilderRedirect />}</Route>
     <Route path={ROUTES.quizBuilder}>{() => <ProtectedPage Page={UserQuizCreator} />}</Route>
     <Route path={`${ROUTES.results}/:id`}>{() => <ProtectedPage Page={QuizResult} />}</Route>
     <Route path={`${ROUTES.quiz}/:id`}>{() => <ProtectedPage Page={QuizRunner} />}</Route>
@@ -100,11 +101,17 @@ function PracticeQuizLibrary() {
   return <QuizLibrary embedded />;
 }
 
+function LegacyQuizBuilderRedirect() {
+  const [, setLocation] = useLocation();
+  useEffect(() => { setLocation(`${ROUTES.quizBuilder}${window.location.search}`, { replace: true }); }, [setLocation]);
+  return null;
+}
+
 const deprecatedHrefTargets: Record<string, string> = {
   "/explore": ROUTES.explore, "/kham-pha": ROUTES.explore, "/bang-xep-hang": ROUTES.leaderboard, "/xep-hang": ROUTES.leaderboard, "/bang-gia": ROUTES.pricing,
   "/ho-so": ROUTES.dashboard, "/nhiem-vu": ROUTES.missions, "/thanh-tich": ROUTES.achievements, "/vi": ROUTES.wallet, "/vi-point": ROUTES.wallet,
   "/gioi-thieu": ROUTES.referrals, "/nap-point": ROUTES.billing, "/thanh-toan": ROUTES.paymentStatus, "/luyen-tap": ROUTES.practice,
-  "/tao-quiz": ROUTES.quizBuilder, "/quiz-cua-toi": ROUTES.myQuizzes, "/tro-ly-ai": ROUTES.aiAssistant, "/ket-qua": ROUTES.results,
+  "/tao-quiz": ROUTES.quizBuilder, "/quiz/create": ROUTES.quizBuilder, "/quiz-cua-toi": ROUTES.myQuizzes, "/tro-ly-ai": ROUTES.aiAssistant, "/ket-qua": ROUTES.results,
   "/quan-tri": ROUTES.admin, "/quan-tri/chu-de": ROUTES.adminTopics, "/quan-tri/quiz-system": ROUTES.adminQuizzes, "/quan-tri/nguoi-dung": ROUTES.adminUsers,
   "/quan-tri/nhom-nguoi-dung": ROUTES.adminUserGroups, "/quan-tri/point": ROUTES.adminPoints, "/quan-tri/xp": ROUTES.adminXp,
   "/quan-tri/gamification": ROUTES.adminGamification, "/quan-tri/bao-cao": ROUTES.adminAnalytics, "/quan-tri/seo-preview": ROUTES.adminSeoPreview,

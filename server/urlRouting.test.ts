@@ -4,7 +4,7 @@ import { ROUTES } from "../client/src/lib/routes";
 describe("URL routing", () => {
   it("công bố các URL chính bằng tiếng Anh", () => {
     expect(ROUTES.explore).toBe("/quiz");
-    expect(ROUTES.quizBuilder).toBe("/quiz/create");
+    expect(ROUTES.quizBuilder).toBe("/build");
     expect(ROUTES.practice).toBe("/practice");
     expect(ROUTES.practiceReview).toBe("/practice/review");
     expect(ROUTES.account).toBe("/account");

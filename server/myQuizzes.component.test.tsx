@@ -41,6 +41,6 @@ describe("MyQuizzes", () => {
     expect(screen.getByText("Đề cần chỉnh sửa")).toBeTruthy();
     expect(screen.getByText("Bổ sung đáp án đúng cho câu 3.")).toBeTruthy();
     await user.click(screen.getAllByRole("button", { name: "Tạo Quiz mới" })[0]!);
-    expect(mocks.setLocation).toHaveBeenCalledWith("/quiz/create");
+    expect(mocks.setLocation).toHaveBeenCalledWith("/build");
   });
 });

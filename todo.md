@@ -791,3 +791,6 @@
 - [x] Tinh gọn thanh Studio: gỡ Người làm bài/Đáp án, chuyển Tác giả Quiz thành icon tải xuống có tooltip và bỏ sticky thanh nguồn AI.
 - [x] Cập nhật nút quay lại trong tiêu đề Studio để điều hướng về `/quiz/create`.
 - [x] Viết regression, xác minh giao diện và lưu checkpoint cho đợt helper legacy/Studio mới.
+- [x] Đổi route chính Quiz Studio từ `/quiz/create` sang `/build` và cập nhật toàn bộ liên kết nội bộ liên quan.
+- [x] Điều hướng nút quay lại trong tiêu đề Studio về trang Quiz của tôi tại `/my-quizzes`.
+- [x] Kiểm thử deep-link route mới, regression và lưu checkpoint.
