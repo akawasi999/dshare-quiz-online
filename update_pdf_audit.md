@@ -7,3 +7,5 @@ Tài liệu cũng yêu cầu xuất Quiz PDF theo Student, Answer Key và Teache
 ## Xác minh trực quan
 
 Studio desktop hiển thị lưới hành động AI, các thẻ Media và dải thêm câu hỏi với đầy đủ nhóm Premium trên một workspace rõ ràng. Trên viewport 390px, header giữ CTA Xuất bản; các hành động AI và thẻ media xếp dọc, không gây tràn ngang hay chồng nội dung trong vùng quan sát.
+
+Thanh công cụ Studio desktop hiện hiển thị nhóm xuất PDF gồm **Học viên**, **Đáp án** và **Giáo viên** cạnh nút Xuất bản. Nhóm điều khiển nằm gọn trên một hàng, giữ CTA Xuất bản và xem trước Sandbox dễ truy cập.

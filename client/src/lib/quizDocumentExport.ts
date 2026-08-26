@@ -73,7 +73,9 @@ export async function exportQuizToWord(quiz: PrintableQuiz) {
   downloadBlob(await Packer.toBlob(document), `${safeFileName(quiz.title)}.docx`);
 }
 
-export async function exportQuizToPdf(quiz: PrintableQuiz) {
+export type QuizPdfVariant = "student" | "answer_key" | "teacher";
+
+export async function exportQuizToPdf(quiz: PrintableQuiz, variant: QuizPdfVariant = "teacher") {
   const [pdfMakeModule, pdfFontsModule] = await Promise.all([import("pdfmake/build/pdfmake"), import("pdfmake/build/vfs_fonts")]);
   const pdfMake = pdfMakeModule.default || pdfMakeModule;
   const pdfFonts = pdfFontsModule.default || pdfFontsModule;
@@ -83,12 +85,12 @@ export async function exportQuizToPdf(quiz: PrintableQuiz) {
     { text: quiz.title || "Quiz chưa đặt tên", style: "title" },
     { text: documentHeading(quiz), style: "meta" },
     ...(quiz.summary ? [{ text: quiz.summary, style: "summary" }] : []),
-    { text: "CÂU HỎI VÀ ĐÁP ÁN", style: "section" },
+    { text: variant === "student" ? "ĐỀ LÀM BÀI" : variant === "answer_key" ? "ĐÁP ÁN" : "ĐỀ GIÁO VIÊN", style: "section" },
     ...quiz.questions.flatMap((question, index) => [
       { text: `Câu ${index + 1}. ${question.prompt || "Câu hỏi chưa có nội dung"}`, style: "question" },
       { text: `${questionTypeLabels[question.type]} · ${difficultyLabels[question.difficulty]} · ${question.points} điểm`, style: "meta" },
-      ...answerLines(question).map(line => ({ text: line, style: line.startsWith("✓") ? "correctAnswer" : "answer", margin: [12, 2, 0, 0] })),
-      ...(question.explanation ? [{ text: [{ text: "Lời giải: ", bold: true }, { text: question.explanation }], style: "explanation" }] : []),
+      ...(variant === "student" ? [{ text: "................................................................................................................", style: "answer", margin: [12, 8, 0, 8] }] : answerLines(question).map(line => ({ text: line, style: line.startsWith("✓") ? "correctAnswer" : "answer", margin: [12, 2, 0, 0] }))),
+      ...(variant === "teacher" && question.explanation ? [{ text: [{ text: "Lời giải: ", bold: true }, { text: question.explanation }], style: "explanation" }] : []),
     ]),
   ];
   const definition = {
@@ -108,7 +110,7 @@ export async function exportQuizToPdf(quiz: PrintableQuiz) {
     },
     footer: (currentPage: number, pageCount: number) => ({ text: `Dshare Quiz Online · Trang ${currentPage}/${pageCount}`, alignment: "center", color: "64748B", fontSize: 8, margin: [0, 10, 0, 0] }),
   };
-  pdfMake.createPdf(definition).download(`${safeFileName(quiz.title)}.pdf`);
+  pdfMake.createPdf(definition).download(`${safeFileName(`${quiz.title}-${variant}`)}.pdf`);
 }
 
 export async function exportQuizResultToPdf(result: PrintableQuizResult) {

@@ -11,7 +11,7 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 type StudioQuestion = { prompt: string; explanation: string; options: Array<{ body: string; isCorrect: boolean }>; answerConfig: Record<string, unknown>; type: string; difficulty: string };
 
 const sourceGuidance = {
-  topic: { heading: "Tạo câu hỏi cùng AI", content: "Hãy cho tôi biết chủ đề, cấp độ, dạng câu hỏi hoặc mục tiêu học tập. Nếu chưa đủ dữ liệu, tôi sẽ gợi ý phần cần bổ sung.", prompts: ["Tạo 3 câu trắc nghiệm Toán lớp 4", "Tạo câu điền từ về tiếng Việt", "Tôi cần câu hỏi ôn tập cơ bản"] },
+  topic: { heading: "Tạo câu hỏi cùng AI", content: "Hãy cho tôi biết chủ đề, cấp độ, dạng câu hỏi hoặc mục tiêu học tập. Nếu chưa đủ dữ liệu, tôi sẽ gợi ý phần cần bổ sung.", prompts: ["Tạo 3 câu trắc nghiệm Toán lớp 4", "Tạo câu điền từ về tiếng Việt", "Tôi cần câu hỏi ôn tập cơ bản", "Tạo một câu tương tự nhưng khó hơn", "Giải thích đáp án theo từng bước", "Dịch câu hỏi sang tiếng Anh", "Kiểm tra chất lượng và độ rõ ràng của câu hỏi"] },
   file: { heading: "Tạo câu hỏi từ tài liệu", content: "Tải lên tệp Excel, Word hoặc PDF. Sau khi phân tích, câu hỏi hợp lệ sẽ xuất hiện trong danh sách câu hỏi.", prompts: ["Tạo 3 câu hỏi mức trung bình", "Tạo câu trắc nghiệm dễ", "Tạo câu hỏi ôn tập từ tài liệu"] },
   youtube: { heading: "Tạo câu hỏi từ YouTube", content: "Dán liên kết video công khai có phụ đề. AI sẽ dùng nội dung lời thoại để tạo câu hỏi.", prompts: ["Tạo 3 câu hỏi mức trung bình", "Tạo câu trắc nghiệm dễ", "Tạo câu hỏi ôn tập từ video"] },
   web: { heading: "Tạo câu hỏi từ trang web", content: "Dán địa chỉ bài viết công khai. AI sẽ trích nội dung chính và tạo câu hỏi.", prompts: ["Tạo 3 câu hỏi mức trung bình", "Tạo câu trắc nghiệm dễ", "Tạo câu hỏi đúng sai"] },
