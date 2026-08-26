@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { parseAiQuestionDraft } from "./aiQuestionGenerator";
+import type { Tool, ToolCall } from "./_core/llm";
 
 const questionTypeSchema = z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "ordering", "image_choice", "essay"]);
 const difficultySchema = z.enum(["easy", "medium", "hard"]);
@@ -25,7 +26,7 @@ const studioQuestionContextSchema = z.object({
   options: z.array(z.object({ body: z.string().max(2_000), isCorrect: z.boolean() })).max(10),
   answerConfig: z.record(z.string(), z.unknown()),
 });
-const operationSchema = z.object({ kind: z.enum(["create", "update", "delete"]), targetId: z.string().trim().min(1).max(120).nullable(), question: questionDraftSchema.nullable() });
+const operationSchema = z.object({ kind: z.enum(["create", "update", "delete", "clear"]), targetId: z.string().trim().min(1).max(120).nullable(), question: questionDraftSchema.nullable() });
 
 export const quizStudioChatInputSchema = z.object({
   messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().trim().min(1).max(4_000) })).min(1).max(12),
@@ -41,7 +42,19 @@ const studioChatResponseSchema = z.object({
   suggestedPrompts: z.array(z.string().trim().min(2).max(180)).max(3),
 });
 
+const toolQuestionSchema = { type: "object", properties: { type: { type: "string", enum: ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "ordering", "image_choice", "essay"] }, difficulty: { type: "string", enum: ["easy", "medium", "hard"] }, points: { type: "integer", minimum: 1, maximum: 100 }, prompt: { type: "string" }, explanation: { type: "string" }, imageUrl: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "points", "prompt", "explanation", "imageUrl", "options", "answerConfig"], additionalProperties: false };
+const toolQuestionUpdatesSchema = { type: "object", properties: { type: toolQuestionSchema.properties.type, difficulty: toolQuestionSchema.properties.difficulty, points: toolQuestionSchema.properties.points, prompt: toolQuestionSchema.properties.prompt, explanation: toolQuestionSchema.properties.explanation, imageUrl: toolQuestionSchema.properties.imageUrl, options: toolQuestionSchema.properties.options, answerConfig: toolQuestionSchema.properties.answerConfig }, additionalProperties: false };
+
+export const quizStudioChatTools: Tool[] = [
+  { type: "function", function: { name: "add_questions", description: "Thêm một hoặc nhiều câu hỏi hoàn chỉnh vào Quiz Studio sau khi người tạo đã xác nhận số lượng.", parameters: { type: "object", properties: { questions: { type: "array", minItems: 1, maxItems: 20, items: toolQuestionSchema } }, required: ["questions"], additionalProperties: false } } },
+  { type: "function", function: { name: "update_question", description: "Cập nhật một phần hoặc toàn bộ câu hỏi có ID trong ngữ cảnh Studio.", parameters: { type: "object", properties: { question_id: { type: "string" }, updates: toolQuestionUpdatesSchema }, required: ["question_id", "updates"], additionalProperties: false } } },
+  { type: "function", function: { name: "delete_question", description: "Xóa một câu hỏi theo ID có trong ngữ cảnh Studio.", parameters: { type: "object", properties: { question_id: { type: "string" } }, required: ["question_id"], additionalProperties: false } } },
+  { type: "function", function: { name: "clear_questions", description: "Xóa toàn bộ câu hỏi và bắt đầu lại. Chỉ gọi khi người tạo yêu cầu rõ ràng.", parameters: { type: "object", properties: {}, additionalProperties: false } } },
+];
+
 const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const fallbackResponse = () => ({ action: "clarify" as const, reply: "Tôi cần thêm một chi tiết để tạo câu hỏi đúng yêu cầu. Hãy cho tôi biết chủ đề, dạng câu hoặc xác nhận thao tác bạn muốn thực hiện.", detected: { topic: null, type: null, difficulty: null, count: null }, operations: [], suggestedPrompts: ["Tạo lại 5 câu trắc nghiệm với 4 đáp án", "Sửa câu hỏi đã chọn và giữ đáp án hợp lệ"] });
 
 function normalizeAiOperationPayload(content: unknown) {
   const raw = typeof content === "string" ? JSON.parse(content) : content;
@@ -85,7 +98,7 @@ Bạn có ba action:
 Quy tắc operations:
 1. create: targetId=null, question phải đầy đủ; tổng create không vượt requestedQuestionCount, 20, hoặc giới hạn 50 câu của Studio.
 2. update: targetId phải đúng id trong ngữ cảnh, question là phiên bản HOÀN CHỈNH sau khi sửa; có thể đổi kiểu, độ khó, điểm, nội dung, ảnh (imageUrl), đáp án, lời giải và answerConfig. Giữ nguyên trường hiện có nếu người dùng không yêu cầu thay đổi.
-3. delete: targetId phải đúng id trong ngữ cảnh, question=null.
+3. delete: targetId phải đúng id trong ngữ cảnh, question=null. clear chỉ dùng khi người tạo yêu cầu xóa toàn bộ danh sách.
 4. Chỉ dùng các kiểu: single, multiple, true_false, true_false_statements, fill_blank, matching, ordering, image_choice, essay. Mọi câu phải có đáp án/answerConfig hợp lệ, points 1–100. imageUrl chỉ dùng URL ảnh hợp lệ hoặc chuỗi rỗng.
 5. Trường options BẮT BUỘC là mảng object theo đúng mẫu [{"body":"Nội dung đáp án","isCorrect":true}]. Không bao giờ gửi options là chuỗi, boolean, số hoặc mảng boolean/chuỗi. answerConfig BẮT BUỘC là object JSON, dùng {} khi không có cấu hình riêng; không bao giờ là chuỗi, boolean, mảng hoặc null.
 6. Nếu không thể tạo cấu trúc đầy đủ, dùng action="clarify" và operations=[]; không gửi operation dở dang. Không tự bịa id, không thao tác ngoài yêu cầu, không tạo nội dung độc hại hoặc đáp án cho bài thi đang diễn ra. Luôn phản hồi JSON đúng schema.
@@ -95,7 +108,6 @@ ${studioContext}` }, ...input.messages.map(message => ({ role: message.role, con
 }
 
 export function parseQuizStudioChatResponse(content: unknown) {
-  const fallback = () => ({ action: "clarify" as const, reply: "Tôi cần tạo lại cấu trúc đáp án để bảo đảm câu hỏi hợp lệ. Bạn hãy xác nhận yêu cầu hoặc gửi lại thao tác cần thực hiện.", detected: { topic: null, type: null, difficulty: null, count: null }, operations: [], suggestedPrompts: ["Tạo lại câu hỏi với 4 đáp án đầy đủ", "Sửa câu hỏi đã chọn và giữ đáp án hợp lệ"] });
   try {
     const raw = normalizeAiOperationPayload(content);
     const parsed = studioChatResponseSchema.parse(raw);
@@ -105,15 +117,40 @@ export function parseQuizStudioChatResponse(content: unknown) {
         if (!operation.targetId || operation.question !== null) throw new Error("Lệnh xoá AI không hợp lệ.");
         return operation;
       }
+      if (operation.kind === "clear") {
+        if (operation.targetId !== null || operation.question !== null) throw new Error("Lệnh làm mới AI không hợp lệ.");
+        return operation;
+      }
       if (!operation.question || (operation.kind === "create" ? operation.targetId !== null : !operation.targetId)) throw new Error("Lệnh chỉnh sửa AI không hợp lệ.");
       const normalized = parseAiQuestionDraft(operation.question, operation.question.type);
       return { ...operation, question: { ...normalized, type: operation.question.type, difficulty: operation.question.difficulty, points: operation.question.points, imageUrl: operation.question.imageUrl } };
     });
-    if (!operations.length) return fallback();
+    if (!operations.length) return fallbackResponse();
     return { ...parsed, operations };
   } catch {
-    return fallback();
+    return fallbackResponse();
   }
+}
+
+export function parseQuizStudioToolCalls(toolCalls: ToolCall[] | undefined, currentQuestions: z.infer<typeof studioQuestionContextSchema>[]) {
+  if (!toolCalls?.length) return fallbackResponse();
+  const currentById = new Map(currentQuestions.map(question => [question.id, question]));
+  const operations: Array<{ kind: "create" | "update" | "delete" | "clear"; targetId: string | null; question: unknown }> = [];
+  for (const toolCall of toolCalls) {
+    let args: unknown;
+    try { args = JSON.parse(toolCall.function.arguments); } catch { continue; }
+    if (!isRecord(args)) continue;
+    if (toolCall.function.name === "add_questions" && Array.isArray(args.questions)) {
+      for (const question of args.questions) operations.push({ kind: "create", targetId: null, question });
+    }
+    if (toolCall.function.name === "update_question" && typeof args.question_id === "string" && isRecord(args.updates)) {
+      const current = currentById.get(args.question_id);
+      if (current) operations.push({ kind: "update", targetId: args.question_id, question: { ...current, ...args.updates } });
+    }
+    if (toolCall.function.name === "delete_question" && typeof args.question_id === "string") operations.push({ kind: "delete", targetId: args.question_id, question: null });
+    if (toolCall.function.name === "clear_questions") operations.push({ kind: "clear", targetId: null, question: null });
+  }
+  return parseQuizStudioChatResponse({ action: "apply", reply: "Đã áp dụng các thay đổi vào Quiz Studio.", detected: { topic: null, type: null, difficulty: null, count: null }, operations, suggestedPrompts: ["Tạo thêm câu hỏi", "Sửa câu hỏi vừa tạo"] });
 }
 
 const enhancementSchema = z.object({ action: z.enum(["explain", "rephrase", "latex"]), prompt: z.string().trim().max(5_000), explanation: z.string().trim().max(5_000), options: z.array(optionSchema).max(10), answerConfig: z.record(z.string(), z.unknown()) });

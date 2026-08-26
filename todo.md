@@ -866,3 +866,6 @@
 - [x] Bổ sung regression cho phản hồi options boolean/string, xác minh AI Studio và lưu checkpoint.
 - [x] Sửa vòng lặp fallback khiến AI Studio lặp lại yêu cầu làm rõ sau khi người tạo đã xác nhận số lượng.
 - [x] Xác minh AI tự thêm câu hỏi vào danh sách bên trái, bổ sung regression và lưu checkpoint.
+- [x] Đọc đặc tả AI Quiz Generator và kiểm kê luồng tạo/sửa/xác nhận AI Studio hiện tại.
+- [x] Chuẩn hóa luồng tạo Quiz AI theo đặc tả, gồm xác nhận đầu vào, tạo câu hỏi, xem trước và áp dụng an toàn.
+- [x] Cập nhật giao diện, regression, xác minh desktop/mobile và lưu checkpoint cho hệ thống AI Quiz cải tiến.

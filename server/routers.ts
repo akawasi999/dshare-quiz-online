@@ -107,7 +107,7 @@ import { awardXp, getAccountGamificationSummary } from "./gamification";
 import { getAiPointQuotes, runWithAiPointCharge } from "./aiPointPricing";
 import { getAccountEntitlements, requirePermission } from "./permissionService";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
-import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse, questionEnhancementInputSchema, quizStudioChatInputSchema } from "./quizStudioChat";
+import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse, parseQuizStudioToolCalls, questionEnhancementInputSchema, quizStudioChatInputSchema, quizStudioChatTools } from "./quizStudioChat";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
 import { importManualQuizFile, ocrPdfWithVision } from "./manualQuizImport";
 import { cpanelLearningRouter } from "./cpanelLearningRouter";
@@ -1137,9 +1137,37 @@ export const appRouter = router({
     studioAiChat: permissionProcedure("ai.quiz.generate").input(quizStudioChatInputSchema).mutation(async ({ ctx, input }) => {
       await assertRegistryPermission(ctx.user.id, "quiz.ai.manual_question");
       const questionSchema = { type: "object", properties: { type: { type: "string" }, difficulty: { type: "string" }, points: { type: "integer" }, prompt: { type: "string" }, explanation: { type: "string" }, imageUrl: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "points", "prompt", "explanation", "imageUrl", "options", "answerConfig"], additionalProperties: false };
-      const response = await invokeLLM({ messages: buildQuizStudioChatMessages(input), maxTokens: 4_000, response_format: { type: "json_schema", json_schema: { name: "quiz_studio_operations", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["clarify", "clarify_count", "apply"] }, reply: { type: "string" }, detected: { type: "object", properties: { topic: { type: ["string", "null"] }, type: { type: ["string", "null"] }, difficulty: { type: ["string", "null"] }, count: { type: ["integer", "null"] } }, required: ["topic", "type", "difficulty", "count"], additionalProperties: false }, operations: { type: "array", items: { type: "object", properties: { kind: { type: "string", enum: ["create", "update", "delete"] }, targetId: { type: ["string", "null"] }, question: { anyOf: [questionSchema, { type: "null" }] } }, required: ["kind", "targetId", "question"], additionalProperties: false } }, suggestedPrompts: { type: "array", items: { type: "string" } }, }, required: ["action", "reply", "detected", "operations", "suggestedPrompts"], additionalProperties: false } } } });
+      const latestInstruction = [...input.messages].reverse().find(message => message.role === "user")?.content ?? "";
+      const isEditIntent = /(sửa|đổi|cập nhật|xóa|xoá|làm mới|clear|update|delete)/i.test(latestInstruction);
+      const useTools = Boolean(input.requestedQuestionCount) || isEditIntent;
+      const response = useTools
+        ? await invokeLLM({ messages: buildQuizStudioChatMessages(input), maxTokens: 4_000, tools: quizStudioChatTools, toolChoice: "auto" })
+        : await invokeLLM({
+          messages: buildQuizStudioChatMessages(input),
+          maxTokens: 1_400,
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "quiz_studio_clarification",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  action: { type: "string", enum: ["clarify", "clarify_count", "apply"] },
+                  reply: { type: "string" },
+                  detected: { type: "object", properties: { topic: { type: ["string", "null"] }, type: { type: ["string", "null"] }, difficulty: { type: ["string", "null"] }, count: { type: ["integer", "null"] } }, required: ["topic", "type", "difficulty", "count"], additionalProperties: false },
+                  operations: { type: "array", items: { type: "object", properties: { kind: { type: "string", enum: ["create", "update", "delete", "clear"] }, targetId: { type: ["string", "null"] }, question: { anyOf: [questionSchema, { type: "null" }] } }, required: ["kind", "targetId", "question"], additionalProperties: false } },
+                  suggestedPrompts: { type: "array", items: { type: "string" } },
+                },
+                required: ["action", "reply", "detected", "operations", "suggestedPrompts"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
       try {
-        const result = parseQuizStudioChatResponse(response.choices[0]?.message.content);
+        const message = response.choices[0]?.message;
+        const result = useTools && message?.tool_calls?.length ? parseQuizStudioToolCalls(message.tool_calls, input.context?.questions ?? []) : parseQuizStudioChatResponse(message?.content);
         const latestPrompt = [...input.messages].reverse().find(message => message.role === "user")?.content ?? "Phản hồi AI Studio";
         const created = result.operations.filter(operation => operation.kind === "create");
         const deleted = result.operations.filter(operation => operation.kind === "delete");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse } from "./quizStudioChat";
+import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse, parseQuizStudioToolCalls, quizStudioChatTools } from "./quizStudioChat";
 
 const singleDraft = {
   type: "single" as const,
@@ -47,6 +47,17 @@ describe("quizStudioChat", () => {
     expect(booleanResult.operations[0]?.question?.answerConfig).toEqual({});
     const stringResult = parseQuizStudioChatResponse({ action: "apply", reply: "Đã tạo câu hỏi.", detected: { topic: "Phân số", type: "single", difficulty: "easy", count: 1 }, suggestedPrompts: [], operations: [{ kind: "create", targetId: null, question: { ...singleDraft, options: ["2/4", "1/4", "3/4"], answerConfig: null } }] });
     expect(stringResult.operations[0]?.question?.options[0]).toEqual({ body: "2/4", isCorrect: true });
+  });
+
+  it("chuyển tool calls thành lệnh thêm, sửa và làm mới bản nháp", () => {
+    expect(quizStudioChatTools.map(tool => tool.function.name)).toEqual(["add_questions", "update_question", "delete_question", "clear_questions"]);
+    const current = [{ id: "q-1", ...singleDraft }];
+    const added = parseQuizStudioToolCalls([{ id: "call-add", type: "function", function: { name: "add_questions", arguments: JSON.stringify({ questions: [singleDraft] }) } }], current);
+    expect(added.operations[0]).toMatchObject({ kind: "create", targetId: null, question: { prompt: singleDraft.prompt } });
+    const updated = parseQuizStudioToolCalls([{ id: "call-update", type: "function", function: { name: "update_question", arguments: JSON.stringify({ question_id: "q-1", updates: { points: 5, explanation: "Lời giải mới đầy đủ." } }) } }], current);
+    expect(updated.operations[0]).toMatchObject({ kind: "update", targetId: "q-1", question: { points: 5, prompt: singleDraft.prompt } });
+    const cleared = parseQuizStudioToolCalls([{ id: "call-clear", type: "function", function: { name: "clear_questions", arguments: "{}" } }], current);
+    expect(cleared.operations).toEqual([{ kind: "clear", targetId: null, question: null }]);
   });
 
   it("tạo hướng dẫn đúng cho công cụ lời giải và giữ cấu trúc câu hỏi khi AI phản hồi", () => {
