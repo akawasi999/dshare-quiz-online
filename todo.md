@@ -864,3 +864,5 @@
 - [x] Bổ sung regression, xác minh luồng chat AI với bản nháp trống và lưu checkpoint.
 - [x] Sửa parser AI Studio để options và answerConfig sai kiểu không làm mutation /build thất bại.
 - [x] Bổ sung regression cho phản hồi options boolean/string, xác minh AI Studio và lưu checkpoint.
+- [x] Sửa vòng lặp fallback khiến AI Studio lặp lại yêu cầu làm rõ sau khi người tạo đã xác nhận số lượng.
+- [x] Xác minh AI tự thêm câu hỏi vào danh sách bên trái, bổ sung regression và lưu checkpoint.

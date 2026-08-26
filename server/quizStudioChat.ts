@@ -41,6 +41,30 @@ const studioChatResponseSchema = z.object({
   suggestedPrompts: z.array(z.string().trim().min(2).max(180)).max(3),
 });
 
+const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+function normalizeAiOperationPayload(content: unknown) {
+  const raw = typeof content === "string" ? JSON.parse(content) : content;
+  if (!isRecord(raw) || !Array.isArray(raw.operations)) return raw;
+  return {
+    ...raw,
+    operations: raw.operations.map(operation => {
+      if (!isRecord(operation) || !isRecord(operation.question)) return operation;
+      const question = operation.question;
+      const sourceOptions = Array.isArray(question.options) ? question.options : [];
+      const options = sourceOptions.map((option, index) => {
+        if (isRecord(option) && typeof option.body === "string" && typeof option.isCorrect === "boolean") return option;
+        if (typeof option === "boolean") return { body: option ? "Đúng" : "Sai", isCorrect: option };
+        if (typeof option === "string" || typeof option === "number") return { body: String(option), isCorrect: index === 0 };
+        return { body: `Phương án ${index + 1}`, isCorrect: index === 0 };
+      });
+      if (question.type === "single" && options.length) options.forEach((option, index) => { option.isCorrect = index === options.findIndex(candidate => candidate.isCorrect); });
+      if (options.length && !options.some(option => option.isCorrect)) options[0]!.isCorrect = true;
+      return { ...operation, question: { ...question, options, answerConfig: isRecord(question.answerConfig) ? question.answerConfig : {} } };
+    }),
+  };
+}
+
 export type QuizStudioChatResponse = ReturnType<typeof parseQuizStudioChatResponse>;
 
 export function buildQuizStudioChatMessages(input: z.infer<typeof quizStudioChatInputSchema>) {
@@ -73,7 +97,7 @@ ${studioContext}` }, ...input.messages.map(message => ({ role: message.role, con
 export function parseQuizStudioChatResponse(content: unknown) {
   const fallback = () => ({ action: "clarify" as const, reply: "Tôi cần tạo lại cấu trúc đáp án để bảo đảm câu hỏi hợp lệ. Bạn hãy xác nhận yêu cầu hoặc gửi lại thao tác cần thực hiện.", detected: { topic: null, type: null, difficulty: null, count: null }, operations: [], suggestedPrompts: ["Tạo lại câu hỏi với 4 đáp án đầy đủ", "Sửa câu hỏi đã chọn và giữ đáp án hợp lệ"] });
   try {
-    const raw = typeof content === "string" ? JSON.parse(content) : content;
+    const raw = normalizeAiOperationPayload(content);
     const parsed = studioChatResponseSchema.parse(raw);
     if (parsed.action !== "apply") return { ...parsed, operations: [] };
     const operations = parsed.operations.map(operation => {

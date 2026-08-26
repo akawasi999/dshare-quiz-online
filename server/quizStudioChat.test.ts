@@ -40,11 +40,13 @@ describe("quizStudioChat", () => {
     expect(result.operations[2]).toMatchObject({ kind: "delete", targetId: "q-2", question: null });
   });
 
-  it("không làm mutation thất bại khi AI trả options hoặc answerConfig sai kiểu", () => {
-    const result = parseQuizStudioChatResponse({ action: "apply", reply: "Đã tạo câu hỏi.", detected: { topic: "Phân số", type: "single", difficulty: "easy", count: 1 }, suggestedPrompts: [], operations: [{ kind: "create", targetId: null, question: { ...singleDraft, options: [true, false, true], answerConfig: "không hợp lệ" } }] });
-    expect(result.action).toBe("clarify");
-    expect(result.operations).toEqual([]);
-    expect(result.reply).toContain("cấu trúc đáp án");
+  it("chuẩn hóa options boolean/string và answerConfig sai kiểu để AI vẫn tạo được câu hỏi", () => {
+    const booleanResult = parseQuizStudioChatResponse({ action: "apply", reply: "Đã tạo câu hỏi.", detected: { topic: "Phân số", type: "single", difficulty: "easy", count: 1 }, suggestedPrompts: [], operations: [{ kind: "create", targetId: null, question: { ...singleDraft, options: [true, false, true], answerConfig: "không hợp lệ" } }] });
+    expect(booleanResult.action).toBe("apply");
+    expect(booleanResult.operations[0]?.question?.options).toEqual([{ body: "Đúng", isCorrect: true }, { body: "Sai", isCorrect: false }, { body: "Đúng", isCorrect: false }]);
+    expect(booleanResult.operations[0]?.question?.answerConfig).toEqual({});
+    const stringResult = parseQuizStudioChatResponse({ action: "apply", reply: "Đã tạo câu hỏi.", detected: { topic: "Phân số", type: "single", difficulty: "easy", count: 1 }, suggestedPrompts: [], operations: [{ kind: "create", targetId: null, question: { ...singleDraft, options: ["2/4", "1/4", "3/4"], answerConfig: null } }] });
+    expect(stringResult.operations[0]?.question?.options[0]).toEqual({ body: "2/4", isCorrect: true });
   });
 
   it("tạo hướng dẫn đúng cho công cụ lời giải và giữ cấu trúc câu hỏi khi AI phản hồi", () => {
