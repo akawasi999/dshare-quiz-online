@@ -99,6 +99,10 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
     expect(screen.getByTestId("quiz-ai-primary")).toBeTruthy();
     expect(screen.getByLabelText("AI Assistant")).toBeTruthy();
+    const resizeHandle = screen.getByRole("separator", { name: "Điều chỉnh độ rộng khung chat AI" });
+    expect(resizeHandle.getAttribute("aria-valuenow")).toBe("460");
+    fireEvent.keyDown(resizeHandle, { key: "ArrowLeft" });
+    expect(resizeHandle.getAttribute("aria-valuenow")).toBe("480");
     expect(screen.getByTestId("collapsed-question-navigator")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Mở danh sách câu hỏi" })).toBeTruthy();
     expect(screen.queryByLabelText("Danh sách câu hỏi")).toBeNull();

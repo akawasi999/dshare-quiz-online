@@ -854,3 +854,5 @@
 - [x] Gỡ hoàn toàn khối liên kết, AI nâng cao và thông báo hệ điều hành thừa khỏi giao diện Quiz Studio.
 - [x] Thu gọn danh sách câu hỏi bên trái thành nút biểu tượng có thể mở lại khi panel AI Studio xuất hiện.
 - [x] Cập nhật regression, xác minh desktop/mobile và lưu checkpoint cho chế độ danh sách câu hỏi thu gọn khi mở AI.
+- [x] Tăng độ rộng mặc định và cho phép kéo thay đổi độ rộng panel AI trong Quiz Studio.
+- [x] Cập nhật regression, xác minh responsive và lưu checkpoint cho panel AI điều chỉnh độ rộng.
