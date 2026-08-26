@@ -13,11 +13,9 @@ describe("URL routing", () => {
     expect(ROUTES.adminTopics).toBe("/admin/learning/topics");
   });
 
-  it("không công bố URL điều hướng cũ", () => {
+  it("công bố route tuyệt đối và giữ chung base Quiz cho danh sách/chi tiết", () => {
     const routes = Object.values(ROUTES);
-    expect(routes).not.toContain("/explore");
-    expect(routes).not.toContain("/kham-pha");
-    expect(routes).not.toContain("/ho-so");
-    expect(routes).not.toContain("/quan-tri");
+    expect(routes.every(route => route.startsWith("/"))).toBe(true);
+    expect(ROUTES.explore).toBe(ROUTES.quiz);
   });
 });

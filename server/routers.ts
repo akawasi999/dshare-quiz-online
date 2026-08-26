@@ -1833,7 +1833,7 @@ export const appRouter = router({
           const profile = await ensureLearnerProfile(userId);
           if (!profile) continue;
           await db.update(learnerProfiles).set({ ...(input.tier ? { tier: input.tier } : {}), ...(input.isBanned !== undefined ? { isBanned: input.isBanned } : {}) }).where(eq(learnerProfiles.id, profile.id));
-          if (input.tier) await createInAppNotification(db, { userId, type: "account_plan", title: "Gói tài khoản đã được cập nhật", body: `Quản trị viên đã cập nhật gói tài khoản của bạn thành ${input.tier.toUpperCase()}.`, href: "/ho-so", metadata: { tier: input.tier, source: "bulk" } });
+          if (input.tier) await createInAppNotification(db, { userId, type: "account_plan", title: "Gói tài khoản đã được cập nhật", body: `Quản trị viên đã cập nhật gói tài khoản của bạn thành ${input.tier.toUpperCase()}.`, href: "/account", metadata: { tier: input.tier, source: "bulk" } });
         }
         await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "users.bulk_updated", entityType: "user_batch", metadata: { userIds: uniqueUserIds, tier: input.tier, isBanned: input.isBanned } });
         return { success: true, updatedCount: uniqueUserIds.length };
@@ -1961,7 +1961,7 @@ export const appRouter = router({
         if (profile) await db.update(learnerProfiles).set({ tier: group.plan.tier }).where(eq(learnerProfiles.id, profile.id));
       }
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user_group.member_assigned", entityType: "user", entityId: input.userId, metadata: { groupId: input.groupId, groupName: group.group.name, planName: group.plan?.name ?? null, previousGroupId: previousMembership?.groupId ?? null } });
-      await createInAppNotification(db, { userId: input.userId, type: "account_permission", title: "Quyền truy cập đã được cập nhật", body: `Bạn đã được đưa vào nhóm “${group.group.name}”${group.plan ? `, liên kết gói ${group.plan.name}` : ""}.`, href: "/ho-so", metadata: { groupId: input.groupId, planId: group.plan?.id ?? null } });
+      await createInAppNotification(db, { userId: input.userId, type: "account_permission", title: "Quyền truy cập đã được cập nhật", body: `Bạn đã được đưa vào nhóm “${group.group.name}”${group.plan ? `, liên kết gói ${group.plan.name}` : ""}.`, href: "/account", metadata: { groupId: input.groupId, planId: group.plan?.id ?? null } });
       return { success: true };
     }),
     removeUserGroupMember: adminProcedure.input(z.object({ userId: z.number().int().positive(), groupId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
@@ -1979,7 +1979,7 @@ export const appRouter = router({
         if (!profile) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy hồ sơ học viên." });
         await db.update(learnerProfiles).set({ tier: input.tier }).where(eq(learnerProfiles.id, profile.id));
         await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "user.tier_updated", entityType: "user", entityId: input.userId, metadata: { previousTier: profile.tier, tier: input.tier } });
-        await createInAppNotification(db, { userId: input.userId, type: "account_plan", title: "Gói tài khoản đã được cập nhật", body: `Quản trị viên đã cập nhật gói tài khoản của bạn thành ${input.tier.toUpperCase()}.`, href: "/ho-so", metadata: { tier: input.tier, source: "user-management" } });
+        await createInAppNotification(db, { userId: input.userId, type: "account_plan", title: "Gói tài khoản đã được cập nhật", body: `Quản trị viên đã cập nhật gói tài khoản của bạn thành ${input.tier.toUpperCase()}.`, href: "/account", metadata: { tier: input.tier, source: "user-management" } });
         return { success: true };
       }),
     updateUserStatus: adminProcedure.input(z.object({ userId: z.number().int().positive(), status: z.enum(["active", "suspended", "banned", "deactivated"]).optional(), reason: z.string().trim().min(3, "Vui lòng nhập lý do tối thiểu 3 ký tự.").max(500).optional(), isBanned: z.boolean().optional() }).refine(input => input.status !== undefined || input.isBanned !== undefined, { message: "Vui lòng chọn trạng thái tài khoản." }))

@@ -17,9 +17,7 @@ describe("payment confirmation email", () => {
   it("dùng các URL tiếng Anh canonical trong email xác nhận", () => {
     const email = buildPaymentConfirmationEmail({ recipient: "learner@example.com", learnerName: "Học viên", planName: "PRO", amount: 50000, pointAmount: 150, membershipMonths: 1, orderCode: 123, appOrigin: "https://quiz.example.vn/" });
     expect(email.html).toContain('href="https://quiz.example.vn/account"');
-    expect(email.html).toContain('href="https://quiz.example.vn/explore"');
-    expect(email.html).not.toContain("/ho-so");
-    expect(email.html).not.toContain("/kham-pha");
+    expect(email.html).toContain('href="https://quiz.example.vn/quiz"');
   });
 
   it("tạo liên kết xác nhận email liên hệ có token và thời hạn rõ ràng", () => {

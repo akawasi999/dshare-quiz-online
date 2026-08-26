@@ -40,30 +40,30 @@ import BrandLogo from "./BrandLogo";
 import { Button } from "./ui/button";
 import { ROUTES } from "@/lib/routes";
 
-type NavigationItem = { icon: typeof LayoutDashboard; label: string; path: string; aliases?: string[]; description: string };
+type NavigationItem = { icon: typeof LayoutDashboard; label: string; path: string; description: string };
 type NavigationSection = { label: string; items: NavigationItem[] };
 
 const navigationSections: NavigationSection[] = [
-  { label: "Tổng quan", items: [{ icon: LayoutDashboard, label: "Dashboard", path: ROUTES.admin, aliases: ["/quan-tri", ROUTES.adminDashboard], description: "Learning Control Center" }] },
+  { label: "Tổng quan", items: [{ icon: LayoutDashboard, label: "Dashboard", path: ROUTES.admin, description: "Learning Control Center" }] },
   { label: "Learning", items: [
-    { icon: FolderTree, label: "Chủ đề", path: ROUTES.adminTopics, aliases: ["/quan-tri/chu-de"], description: "Cây phân cấp và taxonomy Quiz" },
-    { icon: BookOpenCheck, label: "Quiz System", path: ROUTES.adminQuizzes, aliases: ["/quan-tri/quiz-system"], description: "Quản trị toàn bộ Quiz và vòng đời xuất bản" },
+    { icon: FolderTree, label: "Chủ đề", path: ROUTES.adminTopics, description: "Cây phân cấp và taxonomy Quiz" },
+    { icon: BookOpenCheck, label: "Quiz System", path: ROUTES.adminQuizzes, description: "Quản trị toàn bộ Quiz và vòng đời xuất bản" },
   ] },
-  { label: "Gamification", items: [{ icon: CircleDollarSign, label: "Point", path: ROUTES.adminPoints, aliases: ["/quan-tri/point"], description: "Sổ cái và economy Point" }, { icon: Award, label: "XP & Level", path: ROUTES.adminXp, aliases: ["/quan-tri/xp"], description: "Level, rule engine và XP ledger" }, { icon: Trophy, label: "Gamification Center", path: ROUTES.adminGamification, aliases: ["/quan-tri/gamification"], description: "Missions, achievements, badges và feature unlock" }] },
+  { label: "Gamification", items: [{ icon: CircleDollarSign, label: "Point", path: ROUTES.adminPoints, description: "Sổ cái và economy Point" }, { icon: Award, label: "XP & Level", path: ROUTES.adminXp, description: "Level, rule engine và XP ledger" }, { icon: Trophy, label: "Gamification Center", path: ROUTES.adminGamification, description: "Missions, achievements, badges và feature unlock" }] },
   { label: "Users", items: [
-    { icon: Users, label: "Người dùng", path: ROUTES.adminUsers, aliases: ["/quan-tri/nguoi-dung"], description: "Người học và trạng thái tài khoản" },
-    { icon: UsersRound, label: "Nhóm người dùng", path: ROUTES.adminUserGroups, aliases: ["/quan-tri/nhom-nguoi-dung"], description: "Nhóm, gói và quyền liên kết" },
+    { icon: Users, label: "Người dùng", path: ROUTES.adminUsers, description: "Người làm bài và trạng thái tài khoản" },
+    { icon: UsersRound, label: "Nhóm người dùng", path: ROUTES.adminUserGroups, description: "Nhóm, gói và quyền liên kết" },
   ] },
-  { label: "Moderation", items: [{ icon: FileWarning, label: "Báo lỗi", path: ROUTES.adminErrors, aliases: ["/quan-tri/bao-loi"], description: "Hàng đợi kiểm duyệt báo lỗi" }] },
-  { label: "Analytics", items: [{ icon: ChartNoAxesCombined, label: "Tổng quan", path: ROUTES.adminAnalytics, aliases: ["/quan-tri/bao-cao"], description: "Phân tích học tập và Point" }, { icon: Share2, label: "Open Graph Preview", path: ROUTES.adminSeoPreview, aliases: ["/quan-tri/seo-preview"], description: "Xem trước thẻ chia sẻ Quiz" }] },
+  { label: "Moderation", items: [{ icon: FileWarning, label: "Báo lỗi", path: ROUTES.adminErrors, description: "Hàng đợi kiểm duyệt báo lỗi" }] },
+  { label: "Analytics", items: [{ icon: ChartNoAxesCombined, label: "Tổng quan", path: ROUTES.adminAnalytics, description: "Phân tích học tập và Point" }, { icon: Share2, label: "Open Graph Preview", path: ROUTES.adminSeoPreview, description: "Xem trước thẻ chia sẻ Quiz" }] },
   { label: "System", items: [
-    { icon: Activity, label: "Live Monitoring", path: ROUTES.adminMonitoring, aliases: ["/quan-tri/live-monitoring"], description: "Giám sát phiên và vận hành" },
-    { icon: ScrollText, label: "Activity Logs", path: ROUTES.adminLogs, aliases: ["/quan-tri/nhat-ky"], description: "Nhật ký kiểm toán" },
-    { icon: Bot, label: "AI Assistant", path: ROUTES.adminAi, aliases: ["/quan-tri/ai-assistant"], description: "AI Content & Learning Copilot" },
+    { icon: Activity, label: "Live Monitoring", path: ROUTES.adminMonitoring, description: "Giám sát phiên và vận hành" },
+    { icon: ScrollText, label: "Activity Logs", path: ROUTES.adminLogs, description: "Nhật ký kiểm toán" },
+    { icon: Bot, label: "AI Assistant", path: ROUTES.adminAi, description: "AI Content & Learning Copilot" },
   ] },
-  { label: "Appearance", items: [{ icon: Palette, label: "Tùy chỉnh Style", path: ROUTES.adminTheme, aliases: ["/quan-tri/thuong-hieu"], description: "Nhận diện và Design System" }] },
+  { label: "Appearance", items: [{ icon: Palette, label: "Tùy chỉnh Style", path: ROUTES.adminTheme, description: "Nhận diện và Design System" }] },
 ];
-const settingsNavigationItem: NavigationItem = { icon: Settings2, label: "Cài đặt", path: ROUTES.adminSettings, aliases: ["/quan-tri/cai-dat"], description: "Cấu hình cơ bản và Navigation website" };
+const settingsNavigationItem: NavigationItem = { icon: Settings2, label: "Cài đặt", path: ROUTES.adminSettings, description: "Cấu hình cơ bản và Navigation website" };
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
@@ -95,7 +95,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const isCollapsed = state === "collapsed";
-  const activeItem = [...navigationSections.flatMap(section => section.items), settingsNavigationItem].find(item => location === item.path || item.aliases?.includes(location));
+  const activeItem = [...navigationSections.flatMap(section => section.items), settingsNavigationItem].find(item => location === item.path);
 
   useEffect(() => {
     const syncConnection = () => setIsOnline(navigator.onLine);
@@ -135,7 +135,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
           <div className="flex h-full items-center gap-3"><button type="button" onClick={toggleSidebar} aria-label={isCollapsed ? "Mở rộng điều hướng" : "Thu gọn điều hướng"} className="grid size-9 shrink-0 place-items-center rounded-[var(--radius-md-token)] text-text-secondary transition-colors hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20"><PanelLeft size={18} /></button>{!isCollapsed ? <div className="min-w-0"><BrandLogo className="h-7 max-w-[144px]" /><p className="mt-1 text-[9px] font-bold uppercase tracking-[.15em] text-text-muted">Admin Control Center</p></div> : null}</div>
         </SidebarHeader>
         <SidebarContent className="gap-0 py-3">
-          {navigationSections.map(section => <div key={section.label} className="mb-3"><p className="px-4 pb-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-text-muted group-data-[collapsible=icon]:hidden">{section.label}</p><SidebarMenu className="px-2">{section.items.map(item => { const isActive = location === item.path || item.aliases?.includes(location); return <SidebarMenuItem key={item.path}><SidebarMenuButton isActive={isActive} onClick={() => navigate(item)} tooltip={item.label} className={`relative h-10 rounded-[var(--radius-sm-token)] text-[13px] font-medium transition-colors before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-primary ${isActive ? "bg-primary-light text-primary before:block" : "text-text-secondary hover:bg-muted hover:text-foreground before:hidden"}`}><item.icon className="size-4" /><span>{item.label}</span></SidebarMenuButton></SidebarMenuItem>; })}</SidebarMenu></div>)}
+          {navigationSections.map(section => <div key={section.label} className="mb-3"><p className="px-4 pb-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-text-muted group-data-[collapsible=icon]:hidden">{section.label}</p><SidebarMenu className="px-2">{section.items.map(item => { const isActive = location === item.path; return <SidebarMenuItem key={item.path}><SidebarMenuButton isActive={isActive} onClick={() => navigate(item)} tooltip={item.label} className={`relative h-10 rounded-[var(--radius-sm-token)] text-[13px] font-medium transition-colors before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-primary ${isActive ? "bg-primary-light text-primary before:block" : "text-text-secondary hover:bg-muted hover:text-foreground before:hidden"}`}><item.icon className="size-4" /><span>{item.label}</span></SidebarMenuButton></SidebarMenuItem>; })}</SidebarMenu></div>)}
         </SidebarContent>
         <SidebarFooter className="border-t border-border p-3"><SidebarMenu className="mb-3"><SidebarMenuItem><SidebarMenuButton isActive={activeItem?.path === settingsNavigationItem.path} onClick={() => navigate(settingsNavigationItem)} tooltip="Cài đặt" className={`relative h-10 rounded-[var(--radius-sm-token)] text-[13px] font-medium transition-colors before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-primary ${activeItem?.path === settingsNavigationItem.path ? "bg-primary-light text-primary before:block" : "text-text-secondary hover:bg-muted hover:text-foreground before:hidden"}`}><Settings2 className="size-4" /><span>Cài đặt</span></SidebarMenuButton></SidebarMenuItem></SidebarMenu><p className="mb-2 flex items-center gap-1.5 px-1 text-[10px] text-text-muted"><span className={`size-1.5 rounded-full ${isOnline ? "bg-success" : "bg-danger"}`} />{isOnline ? "Đã kết nối" : "Mất kết nối"}</p><AdminMenu userName={user?.name} email={user?.email} onLogout={logout} onAccount={() => setLocation(ROUTES.account)} collapsed={isCollapsed} /></SidebarFooter>
       </Sidebar>

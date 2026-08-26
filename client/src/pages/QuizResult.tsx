@@ -18,7 +18,7 @@ const formatDuration = (seconds?: number) => {
 };
 
 export default function QuizResult() {
-  const [, params] = useRoute("/ket-qua/:id");
+  const [, params] = useRoute(`${ROUTES.results}/:id`);
   const result = typeof window !== "undefined" ? parseStoredQuizResult(sessionStorage.getItem("dshare-quiz-result")) : null;
   const [expanded, setExpanded] = useState<number | null>(null);
   const [discussion, setDiscussion] = useState("");

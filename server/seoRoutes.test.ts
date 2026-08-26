@@ -8,8 +8,8 @@ describe("SEO routes", () => {
   it("công bố sitemap chỉ với URL canonical tiếng Anh", () => {
     const sitemap = readFileSync(path.resolve(import.meta.dirname, "../client/public/sitemap.xml"), "utf8");
     for (const route of SITEMAP_PATHS) expect(sitemap).toContain(`${SITE_ORIGIN}${route}`);
-    expect(sitemap).not.toContain("/kham-pha");
-    expect(sitemap).not.toContain("/bang-gia");
+    expect(sitemap).toContain(`${SITE_ORIGIN}/quiz`);
+    expect(sitemap).toContain(`${SITE_ORIGIN}/pricing`);
   });
 
   it("tạo sitemap có từng Quiz public và metadata chia sẻ canonical", () => {

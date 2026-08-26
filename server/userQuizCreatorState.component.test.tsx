@@ -218,7 +218,7 @@ describe("Quiz Creator theo đặc tả", () => {
 
   it("hiển thị phân tích lượt làm và tỷ lệ đúng/sai khi mở Quiz đã lưu", async () => {
     const user = userEvent.setup();
-    window.history.replaceState({}, "", "/tao-quiz?edit=5");
+    window.history.replaceState({}, "", "/build?edit=5");
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "Phân tích" }));
     expect(screen.getByTestId("quiz-analytics-workspace")).toBeTruthy();
@@ -230,7 +230,7 @@ describe("Quiz Creator theo đặc tả", () => {
   it("hiển thị trạng thái chưa đủ dữ liệu trong tab phân tích", async () => {
     const user = userEvent.setup();
     mocks.analytics.data = { summary: { completedAttempts: 0, averageScore: 0, passRate: 0, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [] };
-    window.history.replaceState({}, "", "/tao-quiz?edit=5");
+    window.history.replaceState({}, "", "/build?edit=5");
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "Phân tích" }));
     expect(screen.getByText("Chưa đủ dữ liệu để phân tích")).toBeTruthy();

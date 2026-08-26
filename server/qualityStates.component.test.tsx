@@ -52,7 +52,7 @@ describe("Các trạng thái chất lượng của route công khai", () => {
 
   it("công bố lỗi tra cứu thanh toán và cho phép thử lại mà không tạo đơn mới", async () => {
     const user = userEvent.setup();
-    window.history.pushState({}, "", "/thanh-toan?orderCode=123");
+    window.history.pushState({}, "", "/payment-status?orderCode=123");
     mocks.payment.isError = true;
     mocks.payment.error = new Error("Máy chủ tạm thời không phản hồi");
     render(<PaymentStatus />);
@@ -63,7 +63,7 @@ describe("Các trạng thái chất lượng của route công khai", () => {
   });
 
   it("không hiển thị trạng thái chờ khi liên kết thanh toán không có mã đơn hợp lệ", () => {
-    window.history.pushState({}, "", "/thanh-toan");
+    window.history.pushState({}, "", "/payment-status");
     render(<PaymentStatus />);
 
     expect(screen.getByRole("heading", { name: "Mã đơn không hợp lệ." })).toBeTruthy();

@@ -27,7 +27,7 @@ vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name:
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, referral: { useQuery: () => mocks.referral }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void; onSuccess?: () => void }) => ({ ...mocks.update, mutate: (_input: unknown, callbacks?: { onSuccess?: () => void }) => { if (mocks.updateShouldSucceed) { options.onSuccess?.(); callbacks?.onSuccess?.(); } else options.onError?.(new Error("Không thể kết nối")); } }) }, confirmContactEmail: { useMutation: () => mocks.confirmContactEmail }, uploadAvatar: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, leaderboard: { xp: { useQuery: () => mocks.leaderboard } } } }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
-vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/ho-so", vi.fn()] }));
+vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/account", vi.fn()] }));
 
 import Profile from "../client/src/pages/Profile";
 import PersonalInfo from "../client/src/pages/PersonalInfo";

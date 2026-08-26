@@ -30,7 +30,7 @@ describe("Pricing dynamic plans", () => {
     expect(screen.getByText("Giá gốc 89.000đ")).toBeTruthy();
     expect(screen.getByText("Tặng 300 Point")).toBeTruthy();
     expect(screen.getByText("Hỗ trợ ưu tiên")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Nâng cấp qua PayOS" }).getAttribute("href")).toBe("/nap-point?planTier=pro");
+    expect(screen.getByRole("link", { name: "Nâng cấp qua PayOS" }).getAttribute("href")).toBe("/billing?planTier=pro");
   });
 
   it("hiển thị trạng thái trống khi quản trị chưa kích hoạt gói nào", () => {

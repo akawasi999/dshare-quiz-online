@@ -22,7 +22,7 @@ vi.mock("@/lib/trpc", () => ({
   },
 }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
-vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/nap-point", vi.fn()] }));
+vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/billing", vi.fn()] }));
 
 import TopUp from "../client/src/pages/TopUp";
 

@@ -22,7 +22,7 @@ export default function NotFound() {
             <div className="relative grid size-14 place-items-center rounded-2xl bg-surface text-primary shadow-[var(--shadow-md)]"><Sparkles size={25} /></div>
             <p className="relative mt-8 text-[11px] font-bold uppercase tracking-[.15em] text-primary">Lối tắt hữu ích</p>
             <div className="relative mt-4 space-y-2"><QuickLink href={ROUTES.pricing} label="Xem bảng giá" /><QuickLink href={ROUTES.quizBuilder} label="Tạo Quiz mới" /><QuickLink href={ROUTES.leaderboard} label="Bảng xếp hạng" /></div>
-            <p className="relative mt-8 text-xs leading-5 text-text-secondary">Nếu bạn mở một liên kết cũ, hệ thống sẽ tự điều hướng sang cấu trúc URL tiếng Anh mới.</p>
+            <p className="relative mt-8 text-xs leading-5 text-text-secondary">Hãy dùng các liên kết hiện hành để tiếp tục học, tạo Quiz hoặc quản lý tài khoản.</p>
           </aside>
         </section>
       </main>

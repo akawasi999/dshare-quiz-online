@@ -14,7 +14,7 @@ vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name:
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary } }, payment: { offers: { useQuery: () => mocks.offers }, createLink: { useMutation: (options: { onError?: (error: Error) => void }) => ({ isPending: false, mutate: () => options.onError?.(new Error("PayOS đang bảo trì")) }) } } } }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
-vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/nap-point", vi.fn()] }));
+vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/billing", vi.fn()] }));
 
 import TopUp from "../client/src/pages/TopUp";
 

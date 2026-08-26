@@ -794,3 +794,6 @@
 - [x] Đổi route chính Quiz Studio từ `/quiz/create` sang `/build` và cập nhật toàn bộ liên kết nội bộ liên quan.
 - [x] Điều hướng nút quay lại trong tiêu đề Studio về trang Quiz của tôi tại `/my-quizzes`.
 - [x] Kiểm thử deep-link route mới, regression và lưu checkpoint.
+- [x] Kiểm kê toàn bộ route, redirect và liên kết legacy còn sót trong mã nguồn.
+- [x] Gỡ bỏ hoàn toàn các route/redirect/liên kết cũ và tối ưu mã điều hướng theo ROUTES chuẩn.
+- [x] Chạy regression điều hướng, build production và lưu checkpoint cho đợt dọn dẹp URL.

@@ -17,7 +17,7 @@ vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name:
 vi.mock("@/contexts/ThemeContext", () => ({ useTheme: () => ({ theme: "light", toggleTheme: mocks.toggleTheme }) }));
 vi.mock("@/hooks/useMobile", () => ({ useIsMobile: () => false }));
 vi.mock("@/components/BrandLogo", () => ({ default: () => <span>Dshare</span> }));
-vi.mock("wouter", () => ({ useLocation: () => ["/quan-tri", mocks.setLocation] }));
+vi.mock("wouter", () => ({ useLocation: () => ["/admin", mocks.setLocation] }));
 
 import DashboardLayout from "../client/src/components/DashboardLayout";
 
