@@ -318,7 +318,7 @@ export async function processGamificationForAttempt(db: DbExecutor, input: Gamif
   return { xpRewards: [...outcomes, ...missionRewards, ...achievementRewards, ...streak.rewards], currentStreak: streak.currentStreak, levelUps };
 }
 
-export async function getLearnerGamificationSummary(db: DbExecutor, userId: number) {
+export async function getAccountGamificationSummary(db: DbExecutor, userId: number) {
   const profileRows = await db.select().from(learnerProfiles).where(eq(learnerProfiles.userId, userId)).limit(1);
   const profile = profileRows[0];
   if (!profile) return undefined;
@@ -346,3 +346,6 @@ export async function getLearnerGamificationSummary(db: DbExecutor, userId: numb
     featureUnlocks: featureRows,
   };
 }
+
+/** @deprecated Dùng getAccountGamificationSummary cho mã mới. */
+export const getLearnerGamificationSummary = getAccountGamificationSummary;

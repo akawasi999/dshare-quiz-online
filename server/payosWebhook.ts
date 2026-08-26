@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { auditLogs, emailDeliverySettings, learnerProfiles, paymentRecords, subscriptionPlans, users, walletTransactions } from "../drizzle/schema";
-import { ensureLearnerProfile, getDb } from "./db";
+import { ensureAccountProfile, getDb } from "./db";
 import { verifyPayosSignature } from "./payosUtils";
 import { getPayosFulfillmentDecision, getPayosWebhookValidationError, isSuccessfulPayosWebhook, type PayosWebhookData } from "./payosWebhookUtils";
 import { getMembershipFulfillment } from "./membershipUtils";
@@ -46,7 +46,7 @@ export async function processPayosWebhook(payload: z.infer<typeof webhookSchema>
     return { idempotent: false, recordId: record.id, status: "failed" as const };
   }
 
-  await ensureLearnerProfile(record.userId);
+  await ensureAccountProfile(record.userId);
   const fulfillment = await db.transaction(async tx => {
     const latestRows = await tx.select().from(paymentRecords).where(eq(paymentRecords.id, record.id)).limit(1);
     const latest = latestRows[0];

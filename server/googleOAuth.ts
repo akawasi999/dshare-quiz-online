@@ -4,7 +4,7 @@ import type { Express, Request, Response } from "express";
 import { parse as parseCookieHeader } from "cookie";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { oauthProviderSettings, userOAuthIdentities, users } from "../drizzle/schema";
-import { getDb, ensureLearnerProfile } from "./db";
+import { getDb, ensureAccountProfile } from "./db";
 import { decryptEmailApiKey } from "./paymentConfirmationEmail";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
@@ -70,7 +70,7 @@ export function registerGoogleOAuthRoutes(app: Express) {
       if (!user) throw new Error("Không thể tạo tài khoản Google.");
       if (user.accountStatus !== "active") return res.status(403).send(accountStatusMessage(user.accountStatus));
       await db.insert(userOAuthIdentities).values({ userId: user.id, provider: "google", providerSubject: profile.sub }).onDuplicateKeyUpdate({ set: { userId: user.id } });
-      await ensureLearnerProfile(user.id);
+      await ensureAccountProfile(user.id);
       const session = await sdk.createSessionToken(user.openId, { name: user.name ?? "", expiresInMs: ONE_YEAR_MS });
       res.cookie(COOKIE_NAME, session, { ...getSessionCookieOptions(req), maxAge: ONE_YEAR_MS });
       res.redirect(302, safeReturnTo(statePayload.returnTo));

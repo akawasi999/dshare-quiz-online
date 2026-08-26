@@ -22,7 +22,7 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.f
 import UserQuizCreator, { ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
 
 describe("Quiz Creator theo đặc tả", () => {
-  afterEach(() => { cleanup(); mocks.versions.data = []; mocks.pinVersion.mockReset(); mocks.analytics.data = { summary: { completedAttempts: 8, averageScore: 75, passRate: 63, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [{ questionId: 1, prompt: "Câu hỏi phân tích", points: 1, answerCount: 8, correctCount: 5, correctRate: 63 }] }; window.history.replaceState({}, "", "/tao-quiz"); });
+  afterEach(() => { cleanup(); mocks.versions.data = []; mocks.pinVersion.mockReset(); mocks.analytics.data = { summary: { completedAttempts: 8, averageScore: 75, passRate: 63, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [{ questionId: 1, prompt: "Câu hỏi phân tích", points: 1, answerCount: 8, correctCount: 5, correctRate: 63 }] }; window.history.replaceState({}, "", "/quiz/create"); });
 
   it("hiển thị App Shell ba cột và ẩn chrome Landing Page", () => {
     render(<UserQuizCreator />);
@@ -34,8 +34,10 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByText("Danh sách câu hỏi")).toBeTruthy();
     expect(screen.getByText("Nhập chủ đề")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Lịch sử bản nháp" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Người làm bài" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Tác giả Quiz" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Tải xuống" }).getAttribute("title")).toBe("Tải xuống");
+    expect(screen.queryByRole("button", { name: "Người làm bài" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Đáp án" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Tác giả Quiz" })).toBeNull();
     expect(screen.getByRole("button", { name: "Xem trước Sandbox" }).textContent).toBe("");
     expect(screen.getByTestId("settings-topic-required")).toBeTruthy();
     expect(screen.getByTestId("manual-question-bar").className).toContain("mb-[50px]");

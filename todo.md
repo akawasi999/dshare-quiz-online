@@ -787,3 +787,7 @@
 - [x] Kiểm kê và chuẩn hóa dần các tên kỹ thuật legacy hướng tới thuật ngữ tài khoản/người làm bài, giữ tương thích dữ liệu hiện có.
 - [x] Bổ sung API và màn hình audit thay đổi quyền theo từng tài khoản trong CPanel.
 - [x] Viết regression, xác minh giao diện và lưu checkpoint cho đợt chuẩn hóa legacy/audit quyền.
+- [x] Kiểm kê và chuyển dần các helper learner* còn lại sang thuật ngữ tài khoản theo từng mô-đun, giữ tương thích ngược.
+- [x] Tinh gọn thanh Studio: gỡ Người làm bài/Đáp án, chuyển Tác giả Quiz thành icon tải xuống có tooltip và bỏ sticky thanh nguồn AI.
+- [x] Cập nhật nút quay lại trong tiêu đề Studio để điều hướng về `/quiz/create`.
+- [x] Viết regression, xác minh giao diện và lưu checkpoint cho đợt helper legacy/Studio mới.

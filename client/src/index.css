@@ -99,7 +99,7 @@ body { font-family: var(--font-family-primary, "Inter"), ui-sans-serif, system-u
 .editor-ai-panel [data-testid="ai-chat-scroll"] { min-height: 0; flex: 1 1 0%; overflow-y: auto; }
 .editor-sidebar-title { display: block; width: 100%; text-transform: uppercase; font-size: 12px; font-weight: 600; letter-spacing: .08em; line-height: 1.2; color: #475569; }
 .editor-question-navigator { min-width: 0; }
-.editor-quick-action-bar { position: sticky; z-index: 10; top: 0; margin-bottom: 20px; }
+.editor-quick-action-bar { margin-bottom: 20px; }
 .editor-question-card { margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
 .editor-question-card.ring-2 { border: 2px solid #3b82f6 !important; box-shadow: 0 4px 14px rgba(59,130,246,.12); }
 .question-media-tile { min-width: 0; border: 1px solid #dbe5f1; border-radius: 8px; background: #f8fbff; padding: 10px; }

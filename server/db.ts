@@ -103,10 +103,10 @@ export async function ensureLearnerProfile(userId: number) {
 /** @deprecated Dùng ensureAccountProfile cho mã mới; giữ lại để không phá các luồng hiện hữu. */
 export const ensureAccountProfile = ensureLearnerProfile;
 
-export async function getLearnerSummary(userId: number) {
+export async function getAccountSummary(userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const profile = await ensureLearnerProfile(userId);
+  const profile = await ensureAccountProfile(userId);
   if (!profile) return undefined;
   const stats = await db.select({
     completed: sql<number>`count(${attempts.id})`,
@@ -120,6 +120,9 @@ export async function getLearnerSummary(userId: number) {
   const upgradePlans = plans.filter(plan => tierRank[plan.tier as keyof typeof tierRank] > tierRank[profileTier]);
   return { profile, stats: stats[0] ?? { completed: 0, averageScore: 0, passedCount: 0 }, currentPlan, upgradePlans };
 }
+
+/** @deprecated Dùng getAccountSummary cho mã mới. */
+export const getLearnerSummary = getAccountSummary;
 
 export async function listPublishedCatalog(search?: string, categoryId?: number, rootTopicId?: number) {
   const db = await getDb();

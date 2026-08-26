@@ -74,10 +74,11 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, permissionProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createAttempt,
+  ensureAccountProfile,
   ensureLearnerProfile,
   getDb,
   getLeaderboard,
-  getLearnerSummary,
+  getAccountSummary,
   getMonthlyQuotaUsage,
   getXpLeaderboard,
   getQuizDetail,
@@ -99,7 +100,7 @@ import { analyzeAiAssistantImage } from "./aiAssistantMultimodal";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { getEffectiveTier } from "./membershipUtils";
-import { getLearnerGamificationSummary } from "./gamification";
+import { getAccountGamificationSummary } from "./gamification";
 import { getAiPointQuotes, runWithAiPointCharge } from "./aiPointPricing";
 import { getAccountEntitlements, requirePermission } from "./permissionService";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
@@ -587,7 +588,7 @@ export const appRouter = router({
   }),
 
   learner: router({
-    summary: protectedProcedure.query(({ ctx }) => getLearnerSummary(ctx.user.id)),
+    summary: protectedProcedure.query(({ ctx }) => getAccountSummary(ctx.user.id)),
     entitlements: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải quyền truy cập." });
@@ -597,8 +598,8 @@ export const appRouter = router({
     gamification: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải tiến trình Gamification." });
-      await ensureLearnerProfile(ctx.user.id);
-      const summary = await getLearnerGamificationSummary(db, ctx.user.id);
+      await ensureAccountProfile(ctx.user.id);
+      const summary = await getAccountGamificationSummary(db, ctx.user.id);
       if (!summary) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể khởi tạo tiến trình học tập." });
       return summary;
     }),

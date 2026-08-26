@@ -10,7 +10,7 @@ const harness = vi.hoisted(() => ({
 }));
 
 vi.mock("./db", () => ({
-  ensureLearnerProfile: vi.fn(async () => undefined),
+  ensureAccountProfile: vi.fn(async () => undefined),
   getDb: vi.fn(async () => ({
     select: () => ({ from: () => ({ where: () => ({ limit: async () => [harness.paymentRecord] }), limit: async () => [] }) }),
     insert: () => ({ values: async () => ({}) }),
