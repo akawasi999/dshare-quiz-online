@@ -829,3 +829,10 @@
 - [x] Hoàn thiện cấu hình chủ đề, quyền truy cập, thời lượng, ảnh bìa và metadata Quiz.
 - [x] Tinh chỉnh UX/UI Studio desktop/mobile, phản hồi thao tác và khả năng truy cập.
 - [x] Viết regression, xác minh trực quan và lưu checkpoint cho Quiz Studio hoàn chỉnh.
+- [x] Audit Studio, dữ liệu mẫu Quiz theo môn học và khả năng lưu lịch sử AI hiện tại.
+- [x] Thu gọn Media thành một nút chọn Ảnh/MP3/Video; chuyển Điểm lên góc phải trên và Độ khó xuống góc phải dưới card.
+- [x] Đặt mặc định bốn tùy chọn cho câu Trắc nghiệm/Nhiều đáp án và thay thông báo yêu cầu nội dung câu hỏi.
+- [x] Bổ sung kéo thả cảm ứng cho các câu Sắp xếp và Ghép nối.
+- [x] Xây dựng thư viện mẫu Quiz theo môn học để tạo nhanh cấu trúc Quiz.
+- [x] Lưu, quản lý và tái sử dụng lịch sử nội dung do AI tạo trong Studio.
+- [x] Viết regression, xác minh responsive và lưu checkpoint cho đợt thiết kế lại Studio.

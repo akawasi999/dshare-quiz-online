@@ -134,7 +134,7 @@ describe("Quiz Creator theo đặc tả", () => {
   it("cho phép chỉnh sửa trực tiếp nội dung và đáp án trong Editor trung tâm", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
-    const prompt = screen.getByPlaceholderText("Vui lòng nhập câu hỏi.") as HTMLTextAreaElement;
+    const prompt = screen.getByPlaceholderText("Nhập nội dung câu hỏi") as HTMLTextAreaElement;
     await user.clear(prompt);
     await user.type(prompt, "Câu hỏi đã chỉnh sửa");
     expect(prompt.value).toBe("Câu hỏi đã chỉnh sửa");
@@ -208,14 +208,17 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(statementInput.value).toContain("nguồn điện");
   });
 
-  it("hiển thị ba khối media, điểm và Preview Sandbox trong luồng P0", async () => {
+  it("hiển thị menu tải media, điểm và Preview Sandbox trong luồng P0", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     expect(screen.getByText("Media")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Tải Audio" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Tải Video" })).toBeTruthy();
-    expect(screen.getByText("JPG, PNG, WEBP tối đa 5MB")).toBeTruthy();
-    expect(screen.getByRole("spinbutton", { name: "Điểm câu hỏi 1" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Tải lên media" }));
+    expect(screen.getByRole("menuitem", { name: "Ảnh" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "MP3" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Video" })).toBeTruthy();
+    expect(screen.getByText(/Ảnh JPG\/PNG\/WEBP tối đa 5MB/)).toBeTruthy();
+    expect(screen.getByText("Điểm")).toBeTruthy();
+    await user.keyboard("{Escape}");
     expect(screen.getByRole("button", { name: /Xem trước Sandbox/ })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Cài đặt" }));
     expect(screen.getAllByText("Quyền riêng tư & chia sẻ").length).toBeGreaterThan(0);
@@ -224,7 +227,7 @@ describe("Quiz Creator theo đặc tả", () => {
   it("hiển thị điều khiển tải ảnh bìa và ảnh minh họa câu hỏi qua S3", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
-    expect(screen.getByRole("button", { name: "Tải ảnh minh họa cho câu hỏi" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Tải lên media" })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Cài đặt" }));
     expect(screen.getByRole("button", { name: "Tải ảnh đại diện Quiz" })).toBeTruthy();
     expect(screen.getByText(/JPG, PNG hoặc WEBP/)).toBeTruthy();
@@ -260,5 +263,32 @@ describe("Quiz Creator theo đặc tả", () => {
     await user.click(screen.getByRole("button", { name: "So sánh" }));
     expect(screen.getByText("Đối chiếu trước khi khôi phục")).toBeTruthy();
     expect(screen.getAllByText("Phiên bản quan trọng")).toHaveLength(2);
+  });
+
+  it("áp dụng được khung Quiz từ thư viện mẫu theo môn học", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Mẫu Quiz" }));
+    expect(screen.getByText("Thư viện mẫu Quiz theo môn học")).toBeTruthy();
+    expect(screen.getByText("Toán học")).toBeTruthy();
+    await user.click(screen.getAllByRole("button", { name: "Dùng mẫu" })[0]!);
+    expect(screen.getByRole("button", { name: "Sao chép câu hỏi 4" })).toBeTruthy();
+  });
+
+  it("mở được lịch sử nội dung AI để tái sử dụng", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Nhập chủ đề" }));
+    await user.click(screen.getByRole("button", { name: "Lịch sử nội dung AI" }));
+    expect(screen.getByText("Nội dung AI đã tạo")).toBeTruthy();
+    expect(screen.getByText("Chưa có nội dung AI nào để tái sử dụng.")).toBeTruthy();
+  });
+
+  it("hiển thị tay nắm kéo thả cho Ghép nối và Sắp xếp", () => {
+    render(<UserQuizCreator />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Loại câu hỏi 1" }), { target: { value: "matching" } });
+    expect(screen.getByRole("button", { name: "Kéo thả cặp ghép 1" })).toBeTruthy();
+    fireEvent.change(screen.getByRole("combobox", { name: "Loại câu hỏi 1" }), { target: { value: "ordering" } });
+    expect(screen.getByRole("button", { name: "Kéo thả bước sắp xếp 1" })).toBeTruthy();
   });
 });

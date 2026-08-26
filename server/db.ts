@@ -9,10 +9,11 @@ import {
   InsertUser,
   learnerProfiles,
   lessons,
-  questionOptions,
+	questionOptions,
 	questions,
 	quizzes,
 	quizQuestions,
+	quizStudioAiHistories,
 	seoSettings,
 	subscriptionPlans,
 	subjects,
@@ -48,6 +49,25 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+export async function saveQuizStudioAiHistory(input: { userId: number; kind: "chat" | "enhancement"; label: string; payload: Record<string, unknown> }) {
+  const db = await getDb();
+  if (!db) return null;
+  await db.insert(quizStudioAiHistories).values({
+    userId: input.userId,
+    kind: input.kind,
+    label: input.label.slice(0, 220),
+    payload: input.payload,
+  });
+  const result = await db.select().from(quizStudioAiHistories).where(eq(quizStudioAiHistories.userId, input.userId)).orderBy(desc(quizStudioAiHistories.createdAt)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function listQuizStudioAiHistories(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(quizStudioAiHistories).where(eq(quizStudioAiHistories.userId, userId)).orderBy(desc(quizStudioAiHistories.createdAt)).limit(30);
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {

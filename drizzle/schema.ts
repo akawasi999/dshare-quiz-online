@@ -674,6 +674,18 @@ export const quizSourceHistories = mysqlTable("quizSourceHistories", {
   index("quiz_source_history_user_used_idx").on(table.userId, table.lastUsedAt),
 ]);
 
+export const quizStudioAiHistories = mysqlTable("quizStudioAiHistories", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  kind: mysqlEnum("kind", ["chat", "enhancement"]).notNull(),
+  label: varchar("label", { length: 220 }).notNull(),
+  payload: json("payload").$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [
+  index("quiz_studio_ai_history_user_created_idx").on(table.userId, table.createdAt),
+  index("quiz_studio_ai_history_user_kind_idx").on(table.userId, table.kind),
+]);
+
 export const questions = mysqlTable("questions", {
   id: int("id").autoincrement().primaryKey(),
   lessonId: int("lessonId"),

@@ -91,6 +91,8 @@ import {
   logSecurityEvent,
   recordAiUsage,
   saveAnswer,
+  saveQuizStudioAiHistory,
+  listQuizStudioAiHistories,
   submitAttempt,
 } from "./db";
 import { shuffledForAttempt } from "./quizEngine";
@@ -1142,18 +1144,24 @@ export const appRouter = router({
       try { const charged = await runWithAiPointCharge(db, { userId: ctx.user.id, code: "ai_question_generation", requestKey: `question:${ctx.user.id}:${Date.now()}` }, async () => { const response = await invokeLLM({ messages: [{ role: "system", content: "Bạn là chuyên gia biên soạn câu hỏi bằng tiếng Việt. Chỉ trả về JSON hợp lệ, không có markdown." }, { role: "user", content: `Tạo một câu hỏi loại ${input.type}, độ khó ${input.difficulty}, chủ đề ${input.topic}. Ngữ cảnh: ${input.context ?? "Không có"}. Trả JSON gồm prompt, explanation, options và answerConfig. Với fill_blank dùng answerConfig.acceptedAnswers; matching dùng pairs {left,right}; true_false dùng Đúng/Sai; essay cần answerConfig.sampleOutline.` }], maxTokens: 1200, response_format: { type: "json_schema", json_schema: { name: "creator_question_draft", strict: true, schema: { type: "object", properties: { prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["prompt", "explanation", "options", "answerConfig"], additionalProperties: false } } } }); return parseAiQuestionDraft(response.choices[0]?.message.content, input.type); }); await recordAiUsage(ctx.user.id, "generate_question"); return { ...input, ...charged.value, quota: { used: quota.used + 1, limit: quota.limit }, pointCharge: charged.pointCharge }; }
       catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI tạo câu hỏi không hợp lệ: ${error.message}` : "AI tạo câu hỏi không hợp lệ." }); }
     }),
+    studioAiHistory: protectedProcedure.query(async ({ ctx }) => listQuizStudioAiHistories(ctx.user.id)),
     studioAiChat: permissionProcedure("ai.quiz.generate").input(quizStudioChatInputSchema).mutation(async ({ ctx, input }) => {
       await assertRegistryPermission(ctx.user.id, "quiz.ai.manual_question");
       const response = await invokeLLM({ messages: buildQuizStudioChatMessages(input), maxTokens: 2_400, response_format: { type: "json_schema", json_schema: { name: "quiz_studio_chat", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["clarify", "generate"] }, reply: { type: "string" }, detected: { type: "object", properties: { topic: { type: ["string", "null"] }, type: { type: ["string", "null"] }, difficulty: { type: ["string", "null"] }, count: { type: ["integer", "null"] } }, required: ["topic", "type", "difficulty", "count"], additionalProperties: false }, questions: { type: "array", items: { type: "object", properties: { type: { type: "string" }, difficulty: { type: "string" }, prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "prompt", "explanation", "options", "answerConfig"], additionalProperties: false } }, suggestedPrompts: { type: "array", items: { type: "string" } } }, required: ["action", "reply", "detected", "questions", "suggestedPrompts"], additionalProperties: false } } } });
       try {
         const result = parseQuizStudioChatResponse(response.choices[0]?.message.content);
+        const latestPrompt = [...input.messages].reverse().find(message => message.role === "user")?.content ?? "Phản hồi AI Studio";
         if (result.action === "generate") {
           const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
           if (quota.limit !== null && quota.used + result.questions.length > quota.limit) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn cần ${result.questions.length} AI Credits nhưng chỉ còn ${Math.max(0, quota.limit - quota.used)} Credit.` });
           for (const _question of result.questions) await recordAiUsage(ctx.user.id, "generate_question");
-          return { ...result, quota: { used: quota.used + result.questions.length, limit: quota.limit } };
+          const responsePayload = { ...result, quota: { used: quota.used + result.questions.length, limit: quota.limit } };
+          await saveQuizStudioAiHistory({ userId: ctx.user.id, kind: "chat", label: latestPrompt, payload: { input: { prompt: latestPrompt, context: input.context ?? {} }, result: responsePayload } });
+          return responsePayload;
         }
-        return { ...result, quota: null };
+        const responsePayload = { ...result, quota: null };
+        await saveQuizStudioAiHistory({ userId: ctx.user.id, kind: "chat", label: latestPrompt, payload: { input: { prompt: latestPrompt, context: input.context ?? {} }, result: responsePayload } });
+        return responsePayload;
       } catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI Studio chưa thể xử lý yêu cầu: ${error.message}` : "AI Studio chưa thể xử lý yêu cầu." }); }
     }),
     enhanceQuestionAI: permissionProcedure("ai.quiz.generate").input(questionEnhancementInputSchema).mutation(async ({ ctx, input }) => {
@@ -1161,7 +1169,7 @@ export const appRouter = router({
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập ví Point." });
-      try { const charged = await runWithAiPointCharge(db, { userId: ctx.user.id, code: "ai_question_enhancement", requestKey: `enhancement:${ctx.user.id}:${Date.now()}` }, async () => { const response = await invokeLLM({ messages: buildQuestionEnhancementMessages(input), maxTokens: 1_600, response_format: { type: "json_schema", json_schema: { name: "quiz_question_enhancement", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["explain", "rephrase", "latex"] }, prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["action", "prompt", "explanation", "options", "answerConfig"], additionalProperties: false } } } }); return parseQuestionEnhancement(response.choices[0]?.message.content, input.question.type); }); await recordAiUsage(ctx.user.id, "generate_question"); return { ...charged.value, quota: { used: quota.used + 1, limit: quota.limit }, pointCharge: charged.pointCharge }; }
+      try { const charged = await runWithAiPointCharge(db, { userId: ctx.user.id, code: "ai_question_enhancement", requestKey: `enhancement:${ctx.user.id}:${Date.now()}` }, async () => { const response = await invokeLLM({ messages: buildQuestionEnhancementMessages(input), maxTokens: 1_600, response_format: { type: "json_schema", json_schema: { name: "quiz_question_enhancement", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["explain", "rephrase", "latex"] }, prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["action", "prompt", "explanation", "options", "answerConfig"], additionalProperties: false } } } }); return parseQuestionEnhancement(response.choices[0]?.message.content, input.question.type); }); await recordAiUsage(ctx.user.id, "generate_question"); const responsePayload = { ...charged.value, quota: { used: quota.used + 1, limit: quota.limit }, pointCharge: charged.pointCharge }; await saveQuizStudioAiHistory({ userId: ctx.user.id, kind: "enhancement", label: `${input.action}: ${input.question.prompt.slice(0, 180)}`, payload: { input, result: responsePayload } }); return responsePayload; }
       catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI chưa thể nâng cấp câu hỏi: ${error.message}` : "AI chưa thể nâng cấp câu hỏi." }); }
     }),
     generateQuestionsFromDocument: permissionProcedure("ai.quiz.generate").input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]), base64: z.string().min(80).max(22_000_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
@@ -1176,7 +1184,7 @@ export const appRouter = router({
         const generated = charged.value;
         for (let index = 0; index < generated.length; index += 1) await recordAiUsage(ctx.user.id, "generate_question");
         const sourceTextLimit = 6_000;
-        return {
+        const responsePayload = {
           sourceName: document.sourceName,
           sourceUrl: document.sourceUrl,
           sourceText: document.text.slice(0, sourceTextLimit),
@@ -1186,6 +1194,8 @@ export const appRouter = router({
           quota: { used: quota.used + generated.length, limit: quota.limit },
           pointCharge: charged.pointCharge,
         };
+        await saveQuizStudioAiHistory({ userId: ctx.user.id, kind: "chat", label: `Từ tài liệu: ${document.sourceName}`, payload: { input: { fileName: input.fileName, difficulty: input.difficulty, questionCount: input.questionCount }, result: responsePayload } });
+        return responsePayload;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể đọc tài liệu để tạo câu hỏi." });
@@ -1204,7 +1214,9 @@ export const appRouter = router({
         for (let index = 0; index < generated.length; index += 1) await recordAiUsage(ctx.user.id, "generate_question");
         if (db) await db.insert(quizSourceHistories).values({ userId: ctx.user.id, sourceUrl: source.sourceUrl, sourceName: source.sourceName, sourceType: source.sourceType, sourceCharacterCount: source.text.length, lastQuestionCount: input.questionCount, lastDifficulty: input.difficulty }).onDuplicateKeyUpdate({ set: { sourceName: source.sourceName, sourceType: source.sourceType, sourceCharacterCount: source.text.length, lastQuestionCount: input.questionCount, lastDifficulty: input.difficulty, useCount: sql`${quizSourceHistories.useCount} + 1`, lastUsedAt: new Date() } });
         const sourceTextLimit = 6_000;
-        return { sourceName: source.sourceName, sourceUrl: source.sourceUrl, sourceType: source.sourceType, sourceText: source.text.slice(0, sourceTextLimit), sourceTextTruncated: source.text.length > sourceTextLimit, sourceCharacterCount: source.text.length, questions: generated, quota: { used: quota.used + generated.length, limit: quota.limit }, pointCharge: charged.pointCharge };
+        const responsePayload = { sourceName: source.sourceName, sourceUrl: source.sourceUrl, sourceType: source.sourceType, sourceText: source.text.slice(0, sourceTextLimit), sourceTextTruncated: source.text.length > sourceTextLimit, sourceCharacterCount: source.text.length, questions: generated, quota: { used: quota.used + generated.length, limit: quota.limit }, pointCharge: charged.pointCharge };
+        await saveQuizStudioAiHistory({ userId: ctx.user.id, kind: "chat", label: `Từ nguồn: ${source.sourceName}`, payload: { input: { url: input.url, difficulty: input.difficulty, questionCount: input.questionCount }, result: responsePayload } });
+        return responsePayload;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể trích xuất nguồn để tạo câu hỏi." });
