@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areSameMatchingSelections, areSameOrderingSelections, areSameSelections, areSameStatementSelections, isAcceptedTextAnswer, isCorrectHotspot, scoreQuiz, shuffledForAttempt } from "./quizEngine";
+import { areSameMatchingSelections, areSameOrderingSelections, areSameSelections, areSameStatementSelections, isAcceptedTextAnswer, scoreQuiz, shuffledForAttempt } from "./quizEngine";
 
 describe("quiz scoring engine", () => {
   it("requires the exact set of options for a multi-choice answer", () => {
@@ -49,21 +49,18 @@ describe("quiz scoring engine", () => {
     expect(result).toMatchObject({ earnedPoints: 5, availablePoints: 5, scorePercent: 100, correctCount: 2 });
   });
 
-  it("chấm chính xác trình tự, Hotspot và trả lời ngắn AI", () => {
+  it("chấm chính xác trình tự và điền từ", () => {
     const orderingItems = [{ id: "a", text: "Bước 1" }, { id: "b", text: "Bước 2" }];
     expect(areSameOrderingSelections(orderingItems, { orderingIds: ["a", "b"] })).toBe(true);
     expect(areSameOrderingSelections(orderingItems, { orderingIds: ["b", "a"] })).toBe(false);
-    expect(isCorrectHotspot([{ x: 50, y: 50, radius: 10 }], { hotspot: { x: 55, y: 53 } })).toBe(true);
     const result = scoreQuiz([
       { questionId: 10, optionIds: [], correctOptionIds: [], type: "ordering", orderingItems, points: 2 },
-      { questionId: 11, optionIds: [], correctOptionIds: [], type: "hotspot", hotspots: [{ x: 50, y: 50, radius: 10 }], points: 2 },
-      { questionId: 12, optionIds: [], correctOptionIds: [], type: "short_answer_ai", acceptedAnswers: ["Trí tuệ nhân tạo"], points: 1 },
+      { questionId: 11, optionIds: [], correctOptionIds: [], type: "fill_blank", acceptedAnswers: ["Trí tuệ nhân tạo"], points: 1 },
     ], [
       { questionId: 10, selectedOptionIds: [], answerPayload: { orderingIds: ["a", "b"] } },
-      { questionId: 11, selectedOptionIds: [], answerPayload: { hotspot: { x: 50, y: 58 } } },
-      { questionId: 12, selectedOptionIds: [], answerPayload: { textAnswer: "trí tuệ   nhân tạo" } },
+      { questionId: 11, selectedOptionIds: [], answerPayload: { textAnswer: "trí tuệ   nhân tạo" } },
     ]);
-    expect(result).toMatchObject({ earnedPoints: 5, availablePoints: 5, correctCount: 3 });
+    expect(result).toMatchObject({ earnedPoints: 3, availablePoints: 3, correctCount: 2 });
   });
 
   it("keeps a deterministic but non-mutating shuffled order", () => {

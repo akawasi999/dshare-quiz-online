@@ -13,7 +13,7 @@ const quizStatusSchema = z.enum(["draft", "pending_review", "rejected", "publish
 const MAX_QUIZZES_PER_PAGE = 20;
 const quizQuestionPayloadSchema = z.object({
   prompt: z.string().trim().min(8).max(5000),
-  type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "audio", "video", "hotspot", "short_answer_ai", "essay", "essay_ai"]),
+  type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "essay"]),
   difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
   explanation: z.string().trim().max(5000).nullable().optional(),
   tags: z.array(z.string().trim().min(1).max(50)).max(20).default([]),

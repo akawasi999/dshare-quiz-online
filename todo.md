@@ -836,3 +836,13 @@
 - [x] Xây dựng thư viện mẫu Quiz theo môn học để tạo nhanh cấu trúc Quiz.
 - [x] Lưu, quản lý và tái sử dụng lịch sử nội dung do AI tạo trong Studio.
 - [x] Viết regression, xác minh responsive và lưu checkpoint cho đợt thiết kế lại Studio.
+- [x] Kiểm kê điều khiển card Studio cần gỡ, ẩn nhãn hoặc đổi vị trí theo yêu cầu tinh giản mới.
+- [x] Bỏ nhãn Media, ẩn spinner của ô Điểm, gỡ Mẫu Quiz và chuyển ô chọn độ khó cạnh kiểu câu hỏi.
+- [x] Tinh giản dạng Nhận định bằng cách bỏ tiêu đề “Nhận định chọn Có/Không” và phần mô tả dưới dạng câu hỏi.
+- [x] Cập nhật regression, xác minh responsive và lưu checkpoint cho bản tinh giản Studio.
+- [x] Bỏ mô tả định dạng và dung lượng phía dưới nút Tải lên trong card câu hỏi Studio.
+- [x] Kiểm kê toàn bộ định nghĩa, UI, Runner, validation, quyền và dữ liệu liên quan đến Audio, Video, Hotspot, Trả lời ngắn AI, Tự luận AI.
+- [x] Gỡ năm dạng câu hỏi khỏi Studio, validation, Quiz Runner và mọi quyền Premium liên quan.
+- [x] Dọn regression, dữ liệu tương thích và nội dung giao diện sau khi gỡ các dạng câu hỏi.
+- [x] Kiểm thử toàn hệ thống, xác minh Studio/Runner và lưu checkpoint cho việc gỡ năm dạng câu hỏi.
+- [x] Khôi phục máy chủ phát triển và xác minh lại trạng thái phục vụ sau các thay đổi loại câu hỏi.

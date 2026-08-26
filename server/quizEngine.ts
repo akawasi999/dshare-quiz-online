@@ -7,7 +7,6 @@ export type QuestionAnswerKey = {
   matchingPairs?: Array<{ left: string; right: string }>;
   acceptedAnswers?: string[];
   orderingItems?: Array<{ id: string; text: string }>;
-  hotspots?: Array<{ x: number; y: number; radius: number }>;
   points: number;
 };
 
@@ -22,8 +21,6 @@ export function areSameStatementSelections(answerKey: Record<string, boolean>, a
 export function isAcceptedTextAnswer(acceptedAnswers: string[], answerPayload?: Record<string, unknown> | null) { const submitted = answerPayload?.textAnswer; return typeof submitted === "string" && Boolean(submitted.trim()) && acceptedAnswers.some(answer => normalizeTextAnswer(answer) === normalizeTextAnswer(submitted)); }
 export function areSameMatchingSelections(answerKey: Array<{ left: string; right: string }>, answerPayload?: Record<string, unknown> | null) { const submitted = answerPayload?.matchingAnswers; if (!submitted || typeof submitted !== "object" || Array.isArray(submitted)) return false; const values = submitted as Record<string, unknown>; return answerKey.length > 0 && answerKey.every((pair, index) => values[String(index)] === pair.right); }
 export function areSameOrderingSelections(answerKey: Array<{ id: string }>, answerPayload?: Record<string, unknown> | null) { const submitted = answerPayload?.orderingIds; return Array.isArray(submitted) && submitted.every(value => typeof value === "string") && answerKey.length > 1 && answerKey.length === submitted.length && answerKey.every((item, index) => item.id === submitted[index]); }
-export function isCorrectHotspot(hotspots: Array<{ x: number; y: number; radius: number }>, answerPayload?: Record<string, unknown> | null) { const selected = answerPayload?.hotspot; if (!selected || typeof selected !== "object" || Array.isArray(selected)) return false; const point = selected as Record<string, unknown>; const x = Number(point.x); const y = Number(point.y); return Number.isFinite(x) && Number.isFinite(y) && hotspots.some(spot => Math.hypot(x - spot.x, y - spot.y) <= spot.radius); }
-
 export function scoreQuiz(answerKey: QuestionAnswerKey[], submittedAnswers: SubmittedAnswer[]): ScoreSummary {
   const submittedMap = new Map(submittedAnswers.map(answer => [answer.questionId, answer.selectedOptionIds]));
   const submittedPayloadMap = new Map(submittedAnswers.map(answer => [answer.questionId, answer.answerPayload]));
@@ -33,10 +30,9 @@ export function scoreQuiz(answerKey: QuestionAnswerKey[], submittedAnswers: Subm
     const isCorrect = question.type === "true_false_statements" ? areSameStatementSelections(question.statementAnswers ?? {}, payload)
       : question.type === "matching" ? areSameMatchingSelections(question.matchingPairs ?? [], payload)
         : question.type === "ordering" ? areSameOrderingSelections(question.orderingItems ?? [], payload)
-          : question.type === "hotspot" ? isCorrectHotspot(question.hotspots ?? [], payload)
-            : ["fill_blank", "short_answer_ai"].includes(question.type ?? "") ? isAcceptedTextAnswer(question.acceptedAnswers ?? [], payload)
-              : ["essay", "essay_ai"].includes(question.type ?? "") ? false
-                : areSameSelections(submittedMap.get(question.questionId) ?? [], question.correctOptionIds);
+          : question.type === "fill_blank" ? isAcceptedTextAnswer(question.acceptedAnswers ?? [], payload)
+            : question.type === "essay" ? false
+              : areSameSelections(submittedMap.get(question.questionId) ?? [], question.correctOptionIds);
     if (isCorrect) { earnedPoints += question.points; correctCount += 1; }
     return { questionId: question.questionId, isCorrect };
   });

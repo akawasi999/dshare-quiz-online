@@ -26,7 +26,7 @@ import {
 import { ENV } from "./_core/env";
 import { sortLeaderboardEntries } from "./leaderboard";
 import { scoreQuiz } from "./quizEngine";
-import { getAcceptedAnswers, getHotspots, getMatchingPairs, getOrderingItems, getTrueFalseStatements } from "../shared/questionValidation";
+import { getAcceptedAnswers, getMatchingPairs, getOrderingItems, getTrueFalseStatements } from "../shared/questionValidation";
 import { getEffectiveTier } from "./membershipUtils";
 import { awardXp, processGamificationForAttempt } from "./gamification";
 import { getQuotaPeriod } from "./quotaUtils";
@@ -456,8 +456,7 @@ export async function submitAttempt(attemptId: number, userId: number) {
       statementAnswers: row.question.type === "true_false_statements" ? Object.fromEntries(getTrueFalseStatements(row.question.answerConfig ?? {}).map(statement => [statement.id, statement.correct])) : undefined,
       matchingPairs: row.question.type === "matching" ? getMatchingPairs(row.question.answerConfig ?? {}) : undefined,
       orderingItems: row.question.type === "ordering" ? getOrderingItems(row.question.answerConfig ?? {}) : undefined,
-      hotspots: row.question.type === "hotspot" ? getHotspots(row.question.answerConfig ?? {}) : undefined,
-      acceptedAnswers: ["fill_blank", "short_answer_ai"].includes(row.question.type) ? getAcceptedAnswers(row.question.answerConfig ?? {}) : undefined,
+      acceptedAnswers: row.question.type === "fill_blank" ? getAcceptedAnswers(row.question.answerConfig ?? {}) : undefined,
       points: row.points,
     })),
     answers.map(answer => ({ questionId: answer.questionId, selectedOptionIds: answer.selectedOptionIds, answerPayload: answer.answerPayload }))

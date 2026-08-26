@@ -29,27 +29,19 @@ describe("QuizRunner data state", () => {
     expect(mocks.detail.refetch).toHaveBeenCalledTimes(1);
   });
 
-  it("hiển thị ảnh và audio đính kèm khi xem trước Sandbox", async () => {
+  it("hiển thị ảnh minh họa khi xem trước Sandbox", async () => {
     const user = userEvent.setup();
-    sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox media", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Câu hỏi có tư liệu minh họa", type: "single", difficulty: "medium", tags: ["Sandbox"], imageUrl: "/manus-storage/question.png", media: { url: "/manus-storage/explain.mp3", kind: "audio", fileName: "explain.mp3" }, options: [{ id: 1, body: "Đúng" }, { id: 2, body: "Sai" }], correctOptionIds: [1] }] }));
+    sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox có ảnh", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Câu hỏi có tư liệu minh họa", type: "single", difficulty: "medium", tags: ["Sandbox"], imageUrl: "/manus-storage/question.png", options: [{ id: 1, body: "Đúng" }, { id: 2, body: "Sai" }], correctOptionIds: [1] }] }));
     window.history.replaceState({}, "", `${window.location.origin}/quiz/0?sandbox=1`);
     expect(window.location.search).toBe("?sandbox=1");
     const { container } = render(<QuizRunner />);
     await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
     expect(screen.getByRole("img", { name: "Hình minh họa câu hỏi" }).getAttribute("src")).toBe("/manus-storage/question.png");
-    expect(container.querySelector("audio")?.getAttribute("src")).toBe("/manus-storage/explain.mp3");
+    expect(container.querySelector("audio")).toBeNull();
+    expect(container.querySelector("video")).toBeNull();
     await user.click(screen.getByRole("button", { name: /Đúng/ }));
     expect(screen.getByRole("progressbar", { name: "Tiến độ làm bài" }).getAttribute("aria-valuenow")).toBe("1");
     expect(screen.getByText("Chính xác! Bạn có thể chuyển sang câu tiếp theo.")).toBeTruthy();
-  });
-
-  it("hiển thị video đính kèm khi xem trước Sandbox", async () => {
-    const user = userEvent.setup();
-    sessionStorage.setItem("dshare-quiz-preview", JSON.stringify({ title: "Sandbox video", summary: "", durationSeconds: 900, questions: [{ id: -1, prompt: "Câu hỏi có video minh họa", type: "single", difficulty: "medium", tags: ["Sandbox"], media: { url: "/manus-storage/explain.webm", kind: "video", fileName: "explain.webm" }, options: [{ id: 1, body: "Đúng" }, { id: 2, body: "Sai" }], correctOptionIds: [1] }] }));
-    window.history.replaceState({}, "", `${window.location.origin}/quiz/0?sandbox=1`);
-    const { container } = render(<QuizRunner />);
-    await user.click(screen.getByRole("button", { name: "Bắt đầu xem trước" }));
-    expect(container.querySelector("video")?.getAttribute("src")).toBe("/manus-storage/explain.webm");
   });
 
   it("khóa điều hướng lùi trong Sandbox khi Studio tắt quyền quay lại", async () => {

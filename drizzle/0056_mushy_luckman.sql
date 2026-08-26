@@ -1,0 +1,1 @@
+ALTER TABLE `questions` MODIFY COLUMN `type` enum('single','multiple','true_false','true_false_statements','fill_blank','image','matching','ordering','image_choice','essay') NOT NULL DEFAULT 'single';

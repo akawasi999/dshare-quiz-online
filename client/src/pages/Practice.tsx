@@ -28,12 +28,7 @@ const typeLabels = {
   matching: "Ghép nối",
   ordering: "Sắp xếp thứ tự",
   image_choice: "Chọn bằng hình ảnh",
-  audio: "Câu hỏi âm thanh",
-  video: "Câu hỏi video",
-  hotspot: "Chọn vị trí trên ảnh",
-  short_answer_ai: "Trả lời ngắn AI",
   essay: "Tự luận",
-  essay_ai: "Tự luận AI",
 } as const;
 
 export default function Practice() {
