@@ -95,6 +95,7 @@ import { decryptAiAssistantApiKey, discoverGeminiChatModel, encryptAiAssistantAp
 import { analyzeAiAssistantImage } from "./aiAssistantMultimodal";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
+import { getEffectiveTier } from "./membershipUtils";
 import { getLearnerGamificationSummary } from "./gamification";
 import { getAiPointQuotes, runWithAiPointCharge } from "./aiPointPricing";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
@@ -284,6 +285,22 @@ async function assertMembershipGroupPermission(userId: number, permission: Membe
   const groups = await getMembershipGroupPermissions();
   const group = groups.find(item => item.tier === profile.tier);
   if (!group?.[permission]) throw new TRPCError({ code: "FORBIDDEN", message: `Nhóm ${profile.tier.toUpperCase()} chưa được cấp quyền ${featureLabel}.` });
+}
+
+const premiumQuestionTypeTier: Partial<Record<string, "pro" | "premium">> = { matching: "pro", ordering: "pro", image_choice: "pro", audio: "pro", video: "premium", hotspot: "premium", short_answer_ai: "premium", essay_ai: "premium" };
+const membershipTierRank = { basic: 1, pro: 2, premium: 3 } as const;
+
+async function assertPremiumQuestionTypesAllowed(userId: number, questionTypes: string[]) {
+  const highestRequirement = questionTypes.reduce<"pro" | "premium" | null>((required, type) => {
+    const next = premiumQuestionTypeTier[type] ?? null;
+    if (!next) return required;
+    return next === "premium" || !required ? next : required;
+  }, null);
+  if (!highestRequirement) return;
+  const profile = await ensureLearnerProfile(userId);
+  if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập hồ sơ thành viên." });
+  const effectiveTier = getEffectiveTier({ tier: profile.tier as "basic" | "pro" | "premium", tierExpiresAt: profile.tierExpiresAt });
+  if (membershipTierRank[effectiveTier] < membershipTierRank[highestRequirement]) throw new TRPCError({ code: "FORBIDDEN", message: `Dạng câu hỏi này yêu cầu gói ${highestRequirement.toUpperCase()} hoặc cao hơn.` });
 }
 
 async function assertQuotaAvailable(userId: number, resource: "attemptsPerMonth" | "quizzesPerMonth" | "aiCreditsPerMonth") {
@@ -1031,6 +1048,7 @@ export const appRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo quiz lúc này." });
       await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
       await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "tạo Quiz");
+      await assertPremiumQuestionTypesAllowed(ctx.user.id, input.questions.map(item => item.type));
       const topic = input.topicId ? (await db.select().from(topics).where(and(eq(topics.id, input.topicId), eq(topics.status, "active"), isNull(topics.deletedAt))).limit(1))[0] : undefined;
       if (input.topicId && !topic) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chủ đề đã chọn không còn hoạt động." });
       if (topic && !topic.allowQuizCreation) throw new TRPCError({ code: "FORBIDDEN", message: "Chủ đề này hiện không cho phép tạo Quiz." });
@@ -1062,6 +1080,7 @@ export const appRouter = router({
       questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "audio", "video", "hotspot", "short_answer_ai", "essay", "essay_ai"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
+      await assertPremiumQuestionTypesAllowed(ctx.user.id, input.questions.map(item => item.type));
       for (const item of input.questions) { const error = validateQuestionConfiguration({ type: item.type, options: item.options, answerConfig: item.answerConfig, imageUrl: item.imageUrl ?? null }); if (error) throw new TRPCError({ code: "BAD_REQUEST", message: `Câu hỏi không hợp lệ: ${error}` }); }
       const lessonId = input.lessonId ?? source.quiz.lessonId;
       if (!lessonId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Quiz thuộc mô hình Chủ đề mới cần được chỉnh sửa trong Quiz System." });

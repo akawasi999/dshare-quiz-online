@@ -766,8 +766,8 @@
 - [x] Tự động ẩn thẻ thông số hero Quiz Runner khi không có dữ liệu hiển thị.
 - [x] Đồng bộ dữ liệu Quiz Studio với Runner, hoàn thiện hiển thị/chấm các loại câu hỏi gồm Ghép nối.
 - [x] Nâng cấp giao diện làm bài Quiz Runner và phản hồi tương tác theo hướng chuyên nghiệp.
-- [ ] Phân tích và triển khai các yêu cầu nâng cấp mới theo tài liệu update.pdf.
-- [ ] Mở rộng mô hình câu hỏi Premium và quyền sử dụng theo gói/nhóm người dùng.
+- [x] Phân tích và triển khai các yêu cầu nâng cấp mới theo tài liệu update.pdf.
+- [x] Mở rộng mô hình câu hỏi Premium và quyền sử dụng theo gói/nhóm người dùng.
 - [x] Tạo nền tảng dữ liệu, Studio, Runner và engine cho Ordering, Hotspot, Media Question và biến thể AI.
 - [x] Hoàn thiện quyền riêng tư Quiz: Public, Unlisted, Private, mật khẩu và danh sách người được mời.
 - [x] Bổ sung xuất Quiz PDF theo bản học viên, đáp án và bản giáo viên.
