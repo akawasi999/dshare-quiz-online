@@ -134,6 +134,16 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(mocks.chat.mutate).toHaveBeenCalledWith(expect.objectContaining({ messages: expect.arrayContaining([expect.objectContaining({ content: "Tạo câu hỏi Toán lớp 4" })]), requestedQuestionCount: null, context: expect.objectContaining({ currentQuestionCount: 1, questions: [expect.objectContaining({ id: expect.any(String), points: 1, imageUrl: "" })] }) }));
   });
 
+  it("hiển thị thư viện prompt theo môn học và cấp độ trong AI Studio", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Nhập chủ đề" }));
+    expect(screen.getByText("Mẫu theo môn học & cấp độ")).toBeTruthy();
+    expect(screen.getByLabelText("Chọn môn học cho prompt AI")).toBeTruthy();
+    expect(screen.getByLabelText("Chọn cấp độ cho prompt AI")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Tạo 5 câu trắc nghiệm Toán lớp 4 về phân số, mức cơ bản" })).toBeTruthy();
+  });
+
   it("buộc xác nhận số lượng trước khi AI tạo và áp dụng lệnh tạo/sửa vào bản nháp", async () => {
     const user = userEvent.setup();
     mocks.chat.mutate.mockClear();
@@ -160,6 +170,20 @@ describe("Quiz Creator theo đặc tả", () => {
     expect((screen.getByRole("combobox", { name: "Loại câu hỏi 1" }) as HTMLSelectElement).value).toBe("true_false");
     await user.click(screen.getByRole("button", { name: "Sao chép câu hỏi 1" }));
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
+  });
+
+  it("cho phép xóa toàn bộ câu hỏi sau khi xác nhận", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Sao chép câu hỏi 1" }));
+    expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: "Xóa tất cả câu hỏi" }));
+    expect(screen.getByRole("heading", { name: "Xóa toàn bộ câu hỏi?" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Xóa tất cả" }));
+    expect(screen.queryByText(/#2/)).toBeNull();
+    expect(screen.getByTestId("empty-question-canvas")).toBeTruthy();
+    expect(screen.getByText("0 / 50 câu hỏi")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Xóa tất cả câu hỏi" })).toBeTruthy();
   });
 
   it("cho phép chỉnh sửa trực tiếp nội dung và đáp án trong Editor trung tâm", async () => {

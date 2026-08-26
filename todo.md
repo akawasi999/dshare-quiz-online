@@ -869,3 +869,8 @@
 - [x] Đọc đặc tả AI Quiz Generator và kiểm kê luồng tạo/sửa/xác nhận AI Studio hiện tại.
 - [x] Chuẩn hóa luồng tạo Quiz AI theo đặc tả, gồm xác nhận đầu vào, tạo câu hỏi, xem trước và áp dụng an toàn.
 - [x] Cập nhật giao diện, regression, xác minh desktop/mobile và lưu checkpoint cho hệ thống AI Quiz cải tiến.
+- [x] Thiết kế thư viện prompt gợi ý theo môn học và cấp độ trong panel AI Quiz Studio.
+- [x] Kết nối lựa chọn prompt với AI Chat, cập nhật regression, xác minh responsive và lưu checkpoint.
+- [x] Bổ sung thao tác xóa toàn bộ câu hỏi Studio với hộp xác nhận và trạng thái nháp an toàn.
+- [x] Cập nhật regression, xác minh desktop/mobile và lưu checkpoint cho thao tác xóa toàn bộ câu hỏi.
+- [x] Điều chỉnh xóa toàn bộ để không giữ card câu hỏi mẫu hoặc mục điều hướng tồn dư trong Studio.
