@@ -40,6 +40,13 @@ describe("quizStudioChat", () => {
     expect(result.operations[2]).toMatchObject({ kind: "delete", targetId: "q-2", question: null });
   });
 
+  it("không làm mutation thất bại khi AI trả options hoặc answerConfig sai kiểu", () => {
+    const result = parseQuizStudioChatResponse({ action: "apply", reply: "Đã tạo câu hỏi.", detected: { topic: "Phân số", type: "single", difficulty: "easy", count: 1 }, suggestedPrompts: [], operations: [{ kind: "create", targetId: null, question: { ...singleDraft, options: [true, false, true], answerConfig: "không hợp lệ" } }] });
+    expect(result.action).toBe("clarify");
+    expect(result.operations).toEqual([]);
+    expect(result.reply).toContain("cấu trúc đáp án");
+  });
+
   it("tạo hướng dẫn đúng cho công cụ lời giải và giữ cấu trúc câu hỏi khi AI phản hồi", () => {
     const messages = buildQuestionEnhancementMessages({ action: "explain", question: { type: "single", difficulty: "medium", prompt: "2 + 2 bằng bao nhiêu?", explanation: "", options: [{ body: "4", isCorrect: true }, { body: "5", isCorrect: false }], answerConfig: {} } });
     expect(messages[0].content).toContain("Tạo lời giải chi tiết");

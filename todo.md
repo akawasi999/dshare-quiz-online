@@ -862,3 +862,5 @@
 - [x] Kết nối giao thức AI với Studio, cập nhật regression, xác minh desktop/mobile và lưu checkpoint.
 - [x] Sửa validation ngữ cảnh AI Studio để câu hỏi nháp chưa có nội dung hoặc lời giải không chặn chat trên /build.
 - [x] Bổ sung regression, xác minh luồng chat AI với bản nháp trống và lưu checkpoint.
+- [x] Sửa parser AI Studio để options và answerConfig sai kiểu không làm mutation /build thất bại.
+- [x] Bổ sung regression cho phản hồi options boolean/string, xác minh AI Studio và lưu checkpoint.

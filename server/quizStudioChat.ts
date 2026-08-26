@@ -63,26 +63,33 @@ Quy tắc operations:
 2. update: targetId phải đúng id trong ngữ cảnh, question là phiên bản HOÀN CHỈNH sau khi sửa; có thể đổi kiểu, độ khó, điểm, nội dung, ảnh (imageUrl), đáp án, lời giải và answerConfig. Giữ nguyên trường hiện có nếu người dùng không yêu cầu thay đổi.
 3. delete: targetId phải đúng id trong ngữ cảnh, question=null.
 4. Chỉ dùng các kiểu: single, multiple, true_false, true_false_statements, fill_blank, matching, ordering, image_choice, essay. Mọi câu phải có đáp án/answerConfig hợp lệ, points 1–100. imageUrl chỉ dùng URL ảnh hợp lệ hoặc chuỗi rỗng.
-5. Không tự bịa id, không thao tác ngoài yêu cầu, không tạo nội dung độc hại hoặc đáp án cho bài thi đang diễn ra. Luôn phản hồi JSON đúng schema.
+5. Trường options BẮT BUỘC là mảng object theo đúng mẫu [{"body":"Nội dung đáp án","isCorrect":true}]. Không bao giờ gửi options là chuỗi, boolean, số hoặc mảng boolean/chuỗi. answerConfig BẮT BUỘC là object JSON, dùng {} khi không có cấu hình riêng; không bao giờ là chuỗi, boolean, mảng hoặc null.
+6. Nếu không thể tạo cấu trúc đầy đủ, dùng action="clarify" và operations=[]; không gửi operation dở dang. Không tự bịa id, không thao tác ngoài yêu cầu, không tạo nội dung độc hại hoặc đáp án cho bài thi đang diễn ra. Luôn phản hồi JSON đúng schema.
 
 Ngữ cảnh Studio:
 ${studioContext}` }, ...input.messages.map(message => ({ role: message.role, content: message.content }))];
 }
 
 export function parseQuizStudioChatResponse(content: unknown) {
-  const parsed = studioChatResponseSchema.parse(typeof content === "string" ? JSON.parse(content) : content);
-  if (parsed.action !== "apply") return { ...parsed, operations: [] };
-  const operations = parsed.operations.map(operation => {
-    if (operation.kind === "delete") {
-      if (!operation.targetId || operation.question !== null) throw new Error("Lệnh xoá AI không hợp lệ.");
-      return operation;
-    }
-    if (!operation.question || (operation.kind === "create" ? operation.targetId !== null : !operation.targetId)) throw new Error("Lệnh chỉnh sửa AI không hợp lệ.");
-    const normalized = parseAiQuestionDraft(operation.question, operation.question.type);
-    return { ...operation, question: { ...normalized, type: operation.question.type, difficulty: operation.question.difficulty, points: operation.question.points, imageUrl: operation.question.imageUrl } };
-  });
-  if (!operations.length) throw new Error("AI chưa trả về thao tác hợp lệ cho bản nháp.");
-  return { ...parsed, operations };
+  const fallback = () => ({ action: "clarify" as const, reply: "Tôi cần tạo lại cấu trúc đáp án để bảo đảm câu hỏi hợp lệ. Bạn hãy xác nhận yêu cầu hoặc gửi lại thao tác cần thực hiện.", detected: { topic: null, type: null, difficulty: null, count: null }, operations: [], suggestedPrompts: ["Tạo lại câu hỏi với 4 đáp án đầy đủ", "Sửa câu hỏi đã chọn và giữ đáp án hợp lệ"] });
+  try {
+    const raw = typeof content === "string" ? JSON.parse(content) : content;
+    const parsed = studioChatResponseSchema.parse(raw);
+    if (parsed.action !== "apply") return { ...parsed, operations: [] };
+    const operations = parsed.operations.map(operation => {
+      if (operation.kind === "delete") {
+        if (!operation.targetId || operation.question !== null) throw new Error("Lệnh xoá AI không hợp lệ.");
+        return operation;
+      }
+      if (!operation.question || (operation.kind === "create" ? operation.targetId !== null : !operation.targetId)) throw new Error("Lệnh chỉnh sửa AI không hợp lệ.");
+      const normalized = parseAiQuestionDraft(operation.question, operation.question.type);
+      return { ...operation, question: { ...normalized, type: operation.question.type, difficulty: operation.question.difficulty, points: operation.question.points, imageUrl: operation.question.imageUrl } };
+    });
+    if (!operations.length) return fallback();
+    return { ...parsed, operations };
+  } catch {
+    return fallback();
+  }
 }
 
 const enhancementSchema = z.object({ action: z.enum(["explain", "rephrase", "latex"]), prompt: z.string().trim().max(5_000), explanation: z.string().trim().max(5_000), options: z.array(optionSchema).max(10), answerConfig: z.record(z.string(), z.unknown()) });
