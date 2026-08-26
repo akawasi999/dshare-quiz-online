@@ -852,3 +852,5 @@
 - [x] Chuyển Tải lên sang phải vùng nhập nội dung, đặt Điểm sát bên phải Độ khó và căn giữa giá trị điểm.
 - [x] Gỡ toàn bộ badge PRO khỏi trang Quiz Studio /build, cập nhật regression và xác minh responsive.
 - [x] Gỡ hoàn toàn khối liên kết, AI nâng cao và thông báo hệ điều hành thừa khỏi giao diện Quiz Studio.
+- [x] Thu gọn danh sách câu hỏi bên trái thành nút biểu tượng có thể mở lại khi panel AI Studio xuất hiện.
+- [x] Cập nhật regression, xác minh desktop/mobile và lưu checkpoint cho chế độ danh sách câu hỏi thu gọn khi mở AI.

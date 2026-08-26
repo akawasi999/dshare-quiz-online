@@ -99,6 +99,12 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByText("Tạo câu hỏi cùng AI")).toBeTruthy();
     expect(screen.getByTestId("quiz-ai-primary")).toBeTruthy();
     expect(screen.getByLabelText("AI Assistant")).toBeTruthy();
+    expect(screen.getByTestId("collapsed-question-navigator")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Mở danh sách câu hỏi" })).toBeTruthy();
+    expect(screen.queryByLabelText("Danh sách câu hỏi")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Mở danh sách câu hỏi" }));
+    expect(screen.getByLabelText("Danh sách câu hỏi")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thu gọn danh sách câu hỏi" })).toBeTruthy();
     expect(screen.getByTestId("question-navigator")).toBeTruthy();
     expect(screen.getByTestId("spec-creator-header")).toBeTruthy();
     expect(screen.queryByTestId("quiz-ai-point-footer")).toBeNull();
@@ -107,7 +113,7 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByRole("button", { name: "Xem trước Sandbox" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Xuất bản/ })).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
-    await user.click(screen.getByRole("button", { name: /Thu gọn/ }));
+    await user.click(screen.getByRole("button", { name: "Thu gọn chat" }));
     expect(screen.queryByLabelText("AI Assistant")).toBeNull();
   });
 
