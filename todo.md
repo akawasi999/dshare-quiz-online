@@ -801,3 +801,9 @@
 - [x] Thêm quy tắc lint cảnh báo URL nội bộ hard-code thay vì ROUTES chuẩn.
 - [x] Ghi nhận lỗi 404 và xây dựng dashboard admin theo dõi lỗi 404/liên kết hỏng.
 - [x] Viết regression, xác minh giao diện và lưu checkpoint cho lint URL cùng dashboard liên kết.
+- [x] Phân tích card Quiz hiện có và chuẩn hóa dữ liệu ảnh bìa, gói, metadata làm bài cho hai trang danh sách.
+- [x] Xây dựng card Quiz bố cục ảnh trái, nội dung phải với badge Basic/PRO/PREMIUM, chủ đề, tác giả và chỉ số.
+- [x] Áp dụng card mới cho Khám phá và Làm Quiz, tối ưu responsive và bỏ mô tả dài theo đặc tả.
+- [x] Giới hạn phân trang 24 Quiz (2×12) cho Khám phá và 12 Quiz (2×6) cho Làm Quiz.
+- [x] Viết regression, xác minh giao diện và lưu checkpoint cho thiết kế card Quiz mới.
+- [x] Tinh chỉnh card Quiz có nền trắng, viền nổi bật và đưa chủ đề lên đầu phần nội dung.

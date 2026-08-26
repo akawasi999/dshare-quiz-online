@@ -37,7 +37,6 @@ const difficultyLabels = {
 } as const;
 const tierLabels = { basic: "Basic", pro: "Pro", premium: "Premium" } as const;
 const libraryPreferenceKey = "dshare-quiz-library-preferences";
-const quizzesPerPage = 9;
 type LibraryPreferences = { topicId: number | null; difficulty: string };
 const defaultLibraryPreferences: LibraryPreferences = {
   topicId: null,
@@ -124,6 +123,7 @@ export default function QuizLibrary({
 }: {
   embedded?: boolean;
 }) {
+  const quizzesPerPage = embedded ? 12 : 24;
   const savedPreferences = loadLibraryPreferences();
   const [location] = useLocation();
   const requestedTopicId = getTopicIdFromLocation(location);
@@ -265,7 +265,7 @@ export default function QuizLibrary({
         (currentPage - 1) * quizzesPerPage,
         currentPage * quizzesPerPage
       ),
-    [currentPage, sorted]
+    [currentPage, sorted, quizzesPerPage]
   );
 
   useEffect(() => {
@@ -572,7 +572,7 @@ export default function QuizLibrary({
           </div>
         ) : sorted.length ? (
           <>
-            <div id="quiz-list" className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div id="quiz-list" className="mt-8 grid gap-x-10 md:grid-cols-2">
               {paginatedQuizzes.map(quiz => (
                 <QuizCard key={quiz.id} quiz={quiz} />
               ))}

@@ -15,7 +15,7 @@ vi.mock("@/components/ui/tooltip", () => ({
 import QuizCard from "../client/src/components/QuizCard";
 
 describe("QuizCard", () => {
-  it("chỉ hiển thị đường dẫn Chủ đề, tag hạng và nút Làm bài cho card catalog", () => {
+  it("hiển thị ảnh trái, tag gói, tác giả và metadata làm bài cho card catalog", () => {
     render(<QuizCard quiz={{
       id: 77,
       title: "Kiểm tra chương 1",
@@ -36,12 +36,13 @@ describe("QuizCard", () => {
     }} />);
 
     expect(screen.getByText("Tiểu học › Lớp 6 › Tin học")).toBeTruthy();
+    expect(screen.getByText("Tác giả Quiz")).toBeTruthy();
     expect(screen.getByText("Basic")).toBeTruthy();
     expect(screen.queryByText("Ôn tập")).toBeNull();
-    expect(screen.queryByText("GS6 Spark")).toBeNull();
     expect(screen.queryByText("TRAINING 01")).toBeNull();
     expect(screen.getByText("Trung bình").className).toContain("bg-[#FFEDD5]");
     expect(screen.getByText("Trung bình").className).toContain("text-[#C2410C]");
     expect(screen.getByRole("link", { name: /làm bài/i }).getAttribute("href")).toBe("/quiz/77");
+    expect(screen.getByText("+0 Point")).toBeTruthy();
   });
 });

@@ -153,9 +153,9 @@ describe("QuizLibrary component", () => {
     expect(screen.queryByText("Tiếng Anh giao tiếp")).toBeNull();
   });
 
-  it("hiển thị tối đa 9 thẻ mỗi trang và chuyển trang bằng điều khiển Trước/Sau", async () => {
+  it("hiển thị tối đa 24 thẻ ở Khám phá và chuyển trang bằng điều khiển Trước/Sau", async () => {
     const user = userEvent.setup();
-    mocks.catalog.data = Array.from({ length: 10 }, (_, index) => ({
+    mocks.catalog.data = Array.from({ length: 25 }, (_, index) => ({
       quizId: index + 1,
       title: `Bộ đề ${index + 1}`,
       summary: null,
@@ -182,14 +182,22 @@ describe("QuizLibrary component", () => {
 
     render(<QuizLibrary />);
 
-    expect(screen.getByText("Bộ đề 10")).toBeTruthy();
+    expect(screen.getByText("Bộ đề 25")).toBeTruthy();
     expect(screen.queryByText("Bộ đề 1")).toBeNull();
     expect(screen.queryByText("Tải thêm bộ đề")).toBeNull();
     expect(screen.getByRole("link", { name: "Trang trước" }).getAttribute("aria-disabled")).toBe("true");
 
     await user.click(screen.getByRole("link", { name: "Trang sau" }));
     expect(screen.getByText("Bộ đề 1")).toBeTruthy();
-    expect(screen.queryByText("Bộ đề 10")).toBeNull();
+    expect(screen.queryByText("Bộ đề 25")).toBeNull();
     expect(screen.getByRole("link", { name: "Trang sau" }).getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("giới hạn trang Làm Quiz nhúng ở 12 thẻ", () => {
+    mocks.catalog.data = Array.from({ length: 13 }, (_, index) => ({ quizId: index + 1, title: `Quiz nhúng ${index + 1}`, summary: null, mode: "training", difficulty: "easy", accessTier: "basic", durationSeconds: 900, questionCount: 10, entryPointCost: 0, completionReward: 10, attemptCount: 0, recentAttemptCount: 0, createdAt: new Date(`2026-08-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`), coverImageUrl: null, topicId: 10, topicTitle: "Tiểu học", rootTopicId: 10, rootTopicTitle: "Tiểu học", categoryTitle: "Tiểu học", subjectTitle: "", lessonTitle: "" }));
+    render(<QuizLibrary embedded />);
+    expect(screen.getByText("Quiz nhúng 13")).toBeTruthy();
+    expect(screen.queryByText("Quiz nhúng 1")).toBeNull();
+    expect(screen.getByRole("link", { name: "Trang sau" })).toBeTruthy();
   });
 });
