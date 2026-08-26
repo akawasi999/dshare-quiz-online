@@ -379,6 +379,13 @@
       "when": 1787715698760,
       "tag": "0053_gifted_iron_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "5",
+      "when": 1787717780293,
+      "tag": "0054_tough_sheva_callister",
+      "breakpoints": true
     }
   ]
 }

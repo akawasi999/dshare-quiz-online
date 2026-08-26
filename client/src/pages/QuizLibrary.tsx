@@ -217,6 +217,7 @@ export default function QuizLibrary({
           recentAttemptCount: Number(quiz.recentAttemptCount ?? 0),
           createdAt: quiz.createdAt,
           coverImage: quiz.coverImageUrl ?? undefined,
+          authorName: quiz.creatorName ?? undefined,
           tier: tierLabels[quiz.accessTier],
           rootTopicId: quiz.rootTopicId ?? null,
         }))

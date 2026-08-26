@@ -30,19 +30,22 @@ describe("QuizCard", () => {
       duration: "15 phút",
       points: 0,
       reward: 0,
+      authorName: "Nguyễn An",
       tier: "Basic",
       accent: "#007453",
       coverImage: "/manus-storage/cover.png",
     }} />);
 
     expect(screen.getByText("Tiểu học › Lớp 6 › Tin học")).toBeTruthy();
-    expect(screen.getByText("Tác giả Quiz")).toBeTruthy();
+    expect(screen.getByText("Nguyễn An")).toBeTruthy();
     expect(screen.getByText("Basic")).toBeTruthy();
     expect(screen.queryByText("Ôn tập")).toBeNull();
     expect(screen.queryByText("TRAINING 01")).toBeNull();
     expect(screen.getByText("Trung bình").className).toContain("bg-[#FFEDD5]");
     expect(screen.getByText("Trung bình").className).toContain("text-[#C2410C]");
-    expect(screen.getByRole("link", { name: /làm bài/i }).getAttribute("href")).toBe("/quiz/77");
-    expect(screen.getByText("+0 Point")).toBeTruthy();
+    const quizLink = screen.getByRole("link", { name: /làm bài/i });
+    expect(quizLink.getAttribute("href")).toBe("/quiz/77");
+    expect(quizLink.querySelector("article")).toBeTruthy();
+    expect(screen.getByText("+0 XP")).toBeTruthy();
   });
 });

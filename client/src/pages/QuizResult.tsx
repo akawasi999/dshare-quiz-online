@@ -31,7 +31,7 @@ export default function QuizResult() {
     if (!details?.trim()) return;
     try {
       await report.mutateAsync({ questionId, details });
-      toast.success("Đã gửi báo lỗi", { description: "Admin sẽ duyệt báo cáo. Point bồi hoàn được cộng nếu báo cáo hợp lệ." });
+      toast.success("Đã gửi báo lỗi", { description: "Admin sẽ duyệt báo cáo. XP bồi hoàn được cộng nếu báo cáo hợp lệ." });
     } catch {
       toast.error("Chưa thể gửi báo lỗi", { description: "Hãy đăng nhập và thử lại sau." });
     }
@@ -101,7 +101,7 @@ export default function QuizResult() {
       <section className="overflow-hidden rounded-[var(--radius-xl-token)] bg-[linear-gradient(135deg,var(--primary)_0%,var(--accent)_100%)] p-7 text-primary-foreground shadow-[var(--shadow-md)] sm:p-10">
         <div className="grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-center">
           <div className="relative mx-auto grid h-44 w-44 place-items-center rounded-full border-[9px] border-warning bg-white/8"><div className="text-center"><p className="font-serif text-[52px] font-semibold tracking-[-.07em]">{result.scorePercent}</p><p className="text-[10px] font-bold uppercase tracking-[.17em] text-warning">điểm</p></div></div>
-          <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-warning">Kết quả {result.passed ? "đạt mục tiêu" : "cần thêm một chút"}</p><h1 className="mt-3 font-serif text-[40px] font-semibold leading-[1.08] tracking-[-.05em]">{result.passed ? "Bạn đã hoàn thành rất tốt." : "Đây là một bước để hiểu sâu hơn."}</h1><p className="mt-4 max-w-xl text-sm leading-6 text-white/80">{result.quiz.title} · Đúng {correctCount}/{questionCount} câu. {result.passed ? `Bạn nhận được ${result.quiz.completionReward ?? 0} Point thưởng nếu đây là lượt kiểm tra hợp lệ.` : `Mốc đạt là ${result.quiz.passingScore} điểm. Hãy xem lại các câu cần ôn ngay bên dưới.`}</p><div className="mt-6 flex flex-wrap gap-3"><Button asChild className="rounded-full bg-warning text-foreground hover:bg-warning/90"><Link href={`${ROUTES.quiz}/${params?.id ?? "101"}`}><RefreshCw size={15} /> Làm lại</Link></Button><Button asChild variant="outline" className="rounded-full border-white/25 bg-white/5 text-white hover:bg-white/10 hover:text-white"><Link href={ROUTES.explore}>Bộ đề khác</Link></Button></div></div>
+          <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-warning">Kết quả {result.passed ? "đạt mục tiêu" : "cần thêm một chút"}</p><h1 className="mt-3 font-serif text-[40px] font-semibold leading-[1.08] tracking-[-.05em]">{result.passed ? "Bạn đã hoàn thành rất tốt." : "Đây là một bước để hiểu sâu hơn."}</h1><p className="mt-4 max-w-xl text-sm leading-6 text-white/80">{result.quiz.title} · Đúng {correctCount}/{questionCount} câu. {result.passed ? `Bạn nhận được ${result.quiz.completionReward ?? 0} XP thưởng nếu đây là lượt kiểm tra hợp lệ.` : `Mốc đạt là ${result.quiz.passingScore} điểm. Hãy xem lại các câu cần ôn ngay bên dưới.`}</p><div className="mt-6 flex flex-wrap gap-3"><Button asChild className="rounded-full bg-warning text-foreground hover:bg-warning/90"><Link href={`${ROUTES.quiz}/${params?.id ?? "101"}`}><RefreshCw size={15} /> Làm lại</Link></Button><Button asChild variant="outline" className="rounded-full border-white/25 bg-white/5 text-white hover:bg-white/10 hover:text-white"><Link href={ROUTES.explore}>Bộ đề khác</Link></Button></div></div>
         </div>
       </section>
 

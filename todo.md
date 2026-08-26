@@ -807,3 +807,19 @@
 - [x] Giới hạn phân trang 24 Quiz (2×12) cho Khám phá và 12 Quiz (2×6) cho Làm Quiz.
 - [x] Viết regression, xác minh giao diện và lưu checkpoint cho thiết kế card Quiz mới.
 - [x] Tinh chỉnh card Quiz có nền trắng, viền nổi bật và đưa chủ đề lên đầu phần nội dung.
+- [x] Bổ sung tên tác giả thực từ tài khoản tạo Quiz vào catalog và card danh sách.
+- [x] Sắp xếp card Quiz: thời gian, số câu và lượt làm trên một hàng; độ khó và Point ở hàng dưới.
+- [x] Cập nhật regression, xác minh giao diện và lưu checkpoint cho tác giả/metadata card Quiz.
+- [x] Cho phép bấm toàn bộ vùng card Quiz để mở Quiz Runner, có hỗ trợ bàn phím và regression.
+- [x] Kiểm kê nguồn Họ và tên OAuth, dữ liệu hồ sơ và các điểm hiển thị tên tài khoản.
+- [x] Bổ sung Họ và tên làm tên hiển thị toàn hệ thống, lấy giá trị ban đầu từ Google OAuth khi có.
+- [x] Cho phép đổi Họ và tên trong Thông tin cá nhân tối đa một lần mỗi 30 ngày, có phản hồi thời gian còn lại.
+- [x] Viết regression, xác minh giao diện và lưu checkpoint cho quản lý Họ và tên.
+- [x] Kiểm kê toàn bộ nguồn cộng Point, XP và phần thưởng Quiz để chuyển đổi an toàn sang XP/Level.
+- [x] Thay thưởng Point của Quiz bằng XP trong dữ liệu, ghi nhận lượt làm và cơ chế tăng Level.
+- [x] Giới hạn Point chỉ được cấp từ mua Point hoặc quyền lợi gói đăng ký.
+- [x] Đổi “Chế độ” thành “Thưởng XP” trên Quiz Runner và Point thành XP trên card Khám phá/Làm Quiz.
+- [x] Viết regression, xác minh giao diện và lưu checkpoint cho chuẩn hóa XP/Point.
+- [x] Kiểm kê trang Quiz của tôi và tái sử dụng ngôn ngữ card/bố cục từ Khám phá.
+- [x] Đồng bộ card Quiz của tôi với Khám phá, giữ chỉnh sửa, sao chép, xóa và thống kê của chủ sở hữu.
+- [x] Viết regression, xác minh responsive và lưu checkpoint cho giao diện Quiz của tôi đồng bộ.

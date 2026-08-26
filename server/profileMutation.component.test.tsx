@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   referral: { data: { referralCode: "DS000001", invitations: [], totalRewarded: 0 }, isLoading: false, error: null as Error | null, refetch: vi.fn() },
   quota: { data: null },
   update: { isPending: false },
+  lastUpdateInput: null as unknown,
   confirmContactEmail: { isPending: false, mutate: vi.fn() },
   updateShouldSucceed: false,
   toast: { success: vi.fn(), error: vi.fn() },
@@ -25,7 +26,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name: "Học viên" }, loading: false }) }));
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, referral: { useQuery: () => mocks.referral }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void; onSuccess?: () => void }) => ({ ...mocks.update, mutate: (_input: unknown, callbacks?: { onSuccess?: () => void }) => { if (mocks.updateShouldSucceed) { options.onSuccess?.(); callbacks?.onSuccess?.(); } else options.onError?.(new Error("Không thể kết nối")); } }) }, confirmContactEmail: { useMutation: () => mocks.confirmContactEmail }, uploadAvatar: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, leaderboard: { xp: { useQuery: () => mocks.leaderboard } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { useUtils: () => ({ auth: { me: { setData: vi.fn() } } }), learner: { summary: { useQuery: () => mocks.summary }, history: { useQuery: () => mocks.history }, gamification: { useQuery: () => mocks.gamification }, referral: { useQuery: () => mocks.referral }, quota: { useQuery: () => mocks.quota }, updateProfile: { useMutation: (options: { onError?: (error: Error) => void; onSuccess?: (data: unknown) => void }) => ({ ...mocks.update, mutate: (input: unknown, callbacks?: { onSuccess?: () => void }) => { mocks.lastUpdateInput = input; if (mocks.updateShouldSucceed) { options.onSuccess?.({ fullName: "Nguyễn An" }); callbacks?.onSuccess?.(); } else options.onError?.(new Error("Không thể kết nối")); } }) }, confirmContactEmail: { useMutation: () => mocks.confirmContactEmail }, uploadAvatar: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) } }, leaderboard: { xp: { useQuery: () => mocks.leaderboard } } } }));
 vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/account", vi.fn()] }));
 
@@ -33,7 +34,7 @@ import Profile from "../client/src/pages/Profile";
 import PersonalInfo from "../client/src/pages/PersonalInfo";
 
 describe("Profile mutation feedback", () => {
-  beforeEach(() => { mocks.toast.error.mockReset(); mocks.toast.success.mockReset(); mocks.updateShouldSucceed = false; mocks.summary.data.currentPlan = null; mocks.summary.data.upgradePlans = []; mocks.summary.data.profile.avatarUrl = ""; mocks.gamification.data.achievements = []; });
+  beforeEach(() => { mocks.toast.error.mockReset(); mocks.toast.success.mockReset(); mocks.updateShouldSucceed = false; mocks.lastUpdateInput = null; mocks.summary.data.currentPlan = null; mocks.summary.data.upgradePlans = []; mocks.summary.data.profile.avatarUrl = ""; mocks.gamification.data.achievements = []; });
   afterEach(cleanup);
 
   it("công bố lỗi khi không thể lưu thiết lập hồ sơ", async () => {
@@ -45,11 +46,21 @@ describe("Profile mutation feedback", () => {
     expect(screen.getByLabelText("Chọn & cắt ảnh")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Xóa ảnh" })).toBeNull();
     expect(screen.getByLabelText("Email liên hệ")).toBeTruthy();
+    expect((screen.getByLabelText("Họ và tên") as HTMLInputElement).value).toBe("Học viên");
     expect(screen.getByLabelText("Ngày sinh")).toBeTruthy();
     expect(screen.getByLabelText("Địa chỉ")).toBeTruthy();
     expect(screen.getByLabelText("Quốc gia")).toBeTruthy();
     expect(screen.getByLabelText("Tỉnh/Thành phố")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Quản lý mật khẩu" })).toBeTruthy();
+  });
+
+  it("gửi Họ và tên khi người dùng lưu thông tin cá nhân", async () => {
+    const user = userEvent.setup();
+    render(<PersonalInfo />);
+    await user.clear(screen.getByLabelText("Họ và tên"));
+    await user.type(screen.getByLabelText("Họ và tên"), "Nguyễn An");
+    await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    expect(mocks.lastUpdateInput).toMatchObject({ fullName: "Nguyễn An" });
   });
 
   it("hiển thị thao tác xóa để đưa avatar hiện có về mặc định", () => {

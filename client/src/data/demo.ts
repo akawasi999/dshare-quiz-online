@@ -17,6 +17,7 @@ export type ShowcaseQuiz = {
   isTrending?: boolean;
   createdAt?: Date;
   coverImage?: string;
+  authorName?: string | null;
   tier: "Basic" | "Pro" | "Premium";
   accent: string;
 };

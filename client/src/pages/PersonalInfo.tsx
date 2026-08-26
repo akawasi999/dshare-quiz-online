@@ -23,14 +23,19 @@ type PendingAvatar = { fileName: string; mimeType: AvatarMimeType; dataUrl: stri
 
 export default function PersonalInfo() {
   const { user, loading } = useAuth();
+  const utils = trpc.useUtils();
   const summary = trpc.learner.summary.useQuery(undefined, { enabled: Boolean(user), ...sharedDataQueryOptions });
   const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null);
   const [pendingAvatar, setPendingAvatar] = useState<PendingAvatar | null>(null);
   const [cropZoom, setCropZoom] = useState(1);
   const [countryCode, setCountryCode] = useState("VN");
   const [province, setProvince] = useState("");
+  const [fullName, setFullName] = useState(user?.name ?? "");
   const updateProfile = trpc.learner.updateProfile.useMutation({
-    onSuccess: () => { summary.refetch(); },
+    onSuccess: data => {
+      summary.refetch();
+      if (data.fullName) utils.auth.me.setData(undefined, current => current ? { ...current, name: data.fullName, nameChangedAt: data.nameChangeAvailableAt ?? current.nameChangedAt } : current);
+    },
     onError: error => toast.error("Không thể lưu hồ sơ", { description: error.message }),
   });
   const uploadAvatar = trpc.learner.uploadAvatar.useMutation({
@@ -54,12 +59,16 @@ export default function PersonalInfo() {
     setProvince(summary.data.profile.province || "");
   }, [summary.data?.profile.countryCode, summary.data?.profile.province]);
 
+  useEffect(() => { setFullName(user?.name ?? ""); }, [user?.name]);
+
   if (loading || summary.isLoading) return <AccountLayout><main className="container py-8"><section className="animate-pulse rounded-2xl bg-muted p-6"><p role="status" className="text-sm text-text-secondary">Đang tải thông tin cá nhân…</p></section></main></AccountLayout>;
   if (!user) return <AccountLayout><main className="container grid min-h-[60vh] place-items-center py-10"><section className="max-w-md rounded-2xl border border-border bg-surface p-8 text-center"><LogIn className="mx-auto text-primary" /><h1 className="mt-4 text-2xl font-black">Đăng nhập để tiếp tục</h1><Button className="mt-5" onClick={() => startLogin()}>Đăng nhập</Button></section></main></AccountLayout>;
   if (summary.error || !summary.data) return <AccountLayout><main className="container py-8"><section className="rounded-2xl border border-danger/20 bg-surface p-6"><p className="font-bold text-danger">Chưa tải được thông tin cá nhân.</p><Button className="mt-4" onClick={() => summary.refetch()}>Thử lại</Button></section></main></AccountLayout>;
 
   const profile = summary.data.profile;
   const avatarUrl = uploadedAvatarUrl ?? profile.avatarUrl ?? "";
+  const nameChangeAvailableAt = user.nameChangedAt ? new Date(new Date(user.nameChangedAt).getTime() + 30 * 24 * 60 * 60 * 1000) : null;
+  const canChangeName = !nameChangeAvailableAt || nameChangeAvailableAt.getTime() <= Date.now();
 
   const chooseAvatar = (file: File | undefined) => {
     if (!file) return;
@@ -107,6 +116,7 @@ export default function PersonalInfo() {
   const removeAvatar = () => {
     updateProfile.mutate({
       avatarUrl: "",
+      fullName,
       bio: profile.bio ?? "",
       learningGoal: profile.learningGoal ?? "",
       contactEmail: profile.contactEmail ?? "",
@@ -123,6 +133,7 @@ export default function PersonalInfo() {
     const form = new FormData(event.currentTarget);
     updateProfile.mutate({
       avatarUrl,
+      fullName,
       bio: String(form.get("bio") ?? ""),
       learningGoal: String(form.get("learningGoal") ?? ""),
       contactEmail: String(form.get("contactEmail") ?? ""),
@@ -161,6 +172,7 @@ export default function PersonalInfo() {
                 </div>
               </div>
             </Field>
+            <Field label="Họ và tên" description="Tên này hiển thị trên toàn hệ thống. Bạn chỉ có thể đổi một lần mỗi 30 ngày."><input aria-label="Họ và tên" id="fullName" name="fullName" value={fullName} onChange={event => setFullName(event.target.value)} minLength={2} maxLength={120} required disabled={!canChangeName} placeholder="Nguyễn Văn A" className="field" />{!canChangeName && nameChangeAvailableAt ? <span role="status" className="mt-2 block rounded-md bg-amber-50 px-2 py-1.5 text-[11px] font-medium text-amber-700">Bạn có thể đổi tên lại từ {nameChangeAvailableAt.toLocaleDateString("vi-VN")}.</span> : null}</Field>
             <Field label="Mục tiêu học tập" description="Tối đa 220 ký tự, hiển thị trên trang Tổng quan."><input id="learningGoal" name="learningGoal" defaultValue={profile.learningGoal ?? ""} maxLength={220} placeholder="Ví dụ: Đạt 7.0 IELTS trong 12 tuần" className="field" /></Field>
             <Field label="Email liên hệ" description="Địa chỉ mới chỉ được áp dụng sau khi bạn xác nhận qua email."><span className="relative block"><Mail aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} /><input aria-label="Email liên hệ" id="contactEmail" name="contactEmail" type="email" defaultValue={profile.contactEmail ?? user.email ?? ""} maxLength={320} placeholder="ban@example.com" className="field pl-10" /></span>{profile.pendingContactEmail ? <span role="status" className="mt-2 block rounded-md bg-amber-50 px-2 py-1.5 text-[11px] font-medium text-amber-700">Đang chờ xác nhận: {profile.pendingContactEmail}</span> : null}</Field>
             <Field label="Ngày sinh" description="Dùng để cá nhân hóa trải nghiệm học tập."><span className="relative block"><CalendarDays aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} /><input aria-label="Ngày sinh" id="birthDate" name="birthDate" type="date" defaultValue={profile.birthDate ?? ""} className="field pl-10" /></span></Field>

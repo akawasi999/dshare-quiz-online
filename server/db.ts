@@ -27,7 +27,7 @@ import { sortLeaderboardEntries } from "./leaderboard";
 import { scoreQuiz } from "./quizEngine";
 import { getAcceptedAnswers, getHotspots, getMatchingPairs, getOrderingItems, getTrueFalseStatements } from "../shared/questionValidation";
 import { getEffectiveTier } from "./membershipUtils";
-import { processGamificationForAttempt } from "./gamification";
+import { awardXp, processGamificationForAttempt } from "./gamification";
 import { getQuotaPeriod } from "./quotaUtils";
 
 export const DEFAULT_QUIZ_COVER_URL = "/manus-storage/dshare-default-quiz-cover_d96ff2fa.png";
@@ -57,7 +57,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
   const values: InsertUser = { openId: user.openId, lastSignedIn: new Date() };
   const updateSet: Record<string, unknown> = { lastSignedIn: new Date() };
-  (["name", "email", "loginMethod"] as const).forEach(field => {
+  if (user.name !== undefined) values.name = user.name ?? null;
+  (["email", "loginMethod"] as const).forEach(field => {
     if (user[field] !== undefined) {
       values[field] = user[field] ?? null;
       updateSet[field] = user[field] ?? null;
@@ -172,11 +173,13 @@ export async function listPublishedCatalog(search?: string, categoryId?: number,
     categoryTitle: categories.title,
     subjectTitle: subjects.title,
     lessonTitle: lessons.title,
+    creatorName: users.name,
   }).from(quizzes)
     .leftJoin(lessons, eq(quizzes.lessonId, lessons.id))
     .leftJoin(subjects, eq(lessons.subjectId, subjects.id))
     .leftJoin(categories, eq(subjects.categoryId, categories.id))
     .leftJoin(topics, and(eq(quizzes.topicId, topics.id), eq(topics.status, "active"), isNull(topics.deletedAt)))
+    .leftJoin(users, eq(quizzes.creatorUserId, users.id))
     .leftJoin(attempts, and(eq(attempts.quizId, quizzes.id), eq(attempts.status, "submitted")))
     .where(and(
       eq(quizzes.isPublished, true),
@@ -210,6 +213,7 @@ export async function listPublishedCatalog(search?: string, categoryId?: number,
       categories.title,
       subjects.title,
       lessons.title,
+      users.name,
     )
     .orderBy(desc(quizzes.createdAt));
   return rows.map(row => {
@@ -463,25 +467,18 @@ export async function submitAttempt(attemptId: number, userId: number) {
     }).where(and(eq(attempts.id, attemptId), eq(attempts.status, "in_progress")));
     if (!updated[0].affectedRows) throw new Error("Attempt has already been submitted");
 
-    if (passed && detail.quiz.completionReward > 0) {
-      const profile = (await tx.select().from(learnerProfiles).where(eq(learnerProfiles.userId, userId)).limit(1))[0];
-      if (!profile) throw new Error("Learner profile not found");
-      const balanceAfter = profile.pointBalance + detail.quiz.completionReward;
-      await tx.update(learnerProfiles).set({ pointBalance: balanceAfter }).where(eq(learnerProfiles.id, profile.id));
-      await tx.insert(walletTransactions).values({
-        userId,
-        type: "quiz_reward",
-        amount: detail.quiz.completionReward,
-        balanceBefore: profile.pointBalance,
-        balanceAfter,
-        description: `Thưởng hoàn thành: ${detail.quiz.title}`,
-        referenceType: "attempt",
-        referenceId: attemptId,
-        dedupeKey: `attempt:${attemptId}:point-reward`,
-        metadata: { quizId: detail.quiz.id, scorePercent: summary.scorePercent },
-      });
-    }
-    return processGamificationForAttempt(tx, {
+    const quizXpReward = passed && detail.quiz.completionReward > 0
+      ? await awardXp(tx, {
+          userId,
+          amount: detail.quiz.completionReward,
+          sourceType: "quiz_completion",
+          sourceId: String(attemptId),
+          dedupeKey: `attempt:${attemptId}:quiz-xp-reward`,
+          reason: `Thưởng hoàn thành Quiz: ${detail.quiz.title}`,
+          metadata: { quizId: detail.quiz.id, scorePercent: summary.scorePercent },
+        })
+      : null;
+    const progression = await processGamificationForAttempt(tx, {
       userId,
       attemptId,
       quizId: detail.quiz.id,
@@ -491,6 +488,13 @@ export async function submitAttempt(attemptId: number, userId: number) {
       questionCount: questionSet.length,
       completedAt,
     });
+    return quizXpReward?.awarded
+      ? {
+          ...progression,
+          xpRewards: [{ amount: detail.quiz.completionReward, reason: "Thưởng hoàn thành Quiz", sourceType: "quiz_completion", sourceId: String(attemptId) }, ...progression.xpRewards],
+          levelUps: quizXpReward.levelUp && quizXpReward.level ? [{ level: quizXpReward.level, features: quizXpReward.unlockedFeatures }, ...progression.levelUps] : progression.levelUps,
+        }
+      : progression;
   });
   const selectedByQuestion = new Map(answers.map(answer => [answer.questionId, answer.selectedOptionIds]));
   const payloadByQuestion = new Map(answers.map(answer => [answer.questionId, answer.answerPayload]));

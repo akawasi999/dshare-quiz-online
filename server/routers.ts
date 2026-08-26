@@ -101,7 +101,7 @@ import { analyzeAiAssistantImage } from "./aiAssistantMultimodal";
 import { buildPaymentOffer, createPayosOrderCode, getPaymentAmount, getPaymentPackage, isFirstPurchaseDiscountEligible, isPaymentPackageCode, paymentPackages } from "./payosUtils";
 import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from "./quotaUtils";
 import { getEffectiveTier } from "./membershipUtils";
-import { getAccountGamificationSummary } from "./gamification";
+import { awardXp, getAccountGamificationSummary } from "./gamification";
 import { getAiPointQuotes, runWithAiPointCharge } from "./aiPointPricing";
 import { getAccountEntitlements, requirePermission } from "./permissionService";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
@@ -112,6 +112,7 @@ import { cpanelLearningRouter } from "./cpanelLearningRouter";
 import { createInAppNotification } from "./inAppNotifications";
 import { extractRemoteQuizSource } from "./remoteQuizExtraction";
 import { transcribeAudio } from "./_core/voiceTranscription";
+import { canChangeDisplayName, getDisplayNameChangeAvailableAt } from "./displayNameUtils";
 import { defaultMembershipGroupPermissions, membershipPermissionKeys, type MembershipPermissionKey } from "../shared/membershipGroupPermissions";
 import { hashPassword, hashToken, newOneTimeToken, normalizeEmail, verifyPassword } from "./localAuth";
 import { LOGIN_CAPTCHA_THRESHOLD, loginLockoutMessage, nextFailedLoginState } from "./loginThrottle";
@@ -669,12 +670,26 @@ export const appRouter = router({
       await db.update(userNotifications).set({ isRead: true, readAt: new Date() }).where(and(eq(userNotifications.userId, ctx.user.id), eq(userNotifications.isRead, false)));
       return { success: true };
     }),
-    updateProfile: protectedProcedure.input(z.object({ bio: z.string().trim().max(500).optional(), learningGoal: z.string().trim().max(220).optional(), contactEmail: z.string().trim().email().max(320).optional().or(z.literal("")), birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")), address: z.string().trim().max(500).optional(), countryCode: z.string().trim().length(2).optional().or(z.literal("")), province: z.string().trim().max(120).optional(), origin: z.string().url().optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")), notificationPreferences: z.object({ studyReminders: z.boolean(), resultUpdates: z.boolean(), platformUpdates: z.boolean() }).optional() }))
+    updateProfile: protectedProcedure.input(z.object({ fullName: z.string().trim().min(2).max(120).optional(), bio: z.string().trim().max(500).optional(), learningGoal: z.string().trim().max(220).optional(), contactEmail: z.string().trim().email().max(320).optional().or(z.literal("")), birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")), address: z.string().trim().max(500).optional(), countryCode: z.string().trim().length(2).optional().or(z.literal("")), province: z.string().trim().max(120).optional(), origin: z.string().url().optional(), avatarUrl: z.string().url().max(1024).optional().or(z.literal("")), notificationPreferences: z.object({ studyReminders: z.boolean(), resultUpdates: z.boolean(), platformUpdates: z.boolean() }).optional() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         const profile = await ensureLearnerProfile(ctx.user.id);
-        if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const account = (await db.select({ name: users.name, nameChangedAt: users.nameChangedAt }).from(users).where(eq(users.id, ctx.user.id)).limit(1))[0];
+        if (!profile || !account) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const requestedFullName = input.fullName?.trim();
+        const currentName = account.name ?? "";
+        const now = new Date();
+        let displayName = account.name;
+        let nameChangeAvailableAt = getDisplayNameChangeAvailableAt(account.nameChangedAt);
+        if (requestedFullName && requestedFullName !== currentName) {
+          if (!canChangeDisplayName(account.nameChangedAt, now)) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: `Bạn chỉ có thể đổi Họ và tên sau ${nameChangeAvailableAt?.toLocaleDateString("vi-VN") ?? "30 ngày"}.` });
+          }
+          nameChangeAvailableAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+          await db.update(users).set({ name: requestedFullName, nameChangedAt: now }).where(eq(users.id, ctx.user.id));
+          displayName = requestedFullName;
+        }
         const requestedEmail = input.contactEmail?.trim().toLowerCase();
         const requiresEmailConfirmation = Boolean(requestedEmail && requestedEmail !== profile.contactEmail);
         const verificationToken = requiresEmailConfirmation ? randomBytes(32).toString("base64url") : null;
@@ -683,9 +698,9 @@ export const appRouter = router({
         let emailDeliverySent = false;
         if (requiresEmailConfirmation) {
           const settings = (await db.select().from(emailDeliverySettings).limit(1))[0];
-          try { emailDeliverySent = Boolean(settings && (await sendContactEmailVerification(settings, { recipient: requestedEmail!, learnerName: ctx.user.name ?? null, verificationToken: verificationToken!, appOrigin: input.origin ?? "" })).sent); } catch (error) { console.error("[Profile Email] Verification email failed:", error); }
+          try { emailDeliverySent = Boolean(settings && (await sendContactEmailVerification(settings, { recipient: requestedEmail!, learnerName: displayName ?? ctx.user.name ?? null, verificationToken: verificationToken!, appOrigin: input.origin ?? "" })).sent); } catch (error) { console.error("[Profile Email] Verification email failed:", error); }
         }
-        return { success: true, emailVerificationPending: requiresEmailConfirmation, emailDeliverySent };
+        return { success: true, fullName: displayName, nameChangeAvailableAt, emailVerificationPending: requiresEmailConfirmation, emailDeliverySent };
       }),
     confirmContactEmail: publicProcedure.input(z.object({ token: z.string().min(32).max(200) })).mutation(async ({ input }) => {
       const db = await getDb();
@@ -713,7 +728,7 @@ export const appRouter = router({
       if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập hồ sơ referral." });
       const [invitations, rewards] = await Promise.all([
         db.select({ profile: learnerProfiles, name: users.name, email: users.email }).from(learnerProfiles).leftJoin(users, eq(learnerProfiles.userId, users.id)).where(eq(learnerProfiles.referredByCode, profile.referralCode)).orderBy(desc(learnerProfiles.createdAt)).limit(50),
-        db.select().from(walletTransactions).where(and(eq(walletTransactions.userId, ctx.user.id), eq(walletTransactions.type, "referral_reward"))).orderBy(desc(walletTransactions.createdAt)).limit(50),
+        db.select().from(xpTransactions).where(and(eq(xpTransactions.userId, ctx.user.id), eq(xpTransactions.sourceType, "referral"))).orderBy(desc(xpTransactions.createdAt)).limit(50),
       ]);
       return { referralCode: profile.referralCode, referredByCode: profile.referredByCode, invitations, rewards, totalRewarded: rewards.reduce((sum, item) => sum + item.amount, 0) };
     }),
@@ -730,14 +745,11 @@ export const appRouter = router({
       if (!referrerProfile) throw new TRPCError({ code: "NOT_FOUND", message: "Mã giới thiệu chưa hợp lệ." });
       const recipientReward = 10;
       const referrerReward = 20;
-      const recipientBalance = profile.pointBalance + recipientReward;
-      const referrerBalance = referrerProfile.pointBalance + referrerReward;
-      await db.update(learnerProfiles).set({ referredByCode: referralCode, pointBalance: recipientBalance }).where(eq(learnerProfiles.id, profile.id));
-      await db.update(learnerProfiles).set({ pointBalance: referrerBalance }).where(eq(learnerProfiles.id, referrerProfile.id));
-      await db.insert(walletTransactions).values([
-        { userId: ctx.user.id, type: "referral_reward", amount: recipientReward, balanceAfter: recipientBalance, description: `Thưởng chào mừng từ mã ${referralCode}`, referenceType: "referral", referenceId: referrerProfile.userId },
-        { userId: referrerProfile.userId, type: "referral_reward", amount: referrerReward, balanceAfter: referrerBalance, description: `Thưởng giới thiệu học viên mới`, referenceType: "referral", referenceId: ctx.user.id },
-      ]);
+      await db.transaction(async tx => {
+        await tx.update(learnerProfiles).set({ referredByCode: referralCode }).where(eq(learnerProfiles.id, profile.id));
+        await awardXp(tx, { userId: ctx.user.id, amount: recipientReward, sourceType: "referral", sourceId: String(referrerProfile.userId), dedupeKey: `referral:${ctx.user.id}:recipient`, reason: `XP chào mừng từ mã ${referralCode}`, metadata: { referralCode, role: "recipient" } });
+        await awardXp(tx, { userId: referrerProfile.userId, amount: referrerReward, sourceType: "referral", sourceId: String(ctx.user.id), dedupeKey: `referral:${ctx.user.id}:referrer`, reason: "XP giới thiệu người dùng mới", metadata: { referralCode, role: "referrer" } });
+      });
       return { success: true, recipientReward, referrerReward };
     }),
     history: protectedProcedure.query(async ({ ctx }) => {
@@ -1773,7 +1785,7 @@ export const appRouter = router({
         .from(bugReports).innerJoin(users, eq(bugReports.userId, users.id)).innerJoin(questions, eq(bugReports.questionId, questions.id))
         .orderBy(desc(bugReports.createdAt)).limit(50);
     }),
-    reviewReport: adminProcedure.input(z.object({ reportId: z.number().int().positive(), approved: z.boolean(), moderatorNote: z.string().trim().max(1000).optional(), rewardPoints: z.number().int().min(0).max(100000).default(0) }))
+    reviewReport: adminProcedure.input(z.object({ reportId: z.number().int().positive(), approved: z.boolean(), moderatorNote: z.string().trim().max(1000).optional(), rewardXp: z.number().int().min(0).max(100000).default(0) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -1781,17 +1793,13 @@ export const appRouter = router({
         const report = rows[0];
         if (!report) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy báo cáo." });
         if (report.status !== "pending") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Báo cáo này đã được duyệt trước đó." });
-        const rewardPoints = input.approved ? input.rewardPoints : 0;
-        await db.update(bugReports).set({ status: input.approved ? "approved" : "rejected", moderatorNote: input.moderatorNote || null, rewardPoints, reviewedAt: new Date() }).where(eq(bugReports.id, report.id));
-        if (input.approved && rewardPoints > 0) {
-          const profile = await ensureLearnerProfile(report.userId);
-          if (profile) {
-            const balanceAfter = profile.pointBalance + rewardPoints;
-            await db.update(learnerProfiles).set({ pointBalance: balanceAfter }).where(eq(learnerProfiles.id, profile.id));
-            await db.insert(walletTransactions).values({ userId: report.userId, type: "report_reward", amount: rewardPoints, balanceAfter, description: `Bồi hoàn báo lỗi câu hỏi #${report.questionId}`, referenceType: "bug_report", referenceId: report.id });
-          }
+        const rewardXp = input.approved ? input.rewardXp : 0;
+        await db.update(bugReports).set({ status: input.approved ? "approved" : "rejected", moderatorNote: input.moderatorNote || null, rewardPoints: rewardXp, reviewedAt: new Date() }).where(eq(bugReports.id, report.id));
+        if (input.approved && rewardXp > 0) {
+          await ensureLearnerProfile(report.userId);
+          await awardXp(db, { userId: report.userId, amount: rewardXp, sourceType: "bug_report", sourceId: String(report.id), dedupeKey: `bug-report:${report.id}:xp-reward`, reason: `XP bồi hoàn báo lỗi câu hỏi #${report.questionId}`, metadata: { questionId: report.questionId } });
         }
-        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.approved ? "report.approved" : "report.rejected", entityType: "bug_report", entityId: report.id, metadata: { rewardPoints } });
+        await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.approved ? "report.approved" : "report.rejected", entityType: "bug_report", entityId: report.id, metadata: { rewardXp } });
         return { success: true };
       }),
     users: adminProcedure.input(z.object({ search: z.string().trim().max(120).optional(), tier: z.enum(["basic", "pro", "premium"]).optional(), status: z.enum(["active", "suspended", "banned", "deactivated"]).optional(), page: z.number().int().min(1).default(1), pageSize: z.number().int().min(5).max(50).default(12) }).optional())
@@ -2022,7 +2030,7 @@ export const appRouter = router({
         await createInAppNotification(db, { userId: input.userId, type: "account_permission", title: status === "active" ? "Tài khoản đã được kích hoạt lại" : "Trạng thái tài khoản đã thay đổi", body: status === "active" ? `Quản trị viên đã kích hoạt lại tài khoản của bạn. Lý do: ${reason}` : `Tài khoản của bạn đang ở trạng thái ${status}. Lý do: ${reason}`, href: "/support", metadata: { accountStatus: status, reason, source: "user-management" } });
         return { success: true, status, previousStatus: account.accountStatus };
       }),
-    adjustPoints: adminProcedure.input(z.object({ userId: z.number().int().positive(), amount: z.number().int().min(-100000).max(100000).refine(value => value !== 0), description: z.string().trim().min(4).max(500) }))
+    adjustPoints: adminProcedure.input(z.object({ userId: z.number().int().positive(), amount: z.number().int().min(-100000).max(-1), description: z.string().trim().min(4).max(500) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

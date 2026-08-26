@@ -129,6 +129,6 @@ describe("QuizRunner data state", () => {
     expect(screen.queryByText("Thời gian làm bài")).toBeNull();
     expect(screen.queryByText("Điểm tối đa")).toBeNull();
     expect(screen.queryByText("0 phút")).toBeNull();
-    expect(screen.getAllByText("Chế độ")).toHaveLength(2);
+    expect(screen.getAllByText("Thưởng XP")).toHaveLength(2);
   });
 });

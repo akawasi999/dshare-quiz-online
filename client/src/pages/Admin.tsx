@@ -254,9 +254,9 @@ function AdminOverview() {
                           reviewReport.mutate({
                             reportId: item.report.id,
                             approved: true,
-                            rewardPoints: 10,
+                            rewardXp: 10,
                             moderatorNote:
-                              "Báo cáo hợp lệ, đã cộng Point bồi hoàn.",
+                              "Báo cáo hợp lệ, đã cộng XP bồi hoàn.",
                           })
                         }
                         className="h-8 rounded-full bg-[#617786] px-3 text-[10px]"
