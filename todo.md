@@ -772,8 +772,8 @@
 - [x] Hoàn thiện quyền riêng tư Quiz: Public, Unlisted, Private, mật khẩu và danh sách người được mời.
 - [x] Bổ sung xuất Quiz PDF theo bản học viên, đáp án và bản giáo viên.
 - [x] Gắn ba lựa chọn xuất PDF vào thanh công cụ Studio và kiểm thử thao tác tải tệp.
-- [ ] Tiếp tục hoàn thiện các hạng mục PDF, báo cáo giáo viên và Quiz AI theo update.pdf từ checkpoint Privacy Guard.
+- [x] Tiếp tục hoàn thiện các hạng mục PDF, báo cáo giáo viên và Quiz AI theo update.pdf từ checkpoint Privacy Guard.
 - [x] Xây dựng Báo cáo Quiz cho giáo viên: tổng quan, học sinh, câu hỏi và biểu đồ tiến độ.
-- [ ] Xây dựng Quiz AI Workspace: tạo đáp án/câu tương tự, giải thích, dịch, kiểm tra chất lượng và hiển thị chi phí Point.
-- [ ] Hoàn thiện điều hướng, trạng thái Premium/AI và UX/UI responsive cho các module nâng cấp.
-- [ ] Viết regression, xác minh trực quan và lưu checkpoint cho đợt nâng cấp update.pdf.
+- [x] Xây dựng Quiz AI Workspace: tạo đáp án/câu tương tự, giải thích, dịch, kiểm tra chất lượng và hiển thị chi phí Point.
+- [x] Hoàn thiện điều hướng, trạng thái Premium/AI và UX/UI responsive cho các module nâng cấp.
+- [x] Viết regression, xác minh trực quan và lưu checkpoint cho đợt nâng cấp update.pdf.
