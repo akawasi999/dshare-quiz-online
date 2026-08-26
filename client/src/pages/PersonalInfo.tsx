@@ -46,7 +46,6 @@ export default function PersonalInfo() {
     const token = new URLSearchParams(window.location.search).get("verifyContactEmail");
     if (token) confirmContactEmail.mutate({ token });
   // Chỉ kích hoạt một lần khi mở liên kết xác nhận từ email.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -797,3 +797,7 @@
 - [x] Kiểm kê toàn bộ route, redirect và liên kết legacy còn sót trong mã nguồn.
 - [x] Gỡ bỏ hoàn toàn các route/redirect/liên kết cũ và tối ưu mã điều hướng theo ROUTES chuẩn.
 - [x] Chạy regression điều hướng, build production và lưu checkpoint cho đợt dọn dẹp URL.
+- [x] Kiểm kê cấu hình lint, dữ liệu lỗi và các API CPanel hiện có cho giám sát liên kết.
+- [x] Thêm quy tắc lint cảnh báo URL nội bộ hard-code thay vì ROUTES chuẩn.
+- [x] Ghi nhận lỗi 404 và xây dựng dashboard admin theo dõi lỗi 404/liên kết hỏng.
+- [x] Viết regression, xác minh giao diện và lưu checkpoint cho lint URL cùng dashboard liên kết.

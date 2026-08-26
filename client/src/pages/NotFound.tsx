@@ -1,10 +1,28 @@
 import { Button } from "@/components/ui/button";
 import SiteHeader from "@/components/SiteHeader";
 import { ROUTES } from "@/lib/routes";
+import { trpc } from "@/lib/trpc";
 import { ArrowRight, Compass, Home, SearchX, Sparkles } from "lucide-react";
+import { useEffect } from "react";
 import { Link } from "wouter";
 
 export default function NotFound() {
+  const { mutate: reportNotFound } = trpc.telemetry.reportNotFound.useMutation();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const path = window.location.pathname;
+    const eventKey = `dshare:not-found:${path}`;
+    if (window.sessionStorage.getItem(eventKey)) return;
+    window.sessionStorage.setItem(eventKey, "1");
+    let referrerPath: string | null = null;
+    try {
+      const referrer = new URL(document.referrer);
+      if (referrer.origin === window.location.origin) referrerPath = referrer.pathname;
+    } catch {
+      referrerPath = null;
+    }
+    reportNotFound({ path, referrerPath });
+  }, [reportNotFound]);
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_78%_16%,rgba(139,92,246,.14),transparent_24%),radial-gradient(circle_at_18%_76%,rgba(32,201,151,.13),transparent_26%),var(--background)] text-foreground">
       <SiteHeader />

@@ -32,6 +32,7 @@ import {
   quizCreatorDrafts,
   quizCreatorDraftVersions,
   quizzes,
+  routeErrorEvents,
   quizQuestions,
   quizSourceHistories,
   seoSettings,
@@ -117,6 +118,7 @@ import { LOGIN_CAPTCHA_THRESHOLD, loginLockoutMessage, nextFailedLoginState } fr
 import { createLoginCaptcha, LOGIN_CAPTCHA_COOKIE, LOGIN_CAPTCHA_MAX_AGE_MS, verifyLoginCaptcha } from "./loginCaptcha";
 import { sdk } from "./_core/sdk";
 import { accountStatusMessage } from "../shared/accessControl";
+import { normalizeInternalPath, summarizeLinkHealth } from "./linkHealth";
 
 const tierRank = { basic: 1, pro: 2, premium: 3 } as const;
 const defaultAiAssistantConfig = { provider: "manus" as const, model: "gpt-5-mini", isEnabled: false, welcomeMessage: "Chào bạn, tôi là Dshare AI Assistant. Tôi có thể giúp bạn lập kế hoạch ôn tập, giải thích khái niệm và gợi ý cách học hiệu quả." };
@@ -353,6 +355,17 @@ export const parseCsv = (text: string) => text.trim().split(/\r?\n/).map(line =>
 
 export const appRouter = router({
   system: systemRouter,
+  telemetry: router({
+    reportNotFound: publicProcedure.input(z.object({ path: z.string().trim().min(1).max(512), referrerPath: z.string().trim().max(512).nullable().optional() })).mutation(async ({ ctx, input }) => {
+      const path = normalizeInternalPath(input.path);
+      if (!path) throw new TRPCError({ code: "BAD_REQUEST", message: "Đường dẫn lỗi không hợp lệ." });
+      const db = await getDb();
+      if (!db) return { success: false };
+      const referrerPath = input.referrerPath ? normalizeInternalPath(input.referrerPath) : null;
+      await db.insert(routeErrorEvents).values({ path, referrerPath, userId: ctx.user?.id ?? null });
+      return { success: true };
+    }),
+  }),
   auth: router({
     me: publicProcedure.query(opts => {
       if (opts.ctx.user && opts.ctx.user.accountStatus && opts.ctx.user.accountStatus !== "active") throw new TRPCError({ code: "FORBIDDEN", message: accountStatusMessage(opts.ctx.user.accountStatus) });
@@ -1595,6 +1608,15 @@ export const appRouter = router({
         .from(attempts).innerJoin(users, eq(attempts.userId, users.id)).innerJoin(quizzes, eq(attempts.quizId, quizzes.id))
         .where(sql`${attempts.startedAt} >= ${since}`).orderBy(desc(attempts.startedAt)).limit(50);
       return { active: rows.filter(row => row.attempt.status === "in_progress"), recent: rows.filter(row => row.attempt.status !== "in_progress").slice(0, 20), refreshedAt: new Date() };
+    }),
+    linkHealth: adminProcedure.query(async () => {
+      const db = await getDb();
+      const now = new Date();
+      if (!db) return summarizeLinkHealth([], now);
+      const since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const events = await db.select({ id: routeErrorEvents.id, path: routeErrorEvents.path, referrerPath: routeErrorEvents.referrerPath, occurredAt: routeErrorEvents.occurredAt })
+        .from(routeErrorEvents).where(gt(routeErrorEvents.occurredAt, since)).orderBy(desc(routeErrorEvents.occurredAt)).limit(300);
+      return summarizeLinkHealth(events, now);
     }),
     generateQuestionAI: adminProcedure.input(aiQuestionInputSchema).mutation(async ({ ctx, input }) => {
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");

@@ -870,7 +870,13 @@ export const auditLogs = mysqlTable("auditLogs", {
   metadata: json("metadata").$type<Record<string, unknown>>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, table => [index("audit_logs_actor_idx").on(table.actorUserId)]);
-
+export const routeErrorEvents = mysqlTable("routeErrorEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  path: varchar("path", { length: 512 }).notNull(),
+  referrerPath: varchar("referrerPath", { length: 512 }),
+  userId: int("userId"),
+  occurredAt: timestamp("occurredAt").defaultNow().notNull(),
+}, table => [index("route_error_events_occurred_idx").on(table.occurredAt), index("route_error_events_path_idx").on(table.path)]);
 export const attemptSecurityEvents = mysqlTable("attemptSecurityEvents", {
   id: int("id").autoincrement().primaryKey(),
   attemptId: int("attemptId").notNull(),
