@@ -20,6 +20,12 @@ describe("quizStudioChat", () => {
     expect(messages[0].content).toContain("CHƯA xác nhận số lượng");
   });
 
+  it("chấp nhận ngữ cảnh từ card nháp chưa có nội dung và lời giải", () => {
+    const messages = buildQuizStudioChatMessages({ messages: [{ role: "user", content: "Hãy giúp tôi tạo câu hỏi" }], context: { currentQuestionCount: 1, questions: [{ id: "q-draft", type: "single", difficulty: "medium", points: 1, prompt: "", explanation: "", imageUrl: "", options: [{ body: "Tùy chọn 1", isCorrect: true }], answerConfig: {} }] } });
+    expect(messages[0].content).toContain('"id":"q-draft"');
+    expect(messages[0].content).toContain('"prompt":""');
+  });
+
   it("không áp dụng thao tác khi AI đang chờ người tạo xác nhận số lượng", () => {
     const result = parseQuizStudioChatResponse({ action: "clarify_count", reply: "Bạn muốn tạo tối đa bao nhiêu câu hỏi?", detected: { topic: "Phân số", type: "single", difficulty: "easy", count: 4 }, suggestedPrompts: ["Tạo tối đa 4 câu"], operations: [] });
     expect(result.operations).toEqual([]);

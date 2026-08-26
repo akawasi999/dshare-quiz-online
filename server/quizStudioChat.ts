@@ -14,7 +14,17 @@ const questionDraftSchema = z.object({
   options: z.array(optionSchema).max(10),
   answerConfig: z.record(z.string(), z.unknown()),
 });
-const studioQuestionContextSchema = questionDraftSchema.extend({ id: z.string().trim().min(1).max(120) });
+const studioQuestionContextSchema = z.object({
+  id: z.string().trim().min(1).max(120),
+  type: questionTypeSchema,
+  difficulty: difficultySchema,
+  points: z.number().int().min(1).max(100),
+  prompt: z.string().trim().max(5_000),
+  explanation: z.string().max(5_000),
+  imageUrl: z.string().max(2_000),
+  options: z.array(z.object({ body: z.string().max(2_000), isCorrect: z.boolean() })).max(10),
+  answerConfig: z.record(z.string(), z.unknown()),
+});
 const operationSchema = z.object({ kind: z.enum(["create", "update", "delete"]), targetId: z.string().trim().min(1).max(120).nullable(), question: questionDraftSchema.nullable() });
 
 export const quizStudioChatInputSchema = z.object({

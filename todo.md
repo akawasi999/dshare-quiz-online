@@ -860,3 +860,5 @@
 - [x] Thiết kế giao thức AI toàn quyền để thêm, xoá, sửa kiểu, độ khó, điểm, nội dung, hình ảnh, đáp án và gợi ý câu hỏi.
 - [x] Bắt buộc AI hỏi và nhận số lượng câu hỏi cần tạo trước khi sinh câu hỏi mới.
 - [x] Kết nối giao thức AI với Studio, cập nhật regression, xác minh desktop/mobile và lưu checkpoint.
+- [x] Sửa validation ngữ cảnh AI Studio để câu hỏi nháp chưa có nội dung hoặc lời giải không chặn chat trên /build.
+- [x] Bổ sung regression, xác minh luồng chat AI với bản nháp trống và lưu checkpoint.
