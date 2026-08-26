@@ -846,3 +846,9 @@
 - [x] Dọn regression, dữ liệu tương thích và nội dung giao diện sau khi gỡ các dạng câu hỏi.
 - [x] Kiểm thử toàn hệ thống, xác minh Studio/Runner và lưu checkpoint cho việc gỡ năm dạng câu hỏi.
 - [x] Khôi phục máy chủ phát triển và xác minh lại trạng thái phục vụ sau các thay đổi loại câu hỏi.
+- [x] Rà soát card Studio theo mẫu nút Lời giải mới và xác định toàn bộ nhãn/mô tả đáp án cần gỡ.
+- [x] Thiết kế lại nút Lời giải dạng pill “Thêm gợi ý +”, loại bỏ tiêu đề/mô tả phía trên đáp án và gỡ AI hỗ trợ khỏi mọi card câu hỏi.
+- [x] Cập nhật regression, xác minh desktop/mobile và lưu checkpoint cho tinh giản card câu hỏi Studio.
+- [x] Chuyển Tải lên sang phải vùng nhập nội dung, đặt Điểm sát bên phải Độ khó và căn giữa giá trị điểm.
+- [x] Gỡ toàn bộ badge PRO khỏi trang Quiz Studio /build, cập nhật regression và xác minh responsive.
+- [x] Gỡ hoàn toàn khối liên kết, AI nâng cao và thông báo hệ điều hành thừa khỏi giao diện Quiz Studio.

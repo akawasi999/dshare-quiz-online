@@ -14,9 +14,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideHeader, hideFooter, staticHeader, compactViewport }: { children: React.ReactNode; hideHeader?: boolean; hideFooter?: boolean; staticHeader?: boolean; compactViewport?: boolean }) => <div data-testid="account-layout" data-hide-header={hideHeader ? "true" : "false"} data-hide-footer={hideFooter ? "true" : "false"} data-static-header={staticHeader ? "true" : "false"} data-compact-viewport={compactViewport ? "true" : "false"}>{children}</div> }));
-vi.mock("@/components/AiPointPreflightNotice", () => ({ default: () => <div data-testid="quiz-ai-point-footer">Bảng giá Point AI</div> }));
 vi.mock("@/components/PermissionGuard", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => mocks.chat }, enhanceQuestionAI: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => mocks.chat }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 import UserQuizCreator, { ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
@@ -102,6 +101,9 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByLabelText("AI Assistant")).toBeTruthy();
     expect(screen.getByTestId("question-navigator")).toBeTruthy();
     expect(screen.getByTestId("spec-creator-header")).toBeTruthy();
+    expect(screen.queryByTestId("quiz-ai-point-footer")).toBeNull();
+    expect(screen.queryByText("AI nâng cao")).toBeNull();
+    expect(screen.queryByLabelText("Liên kết pháp lý")).toBeNull();
     expect(screen.getByRole("button", { name: "Xem trước Sandbox" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Xuất bản/ })).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
@@ -142,9 +144,12 @@ describe("Quiz Creator theo đặc tả", () => {
     await user.clear(answer);
     await user.type(answer, "Đáp án mới");
     expect(answer.value).toBe("Đáp án mới");
-    expect(screen.getByRole("button", { name: "Giải thích" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Viết lại" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Chuẩn LaTeX" })).toBeTruthy();
+    expect(screen.getByLabelText("Thêm gợi ý lời giải")).toBeTruthy();
+    expect(screen.queryByText("AI hỗ trợ")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Giải thích" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Viết lại" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Chuẩn LaTeX" })).toBeNull();
+    expect(screen.queryByText("Tùy chọn trả lời")).toBeNull();
   });
 
   it("hiển thị điều khiển sắp xếp và không còn năm dạng câu hỏi đã gỡ", async () => {
@@ -210,17 +215,21 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(statementInput.value).toContain("nguồn điện");
   });
 
-  it("hiển thị tải ảnh, điểm và Preview Sandbox trong luồng P0", async () => {
+  it("hiển thị tải ảnh cạnh nội dung, điểm sát độ khó và Preview Sandbox trong luồng P0", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     expect(screen.queryByText("Media")).toBeNull();
-    expect(screen.getByRole("button", { name: "Tải lên ảnh minh họa" })).toBeTruthy();
+    const uploadButton = screen.getByRole("button", { name: "Tải lên ảnh minh họa" });
+    expect(uploadButton).toBeTruthy();
+    expect(uploadButton.parentElement?.parentElement?.contains(screen.getByPlaceholderText("Nhập nội dung câu hỏi"))).toBe(true);
     expect(screen.queryByRole("menuitem", { name: "MP3" })).toBeNull();
     expect(screen.queryByRole("menuitem", { name: "Video" })).toBeNull();
     expect(screen.queryByText(/Ảnh JPG\/PNG\/WEBP tối đa 5MB/)).toBeNull();
     expect(screen.getByText("Điểm")).toBeTruthy();
     expect(screen.queryByText("Độ khó")).toBeNull();
     expect(screen.getByRole("combobox", { name: "Độ khó câu hỏi 1" })).toBeTruthy();
+    expect(screen.getByRole("spinbutton", { name: "Điểm câu hỏi 1" }).className).toContain("text-center");
+    expect(screen.queryByText("PRO")).toBeNull();
     expect(screen.getByRole("button", { name: /Xem trước Sandbox/ })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Cài đặt" }));
     expect(screen.getAllByText("Quyền riêng tư & chia sẻ").length).toBeGreaterThan(0);
