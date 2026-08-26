@@ -15,12 +15,12 @@ Nguồn: `QuizAI_Permission_System_Basic_Pro_Premium_Manus_Spec.docx` do ngườ
 |---|---:|---:|---:|
 | AI nhập chủ đề, tệp, YouTube | Khóa | Bật | Bật |
 | AI câu tương tự, đáp án, dịch | Khóa | Khóa | Bật |
-| Quiz riêng tư, tặng Zelly | Khóa | Bật | Bật |
-| Lưu bảng tính, tiếp tục bài thi | Khóa | Khóa | Bật |
-| Thống kê học sinh | Bật | Bật | Bật |
+| Quiz riêng tư | Khóa | Bật | Bật |
+| Lưu bảng tính | Khóa | Khóa | Bật |
+| Thống kê người làm bài | Bật | Bật | Bật |
 | Thống kê câu hỏi, tổng quan | Khóa | Khóa | Bật |
 | Người dùng đồng thời | 10 | 200 | 200 |
-| Bản đồ/dạng câu hỏi nâng cao | Giới hạn | Mở rộng | Không giới hạn thực tế |
+| Dạng câu hỏi Premium | Giới hạn | Mở rộng | Không giới hạn thực tế |
 
 ## Xác minh trực quan
 

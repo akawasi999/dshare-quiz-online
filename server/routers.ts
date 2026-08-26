@@ -302,20 +302,15 @@ async function assertRegistryPermission(userId: number, permissionKey: string) {
   }
 }
 
-const premiumQuestionTypeTier: Partial<Record<string, "pro" | "premium">> = { matching: "pro", ordering: "pro", image_choice: "pro", audio: "pro", video: "premium", hotspot: "premium", short_answer_ai: "premium", essay_ai: "premium" };
-const membershipTierRank = { basic: 1, pro: 2, premium: 3 } as const;
+const premiumQuestionTypes = new Set(["matching", "ordering", "image_choice", "audio", "video", "hotspot", "short_answer_ai", "essay_ai"]);
 
 async function assertPremiumQuestionTypesAllowed(userId: number, questionTypes: string[]) {
-  const highestRequirement = questionTypes.reduce<"pro" | "premium" | null>((required, type) => {
-    const next = premiumQuestionTypeTier[type] ?? null;
-    if (!next) return required;
-    return next === "premium" || !required ? next : required;
-  }, null);
-  if (!highestRequirement) return;
-  const profile = await ensureLearnerProfile(userId);
-  if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập hồ sơ thành viên." });
-  const effectiveTier = getEffectiveTier({ tier: profile.tier as "basic" | "pro" | "premium", tierExpiresAt: profile.tierExpiresAt });
-  if (membershipTierRank[effectiveTier] < membershipTierRank[highestRequirement]) throw new TRPCError({ code: "FORBIDDEN", message: `Dạng câu hỏi này yêu cầu gói ${highestRequirement.toUpperCase()} hoặc cao hơn.` });
+  const selectedCount = questionTypes.filter(type => premiumQuestionTypes.has(type)).length;
+  if (!selectedCount) return;
+  const entitlement = await assertRegistryPermission(userId, "quiz.premium_question_types");
+  if (entitlement.limitValue !== null && selectedCount > entitlement.limitValue) {
+    throw new TRPCError({ code: "FORBIDDEN", message: `Gói hiện tại cho phép tối đa ${entitlement.limitValue} dạng câu hỏi Premium trong một Quiz.` });
+  }
 }
 
 async function assertQuotaAvailable(userId: number, resource: "attemptsPerMonth" | "quizzesPerMonth" | "aiCreditsPerMonth") {
@@ -1036,7 +1031,6 @@ export const appRouter = router({
     }),
     duplicateQuiz: permissionProcedure("quiz.create").input(quizIdInput).mutation(async ({ ctx, input }) => {
       await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
-      await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "sao chép Quiz");
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       const legacyLessonId = source.quiz.lessonId;
       if (!legacyLessonId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Quiz thuộc mô hình Chủ đề mới không thể sao chép bằng luồng legacy." });
@@ -1068,7 +1062,6 @@ export const appRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo quiz lúc này." });
       await assertQuotaAvailable(ctx.user.id, "quizzesPerMonth");
-      await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "tạo Quiz");
       await assertPremiumQuestionTypesAllowed(ctx.user.id, input.questions.map(item => item.type));
       const topic = input.topicId ? (await db.select().from(topics).where(and(eq(topics.id, input.topicId), eq(topics.status, "active"), isNull(topics.deletedAt))).limit(1))[0] : undefined;
       if (input.topicId && !topic) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Chủ đề đã chọn không còn hoạt động." });
@@ -1116,7 +1109,6 @@ export const appRouter = router({
       return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length, isPublished: status === "published", status, visibility: input.settings.visibility };
     }),
     generateQuestionAI: permissionProcedure("ai.quiz.generate").input(aiQuestionInputSchema.omit({ lessonId: true })).mutation(async ({ ctx, input }) => {
-      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi bằng AI");
       await assertRegistryPermission(ctx.user.id, "quiz.ai.manual_question");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       const db = await getDb();
@@ -1125,7 +1117,6 @@ export const appRouter = router({
       catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI tạo câu hỏi không hợp lệ: ${error.message}` : "AI tạo câu hỏi không hợp lệ." }); }
     }),
     studioAiChat: permissionProcedure("ai.quiz.generate").input(quizStudioChatInputSchema).mutation(async ({ ctx, input }) => {
-      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng chat AI trong Studio");
       await assertRegistryPermission(ctx.user.id, "quiz.ai.manual_question");
       const response = await invokeLLM({ messages: buildQuizStudioChatMessages(input), maxTokens: 2_400, response_format: { type: "json_schema", json_schema: { name: "quiz_studio_chat", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["clarify", "generate"] }, reply: { type: "string" }, detected: { type: "object", properties: { topic: { type: ["string", "null"] }, type: { type: ["string", "null"] }, difficulty: { type: ["string", "null"] }, count: { type: ["integer", "null"] } }, required: ["topic", "type", "difficulty", "count"], additionalProperties: false }, questions: { type: "array", items: { type: "object", properties: { type: { type: "string" }, difficulty: { type: "string" }, prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "prompt", "explanation", "options", "answerConfig"], additionalProperties: false } }, suggestedPrompts: { type: "array", items: { type: "string" } } }, required: ["action", "reply", "detected", "questions", "suggestedPrompts"], additionalProperties: false } } } });
       try {
@@ -1140,7 +1131,7 @@ export const appRouter = router({
       } catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI Studio chưa thể xử lý yêu cầu: ${error.message}` : "AI Studio chưa thể xử lý yêu cầu." }); }
     }),
     enhanceQuestionAI: permissionProcedure("ai.quiz.generate").input(questionEnhancementInputSchema).mutation(async ({ ctx, input }) => {
-      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng công cụ AI cho câu hỏi");
+      await assertRegistryPermission(ctx.user.id, "quiz.ai.manual_question");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập ví Point." });
@@ -1148,7 +1139,6 @@ export const appRouter = router({
       catch (error) { if (error instanceof TRPCError) throw error; throw new TRPCError({ code: "BAD_GATEWAY", message: error instanceof Error ? `AI chưa thể nâng cấp câu hỏi: ${error.message}` : "AI chưa thể nâng cấp câu hỏi." }); }
     }),
     generateQuestionsFromDocument: permissionProcedure("ai.quiz.generate").input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]), base64: z.string().min(80).max(22_000_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
-      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi từ tài liệu bằng AI");
       await assertRegistryPermission(ctx.user.id, "quiz.ai.file_import");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       if (quota.limit !== null && quota.used + input.questionCount > quota.limit) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn cần ${input.questionCount} AI Credits nhưng chỉ còn ${Math.max(0, quota.limit - quota.used)} Credit.` });
@@ -1176,7 +1166,6 @@ export const appRouter = router({
       }
     }),
     generateQuestionsFromRemoteSource: protectedProcedure.input(z.object({ url: z.string().trim().url().max(2_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
-      await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi từ YouTube hoặc trang web");
       await assertRegistryPermission(ctx.user.id, /(^|\.)youtu\.be\//i.test(input.url) || /youtube\.com\//i.test(input.url) ? "quiz.ai.youtube_import" : "quiz.ai.manual_question");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       if (quota.limit !== null && quota.used + input.questionCount > quota.limit) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn cần ${input.questionCount} AI Credits nhưng chỉ còn ${Math.max(0, quota.limit - quota.used)} Credit.` });
@@ -1201,10 +1190,9 @@ export const appRouter = router({
       return db.select().from(quizSourceHistories).where(eq(quizSourceHistories.userId, ctx.user.id)).orderBy(desc(quizSourceHistories.lastUsedAt)).limit(8);
     }),
     importManualQuizFile: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"]), base64: z.string().min(80).max(22_000_000) })).mutation(async ({ ctx, input }) => {
-      await assertMembershipGroupPermission(ctx.user.id, "canCreateQuiz", "tạo Quiz");
       try {
         return await importManualQuizFile({ userId: ctx.user.id, ...input, ocrFallback: async dataUrl => {
-          await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "OCR PDF dạng ảnh");
+          await assertRegistryPermission(ctx.user.id, "quiz.ai.file_import");
           await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
           const text = await ocrPdfWithVision(dataUrl);
           await recordAiUsage(ctx.user.id, "generate_question");

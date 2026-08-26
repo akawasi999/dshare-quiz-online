@@ -12,7 +12,7 @@ vi.mock("@/lib/trpc", () => ({
         useQuery: () => ({
           data: {
             plans: [{ id: 1, code: "basic", name: "Basic", tier: "basic" }, { id: 2, code: "pro-monthly", name: "PRO", tier: "pro" }, { id: 3, code: "premium-monthly", name: "PREMIUM", tier: "premium" }],
-            permissions: [{ id: 10, key: "quiz.ai.file_import", name: "Trích xuất từ tệp", description: "Phân tích tài liệu bằng AI.", category: "quiz_ai", type: "boolean" }, { id: 11, key: "quiz.concurrent_users", name: "Người dùng đồng thời", description: "Giới hạn người dùng đồng thời.", category: "advanced", type: "limit" }],
+            permissions: [{ id: 10, key: "quiz.ai.file_import", name: "Trích xuất từ tệp", description: "Phân tích tài liệu bằng AI.", category: "quiz_ai", type: "boolean" }, { id: 11, key: "quiz.concurrent_users", name: "Người làm bài đồng thời", description: "Giới hạn người làm bài đồng thời.", category: "advanced", type: "limit" }],
             matrix: [{ planId: 1, permissionId: 10, isEnabled: false, limitValue: null, limitUnit: null }, { planId: 2, permissionId: 10, isEnabled: true, limitValue: null, limitUnit: null }, { planId: 3, permissionId: 10, isEnabled: true, limitValue: null, limitUnit: null }, { planId: 1, permissionId: 11, isEnabled: true, limitValue: 10, limitUnit: "items" }, { planId: 2, permissionId: 11, isEnabled: true, limitValue: 200, limitUnit: "items" }, { planId: 3, permissionId: 11, isEnabled: true, limitValue: 200, limitUnit: "items" }],
           },
           isLoading: false,
@@ -36,6 +36,10 @@ describe("Permission Matrix CPanel", () => {
     expect(screen.getByText("PRO")).toBeTruthy();
     expect(screen.getByText("PREMIUM")).toBeTruthy();
     expect(screen.getByText("Quiz AI")).toBeTruthy();
+    expect(screen.getByText("Người làm bài đồng thời")).toBeTruthy();
+    expect(screen.queryByText("Tặng Zelly cho học sinh")).toBeNull();
+    expect(screen.queryByText("Tiếp tục bài kiểm tra tiếp theo")).toBeNull();
+    expect(screen.queryByText("Bản đồ cao cấp")).toBeNull();
     fireEvent.click(screen.getByLabelText("Bật Trích xuất từ tệp cho Basic"));
     expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ planId: 1, permissionId: 10, isEnabled: true }));
   });

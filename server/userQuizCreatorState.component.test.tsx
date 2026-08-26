@@ -34,6 +34,8 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByText("Danh sách câu hỏi")).toBeTruthy();
     expect(screen.getByText("Nhập chủ đề")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Lịch sử bản nháp" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Người làm bài" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Tác giả Quiz" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Xem trước Sandbox" }).textContent).toBe("");
     expect(screen.getByTestId("settings-topic-required")).toBeTruthy();
     expect(screen.getByTestId("manual-question-bar").className).toContain("mb-[50px]");
@@ -218,7 +220,7 @@ describe("Quiz Creator theo đặc tả", () => {
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "Phân tích" }));
     expect(screen.getByTestId("quiz-analytics-workspace")).toBeTruthy();
-    expect(screen.getByText("Hiệu quả làm bài của người học")).toBeTruthy();
+    expect(screen.getByText("Hiệu quả làm bài của người làm bài")).toBeTruthy();
     expect(screen.getByText("Câu hỏi phân tích")).toBeTruthy();
     expect(screen.getAllByText("63%")).toHaveLength(2);
   });

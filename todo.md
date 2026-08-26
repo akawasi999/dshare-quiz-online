@@ -780,3 +780,7 @@
 - [x] Phân tích và triển khai ma trận quyền Quiz AI Basic/Pro/Premium theo tài liệu quyền truy cập mới.
 - [x] Xây dựng giao diện CPanel quản lý nhóm người dùng và quyền Premium theo ma trận.
 - [x] Kết nối enforcement quyền Premium, viết regression và lưu checkpoint cho hệ thống phân quyền mới.
+- [x] Chuẩn hóa toàn bộ ngôn ngữ “học sinh/giáo viên” thành người làm bài và tác giả Quiz.
+- [x] Bảo đảm mọi tài khoản có thể tạo và làm Quiz, chỉ giới hạn quyền theo gói đăng ký.
+- [x] Loại bỏ toàn bộ Zelly, “Tiếp tục bài kiểm tra tiếp theo” và “Bản đồ cao cấp”.
+- [x] Viết regression, xác minh giao diện và lưu checkpoint cho đợt chuẩn hóa vai trò/tính năng.

@@ -73,9 +73,9 @@ export async function exportQuizToWord(quiz: PrintableQuiz) {
   downloadBlob(await Packer.toBlob(document), `${safeFileName(quiz.title)}.docx`);
 }
 
-export type QuizPdfVariant = "student" | "answer_key" | "teacher";
+export type QuizPdfVariant = "participant" | "answer_key" | "author";
 
-export async function exportQuizToPdf(quiz: PrintableQuiz, variant: QuizPdfVariant = "teacher") {
+export async function exportQuizToPdf(quiz: PrintableQuiz, variant: QuizPdfVariant = "author") {
   const [pdfMakeModule, pdfFontsModule] = await Promise.all([import("pdfmake/build/pdfmake"), import("pdfmake/build/vfs_fonts")]);
   const pdfMake = pdfMakeModule.default || pdfMakeModule;
   const pdfFonts = pdfFontsModule.default || pdfFontsModule;
@@ -85,12 +85,12 @@ export async function exportQuizToPdf(quiz: PrintableQuiz, variant: QuizPdfVaria
     { text: quiz.title || "Quiz chưa đặt tên", style: "title" },
     { text: documentHeading(quiz), style: "meta" },
     ...(quiz.summary ? [{ text: quiz.summary, style: "summary" }] : []),
-    { text: variant === "student" ? "ĐỀ LÀM BÀI" : variant === "answer_key" ? "ĐÁP ÁN" : "ĐỀ GIÁO VIÊN", style: "section" },
+    { text: variant === "participant" ? "BẢN NGƯỜI LÀM BÀI" : variant === "answer_key" ? "ĐÁP ÁN" : "BẢN TÁC GIẢ QUIZ", style: "section" },
     ...quiz.questions.flatMap((question, index) => [
       { text: `Câu ${index + 1}. ${question.prompt || "Câu hỏi chưa có nội dung"}`, style: "question" },
       { text: `${questionTypeLabels[question.type]} · ${difficultyLabels[question.difficulty]} · ${question.points} điểm`, style: "meta" },
-      ...(variant === "student" ? [{ text: "................................................................................................................", style: "answer", margin: [12, 8, 0, 8] }] : answerLines(question).map(line => ({ text: line, style: line.startsWith("✓") ? "correctAnswer" : "answer", margin: [12, 2, 0, 0] }))),
-      ...(variant === "teacher" && question.explanation ? [{ text: [{ text: "Lời giải: ", bold: true }, { text: question.explanation }], style: "explanation" }] : []),
+      ...(variant === "participant" ? [{ text: "................................................................................................................", style: "answer", margin: [12, 8, 0, 8] }] : answerLines(question).map(line => ({ text: line, style: line.startsWith("✓") ? "correctAnswer" : "answer", margin: [12, 2, 0, 0] }))),
+      ...(variant === "author" && question.explanation ? [{ text: [{ text: "Lời giải: ", bold: true }, { text: question.explanation }], style: "explanation" }] : []),
     ]),
   ];
   const definition = {

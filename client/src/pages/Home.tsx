@@ -133,7 +133,7 @@ export default function Home() {
             <p className="mt-6 max-w-2xl text-[17px] leading-8 text-text-secondary sm:text-[19px]">
               Biến văn bản, PDF, URL hoặc chủ đề bất kỳ thành trải nghiệm học
               tập tương tác—từ tạo câu hỏi, hoàn thiện Quiz đến chia sẻ cho
-              người học.
+              người làm bài.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button
@@ -402,7 +402,7 @@ export default function Home() {
                     Truy cập nhanh bằng mã QR hoặc mã tham gia.
                   </h3>
                   <p className="mt-4 max-w-sm text-[15px] font-medium leading-7 text-[#4c4262]">
-                    Học viên vào bài ngay trên trình duyệt, không cần tải ứng
+                    Người làm bài vào Quiz ngay trên trình duyệt, không cần tải ứng
                     dụng và không phải chờ đợi.
                   </p>
                 </div>
