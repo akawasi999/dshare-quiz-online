@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }], topics: [{ id: 24, name: "Tin học văn phòng", parentId: null, depth: 0, status: "active" }, { id: 25, name: "Excel", parentId: 24, depth: 1, status: "active" }, { id: 26, name: "Hàm tính", parentId: 25, depth: 2, status: "active" }, { id: 27, name: "Chủ đề một cấp", parentId: null, depth: 0, status: "active" }, { id: 28, name: "Chủ đề hai cấp", parentId: null, depth: 0, status: "active" }, { id: 29, name: "Nhánh cuối", parentId: 28, depth: 1, status: "active" }] }, isLoading: false },
   create: { mutate: vi.fn(), isPending: false },
-  chat: { mutate: vi.fn(), isPending: false },
+  chat: { mutate: vi.fn(), isPending: false, onSuccess: null as null | ((result: any) => void) },
   pinVersion: vi.fn(),
   versions: { data: [] as any[], isLoading: false, refetch: vi.fn() },
   analytics: { data: { summary: { completedAttempts: 8, averageScore: 75, passRate: 63, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [{ questionId: 1, prompt: "Câu hỏi phân tích", points: 1, answerCount: 8, correctCount: 5, correctRate: 63 }] }, isLoading: false, isError: false, refetch: vi.fn() },
@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideHeader, hideFooter, staticHeader, compactViewport }: { children: React.ReactNode; hideHeader?: boolean; hideFooter?: boolean; staticHeader?: boolean; compactViewport?: boolean }) => <div data-testid="account-layout" data-hide-header={hideHeader ? "true" : "false"} data-hide-footer={hideFooter ? "true" : "false"} data-static-header={staticHeader ? "true" : "false"} data-compact-viewport={compactViewport ? "true" : "false"}>{children}</div> }));
 vi.mock("@/components/PermissionGuard", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: () => mocks.chat }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: (options: { onSuccess?: (result: any) => void }) => { mocks.chat.onSuccess = options.onSuccess ?? null; return mocks.chat; } }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 import UserQuizCreator, { ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
@@ -128,10 +128,29 @@ describe("Quiz Creator theo đặc tả", () => {
     await user.click(screen.getByRole("button", { name: "Nhập chủ đề" }));
     expect(screen.getByRole("button", { name: "Đính kèm tệp vào chat AI" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Nhập chủ đề" })).toBeTruthy();
-    const input = screen.getByPlaceholderText("Hỏi AI hoặc mô tả Quiz bạn muốn tạo…");
+    const input = screen.getByPlaceholderText("Hãy yêu cầu AI thêm, sửa hoặc xoá câu hỏi…");
     await user.type(input, "Tạo câu hỏi Toán lớp 4");
     await user.keyboard("{Enter}");
-    expect(mocks.chat.mutate).toHaveBeenCalledWith(expect.objectContaining({ messages: expect.arrayContaining([expect.objectContaining({ content: "Tạo câu hỏi Toán lớp 4" })]) }));
+    expect(mocks.chat.mutate).toHaveBeenCalledWith(expect.objectContaining({ messages: expect.arrayContaining([expect.objectContaining({ content: "Tạo câu hỏi Toán lớp 4" })]), requestedQuestionCount: null, context: expect.objectContaining({ currentQuestionCount: 1, questions: [expect.objectContaining({ id: expect.any(String), points: 1, imageUrl: "" })] }) }));
+  });
+
+  it("buộc xác nhận số lượng trước khi AI tạo và áp dụng lệnh tạo/sửa vào bản nháp", async () => {
+    const user = userEvent.setup();
+    mocks.chat.mutate.mockClear();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Nhập chủ đề" }));
+    await user.type(screen.getByPlaceholderText("Hãy yêu cầu AI thêm, sửa hoặc xoá câu hỏi…"), "Tạo câu hỏi về phân số");
+    await user.keyboard("{Enter}");
+    const originalId = mocks.chat.mutate.mock.calls[0]?.[0]?.context?.questions?.[0]?.id;
+    await act(async () => { mocks.chat.onSuccess?.({ action: "clarify_count", reply: "Bạn muốn tạo tối đa bao nhiêu câu hỏi?", detected: { topic: "Phân số", type: "single", difficulty: "easy", count: 3 }, suggestedPrompts: [], operations: [] }); });
+    const countInput = screen.getByRole("spinbutton", { name: "Số câu hỏi tối đa AI được tạo" });
+    expect((countInput as HTMLInputElement).value).toBe("3");
+    fireEvent.change(countInput, { target: { value: "2" } });
+    await user.click(screen.getByRole("button", { name: "Xác nhận tạo" }));
+    expect(mocks.chat.mutate).toHaveBeenLastCalledWith(expect.objectContaining({ requestedQuestionCount: 2 }));
+    await act(async () => { mocks.chat.onSuccess?.({ action: "apply", reply: "Đã cập nhật bản nháp.", detected: { topic: "Phân số", type: "single", difficulty: "hard", count: 1 }, suggestedPrompts: [], operations: [{ kind: "update", targetId: originalId, question: { type: "single", difficulty: "hard", points: 5, prompt: "Phân số nào tương đương một phần hai?", explanation: "2/4 rút gọn bằng 1/2.", imageUrl: "", options: [{ body: "2/4", isCorrect: true }, { body: "1/4", isCorrect: false }], answerConfig: {} } }, { kind: "create", targetId: null, question: { type: "multiple", difficulty: "medium", points: 3, prompt: "Chọn các phân số bằng một nửa.", explanation: "2/4 và 3/6 đều bằng 1/2.", imageUrl: "", options: [{ body: "2/4", isCorrect: true }, { body: "3/6", isCorrect: true }, { body: "1/3", isCorrect: false }], answerConfig: {} } }] }); });
+    expect(screen.getByDisplayValue("Phân số nào tương đương một phần hai?")).toBeTruthy();
+    expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
   });
 
   it("cho phép nhân bản và đổi loại câu hỏi ngay trong tab Câu hỏi", async () => {

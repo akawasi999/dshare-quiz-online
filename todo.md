@@ -856,3 +856,7 @@
 - [x] Cập nhật regression, xác minh desktop/mobile và lưu checkpoint cho chế độ danh sách câu hỏi thu gọn khi mở AI.
 - [x] Tăng độ rộng mặc định và cho phép kéo thay đổi độ rộng panel AI trong Quiz Studio.
 - [x] Cập nhật regression, xác minh responsive và lưu checkpoint cho panel AI điều chỉnh độ rộng.
+- [x] Kiểm kê hợp đồng AI Studio, mô hình câu hỏi và các thao tác thêm, sửa, xoá hiện có.
+- [x] Thiết kế giao thức AI toàn quyền để thêm, xoá, sửa kiểu, độ khó, điểm, nội dung, hình ảnh, đáp án và gợi ý câu hỏi.
+- [x] Bắt buộc AI hỏi và nhận số lượng câu hỏi cần tạo trước khi sinh câu hỏi mới.
+- [x] Kết nối giao thức AI với Studio, cập nhật regression, xác minh desktop/mobile và lưu checkpoint.
