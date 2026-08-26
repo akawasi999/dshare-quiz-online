@@ -777,3 +777,6 @@
 - [x] Xây dựng Quiz AI Workspace: tạo đáp án/câu tương tự, giải thích, dịch, kiểm tra chất lượng và hiển thị chi phí Point.
 - [x] Hoàn thiện điều hướng, trạng thái Premium/AI và UX/UI responsive cho các module nâng cấp.
 - [x] Viết regression, xác minh trực quan và lưu checkpoint cho đợt nâng cấp update.pdf.
+- [x] Phân tích và triển khai ma trận quyền Quiz AI Basic/Pro/Premium theo tài liệu quyền truy cập mới.
+- [x] Xây dựng giao diện CPanel quản lý nhóm người dùng và quyền Premium theo ma trận.
+- [x] Kết nối enforcement quyền Premium, viết regression và lưu checkpoint cho hệ thống phân quyền mới.

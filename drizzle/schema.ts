@@ -472,6 +472,42 @@ export const userGroupMembers = mysqlTable("userGroupMembers", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => [uniqueIndex("user_group_members_user_unique").on(table.userId), uniqueIndex("user_group_members_group_user_unique").on(table.groupId, table.userId), index("user_group_members_group_idx").on(table.groupId)]);
 
+export const permissionRegistry = mysqlTable("permissionRegistry", {
+  id: int("id").autoincrement().primaryKey(),
+  key: varchar("key", { length: 120 }).notNull(),
+  name: varchar("name", { length: 180 }).notNull(),
+  description: varchar("description", { length: 600 }),
+  category: varchar("category", { length: 80 }).notNull(),
+  type: mysqlEnum("type", ["boolean", "limit", "quota"]).default("boolean").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("permission_registry_key_unique").on(table.key), index("permission_registry_category_idx").on(table.category)]);
+
+export const subscriptionPlanPermissions = mysqlTable("subscriptionPlanPermissions", {
+  id: int("id").autoincrement().primaryKey(),
+  planId: int("planId").notNull(),
+  permissionId: int("permissionId").notNull(),
+  isEnabled: boolean("isEnabled").default(false).notNull(),
+  limitValue: int("limitValue"),
+  limitUnit: varchar("limitUnit", { length: 40 }),
+  config: json("config").$type<Record<string, unknown>>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("subscription_plan_permissions_unique").on(table.planId, table.permissionId), index("subscription_plan_permissions_plan_idx").on(table.planId)]);
+
+export const userPermissionOverrides = mysqlTable("userPermissionOverrides", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  permissionId: int("permissionId").notNull(),
+  isEnabled: boolean("isEnabled").default(true).notNull(),
+  limitValue: int("limitValue"),
+  expiresAt: timestamp("expiresAt"),
+  reason: varchar("reason", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => [uniqueIndex("user_permission_overrides_unique").on(table.userId, table.permissionId), index("user_permission_overrides_user_idx").on(table.userId)]);
+
 export const categories = mysqlTable("categories", {
   id: int("id").autoincrement().primaryKey(),
   title: varchar("title", { length: 180 }).notNull(),

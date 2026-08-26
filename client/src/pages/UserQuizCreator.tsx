@@ -1,6 +1,7 @@
 import AccountLayout from "@/components/AccountLayout";
 import { QuizStudioAiChat } from "@/components/QuizStudioAiChat";
 import AiPointPreflightNotice from "@/components/AiPointPreflightNotice";
+import PermissionGuard from "@/components/PermissionGuard";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -93,7 +94,7 @@ export default function UserQuizCreator() {
       <section ref={editorMainRef} className="editor-main" aria-label="Khu vực chỉnh sửa Quiz">
         {activeTab === "analytics" ? <QuizAnalyticsWorkspace analytics={quizAnalytics} /> : activeTab === "settings" ? <SettingsWorkspace title={title} description={description} slug={slug} topicId={topicId} coverImageUrl={coverImageUrl} settings={settings} content={content.data} onTitle={setTitle} onDescription={setDescription} onSlug={(value: string) => setSlug(slugify(value))} onTopic={setTopicId} onCover={setCoverImageUrl} onSettings={setSettings} /> : <EditorCanvas questions={questions} selectedId={selectedId} highlightedIds={highlightedIds} locked={isAiGenerating} onUpdate={updateQuestion} onSelect={setSelectedId} onDuplicate={duplicateQuestion} onRemove={removeQuestion} onAdd={addQuestion} onOpenAi={openAi} onReorder={reorderQuestions} />}
       </section>
-      {chatOpen ? <aside className="editor-ai-panel" aria-label="AI Assistant"><div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto p-1"><div className="min-h-[620px] shrink-0"><QuizStudioAiChat variant="primary" source={chatSource} title={title} summary={description} questionCount={questions.length} onClose={() => { setChatOpen(false); setIsAiGenerating(false); }} onGenerated={addAiQuestions} onBusyChange={setIsAiGenerating} /></div><AiPointPreflightNotice showApplyAction={false} /></div></aside> : null}
+      {chatOpen ? <aside className="editor-ai-panel" aria-label="AI Assistant"><PermissionGuard permissionKey="quiz.ai.manual_question"><div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto p-1"><div className="min-h-[620px] shrink-0"><QuizStudioAiChat variant="primary" source={chatSource} title={title} summary={description} questionCount={questions.length} onClose={() => { setChatOpen(false); setIsAiGenerating(false); }} onGenerated={addAiQuestions} onBusyChange={setIsAiGenerating} /></div><AiPointPreflightNotice showApplyAction={false} /></div></PermissionGuard></aside> : null}
     </section>
     <AlertDialog open={publishConfirm} onOpenChange={setPublishConfirm}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Xuất bản Quiz công khai?</AlertDialogTitle><AlertDialogDescription>Quiz sẽ được công khai để người học có thể truy cập và làm bài. Bạn có thể chỉnh sửa lại sau khi xuất bản.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Hủy</AlertDialogCancel><AlertDialogAction onClick={publish}>Xác nhận xuất bản</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     <ShareQuizDialog share={share} onClose={() => setShare(null)} />

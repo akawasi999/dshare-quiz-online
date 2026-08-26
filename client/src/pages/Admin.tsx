@@ -14,6 +14,7 @@ import QuestionEditorPanel from "@/components/QuestionEditorPanel";
 import QuestionTransferPanel from "@/components/QuestionTransferPanel";
 import RandomQuizBuilder from "@/components/RandomQuizBuilder";
 import MembershipGroupPermissionsPanel from "@/components/MembershipGroupPermissionsPanel";
+import PermissionMatrixPanel from "@/components/PermissionMatrixPanel";
 import UserManagementPanel from "@/components/UserManagementPanel";
 import AdminAiAssistantPanel from "@/components/AdminAiAssistantPanel";
 import ContentManagementPanel from "@/components/ContentManagementPanel";
@@ -84,7 +85,7 @@ export default function Admin() {
   if (location === ROUTES.adminQuizzes) content = <QuizSystemPanel />;
   if (location === ROUTES.adminUsers) content = <UserManagementPanel />;
   if (location === ROUTES.adminUserGroups)
-    content = <MembershipGroupPermissionsPanel />;
+    content = <><PermissionMatrixPanel /><div className="mt-6"><MembershipGroupPermissionsPanel /></div></>;
   if (location === ROUTES.adminAnalytics) content = <AnalyticsControlPanel />;
   if (location === ROUTES.adminSeoPreview) content = <OpenGraphPreviewPanel />;
   if (location === ROUTES.adminMonitoring) content = <LiveMonitoringPanel />;

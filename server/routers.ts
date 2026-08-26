@@ -24,6 +24,7 @@ import {
   missionDefinitions,
   oauthProviderSettings,
   paymentEmailDeliveries,
+  permissionRegistry,
   questionOptions,
   paymentRecords,
   pointPriceRules,
@@ -39,6 +40,7 @@ import {
   supportFaqs,
   supportMessages,
   subscriptionPlans,
+  subscriptionPlanPermissions,
   subjects,
   topics,
   userAchievements,
@@ -46,6 +48,7 @@ import {
   userCredentials,
   userMissionAssignments,
   userOAuthIdentities,
+  userPermissionOverrides,
   userGroupMembers,
   userGroupPermissions,
   userGroups,
@@ -98,6 +101,7 @@ import { hasReachedQuota, membershipQuotas, quotaLabel, type QuotaTier } from ".
 import { getEffectiveTier } from "./membershipUtils";
 import { getLearnerGamificationSummary } from "./gamification";
 import { getAiPointQuotes, runWithAiPointCharge } from "./aiPointPricing";
+import { getUserEntitlements, requirePermission } from "./permissionService";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
 import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse, questionEnhancementInputSchema, quizStudioChatInputSchema } from "./quizStudioChat";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
@@ -285,6 +289,17 @@ async function assertMembershipGroupPermission(userId: number, permission: Membe
   const groups = await getMembershipGroupPermissions();
   const group = groups.find(item => item.tier === profile.tier);
   if (!group?.[permission]) throw new TRPCError({ code: "FORBIDDEN", message: `Nhóm ${profile.tier.toUpperCase()} chưa được cấp quyền ${featureLabel}.` });
+}
+
+async function assertRegistryPermission(userId: number, permissionKey: string) {
+  const db = await getDb();
+  if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể xác thực quyền tính năng." });
+  try { return await requirePermission(db, userId, permissionKey); }
+  catch (error) {
+    const detail = error as Error & { permission?: string; requiredPlan?: string | null };
+    if (detail.permission) throw new TRPCError({ code: "FORBIDDEN", message: `FEATURE_NOT_AVAILABLE: ${detail.permission}. Yêu cầu gói ${detail.requiredPlan?.toUpperCase() ?? "phù hợp"}.` });
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: detail.message || "Không thể xác thực quyền tính năng." });
+  }
 }
 
 const premiumQuestionTypeTier: Partial<Record<string, "pro" | "premium">> = { matching: "pro", ordering: "pro", image_choice: "pro", audio: "pro", video: "premium", hotspot: "premium", short_answer_ai: "premium", essay_ai: "premium" };
@@ -578,6 +593,12 @@ export const appRouter = router({
 
   learner: router({
     summary: protectedProcedure.query(({ ctx }) => getLearnerSummary(ctx.user.id)),
+    entitlements: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải quyền truy cập." });
+      try { return await getUserEntitlements(db, ctx.user.id); }
+      catch (error) { throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error instanceof Error ? error.message : "Không thể tải quyền truy cập." }); }
+    }),
     gamification: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải tiến trình Gamification." });
@@ -1096,6 +1117,7 @@ export const appRouter = router({
     }),
     generateQuestionAI: permissionProcedure("ai.quiz.generate").input(aiQuestionInputSchema.omit({ lessonId: true })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi bằng AI");
+      await assertRegistryPermission(ctx.user.id, "quiz.ai.manual_question");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập ví Point." });
@@ -1104,6 +1126,7 @@ export const appRouter = router({
     }),
     studioAiChat: permissionProcedure("ai.quiz.generate").input(quizStudioChatInputSchema).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "dùng chat AI trong Studio");
+      await assertRegistryPermission(ctx.user.id, "quiz.ai.manual_question");
       const response = await invokeLLM({ messages: buildQuizStudioChatMessages(input), maxTokens: 2_400, response_format: { type: "json_schema", json_schema: { name: "quiz_studio_chat", strict: true, schema: { type: "object", properties: { action: { type: "string", enum: ["clarify", "generate"] }, reply: { type: "string" }, detected: { type: "object", properties: { topic: { type: ["string", "null"] }, type: { type: ["string", "null"] }, difficulty: { type: ["string", "null"] }, count: { type: ["integer", "null"] } }, required: ["topic", "type", "difficulty", "count"], additionalProperties: false }, questions: { type: "array", items: { type: "object", properties: { type: { type: "string" }, difficulty: { type: "string" }, prompt: { type: "string" }, explanation: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "prompt", "explanation", "options", "answerConfig"], additionalProperties: false } }, suggestedPrompts: { type: "array", items: { type: "string" } } }, required: ["action", "reply", "detected", "questions", "suggestedPrompts"], additionalProperties: false } } } });
       try {
         const result = parseQuizStudioChatResponse(response.choices[0]?.message.content);
@@ -1126,6 +1149,7 @@ export const appRouter = router({
     }),
     generateQuestionsFromDocument: permissionProcedure("ai.quiz.generate").input(z.object({ fileName: z.string().min(1).max(160), mimeType: z.enum(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]), base64: z.string().min(80).max(22_000_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi từ tài liệu bằng AI");
+      await assertRegistryPermission(ctx.user.id, "quiz.ai.file_import");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       if (quota.limit !== null && quota.used + input.questionCount > quota.limit) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn cần ${input.questionCount} AI Credits nhưng chỉ còn ${Math.max(0, quota.limit - quota.used)} Credit.` });
       try {
@@ -1153,6 +1177,7 @@ export const appRouter = router({
     }),
     generateQuestionsFromRemoteSource: protectedProcedure.input(z.object({ url: z.string().trim().url().max(2_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {
       await assertMembershipGroupPermission(ctx.user.id, "canUseAi", "tạo câu hỏi từ YouTube hoặc trang web");
+      await assertRegistryPermission(ctx.user.id, /(^|\.)youtu\.be\//i.test(input.url) || /youtube\.com\//i.test(input.url) ? "quiz.ai.youtube_import" : "quiz.ai.manual_question");
       const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
       if (quota.limit !== null && quota.used + input.questionCount > quota.limit) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn cần ${input.questionCount} AI Credits nhưng chỉ còn ${Math.max(0, quota.limit - quota.used)} Credit.` });
       try {
@@ -1329,6 +1354,31 @@ export const appRouter = router({
     }),
   }),
   admin: router({
+    permissionMatrix: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tải ma trận quyền." });
+      const [plans, permissions, matrix] = await Promise.all([
+        db.select().from(subscriptionPlans).orderBy(asc(subscriptionPlans.displayOrder)),
+        db.select().from(permissionRegistry).orderBy(asc(permissionRegistry.category), asc(permissionRegistry.name)),
+        db.select().from(subscriptionPlanPermissions),
+      ]);
+      return { plans, permissions, matrix };
+    }),
+    savePlanPermission: adminProcedure.input(z.object({ planId: z.number().int().positive(), permissionId: z.number().int().positive(), isEnabled: z.boolean(), limitValue: z.number().int().min(0).nullable(), limitUnit: z.string().trim().max(40).nullable(), config: z.record(z.string(), z.unknown()).nullable() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể lưu quyền gói." });
+      const payload = { planId: input.planId, permissionId: input.permissionId, isEnabled: input.isEnabled, limitValue: input.limitValue, limitUnit: input.limitUnit, config: input.config };
+      await db.insert(subscriptionPlanPermissions).values(payload).onDuplicateKeyUpdate({ set: payload });
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "permission.matrix_updated", entityType: "subscription_plan_permission", entityId: input.permissionId, metadata: payload });
+      return { success: true };
+    }),
+    savePermissionMetadata: adminProcedure.input(z.object({ permissionId: z.number().int().positive(), name: z.string().trim().min(2).max(180), description: z.string().trim().max(600).nullable(), category: z.string().trim().min(2).max(80), type: z.enum(["boolean", "limit", "quota"]), isActive: z.boolean() })).mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể cập nhật Permission Registry." });
+      await db.update(permissionRegistry).set({ name: input.name, description: input.description, category: input.category, type: input.type, isActive: input.isActive }).where(eq(permissionRegistry.id, input.permissionId));
+      await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "permission.registry_updated", entityType: "permission", entityId: input.permissionId, metadata: input });
+      return { success: true };
+    }),
     siteSettings: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập cài đặt hệ thống." });
