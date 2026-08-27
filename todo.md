@@ -892,3 +892,4 @@
 - [x] Ẩn mô tả dưới tiêu đề và đặt tiêu đề Quiz cạnh avatar trên header mobile /build.
 - [x] Tối ưu danh sách Quiz của tôi trên mobile: bộ lọc gọn, thẻ và thao tác không tràn/cắt nội dung.
 - [x] Loại bỏ nút Sửa đổi trực tiếp trên card Quiz của tôi; giữ chức năng trong menu ba chấm.
+- [x] Loại bỏ viền và màu nhấn khi focus trên các ô input/textarea dùng chung.

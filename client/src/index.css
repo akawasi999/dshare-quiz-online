@@ -712,6 +712,14 @@ body:has(main[data-ai-viewport="true"]) #root {
   .my-quiz-card-actions > button:last-child { min-width: 0; padding-inline: 10px; }
 }
 
+/* Keep form fields visually neutral while focused; validation states remain explicit. */
+:where(input[data-slot="input"], textarea[data-slot="textarea"], select):focus-visible {
+  outline: none;
+  border-color: var(--input) !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .quiz-card-enter {
     animation: quiz-card-enter 260ms var(--ease-out) both;
