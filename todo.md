@@ -878,3 +878,7 @@
 - [x] Cập nhật regression, xác minh responsive và lưu checkpoint cho trạng thái mở đầu AI Chat.
 - [x] Sửa trạng thái lời chào AI Chat để nội dung không bị cắt, không có thanh cuộn thừa và căn chỉnh cân đối.
 - [x] Cập nhật regression, xác minh desktop/mobile và lưu checkpoint cho bản sửa bố cục AI Chat.
+- [x] Thiết kế thanh công cụ icon sticky bên phải để thêm nhanh Trắc nghiệm, Nhiều đáp án, Đúng/Sai, Ghép nối và Chọn hình ảnh.
+- [x] Thêm menu ba chấm cho các dạng còn lại, nút AI nổi bật, tự ẩn thanh khi AI Chat mở và cập nhật regression/xác minh.
+- [x] Căn thanh icon tạo câu hỏi sát cạnh phải của vùng tab Câu hỏi, giữ sticky và tự ẩn khi AI Chat mở.
+- [x] Căn thanh icon ngang hàng với thẻ Câu hỏi #1 và tối ưu bố cục Studio cho tablet/mobile.

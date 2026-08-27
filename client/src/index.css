@@ -528,6 +528,64 @@ body:has(main[data-ai-viewport="true"]) #root {
   display: none;
 }
 
+.editor-question-toolbelt {
+  position: sticky;
+  z-index: 24;
+  top: 7.5rem;
+  float: right;
+  display: flex;
+  width: 3.1rem;
+  margin-right: -3.25rem;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  padding: .45rem;
+  box-shadow: 0 12px 30px rgba(20, 44, 91, .12);
+  backdrop-filter: blur(10px);
+}
+
+.editor-question-toolbelt__button {
+  height: 2.45rem;
+  width: 2.45rem;
+  border-radius: .85rem;
+  color: var(--text-secondary);
+}
+
+.editor-question-toolbelt__button:hover {
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+  color: var(--primary);
+}
+
+.editor-question-toolbelt__button--ai {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 11%, var(--surface));
+}
+
+.editor-question-toolbelt__button--ai:hover {
+  background: var(--accent);
+  color: white;
+}
+
+@media (max-width: 1023px) {
+  .editor-question-toolbelt { display: none; }
+}
+
+@media (max-width: 639px) {
+  .editor-main { padding: 12px; }
+  .editor-main > main { padding-bottom: 20px; }
+  .editor-quick-action-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; padding: 8px; }
+  .editor-quick-action-bar button { min-height: 44px; padding-inline: 10px; font-size: 12px; }
+  .editor-question-card { margin-bottom: 16px; border-radius: 12px; padding: 16px; }
+  .editor-question-card > div:first-child { gap: 10px; }
+  .editor-question-card > div:first-child > div:first-child { display: grid; width: 100%; flex-basis: 100%; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; }
+  .editor-question-card > div:first-child > div:first-child > select:first-of-type { grid-column: 3; min-width: 0; }
+  .editor-question-card > div:first-child > div:first-child > select:nth-of-type(2) { grid-row: 2; grid-column: 1 / span 2; }
+  .editor-question-card > div:first-child > div:first-child > label { grid-row: 2; grid-column: 3; justify-self: end; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .quiz-card-enter {
     animation: quiz-card-enter 260ms var(--ease-out) both;

@@ -178,6 +178,21 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
   });
 
+  it("hiển thị thanh icon tạo nhanh và tự ẩn khi mở AI Chat", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    expect(screen.getByTestId("question-quick-add-toolbar")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thêm câu Trắc nghiệm" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thêm câu Nhiều đáp án" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thêm câu Đúng / Sai" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thêm câu Ghép nối" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thêm câu Chọn bằng hình ảnh" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Thêm câu Nhiều đáp án" }));
+    expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: "Tạo câu hỏi cùng AI" }));
+    expect(screen.queryByTestId("question-quick-add-toolbar")).toBeNull();
+  });
+
   it("cho phép xóa toàn bộ câu hỏi sau khi xác nhận", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
