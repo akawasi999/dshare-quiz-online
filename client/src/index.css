@@ -524,6 +524,10 @@ body:has(main[data-ai-viewport="true"]) #root {
   background: rgba(112, 87, 232, .52);
 }
 
+.quiz-ai-primary--welcome [data-testid="ai-chat-scroll"] {
+  display: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .quiz-card-enter {
     animation: quiz-card-enter 260ms var(--ease-out) both;

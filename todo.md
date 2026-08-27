@@ -876,3 +876,5 @@
 - [x] Điều chỉnh xóa toàn bộ để không giữ card câu hỏi mẫu hoặc mục điều hướng tồn dư trong Studio.
 - [x] Thiết kế lại lời chào và gợi ý thao tác hiển thị khi lần đầu mở AI Chat trong Quiz Studio.
 - [x] Cập nhật regression, xác minh responsive và lưu checkpoint cho trạng thái mở đầu AI Chat.
+- [x] Sửa trạng thái lời chào AI Chat để nội dung không bị cắt, không có thanh cuộn thừa và căn chỉnh cân đối.
+- [x] Cập nhật regression, xác minh desktop/mobile và lưu checkpoint cho bản sửa bố cục AI Chat.
