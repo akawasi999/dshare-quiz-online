@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render as renderBase, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { annotateIconTooltips } from "../client/src/components/IconTooltipEnhancer";
@@ -20,6 +20,15 @@ vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: ()
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 import UserQuizCreator, { InlineAnswerImageUploader, QuestionImagePreview, ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
+
+const render = (ui: React.ReactElement) => {
+  const result = renderBase(ui);
+  if (ui.type === UserQuizCreator) {
+    const closeButton = screen.queryByRole("button", { name: "Close" });
+    if (closeButton) fireEvent.click(closeButton);
+  }
+  return result;
+};
 
 describe("Quiz Creator theo đặc tả", () => {
   afterEach(() => { cleanup(); mocks.versions.data = []; mocks.pinVersion.mockReset(); mocks.analytics.data = { summary: { completedAttempts: 8, averageScore: 75, passRate: 63, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [{ questionId: 1, prompt: "Câu hỏi phân tích", points: 1, answerCount: 8, correctCount: 5, correctRate: 63 }] }; window.history.replaceState({}, "", "/build"); });
@@ -60,6 +69,12 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.queryByTestId("quiz-ai-point-footer")).toBeNull();
   });
 
+  it("mở popup chọn chủ đề khi người dùng bắt đầu tạo Quiz mới", () => {
+    renderBase(<UserQuizCreator />);
+    expect(screen.getByTestId("topic-picker-dialog")).toBeTruthy();
+    expect(screen.getByText("Chọn chủ đề Quiz")).toBeTruthy();
+  });
+
   it("mở hộp lịch sử bản nháp để khôi phục phiên bản", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
@@ -88,6 +103,10 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.queryByText("Trợ lý biên soạn")).toBeNull();
     expect(screen.queryByText("Bảo mật & nâng cao")).toBeNull();
     expect(screen.getByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeTruthy();
+    expect(screen.queryByText("Đường dẫn (slug)")).toBeNull();
+    expect(screen.queryByText("Đặt tên, mô tả và nhận diện cho Quiz.")).toBeNull();
+    expect(screen.queryByText("Thiết lập thời gian, lượt làm và trải nghiệm trả lời.")).toBeNull();
+    expect(screen.getByRole("button", { name: "Tải ảnh đại diện Quiz" })).toBeTruthy();
     expect(screen.getByTestId("topic-breadcrumb").textContent).toContain("Chưa chọn chủ đề");
     expect(screen.queryByText("Bản đồ Game")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Thay đổi chủ đề" }));

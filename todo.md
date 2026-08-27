@@ -919,3 +919,7 @@
 - [x] Tối ưu responsive bảng Nhận định Có/Không để không vỡ bố cục trên desktop, tablet và mobile.
 - [x] Di chuyển icon xóa của dòng Nhận định Có/Không sang phía trước nội dung.
 - [x] Thiết kế lại hiển thị chủ đề dạng breadcrumb và popup chọn chủ đề phân cấp trong Studio.
+- [x] Mở popup chọn chủ đề ngay khi vào Studio tạo Quiz mới.
+- [x] Tự sinh slug theo tiêu đề; gỡ ô slug và đưa tải ảnh đại diện vào vị trí đó.
+- [x] Hiển thị ảnh đại diện 150 × 98 px phía trên Tên Quiz; thu nhỏ tiêu đề Cài đặt và bỏ mô tả.
+- [x] Thêm nền và hover sinh động, dễ nhận biết cho popup chọn chủ đề.
