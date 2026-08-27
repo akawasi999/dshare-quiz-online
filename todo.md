@@ -923,3 +923,4 @@
 - [x] Tự sinh slug theo tiêu đề; gỡ ô slug và đưa tải ảnh đại diện vào vị trí đó.
 - [x] Hiển thị ảnh đại diện 150 × 98 px phía trên Tên Quiz; thu nhỏ tiêu đề Cài đặt và bỏ mô tả.
 - [x] Thêm nền và hover sinh động, dễ nhận biết cho popup chọn chủ đề.
+- [x] Chỉ tự mở popup chủ đề khi Studio khởi tạo mà bản nháp hoặc Quiz chưa có chủ đề.
