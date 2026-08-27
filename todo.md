@@ -908,3 +908,5 @@
 - [x] Thay menu ba chấm của thẻ câu hỏi bằng icon Nhân bản và Xóa không chữ.
 - [x] Gỡ Trợ lý biên soạn và Bảo mật & nâng cao khỏi tab Cài đặt Quiz Studio.
 - [x] Áp dụng focus input toàn hệ thống không viền, chỉ có đường viền dưới màu tím.
+- [x] Điều chỉnh độ tương phản gạch chân focus màu tím trong Dark Mode.
+- [x] Khi focus, ẩn hoàn toàn khung viền của input và chỉ giữ gạch chân tím.

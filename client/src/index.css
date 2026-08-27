@@ -163,6 +163,7 @@ body { font-family: var(--font-family-primary, "Inter"), ui-sans-serif, system-u
   --primary: #635bff;
   --primary-dark: #5147e5;
   --primary-light: #eef0ff;
+  --field-focus-underline: #7057e8;
   --accent: #7c5cfc;
   --success: #22c55e;
   --warning: #f59e0b;
@@ -226,6 +227,7 @@ body { font-family: var(--font-family-primary, "Inter"), ui-sans-serif, system-u
   --primary: #a8a3ff;
   --primary-dark: #918bff;
   --primary-light: rgba(168, 163, 255, .14);
+  --field-focus-underline: #c4b5fd;
   --secondary: #273449;
   --secondary-foreground: var(--text);
   --muted: #273449;
@@ -716,8 +718,9 @@ body:has(main[data-ai-viewport="true"]) #root {
 :where(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), textarea, select, [data-slot="select-trigger"]):not([aria-invalid="true"]):focus-visible {
   outline: none;
   border-color: transparent !important;
-  border-bottom-color: #7057e8 !important;
+  border-bottom-color: var(--field-focus-underline) !important;
   border-bottom-width: 2px !important;
+  box-shadow: none !important;
   --tw-ring-shadow: 0 0 #0000 !important;
   --tw-ring-offset-shadow: 0 0 #0000 !important;
 }

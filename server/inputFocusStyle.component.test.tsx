@@ -23,8 +23,11 @@ describe("Trạng thái focus của ô nhập liệu", () => {
     expect(textarea.className).toContain("aria-invalid:border-destructive");
     expect(select.className).toContain("aria-invalid:border-destructive");
     const styles = readFileSync("client/src/index.css", "utf8");
-    expect(styles).toContain("border-bottom-color: #7057e8 !important;");
+    expect(styles).toContain("--field-focus-underline: #7057e8;");
+    expect(styles).toContain("--field-focus-underline: #c4b5fd;");
+    expect(styles).toContain("border-bottom-color: var(--field-focus-underline) !important;");
     expect(styles).toContain("border-bottom-width: 2px !important;");
+    expect(styles).toContain("box-shadow: none !important;");
     expect(styles).toContain(':not([aria-invalid="true"]):focus-visible');
   });
 });
