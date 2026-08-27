@@ -612,38 +612,33 @@ body:has(main[data-ai-viewport="true"]) #root {
 
 @media (max-width: 639px) {
   .editor-header {
-    position: relative;
-    min-height: 124px !important;
-    padding-top: 42px !important;
-    padding-bottom: 52px !important;
+    display: grid;
+    grid-template-areas: "primary actions" "tabs tabs";
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 0 !important;
+    gap: 8px;
+    padding: 8px 12px 10px !important;
   }
 
-  .editor-header > div:first-of-type > div:last-child {
-    position: absolute;
-    top: 7px;
-    right: 16px;
-    left: 16px;
+  .editor-header-mobile-title {
     display: block !important;
+    min-width: 0;
+    flex: 1 1 auto;
   }
 
-  .editor-header > div:first-of-type > div:last-child > input {
+  .editor-header-primary { grid-area: primary; }
+  .editor-header-actions { grid-area: actions; }
+
+  .editor-header-mobile-title > input {
     width: 100%;
     height: 24px;
     font-size: 14px;
   }
 
-  .editor-header > div:nth-of-type(3) > [aria-label="Mở điều hướng Studio"],
-  .editor-header > div:nth-of-type(3) > [aria-label="Xem trước Sandbox"] {
+  .editor-header-actions > [aria-label="Mở điều hướng Studio"],
+  .editor-header-actions > [aria-label="Xem trước Sandbox"],
+  .editor-header-desktop-publish {
     display: none !important;
-  }
-
-  .editor-header > div:nth-of-type(3) > button:last-child {
-    position: absolute;
-    bottom: 7px;
-    left: calc(50% + 66px);
-    z-index: 1;
-    height: 34px;
-    padding-inline: 10px;
   }
 
   html, body, #root { max-width: 100%; overflow-x: clip; }
@@ -675,15 +670,16 @@ body:has(main[data-ai-viewport="true"]) #root {
   }
 
   .editor-mobile-tabs {
-    display: flex;
-    position: absolute;
-    bottom: 6px;
-    left: 50%;
-    width: 266px;
-    min-height: 36px;
-    justify-content: flex-start;
-    transform: translateX(-50%);
+    display: grid;
+    grid-area: tabs;
+    width: min(100%, 320px);
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    justify-self: center;
+    gap: 2px;
   }
+
+  .editor-mobile-publish { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; }
 
   .editor-main, .editor-main > main, .editor-question-card, .question-prompt-row {
     max-width: 100%;
@@ -694,6 +690,26 @@ body:has(main[data-ai-viewport="true"]) #root {
   .editor-mobile-tabs {
     display: none;
   }
+}
+
+@media (max-width: 639px) {
+  .my-quizzes-page { overflow-x: clip; padding: 16px 12px 28px; }
+  .my-quizzes-page > div > header { gap: 12px; border-radius: 22px; padding: 18px; }
+  .my-quizzes-page > div > header h1 { font-size: 28px; }
+  .my-quizzes-page > div > header > .button { width: 100%; }
+  .my-quizzes-filter { margin-top: 16px; border-radius: 20px; padding: 12px; }
+  .my-quizzes-controls { width: 100%; gap: 10px; }
+  .my-quizzes-status-filter { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .my-quizzes-status-filter > button { min-width: 0; padding-inline: 6px; font-size: 11px; white-space: nowrap; }
+  .my-quizzes-summary { width: 100%; }
+  .my-quiz-card { gap: 12px; padding: 12px; }
+  .my-quiz-card-cover { width: 96px; height: 112px; border-radius: 16px; }
+  .my-quiz-card-content { min-width: 0; }
+  .my-quiz-card-meta { gap: 4px 8px; }
+  .my-quiz-card-meta > span:last-child { width: 100%; }
+  .my-quiz-card-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .my-quiz-card-actions > button:first-child { min-width: 0; }
+  .my-quiz-card-actions > button:last-child { min-width: 0; padding-inline: 10px; }
 }
 
 @media (prefers-reduced-motion: no-preference) {

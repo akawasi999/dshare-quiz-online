@@ -888,3 +888,7 @@
 - [x] Thêm nút AI nổi ở góc phải dưới trên mobile để mở khung chat AI dạng panel từ đáy.
 - [x] Loại bỏ khoảng trống và tràn ngang trên mobile để /build khớp chiều rộng màn hình, không có thanh cuộn dưới.
 - [x] Tinh gọn header mobile /build: hiển thị tiêu đề, bỏ ba chấm/xem trước và đặt Xuất bản cạnh Cài đặt.
+- [x] Chuẩn hóa header mobile /build theo lưới ba hàng để tiêu đề, điều hướng và thao tác không xô lệch.
+- [x] Ẩn mô tả dưới tiêu đề và đặt tiêu đề Quiz cạnh avatar trên header mobile /build.
+- [x] Tối ưu danh sách Quiz của tôi trên mobile: bộ lọc gọn, thẻ và thao tác không tràn/cắt nội dung.
+- [x] Loại bỏ nút Sửa đổi trực tiếp trên card Quiz của tôi; giữ chức năng trong menu ba chấm.

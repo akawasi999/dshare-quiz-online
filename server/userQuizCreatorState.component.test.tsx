@@ -28,6 +28,8 @@ describe("Quiz Creator theo đặc tả", () => {
     render(<UserQuizCreator />);
     expect(screen.getByTestId("spec-creator-header").className).toContain("editor-header");
     expect(screen.getByTestId("editor-mobile-tabs")).toBeTruthy();
+    expect(screen.getByTestId("editor-mobile-title")).toBeTruthy();
+    expect(screen.getByTestId("editor-mobile-publish")).toBeTruthy();
     expect(screen.getByTestId("spec-quiz-workspace").className).toContain("editor-body");
     expect(screen.getByTestId("account-layout").getAttribute("data-compact-viewport")).toBe("true");
     expect(screen.getByTestId("account-layout").getAttribute("data-allow-mobile-scroll")).toBe("true");
@@ -50,7 +52,7 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByTestId("manual-question-bar").className).toContain("editor-manual-question-bar");
     expect(screen.getByTestId("manual-question-bar").className).toContain("mb-[50px]");
     const preview = screen.getByRole("button", { name: "Xem trước Sandbox" });
-    const publish = screen.getByRole("button", { name: /Xuất bản/ });
+    const publish = screen.getByTestId("editor-desktop-publish");
     expect(preview.compareDocumentPosition(publish) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByTestId("question-navigator").className).toContain("editor-question-navigator");
     expect(screen.getByTestId("question-navigator-scroll").className).toContain("flex-col");
@@ -123,7 +125,7 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.queryByText("AI nâng cao")).toBeNull();
     expect(screen.queryByLabelText("Liên kết pháp lý")).toBeNull();
     expect(screen.getByRole("button", { name: "Xem trước Sandbox" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Xuất bản/ })).toBeTruthy();
+    expect(screen.getByTestId("editor-desktop-publish")).toBeTruthy();
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
     await user.click(screen.getByRole("button", { name: "Thu gọn chat" }));
     expect(screen.queryByLabelText("AI Assistant")).toBeNull();

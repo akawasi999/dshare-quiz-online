@@ -23,13 +23,15 @@ describe("MyQuizzes", () => {
     expect(screen.getByText("Ôn tập Sinh học 10")).toBeTruthy();
     expect(screen.getByText("Lịch sử Việt Nam")).toBeTruthy();
     expect(screen.getByText("Đề cần chỉnh sửa")).toBeTruthy();
+    expect(screen.getByTestId("my-quizzes-filter").className).toContain("my-quizzes-filter");
+    expect(screen.getByTestId("my-quiz-card-1").className).toContain("my-quiz-card");
     expect(screen.getByText("Bổ sung đáp án đúng cho câu 3.")).toBeTruthy();
     await user.type(screen.getByRole("textbox", { name: "Tìm kiếm Quiz của tôi" }), "lịch sử");
     expect(screen.queryByText("Ôn tập Sinh học 10")).toBeNull();
     expect(screen.getByText("Lịch sử Việt Nam")).toBeTruthy();
     await user.clear(screen.getByRole("textbox", { name: "Tìm kiếm Quiz của tôi" }));
     await user.click(screen.getByRole("button", { name: "Thao tác Quiz Ôn tập Sinh học 10" }));
-    expect(screen.getAllByText("Sửa đổi").length).toBeGreaterThan(1);
+    expect(screen.getByText("Sửa đổi")).toBeTruthy();
     expect(screen.getAllByText("Sao chép").length).toBeGreaterThan(1);
     expect(screen.getByText("Xóa")).toBeTruthy();
     await user.keyboard("{Escape}");
