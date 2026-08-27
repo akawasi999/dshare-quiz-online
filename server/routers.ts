@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
 import { createHash, randomBytes } from "node:crypto";
+import sharp from "sharp";
 import { z } from "zod";
 import {
   aiAssistantConversations,
@@ -158,6 +159,7 @@ const requestOrigin = (req: { protocol?: string; get?: (header: string) => strin
   return `${protocol || "https"}://${host}`;
 };
 const safeUploadFileName = (fileName: string) => fileName.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-").slice(0, 120) || "image";
+const webpUploadFileName = (fileName: string) => `${safeUploadFileName(fileName).replace(/\.[^.]+$/, "") || "image"}.webp`;
 const quizAssetUrlInput = z.string().trim().max(1024).refine(value => value.startsWith("/manus-storage/") || /^https?:\/\//i.test(value), { message: "URL ảnh phải là liên kết HTTPS/HTTP hoặc đường dẫn lưu trữ hợp lệ." });
 const decodeQuizImageUpload = (input: z.infer<typeof quizImageUploadInput>) => {
   const match = input.base64.match(/^data:([^;]+);base64,([A-Za-z0-9+/=\s]+)$/);
@@ -166,6 +168,13 @@ const decodeQuizImageUpload = (input: z.infer<typeof quizImageUploadInput>) => {
   if (!bytes.length) throw new TRPCError({ code: "BAD_REQUEST", message: "Tệp ảnh trống hoặc không đọc được." });
   if (bytes.length > maxQuizImageBytes) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Ảnh tối đa 5 MB." });
   return bytes;
+};
+const convertQuizImageToWebp = async (bytes: Buffer) => {
+  try {
+    return await sharp(bytes, { limitInputPixels: 40_000_000 }).rotate().webp({ quality: 82, effort: 4 }).toBuffer();
+  } catch {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Không thể xử lý ảnh. Vui lòng thử lại với tệp JPG, PNG hoặc WEBP hợp lệ." });
+  }
 };
 const decodeAvatarImageUpload = (input: z.infer<typeof avatarUploadInput>) => {
   const match = input.base64.match(/^data:([^;]+);base64,([A-Za-z0-9+/=\s]+)$/);
@@ -977,12 +986,14 @@ export const appRouter = router({
     }),
     uploadCover: permissionProcedure("quiz.create").input(quizImageUploadInput).mutation(async ({ ctx, input }) => {
       const bytes = decodeQuizImageUpload(input);
-      const uploaded = await storagePut(`quiz-covers/${ctx.user.id}/${Date.now()}-${safeUploadFileName(input.fileName)}`, bytes, input.mimeType);
+      const webp = await convertQuizImageToWebp(bytes);
+      const uploaded = await storagePut(`quiz-covers/${ctx.user.id}/${Date.now()}-${webpUploadFileName(input.fileName)}`, webp, "image/webp");
       return { url: uploaded.url };
     }),
     uploadQuestionImage: permissionProcedure("quiz.create").input(quizImageUploadInput).mutation(async ({ ctx, input }) => {
       const bytes = decodeQuizImageUpload(input);
-      const uploaded = await storagePut(`quiz-question-images/${ctx.user.id}/${Date.now()}-${safeUploadFileName(input.fileName)}`, bytes, input.mimeType);
+      const webp = await convertQuizImageToWebp(bytes);
+      const uploaded = await storagePut(`quiz-question-images/${ctx.user.id}/${Date.now()}-${webpUploadFileName(input.fileName)}`, webp, "image/webp");
       return { url: uploaded.url };
     }),
     myQuizzes: permissionProcedure("quiz.view").query(async ({ ctx }) => {

@@ -19,7 +19,7 @@ vi.mock("@/components/PermissionGuard", () => ({ default: ({ children }: { child
 vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: (options: { onSuccess?: (result: any) => void }) => { mocks.chat.onSuccess = options.onSuccess ?? null; return mocks.chat; } }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
-import UserQuizCreator, { ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
+import UserQuizCreator, { QuestionImagePreview, ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
 
 describe("Quiz Creator theo đặc tả", () => {
   afterEach(() => { cleanup(); mocks.versions.data = []; mocks.pinVersion.mockReset(); mocks.analytics.data = { summary: { completedAttempts: 8, averageScore: 75, passRate: 63, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [{ questionId: 1, prompt: "Câu hỏi phân tích", points: 1, answerCount: 8, correctCount: 5, correctRate: 63 }] }; window.history.replaceState({}, "", "/build"); });
@@ -184,7 +184,11 @@ describe("Quiz Creator theo đặc tả", () => {
     render(<UserQuizCreator />);
     await user.selectOptions(screen.getByRole("combobox", { name: "Loại câu hỏi 1" }), "true_false");
     expect((screen.getByRole("combobox", { name: "Loại câu hỏi 1" }) as HTMLSelectElement).value).toBe("true_false");
-    await user.click(screen.getByRole("button", { name: "Sao chép câu hỏi 1" }));
+    expect(screen.queryByRole("button", { name: "Sao chép câu hỏi 1" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Thao tác câu hỏi 1" }));
+    expect(screen.getByText("Nhân bản")).toBeTruthy();
+    expect(screen.getByText("Xóa")).toBeTruthy();
+    await user.click(screen.getByText("Nhân bản"));
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
   });
 
@@ -209,7 +213,8 @@ describe("Quiz Creator theo đặc tả", () => {
   it("cho phép xóa toàn bộ câu hỏi sau khi xác nhận", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
-    await user.click(screen.getByRole("button", { name: "Sao chép câu hỏi 1" }));
+    await user.click(screen.getByRole("button", { name: "Thao tác câu hỏi 1" }));
+    await user.click(screen.getByText("Nhân bản"));
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "Xóa tất cả câu hỏi" }));
     expect(screen.getByRole("heading", { name: "Xóa toàn bộ câu hỏi?" })).toBeTruthy();
@@ -327,6 +332,18 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByRole("button", { name: /Xem trước Sandbox/ })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Cài đặt" }));
     expect(screen.getAllByText("Quyền riêng tư & chia sẻ").length).toBeGreaterThan(0);
+  });
+
+  it("hiển thị ảnh câu hỏi trong khung nén và cung cấp thao tác gỡ ảnh", async () => {
+    const user = userEvent.setup();
+    const onRemove = vi.fn();
+    render(<QuestionImagePreview imageUrl="https://example.com/question-image.png" questionIndex={0} onRemove={onRemove} />);
+    const preview = screen.getByTestId("question-image-preview-1");
+    expect(preview.className).toContain("h-[180px]");
+    expect(preview.className).toContain("max-w-[600px]");
+    expect(screen.getByRole("img", { name: "Ảnh minh họa câu hỏi 1" }).getAttribute("src")).toBe("https://example.com/question-image.png");
+    await user.click(screen.getByRole("button", { name: "Xóa ảnh minh họa câu hỏi 1" }));
+    expect(onRemove).toHaveBeenCalledTimes(1);
   });
 
   it("hiển thị điều khiển tải ảnh bìa và ảnh minh họa câu hỏi qua S3", async () => {
