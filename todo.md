@@ -910,3 +910,5 @@
 - [x] Áp dụng focus input toàn hệ thống không viền, chỉ có đường viền dưới màu tím.
 - [x] Điều chỉnh độ tương phản gạch chân focus màu tím trong Dark Mode.
 - [x] Khi focus, ẩn hoàn toàn khung viền của input và chỉ giữ gạch chân tím.
+- [x] Tái thiết kế input Studio theo hover/focus: gạch chân tím, công cụ ngữ cảnh và xóa chỉ hiện khi cần.
+- [x] Chỉ hiển thị một gạch chân tím khi focus, loại bỏ đường viền tím trùng lặp.

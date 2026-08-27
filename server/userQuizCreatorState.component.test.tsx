@@ -249,12 +249,15 @@ describe("Quiz Creator theo đặc tả", () => {
     render(<UserQuizCreator />);
     const firstAnswer = screen.getByPlaceholderText("Tùy chọn 1");
     const secondAnswer = screen.getByPlaceholderText("Tùy chọn 2");
+    const firstAnswerRow = firstAnswer.closest(".studio-answer-row");
+    expect(firstAnswerRow).toBeTruthy();
+    expect(firstAnswerRow?.querySelector(".studio-answer-delete")).toBeTruthy();
     expect(screen.queryByText("Thêm hình ảnh")).toBeNull();
     await user.click(firstAnswer);
     const answerImageButton = screen.getByRole("button", { name: "Thêm hình ảnh cho question-1-option-0" });
     expect(answerImageButton).toBeTruthy();
-    expect(answerImageButton.parentElement?.className).toContain("answer-image-control");
-    expect(answerImageButton.parentElement?.parentElement?.className).not.toContain("rounded-lg");
+    expect(answerImageButton.closest(".answer-image-control")).toBeTruthy();
+    expect(answerImageButton.closest(".studio-answer-row")).toBeNull();
     expect(screen.queryByRole("button", { name: "Thêm hình ảnh cho question-1-option-1" })).toBeNull();
     await user.click(secondAnswer);
     expect(screen.queryByRole("button", { name: "Thêm hình ảnh cho question-1-option-0" })).toBeNull();

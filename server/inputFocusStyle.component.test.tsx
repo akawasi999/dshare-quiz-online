@@ -29,5 +29,6 @@ describe("Trạng thái focus của ô nhập liệu", () => {
     expect(styles).toContain("border-bottom-width: 2px !important;");
     expect(styles).toContain("box-shadow: none !important;");
     expect(styles).toContain(':not([aria-invalid="true"]):focus-visible');
+    expect(styles).toContain(".studio-answer-row:focus-within { border-bottom-color: transparent; }");
   });
 });

@@ -108,6 +108,11 @@ body { font-family: var(--font-family-primary, "Inter"), ui-sans-serif, system-u
 .editor-question-card.ring-2 { border: 2px solid #3b82f6 !important; box-shadow: 0 4px 14px rgba(59,130,246,.12); }
 .question-media-tile { min-width: 0; border: 1px solid #dbe5f1; border-radius: 8px; background: #f8fbff; padding: 10px; }
 .question-media-tile:focus-within { border-color: #3b82f6; background: #eff6ff; box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+.studio-answer-row { border-bottom: 1px solid transparent; transition: border-color 180ms var(--ease-out), background-color 180ms var(--ease-out); }
+.studio-answer-row:hover { border-bottom-color: color-mix(in srgb, var(--border) 68%, transparent); }
+.studio-answer-row:focus-within { border-bottom-color: transparent; }
+.studio-answer-delete { opacity: 0; pointer-events: none; transition: opacity 160ms var(--ease-out), color 160ms var(--ease-out), background-color 160ms var(--ease-out); }
+.studio-answer-row:hover .studio-answer-delete, .studio-answer-row:focus-within .studio-answer-delete { opacity: 1; pointer-events: auto; }
 
 @media (max-width: 1023px) {
   .editor-header { height: auto; min-height: 60px; padding-block: 8px; }
