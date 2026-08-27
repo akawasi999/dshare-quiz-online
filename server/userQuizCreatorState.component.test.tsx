@@ -350,6 +350,10 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(statementInput.value).toContain("nguồn điện");
     expect(screen.getByRole("button", { name: "Chọn Có cho nội dung 1" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Chọn Không cho nội dung 1" })).toBeTruthy();
+    const deleteButton = screen.getByRole("button", { name: "Xóa nội dung 1" });
+    expect(deleteButton.className).toContain("right-2");
+    expect(deleteButton.parentElement?.className).toContain("relative");
+    expect(screen.getByTestId("true-false-statements-table").querySelectorAll(".space-y-2 > .studio-answer-row")).toHaveLength(2);
   });
 
   it("đổi Ghép nối thành Mục bên trái và Mục bên phải với mũi tên ở giữa", async () => {

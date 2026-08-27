@@ -915,3 +915,4 @@
 - [x] Đổi Ghép nối sang Mục bên trái/Mục bên phải, có mũi tên ngoài ô phải.
 - [x] Thiết kế Nhận định Có/Không dạng bảng ba cột nền trắng với lựa chọn tròn.
 - [x] Thiết kế Đúng/Sai bằng hai thẻ lớn có trạng thái Có xanh và Không đỏ.
+- [x] Căn icon xóa cùng hàng nội dung và tách riêng các đường kẻ bảng Nhận định Có/Không.
