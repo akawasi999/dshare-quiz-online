@@ -31,4 +31,13 @@ describe("Trạng thái focus của ô nhập liệu", () => {
     expect(styles).toContain(':not([aria-invalid="true"]):focus-visible');
     expect(styles).toContain(".studio-answer-row:focus-within { border-bottom-color: transparent; }");
   });
+
+  it("giữ bảng Nhận định trong bề rộng khả dụng tại các breakpoint nhỏ", () => {
+    const styles = readFileSync("client/src/index.css", "utf8");
+    expect(styles).toContain('[data-testid="true-false-statements-table"] { min-width: 0; max-width: 100%; }');
+    expect(styles).toContain("@media (max-width: 640px)");
+    expect(styles).toContain("grid-template-columns: minmax(0, 1fr) 60px 60px !important;");
+    expect(styles).toContain("@media (max-width: 390px)");
+    expect(styles).toContain("grid-template-columns: minmax(0, 1fr) 52px 52px !important;");
+  });
 });
