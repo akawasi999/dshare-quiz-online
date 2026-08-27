@@ -917,3 +917,4 @@
 - [x] Thiết kế Đúng/Sai bằng hai thẻ lớn có trạng thái Có xanh và Không đỏ.
 - [x] Căn icon xóa cùng hàng nội dung và tách riêng các đường kẻ bảng Nhận định Có/Không.
 - [x] Tối ưu responsive bảng Nhận định Có/Không để không vỡ bố cục trên desktop, tablet và mobile.
+- [x] Di chuyển icon xóa của dòng Nhận định Có/Không sang phía trước nội dung.

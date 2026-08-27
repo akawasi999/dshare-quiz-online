@@ -351,8 +351,9 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByRole("button", { name: "Chọn Có cho nội dung 1" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Chọn Không cho nội dung 1" })).toBeTruthy();
     const deleteButton = screen.getByRole("button", { name: "Xóa nội dung 1" });
-    expect(deleteButton.className).toContain("right-2");
-    expect(deleteButton.parentElement?.className).toContain("relative");
+    expect(deleteButton.className).toContain("justify-center");
+    expect(deleteButton.className).not.toContain("absolute");
+    expect(deleteButton.parentElement?.firstElementChild).toBe(deleteButton);
     expect(screen.getByTestId("true-false-statements-table").querySelectorAll(".space-y-2 > .studio-answer-row")).toHaveLength(2);
   });
 
