@@ -281,32 +281,35 @@ function FloatingToolbar({ onOpenAi, onAdd, onSelectAll }: any) { return <aside 
 function CheckSquareIcon(props: any) { return <CheckCircle2 {...props} />; }
 function ToolbarButton({ label, icon: Icon, onClick, accent }: any) { return <Button type="button" variant="outline" onClick={onClick} className={`h-10 min-w-0 justify-start gap-2 rounded-xl border-[#172554]/8 bg-[#fafbff] px-3 text-xs font-semibold text-[#35415a] shadow-[0_6px_16px_rgba(20,44,91,.04)] hover:border-[#7057e8]/30 hover:bg-[#f7f4ff] xl:h-12 xl:w-12 xl:justify-center xl:px-0 xl:[&>span]:sr-only ${accent ? "text-[#7057e8]" : ""}`} aria-label={label}><Icon size={17} /><span>{label}</span></Button>; }
 
-function TopicCascadeSelector({ topics, value, onChange }: { topics: Array<{ id: number; name: string; parentId: number | null }>; value: string; onChange: (value: string) => void }) {
+function TopicPickerDialog({ open, onOpenChange, topics, value, onConfirm }: { open: boolean; onOpenChange: (open: boolean) => void; topics: Array<{ id: number; name: string; parentId: number | null }>; value: string; onConfirm: (value: string) => void }) {
+  const [pendingTopicId, setPendingTopicId] = useState(value);
+  useEffect(() => { if (open) setPendingTopicId(value); }, [open, value]);
+  const byId = useMemo(() => new Map(topics.map(topic => [topic.id, topic])), [topics]);
+  const chain = useMemo(() => { const result: Array<{ id: number; name: string; parentId: number | null }> = []; let current = pendingTopicId ? byId.get(Number(pendingTopicId)) : undefined; while (current) { result.unshift(current); current = current.parentId ? byId.get(current.parentId) : undefined; } return result; }, [byId, pendingTopicId]);
+  const rootTopics = topics.filter(topic => topic.parentId === null);
+  const secondTopics = chain[0] ? topics.filter(topic => topic.parentId === chain[0]!.id) : [];
+  const thirdTopics = chain[1] ? topics.filter(topic => topic.parentId === chain[1]!.id) : [];
+  const hasChildren = pendingTopicId ? topics.some(topic => topic.parentId === Number(pendingTopicId)) : false;
+  const isSelectionComplete = Boolean(pendingTopicId) && !hasChildren;
+  const columns = [{ label: "Chủ đề", options: rootTopics, selectedId: chain[0]?.id }, { label: "Cấp tiếp theo", options: secondTopics, selectedId: chain[1]?.id }, { label: "Chủ đề cuối", options: thirdTopics, selectedId: chain[2]?.id }];
+  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent data-testid="topic-picker-dialog" className="max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl p-0 sm:max-w-5xl"><DialogHeader className="border-b border-[#e2e8f0] px-5 py-4 sm:px-6"><DialogTitle>Chọn chủ đề Quiz</DialogTitle><DialogDescription className="sr-only">Chọn lần lượt các cấp chủ đề. Nếu một cấp có nhánh con, hãy chọn đến cấp cuối cùng.</DialogDescription></DialogHeader><div className="px-5 py-4 sm:px-6"><div className="flex min-h-12 items-center gap-2 rounded-lg bg-[#f3f4f8] px-3 text-sm font-semibold text-[#334155]"><LayoutGrid size={17} className="shrink-0 text-[#a8aabb]" />{chain.length ? <span>{chain.map(item => item.name).join(" · ")}</span> : <span className="text-[#71838d]">Chưa chọn chủ đề</span>}</div><div className="mt-5 grid divide-y divide-[#e2e8f0] md:grid-cols-3 md:divide-x md:divide-y-0">{columns.map((column, columnIndex) => <div key={column.label} className="min-h-44 py-3 md:px-4 md:first:pl-0 md:last:pr-0"><h3 className="px-2 pb-2 text-sm font-bold text-[#334155]">{column.label}{columnIndex === 0 ? <span className="ml-1 text-[#de1264]">*</span> : null}</h3>{column.options.length ? <div className="space-y-1">{column.options.map(topic => { const selected = topic.id === column.selectedId; return <button key={topic.id} type="button" onClick={() => setPendingTopicId(String(topic.id))} className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors ${selected ? "bg-[#f7f4ff] text-[#635BFF]" : "text-[#475569] hover:bg-[#f8fafc]"}`} aria-pressed={selected}>{topic.name}{selected ? <Check size={15} aria-hidden="true" /> : null}</button>; })}</div> : <p className="px-2 pt-3 text-xs text-[#94a3b8]">{columnIndex === 0 ? "Chưa có chủ đề" : "Chọn cấp trước để tiếp tục"}</p>}</div>)}</div></div><DialogFooter className="border-t border-[#e2e8f0] px-5 py-4 sm:px-6"><p className="mr-auto text-xs text-[#71838d]">{pendingTopicId && !isSelectionComplete ? "Hãy chọn đến chủ đề cuối cùng." : "Lựa chọn sẽ được lưu cùng Quiz."}</p><Button type="button" onClick={() => { if (!isSelectionComplete) return; onConfirm(pendingTopicId); onOpenChange(false); }} disabled={!isSelectionComplete} className="min-w-44 bg-[#635BFF] text-white hover:bg-[#584fe1]"><Check size={15} />Chọn chủ đề</Button></DialogFooter></DialogContent></Dialog>;
+}
+
+function TopicBreadcrumb({ topics, value, onOpen }: { topics: Array<{ id: number; name: string; parentId: number | null }>; value: string; onOpen: () => void }) {
   const byId = new Map(topics.map(topic => [topic.id, topic]));
-  const chain: number[] = [];
+  const chain: Array<{ id: number; name: string; parentId: number | null }> = [];
   let current = value ? byId.get(Number(value)) : undefined;
-  while (current) { chain.unshift(current.id); current = current.parentId ? byId.get(current.parentId) : undefined; }
-  const levels: Array<{ parentId: number | null; selectedId: number | undefined; options: typeof topics }> = [];
-  let parentId: number | null = null;
-  let index = 0;
-  while (true) {
-    const options = topics.filter(topic => topic.parentId === parentId);
-    if (!options.length) break;
-    const selectedId = chain[index];
-    levels.push({ parentId, selectedId, options });
-    if (!selectedId || !topics.some(topic => topic.parentId === selectedId)) break;
-    parentId = selectedId;
-    index += 1;
-  }
-  return <div className="grid gap-3 md:grid-cols-3" data-testid="topic-cascade-selector">{levels.map((level, levelIndex) => levelIndex === 0 ? <Field key={`${level.parentId ?? "root"}-${levelIndex}`} label="Chủ đề"><select aria-label="Chủ đề" required value={level.selectedId?.toString() ?? ""} onChange={event => onChange(event.target.value)} className="h-10 w-full rounded-md border border-[#172554]/10 bg-white px-3 text-sm"><option value="">Chọn Chủ đề</option>{level.options.map(topic => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</select></Field> : <div key={`${level.parentId ?? "root"}-${levelIndex}`} className="flex items-end"><select aria-label={`Chủ đề con cấp ${levelIndex + 1}`} required value={level.selectedId?.toString() ?? ""} onChange={event => onChange(event.target.value)} className="h-10 w-full rounded-md border border-[#172554]/10 bg-white px-3 text-sm"><option value="">Chọn Chủ đề</option>{level.options.map(topic => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</select></div>)}</div>;
+  while (current) { chain.unshift(current); current = current.parentId ? byId.get(current.parentId) : undefined; }
+  return <div data-testid="topic-breadcrumb" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e2e8f0] bg-white px-3 py-2.5"><div className="flex min-w-0 flex-wrap items-center gap-2">{chain.length ? chain.map((topic, index) => <div key={topic.id} className="flex items-center gap-2">{index ? <ChevronRight aria-hidden="true" size={16} className="text-[#94a3b8]" /> : null}<span className={`rounded-md border px-2.5 py-1.5 text-sm font-semibold ${index === 0 ? "border-[#d8efdf] bg-[#effaf2] text-[#3d5a47]" : "border-[#e2e8f0] bg-white text-[#475569]"}`}>{topic.name}</span></div>) : <span className="text-sm text-[#71838d]">Chưa chọn chủ đề</span>}</div><Button type="button" variant="outline" onClick={onOpen} aria-label="Thay đổi chủ đề" className="h-9 shrink-0 rounded-lg border-[#e2e8f0] bg-white px-3 text-xs font-semibold text-[#475569] hover:border-[#c4b5fd] hover:bg-[#faf8ff] hover:text-[#635BFF]"><Link2 size={14} />Thay đổi</Button></div>;
 }
 
 function SettingsWorkspace({ title, description, slug, topicId, coverImageUrl, settings, content, onTitle, onDescription, onSlug, onTopic, onCover, onSettings }: any) {
   const toggle = (key: keyof CreatorSettings, checked: boolean) => onSettings((current: CreatorSettings) => ({ ...current, [key]: checked }));
+  const [topicPickerOpen, setTopicPickerOpen] = useState(false);
   return <section data-testid="spec-settings-workspace" className="mx-auto mt-4 max-w-[1120px] space-y-5">
     <SettingsSection icon={Settings2} title="Thông tin cơ bản" description="Đặt tên, mô tả và nhận diện cho Quiz.">
       <div className="grid gap-4 md:grid-cols-2"><Field label="Tên Quiz *"><Input aria-label="Tiêu đề Quiz trong studio" value={title} onChange={event => onTitle(event.target.value)} placeholder="Tên Quiz" /></Field><Field label="Đường dẫn (slug)"><Input value={slug} onChange={event => onSlug(event.target.value)} placeholder="tu-dong-tu-ten-quiz" /></Field></div>
-      <div className="mt-4"><TopicCascadeSelector topics={content?.topics ?? []} value={topicId} onChange={onTopic} /></div>
+      <div className="mt-4"><TopicBreadcrumb topics={content?.topics ?? []} value={topicId} onOpen={() => setTopicPickerOpen(true)} /><TopicPickerDialog open={topicPickerOpen} onOpenChange={setTopicPickerOpen} topics={content?.topics ?? []} value={topicId} onConfirm={onTopic} /></div>
       <div className="mt-4"><Field label="Mô tả Quiz"><Textarea aria-label="Mô tả Quiz trong studio" value={description} onChange={event => onDescription(event.target.value)} className="min-h-20" placeholder="Mô tả ngắn gọn về mục tiêu hoặc nội dung Quiz." /></Field></div>
       <div className="mt-4"><Field label="Ảnh đại diện 16:9"><QuizCoverControl coverImageUrl={coverImageUrl} onCover={onCover} /></Field></div>
     </SettingsSection>

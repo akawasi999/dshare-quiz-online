@@ -88,19 +88,22 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.queryByText("Trợ lý biên soạn")).toBeNull();
     expect(screen.queryByText("Bảo mật & nâng cao")).toBeNull();
     expect(screen.getByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeTruthy();
-    expect(screen.getByRole("option", { name: "Tin học văn phòng" })).toBeTruthy();
+    expect(screen.getByTestId("topic-breadcrumb").textContent).toContain("Chưa chọn chủ đề");
     expect(screen.queryByText("Bản đồ Game")).toBeNull();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề" }), "24");
+    await user.click(screen.getByRole("button", { name: "Thay đổi chủ đề" }));
+    expect(screen.getByTestId("topic-picker-dialog")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Tin học văn phòng" }));
+    expect(screen.getByRole("button", { name: "Excel" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Excel" }));
+    expect(screen.getByRole("button", { name: "Hàm tính" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Chọn chủ đề" }).getAttribute("disabled")).not.toBeNull();
+    await user.click(screen.getByRole("button", { name: "Hàm tính" }));
+    await user.click(screen.getByRole("button", { name: "Chọn chủ đề" }));
+    expect(screen.queryByTestId("topic-picker-dialog")).toBeNull();
+    expect(screen.getByTestId("topic-breadcrumb").textContent).toContain("Tin học văn phòng");
+    expect(screen.getByTestId("topic-breadcrumb").textContent).toContain("Excel");
+    expect(screen.getByTestId("topic-breadcrumb").textContent).toContain("Hàm tính");
     expect(screen.queryByTestId("settings-topic-required")).toBeNull();
-    expect(screen.getByRole("combobox", { name: "Chủ đề con cấp 2" })).toBeTruthy();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề con cấp 2" }), "25");
-    expect(screen.getByRole("combobox", { name: "Chủ đề con cấp 3" })).toBeTruthy();
-    expect(screen.queryByText("Chủ đề cấp 2")).toBeNull();
-    expect(screen.queryByText("Chủ đề cấp 3")).toBeNull();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề" }), "27");
-    expect(screen.queryByRole("combobox", { name: "Chủ đề con cấp 2" })).toBeNull();
-    await user.selectOptions(screen.getByRole("combobox", { name: "Chủ đề" }), "28");
-    expect(screen.getByRole("combobox", { name: "Chủ đề con cấp 2" })).toBeTruthy();
   });
 
   it("mở Panel AI từ thanh AI nhanh và giữ nguyên Sidebar cùng Editor", async () => {
