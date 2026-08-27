@@ -713,9 +713,9 @@ body:has(main[data-ai-viewport="true"]) #root {
 }
 
 /* Keep form fields visually neutral while focused; validation states remain explicit. */
-:where(input[data-slot="input"], textarea[data-slot="textarea"], select):focus-visible {
+:where(input[data-slot="input"], textarea[data-slot="textarea"], select, [data-slot="select-trigger"]):not([aria-invalid="true"]):focus-visible {
   outline: none;
-  border-color: var(--input) !important;
+  border-color: transparent !important;
   --tw-ring-shadow: 0 0 #0000 !important;
   --tw-ring-offset-shadow: 0 0 #0000 !important;
 }

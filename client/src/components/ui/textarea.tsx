@@ -53,7 +53,7 @@ function Textarea({
     <textarea
       data-slot="textarea"
       className={cn(
-        "border-input placeholder:text-muted-foreground focus-visible:border-input focus-visible:ring-0 aria-invalid:border-destructive aria-invalid:ring-4 aria-invalid:ring-destructive/15 flex field-sizing-content min-h-28 w-full rounded-[var(--radius-md-token)] border bg-surface px-3 py-2.5 text-base shadow-[var(--shadow-sm)] transition-[color,border-color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-55 md:text-sm",
+        "border-input placeholder:text-muted-foreground focus-visible:border-transparent focus-visible:ring-0 aria-invalid:border-destructive aria-invalid:ring-4 aria-invalid:ring-destructive/15 flex field-sizing-content min-h-28 w-full rounded-[var(--radius-md-token)] border bg-surface px-3 py-2.5 text-base shadow-[var(--shadow-sm)] transition-[color,border-color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-55 md:text-sm",
         className
       )}
       onCompositionStart={handleCompositionStart}

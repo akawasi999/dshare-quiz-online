@@ -281,6 +281,13 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(cardsAfter[0]!.textContent).toContain("Đúng / Sai");
   });
 
+  it("không còn kéo-thả vị trí ở các thẻ câu hỏi vùng giữa", () => {
+    render(<UserQuizCreator />);
+    const questionCard = document.querySelector<HTMLElement>("[data-testid^='question-card-']");
+    expect(questionCard).toBeTruthy();
+    expect(questionCard?.getAttribute("draggable")).toBeNull();
+  });
+
   it("cuộn tới card tương ứng khi chọn câu hỏi trong Sidebar", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);

@@ -893,3 +893,5 @@
 - [x] Tối ưu danh sách Quiz của tôi trên mobile: bộ lọc gọn, thẻ và thao tác không tràn/cắt nội dung.
 - [x] Loại bỏ nút Sửa đổi trực tiếp trên card Quiz của tôi; giữ chức năng trong menu ba chấm.
 - [x] Loại bỏ viền và màu nhấn khi focus trên các ô input/textarea dùng chung.
+- [x] Loại bỏ hiệu ứng viền khi focus/chọn trên input, textarea và select toàn hệ thống.
+- [x] Loại bỏ tay nắm và thao tác kéo thả ở các thẻ câu hỏi vùng giữa trang /build.
