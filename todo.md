@@ -887,3 +887,4 @@
 - [x] Đặt nút tải ảnh bên dưới ô nhập nội dung câu hỏi trên giao diện mobile.
 - [x] Thêm nút AI nổi ở góc phải dưới trên mobile để mở khung chat AI dạng panel từ đáy.
 - [x] Loại bỏ khoảng trống và tràn ngang trên mobile để /build khớp chiều rộng màn hình, không có thanh cuộn dưới.
+- [x] Tinh gọn header mobile /build: hiển thị tiêu đề, bỏ ba chấm/xem trước và đặt Xuất bản cạnh Cài đặt.
