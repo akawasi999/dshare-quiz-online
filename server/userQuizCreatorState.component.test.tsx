@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   analytics: { data: { summary: { completedAttempts: 8, averageScore: 75, passRate: 63, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [{ questionId: 1, prompt: "Câu hỏi phân tích", points: 1, answerCount: 8, correctCount: 5, correctRate: 63 }] }, isLoading: false, isError: false, refetch: vi.fn() },
 }));
 
-vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideHeader, hideFooter, staticHeader, compactViewport }: { children: React.ReactNode; hideHeader?: boolean; hideFooter?: boolean; staticHeader?: boolean; compactViewport?: boolean }) => <div data-testid="account-layout" data-hide-header={hideHeader ? "true" : "false"} data-hide-footer={hideFooter ? "true" : "false"} data-static-header={staticHeader ? "true" : "false"} data-compact-viewport={compactViewport ? "true" : "false"}>{children}</div> }));
+vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideHeader, hideFooter, staticHeader, compactViewport, allowMobileScroll }: { children: React.ReactNode; hideHeader?: boolean; hideFooter?: boolean; staticHeader?: boolean; compactViewport?: boolean; allowMobileScroll?: boolean }) => <div data-testid="account-layout" data-hide-header={hideHeader ? "true" : "false"} data-hide-footer={hideFooter ? "true" : "false"} data-static-header={staticHeader ? "true" : "false"} data-compact-viewport={compactViewport ? "true" : "false"} data-allow-mobile-scroll={allowMobileScroll ? "true" : "false"}>{children}</div> }));
 vi.mock("@/components/PermissionGuard", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: (options: { onSuccess?: (result: any) => void }) => { mocks.chat.onSuccess = options.onSuccess ?? null; return mocks.chat; } }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
@@ -27,8 +27,10 @@ describe("Quiz Creator theo đặc tả", () => {
   it("hiển thị App Shell ba cột và ẩn chrome Landing Page", () => {
     render(<UserQuizCreator />);
     expect(screen.getByTestId("spec-creator-header").className).toContain("editor-header");
+    expect(screen.getByTestId("editor-mobile-tabs")).toBeTruthy();
     expect(screen.getByTestId("spec-quiz-workspace").className).toContain("editor-body");
     expect(screen.getByTestId("account-layout").getAttribute("data-compact-viewport")).toBe("true");
+    expect(screen.getByTestId("account-layout").getAttribute("data-allow-mobile-scroll")).toBe("true");
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-header")).toBe("true");
     expect(screen.getByTestId("account-layout").getAttribute("data-hide-footer")).toBe("true");
     expect(screen.getByText("Danh sách câu hỏi")).toBeTruthy();
@@ -43,7 +45,9 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.queryByRole("button", { name: "Đáp án" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Tác giả Quiz" })).toBeNull();
     expect(screen.getByRole("button", { name: "Xem trước Sandbox" }).textContent).toBe("");
+    expect(screen.getByTestId("question-media-controls").className).toContain("question-media-controls");
     expect(screen.getByTestId("settings-topic-required")).toBeTruthy();
+    expect(screen.getByTestId("manual-question-bar").className).toContain("editor-manual-question-bar");
     expect(screen.getByTestId("manual-question-bar").className).toContain("mb-[50px]");
     const preview = screen.getByRole("button", { name: "Xem trước Sandbox" });
     const publish = screen.getByRole("button", { name: /Xuất bản/ });
@@ -191,11 +195,13 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByRole("button", { name: "Thêm câu Đúng / Sai" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Thêm câu Ghép nối" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Thêm câu Chọn bằng hình ảnh" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Mở Chat AI trên điện thoại" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Thêm câu Trắc nghiệm" }).getAttribute("title")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Thêm câu Nhiều đáp án" }));
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "Tạo câu hỏi cùng AI" }));
     expect(screen.queryByTestId("question-quick-add-toolbar")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Mở Chat AI trên điện thoại" })).toBeNull();
   });
 
   it("cho phép xóa toàn bộ câu hỏi sau khi xác nhận", async () => {

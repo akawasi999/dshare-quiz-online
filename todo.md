@@ -883,3 +883,7 @@
 - [x] Căn thanh icon tạo câu hỏi sát cạnh phải của vùng tab Câu hỏi, giữ sticky và tự ẩn khi AI Chat mở.
 - [x] Căn thanh icon ngang hàng với thẻ Câu hỏi #1 và tối ưu bố cục Studio cho tablet/mobile.
 - [x] Chuẩn hóa tooltip toàn hệ thống để mỗi icon chỉ hiển thị một chú thích khi hover hoặc focus.
+- [x] Thiết kế lại /build trên mobile: ẩn danh sách câu hỏi, căn tab dưới Xuất bản, xếp dọc thao tác AI/kiểu câu hỏi, mở AI Chat từ đáy và cho phép vuốt cuộn nội dung.
+- [x] Đặt nút tải ảnh bên dưới ô nhập nội dung câu hỏi trên giao diện mobile.
+- [x] Thêm nút AI nổi ở góc phải dưới trên mobile để mở khung chat AI dạng panel từ đáy.
+- [x] Loại bỏ khoảng trống và tràn ngang trên mobile để /build khớp chiều rộng màn hình, không có thanh cuộn dưới.
