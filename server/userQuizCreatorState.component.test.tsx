@@ -185,6 +185,10 @@ describe("Quiz Creator theo đặc tả", () => {
     render(<UserQuizCreator />);
     await user.selectOptions(screen.getByRole("combobox", { name: "Loại câu hỏi 1" }), "true_false");
     expect((screen.getByRole("combobox", { name: "Loại câu hỏi 1" }) as HTMLSelectElement).value).toBe("true_false");
+    expect(screen.getByTestId("true-false-choice-cards")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Chọn Đúng cho câu 1" }).getAttribute("aria-pressed")).toBe("true");
+    await user.click(screen.getByRole("button", { name: "Chọn Sai cho câu 1" }));
+    expect(screen.getByRole("button", { name: "Chọn Sai cho câu 1" }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.queryByRole("button", { name: "Sao chép câu hỏi 1" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Thao tác câu hỏi 1" })).toBeNull();
     expect(screen.getByRole("button", { name: "Nhân bản câu hỏi 1" })).toBeTruthy();
@@ -337,9 +341,24 @@ describe("Quiz Creator theo đặc tả", () => {
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "+ Nhận định Có / Không" }));
     expect(screen.queryByText("Nhận định chọn Có / Không")).toBeNull();
-    const statementInput = screen.getByPlaceholderText("Nhận định 1") as HTMLInputElement;
+    expect(screen.getByTestId("true-false-statements-table")).toBeTruthy();
+    expect(screen.getByText("Nội dung")).toBeTruthy();
+    expect(screen.getByText("Có")).toBeTruthy();
+    expect(screen.getByText("Không")).toBeTruthy();
+    const statementInput = screen.getByPlaceholderText("Nội dung 1") as HTMLInputElement;
     await user.type(statementInput, "Máy tính cần có nguồn điện để hoạt động.");
     expect(statementInput.value).toContain("nguồn điện");
+    expect(screen.getByRole("button", { name: "Chọn Có cho nội dung 1" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Chọn Không cho nội dung 1" })).toBeTruthy();
+  });
+
+  it("đổi Ghép nối thành Mục bên trái và Mục bên phải với mũi tên ở giữa", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Loại câu hỏi 1" }), "matching");
+    expect(screen.getAllByPlaceholderText("Mục bên trái")).toHaveLength(2);
+    const rightInput = screen.getAllByPlaceholderText("Mục bên phải")[0]!;
+    expect(rightInput.parentElement?.previousElementSibling?.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("hiển thị tải ảnh cạnh nội dung, điểm sát độ khó và Preview Sandbox trong luồng P0", async () => {

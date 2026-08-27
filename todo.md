@@ -912,3 +912,6 @@
 - [x] Khi focus, ẩn hoàn toàn khung viền của input và chỉ giữ gạch chân tím.
 - [x] Tái thiết kế input Studio theo hover/focus: gạch chân tím, công cụ ngữ cảnh và xóa chỉ hiện khi cần.
 - [x] Chỉ hiển thị một gạch chân tím khi focus, loại bỏ đường viền tím trùng lặp.
+- [x] Đổi Ghép nối sang Mục bên trái/Mục bên phải, có mũi tên ngoài ô phải.
+- [x] Thiết kế Nhận định Có/Không dạng bảng ba cột nền trắng với lựa chọn tròn.
+- [x] Thiết kế Đúng/Sai bằng hai thẻ lớn có trạng thái Có xanh và Không đỏ.
