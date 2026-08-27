@@ -35,10 +35,13 @@ export function isIconOnlyControl(element: Element) {
 export function annotateIconTooltips(root: ParentNode = document) {
   root.querySelectorAll(allInteractiveSelector).forEach(element => {
     const iconClass = Array.from(element.querySelector("svg")?.classList ?? []).find(className => className.startsWith("lucide-"));
-    const label = element.getAttribute("aria-label")?.trim() ?? (iconClass ? fallbackLabels[iconClass] : undefined);
-    if (!label || element.hasAttribute("data-tooltip-skip") || !isIconOnlyControl(element)) return;
+    const nativeTitle = element.getAttribute("title")?.trim();
+    const label = element.getAttribute("aria-label")?.trim() ?? nativeTitle ?? (iconClass ? fallbackLabels[iconClass] : undefined);
+    if (!label || !isIconOnlyControl(element)) return;
+    if (nativeTitle) element.removeAttribute("title");
+    if (element.hasAttribute("data-tooltip-skip")) return;
     if (!element.getAttribute("aria-label")) element.setAttribute("aria-label", label);
-    element.setAttribute("data-icon-tooltip", label);
+    if (element.getAttribute("data-icon-tooltip") !== label) element.setAttribute("data-icon-tooltip", label);
   });
 }
 
@@ -54,7 +57,7 @@ export default function IconTooltipEnhancer() {
         }
       }));
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["aria-label", "title"], childList: true, subtree: true });
     return () => observer.disconnect();
   }, []);
 

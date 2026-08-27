@@ -3,6 +3,7 @@ import React from "react";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { annotateIconTooltips } from "../client/src/components/IconTooltipEnhancer";
 
 const mocks = vi.hoisted(() => ({
   content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }], topics: [{ id: 24, name: "Tin học văn phòng", parentId: null, depth: 0, status: "active" }, { id: 25, name: "Excel", parentId: 24, depth: 1, status: "active" }, { id: 26, name: "Hàm tính", parentId: 25, depth: 2, status: "active" }, { id: 27, name: "Chủ đề một cấp", parentId: null, depth: 0, status: "active" }, { id: 28, name: "Chủ đề hai cấp", parentId: null, depth: 0, status: "active" }, { id: 29, name: "Nhánh cuối", parentId: 28, depth: 1, status: "active" }] }, isLoading: false },
@@ -34,7 +35,10 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByText("Nhập chủ đề")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Lịch sử bản nháp" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Mở điều hướng Studio" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Tải xuống" }).getAttribute("title")).toBe("Tải xuống");
+    const downloadButton = screen.getByRole("button", { name: "Tải xuống" });
+    annotateIconTooltips(document);
+    expect(downloadButton.getAttribute("title")).toBeNull();
+    expect(downloadButton.getAttribute("data-icon-tooltip")).toBe("Tải xuống");
     expect(screen.queryByRole("button", { name: "Người làm bài" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Đáp án" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Tác giả Quiz" })).toBeNull();
@@ -187,6 +191,7 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByRole("button", { name: "Thêm câu Đúng / Sai" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Thêm câu Ghép nối" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Thêm câu Chọn bằng hình ảnh" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thêm câu Trắc nghiệm" }).getAttribute("title")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Thêm câu Nhiều đáp án" }));
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "Tạo câu hỏi cùng AI" }));

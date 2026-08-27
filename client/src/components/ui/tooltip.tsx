@@ -27,9 +27,15 @@ function Tooltip({
 }
 
 function TooltipTrigger({
+  asChild,
+  children,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
+  const triggerChild = asChild && React.isValidElement(children)
+    ? React.cloneElement(children as React.ReactElement<{ title?: string }>, { title: undefined })
+    : children;
+
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" data-tooltip-skip="" asChild={asChild} {...props}>{triggerChild}</TooltipPrimitive.Trigger>;
 }
 
 function TooltipContent({

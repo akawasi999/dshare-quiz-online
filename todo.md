@@ -882,3 +882,4 @@
 - [x] Thêm menu ba chấm cho các dạng còn lại, nút AI nổi bật, tự ẩn thanh khi AI Chat mở và cập nhật regression/xác minh.
 - [x] Căn thanh icon tạo câu hỏi sát cạnh phải của vùng tab Câu hỏi, giữ sticky và tự ẩn khi AI Chat mở.
 - [x] Căn thanh icon ngang hàng với thẻ Câu hỏi #1 và tối ưu bố cục Studio cho tablet/mobile.
+- [x] Chuẩn hóa tooltip toàn hệ thống để mỗi icon chỉ hiển thị một chú thích khi hover hoặc focus.
