@@ -138,6 +138,12 @@ describe("Quiz Creator theo đặc tả", () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
     await user.click(screen.getByRole("button", { name: "Nhập chủ đề" }));
+    expect(screen.getByTestId("ai-chat-welcome")).toBeTruthy();
+    expect(screen.getByText(/Chào bạn/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Xem lại tất cả các câu hỏi" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Chỉnh sửa câu hỏi và phương án trả lời trau chuốt hơn" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thêm câu hỏi" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Chọn mẫu theo môn học và cấp độ" }));
     expect(screen.getByText("Mẫu theo môn học & cấp độ")).toBeTruthy();
     expect(screen.getByLabelText("Chọn môn học cho prompt AI")).toBeTruthy();
     expect(screen.getByLabelText("Chọn cấp độ cho prompt AI")).toBeTruthy();
