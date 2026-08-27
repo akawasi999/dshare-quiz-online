@@ -27,7 +27,6 @@ const typeLabels = {
   image: "Quan sát hình ảnh",
   matching: "Ghép nối",
   ordering: "Sắp xếp thứ tự",
-  image_choice: "Chọn bằng hình ảnh",
   essay: "Tự luận",
 } as const;
 

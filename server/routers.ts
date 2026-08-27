@@ -69,7 +69,7 @@ import { buildAttemptMilestoneAlert } from "./attemptNotifications";
 import { getReferralValidationError, normalizeReferralCode } from "./referralUtils";
 import { richTextToPlainText, sanitizeRichTextHtml } from "../shared/richText";
 import { allocateQuestionCounts } from "./randomQuiz";
-import { getAcceptedAnswers, getMatchingPairs, getOrderingItems, getTrueFalseStatements, validateQuestionConfiguration } from "../shared/questionValidation";
+import { getAcceptedAnswers, getMatchingPairs, getOrderingItems, getTrueFalseStatements, type QuestionValidationType, validateQuestionConfiguration } from "../shared/questionValidation";
 import { notifyOwner } from "./_core/notification";
 import { storageGetSignedUrl, storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
@@ -317,7 +317,7 @@ async function assertRegistryPermission(userId: number, permissionKey: string) {
   }
 }
 
-const premiumQuestionTypes = new Set(["matching", "ordering", "image_choice"]);
+const premiumQuestionTypes = new Set(["matching", "ordering"]);
 
 async function assertPremiumQuestionTypesAllowed(userId: number, questionTypes: string[]) {
   const selectedCount = questionTypes.filter(type => premiumQuestionTypes.has(type)).length;
@@ -945,7 +945,7 @@ export const appRouter = router({
           difficulty: item.question.difficulty,
           tags: item.question.tags,
           imageUrl: item.question.imageUrl,
-          statements: item.question.type === "true_false_statements" ? getTrueFalseStatements(item.question.answerConfig ?? {}).map(statement => ({ id: statement.id, text: statement.text })) : [],
+          statements: item.question.type === "true_false_statements" ? getTrueFalseStatements(item.question.answerConfig ?? {}).map(statement => ({ id: statement.id, text: statement.text, imageUrl: statement.imageUrl })) : [],
           matchingPairs: item.question.type === "matching" ? getMatchingPairs(item.question.answerConfig ?? {}) : [],
           orderingItems: item.question.type === "ordering" ? getOrderingItems(item.question.answerConfig ?? {}) : [],
           acceptedAnswers: item.question.type === "fill_blank" ? getAcceptedAnswers(item.question.answerConfig ?? {}) : [],
@@ -956,7 +956,7 @@ export const appRouter = router({
             : item.options,
         })).map(question => ({
           ...question,
-          options: question.options.map(option => ({ id: option.id, body: option.body })),
+          options: question.options.map(option => ({ id: option.id, body: option.body, imageUrl: option.imageUrl })),
         })),
       };
     }),
@@ -1085,7 +1085,7 @@ export const appRouter = router({
     createQuiz: permissionProcedure("quiz.create").input(z.object({
       lessonId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), slug: z.string().trim().regex(/^[a-z0-9-]+$/).max(200).optional(), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440).default(15), maxAttempts: z.number().int().min(0).max(1000).default(0), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean().default(false), hideHintsAndExplanation: z.boolean().default(false), allowBackNavigation: z.boolean().default(true), requireRegistration: z.boolean().default(true), liveMonitoring: z.boolean().default(false), requireEmail: z.boolean().default(false), shuffleQuestions: z.boolean().default(false), shuffleAnswers: z.boolean().default(false), visibility: z.enum(["public", "unlisted", "private"]).default("public"), accessPolicy: z.enum(["everyone", "link", "code", "invited", "self"]).default("everyone"), accessCode: z.string().trim().max(64).default(""), accessPassword: z.string().max(160).default(""), invitees: z.string().max(4000).default("") }).default({ durationMinutes: 15, maxAttempts: 0, antiCheatMonitor: false, hideHintsAndExplanation: false, allowBackNavigation: true, requireRegistration: true, liveMonitoring: false, requireEmail: false, shuffleQuestions: false, shuffleAnswers: false, visibility: "public", accessPolicy: "everyone", accessCode: "", accessPassword: "", invitees: "" }),
-      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
+      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), imageUrl: quizAssetUrlInput.optional(), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể tạo quiz lúc này." });
@@ -1111,7 +1111,7 @@ export const appRouter = router({
         const item = input.questions[index]!;
         const createdQuestion = await db.insert(questions).values({ lessonId: lesson[0]!.id, topicId: topic?.id ?? null, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig });
         const questionId = Number(createdQuestion[0].insertId);
-        if (item.options.length) await db.insert(questionOptions).values(item.options.map((option: { body: string; isCorrect: boolean }, optionIndex: number) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex })));
+        if (item.options.length) await db.insert(questionOptions).values(item.options.map((option: { body: string; imageUrl?: string; isCorrect: boolean }, optionIndex: number) => ({ questionId, body: option.body, imageUrl: option.imageUrl, isCorrect: option.isCorrect, sortOrder: optionIndex })));
         await db.insert(quizQuestions).values({ quizId, questionId, sortOrder: index, points: item.points });
       }
       return { quizId, title: input.title, slug: quizSlug, questionCount: input.questions.length, isPublished: status === "published", status, visibility: input.settings.visibility };
@@ -1119,7 +1119,7 @@ export const appRouter = router({
     updateQuiz: permissionProcedure("quiz.edit").input(z.object({
       quizId: z.number().int().positive(), lessonId: z.number().int().positive().optional(), topicId: z.number().int().positive().optional(), title: z.string().trim().min(4).max(220), summary: z.string().trim().max(1000).optional(), coverImageUrl: quizAssetUrlInput.optional(), isPublished: z.boolean().default(false),
       settings: z.object({ durationMinutes: z.number().int().min(1).max(1440), maxAttempts: z.number().int().min(0).max(1000), expiresAt: z.string().datetime().optional(), antiCheatMonitor: z.boolean(), hideHintsAndExplanation: z.boolean(), allowBackNavigation: z.boolean(), requireRegistration: z.boolean(), liveMonitoring: z.boolean(), requireEmail: z.boolean(), shuffleQuestions: z.boolean(), shuffleAnswers: z.boolean(), visibility: z.enum(["public", "unlisted", "private"]), accessPolicy: z.enum(["everyone", "link", "code", "invited", "self"]), accessCode: z.string().trim().max(64), accessPassword: z.string().max(160), invitees: z.string().max(4000) }),
-      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
+      questions: z.array(z.object({ prompt: z.string().trim().min(8).max(5000), explanation: z.string().trim().max(5000).optional(), imageUrl: quizAssetUrlInput.optional(), type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "essay"]), difficulty: z.enum(["easy", "medium", "hard"]).default("medium"), tags: z.array(z.string().trim().min(1).max(40)).max(6).default([]), points: z.number().int().min(1).max(100).default(1), options: z.array(z.object({ body: z.string().trim().min(1).max(2000), imageUrl: quizAssetUrlInput.optional(), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) })).min(1).max(50),
     })).mutation(async ({ ctx, input }) => {
       const source = await getOwnedQuizDraft(ctx.user.id, input.quizId);
       await assertPremiumQuestionTypesAllowed(ctx.user.id, input.questions.map(item => item.type));
@@ -1133,7 +1133,7 @@ export const appRouter = router({
       const status = topic.requireQuizModeration && input.isPublished ? "pending_review" : input.isPublished ? "published" : "draft";
       await removeOwnedQuizQuestions(source.db, source.quiz.id, source.questions);
       await source.db.update(quizzes).set({ lessonId, topicId, status, title: input.title, summary: input.summary, coverImageUrl: input.coverImageUrl, durationSeconds: input.settings.durationMinutes * 60, questionCount: input.questions.length, randomizeQuestions: input.settings.shuffleQuestions, randomizeOptions: input.settings.shuffleAnswers, visibility: input.settings.visibility, creatorSettings: protectCreatorSettings(input.settings, source.quiz.creatorSettings), isPublished: status === "published" }).where(and(eq(quizzes.id, source.quiz.id), eq(quizzes.creatorUserId, ctx.user.id)));
-      for (let index = 0; index < input.questions.length; index += 1) { const item = input.questions[index]!; const createdQuestion = await source.db.insert(questions).values({ lessonId, topicId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(createdQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option, optionIndex) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId: source.quiz.id, questionId, sortOrder: index, points: item.points }); }
+      for (let index = 0; index < input.questions.length; index += 1) { const item = input.questions[index]!; const createdQuestion = await source.db.insert(questions).values({ lessonId, topicId, creatorUserId: ctx.user.id, prompt: item.prompt, explanation: item.explanation, imageUrl: item.imageUrl, type: item.type, difficulty: item.difficulty, tags: item.tags, answerConfig: item.answerConfig }); const questionId = Number(createdQuestion[0].insertId); if (item.options.length) await source.db.insert(questionOptions).values(item.options.map((option, optionIndex) => ({ questionId, body: option.body, imageUrl: option.imageUrl, isCorrect: option.isCorrect, sortOrder: optionIndex }))); await source.db.insert(quizQuestions).values({ quizId: source.quiz.id, questionId, sortOrder: index, points: item.points }); }
       return { quizId: source.quiz.id, title: input.title, questionCount: input.questions.length, isPublished: status === "published", status, visibility: input.settings.visibility };
     }),
     generateQuestionAI: permissionProcedure("ai.quiz.generate").input(aiQuestionInputSchema.omit({ lessonId: true })).mutation(async ({ ctx, input }) => {
@@ -1752,13 +1752,13 @@ export const appRouter = router({
       lessonId: z.number().int().positive(),
       quizId: z.number().int().positive().optional(),
       prompt: z.string().trim().min(8).max(5000),
-      type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "essay"]),
+      type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "essay"]),
       difficulty: z.enum(["easy", "medium", "hard"]),
       explanation: z.string().trim().max(5000).optional(),
       tags: z.array(z.string().trim().min(1).max(40)).min(1).max(12),
       answerConfig: z.record(z.string(), z.unknown()).optional(),
       imageUrl: z.string().url().max(1024).optional().or(z.literal("")),
-      options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10),
+      options: z.array(z.object({ body: z.string().trim().min(1).max(2000), imageUrl: quizAssetUrlInput.optional(), isCorrect: z.boolean() })).max(10),
     })).mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -1773,7 +1773,7 @@ export const appRouter = router({
         const created = await db.insert(questions).values(questionData);
         questionId = Number(created[0].insertId);
       }
-      if (input.options.length) await db.insert(questionOptions).values(input.options.map((option, sortOrder) => ({ questionId: questionId!, body: option.body, isCorrect: option.isCorrect, sortOrder })));
+      if (input.options.length) await db.insert(questionOptions).values(input.options.map((option, sortOrder) => ({ questionId: questionId!, body: option.body, imageUrl: option.imageUrl, isCorrect: option.isCorrect, sortOrder })));
       if (input.quizId) await db.insert(quizQuestions).values({ quizId: input.quizId, questionId: questionId!, points: 1, sortOrder: 0 }).onDuplicateKeyUpdate({ set: { questionId: questionId! } });
       await db.insert(auditLogs).values({ actorUserId: ctx.user.id, action: input.id ? "question.updated" : "question.created", entityType: "question", entityId: questionId, metadata: { prompt: input.prompt.slice(0, 160) } });
       return { success: true, questionId };
@@ -1784,7 +1784,7 @@ export const appRouter = router({
       const rows = await db.select().from(questions).where(input?.lessonId ? eq(questions.lessonId, input.lessonId) : undefined).orderBy(desc(questions.updatedAt));
       const options = rows.length ? await db.select().from(questionOptions).where(sql`${questionOptions.questionId} in (${sql.join(rows.map(row => sql`${row.id}`), sql`, `)})`).orderBy(questionOptions.sortOrder) : [];
       const header = ["lessonId", "prompt", "type", "difficulty", "tags", "explanation", "imageUrl", "answerConfig", "options"].join(",");
-      const lines = rows.map(question => [question.lessonId, question.prompt, question.type, question.difficulty, JSON.stringify(question.tags), question.explanation, question.imageUrl, JSON.stringify(question.answerConfig ?? {}), JSON.stringify(options.filter(option => option.questionId === question.id).map(option => ({ body: option.body, isCorrect: option.isCorrect })))].map(csvEscape).join(","));
+      const lines = rows.map(question => [question.lessonId, question.prompt, question.type, question.difficulty, JSON.stringify(question.tags), question.explanation, question.imageUrl, JSON.stringify(question.answerConfig ?? {}), JSON.stringify(options.filter(option => option.questionId === question.id).map(option => ({ body: option.body, imageUrl: option.imageUrl ?? undefined, isCorrect: option.isCorrect })))].map(csvEscape).join(","));
       return { filename: `dshare-question-bank-${new Date().toISOString().slice(0, 10)}.csv`, csv: [header, ...lines].join("\n") };
     }),
     importQuestions: adminProcedure.input(z.object({ csv: z.string().min(20).max(2_000_000) })).mutation(async ({ ctx, input }) => {
@@ -1799,16 +1799,16 @@ export const appRouter = router({
         const row = rows[index];
         try {
           const data = Object.fromEntries(columns.map((column, columnIndex) => [column, row[columnIndex] ?? ""]));
-          const lessonId = Number(data.lessonId); const type = data.type as "single" | "multiple" | "true_false" | "fill_blank" | "image" | "matching"; const difficulty = data.difficulty as "easy" | "medium" | "hard";
-          if (!Number.isInteger(lessonId) || !["single", "multiple", "true_false", "fill_blank", "image", "matching"].includes(type) || !["easy", "medium", "hard"].includes(difficulty)) throw new Error("lessonId, type hoặc difficulty không hợp lệ");
-          const tags = JSON.parse(data.tags || "[]") as string[]; const importedOptions = JSON.parse(data.options || "[]") as Array<{ body: string; isCorrect: boolean }>;
+          const lessonId = Number(data.lessonId); const type = data.type as QuestionValidationType; const difficulty = data.difficulty as "easy" | "medium" | "hard";
+          if (!Number.isInteger(lessonId) || !["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "essay"].includes(type) || !["easy", "medium", "hard"].includes(difficulty)) throw new Error("lessonId, type hoặc difficulty không hợp lệ");
+          const tags = JSON.parse(data.tags || "[]") as string[]; const importedOptions = JSON.parse(data.options || "[]") as Array<{ body: string; imageUrl?: string; isCorrect: boolean }>;
           const answerConfig = JSON.parse(data.answerConfig || "{}") as Record<string, unknown>;
           if (!Array.isArray(tags) || !tags.length || !Array.isArray(importedOptions)) throw new Error("tags hoặc options không hợp lệ");
           const validationError = validateQuestionConfiguration({ type, options: importedOptions, answerConfig, imageUrl: data.imageUrl || null });
           if (validationError) throw new Error(validationError);
           const createdQuestion = await db.insert(questions).values({ lessonId, prompt: data.prompt, type, difficulty, tags, explanation: data.explanation || null, imageUrl: data.imageUrl || null, answerConfig });
           const questionId = Number(createdQuestion[0].insertId);
-          await db.insert(questionOptions).values(importedOptions.map((option, sortOrder) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder })));
+          await db.insert(questionOptions).values(importedOptions.map((option, sortOrder) => ({ questionId, body: option.body, imageUrl: option.imageUrl, isCorrect: option.isCorrect, sortOrder })));
           created += 1;
         } catch (error) { errors.push({ row: index + 2, message: error instanceof Error ? error.message : "Dữ liệu không hợp lệ" }); }
       }

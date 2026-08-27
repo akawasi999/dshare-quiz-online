@@ -527,13 +527,13 @@ export async function submitAttempt(attemptId: number, userId: number) {
     selectedStatementAnswers: (payloadByQuestion.get(row.question.id) as { statementAnswers?: Record<string, boolean> } | null)?.statementAnswers ?? {},
     selectedMatchingAnswers: (payloadByQuestion.get(row.question.id) as { matchingAnswers?: Record<string, string> } | null)?.matchingAnswers ?? {},
     selectedTextAnswer: (payloadByQuestion.get(row.question.id) as { textAnswer?: string } | null)?.textAnswer ?? "",
-    statements: row.question.type === "true_false_statements" ? getTrueFalseStatements(row.question.answerConfig ?? {}).map(statement => ({ id: statement.id, text: statement.text, correct: statement.correct })) : [],
+    statements: row.question.type === "true_false_statements" ? getTrueFalseStatements(row.question.answerConfig ?? {}).map(statement => ({ id: statement.id, text: statement.text, imageUrl: statement.imageUrl, correct: statement.correct })) : [],
     matchingPairs: row.question.type === "matching" ? getMatchingPairs(row.question.answerConfig ?? {}) : [],
     acceptedAnswers: row.question.type === "fill_blank" ? getAcceptedAnswers(row.question.answerConfig ?? {}) : [],
     sampleOutline: row.question.type === "essay" ? String((row.question.answerConfig as { sampleOutline?: unknown } | null)?.sampleOutline ?? "") : "",
     correctOptionIds: row.options.filter(option => option.isCorrect).map(option => option.id),
     isCorrect: correctnessByQuestion.get(row.question.id) ?? false,
-    options: row.options.map(option => ({ id: option.id, body: option.body })),
+    options: row.options.map(option => ({ id: option.id, body: option.body, imageUrl: option.imageUrl })),
   }));
   return { ...summary, passed, quiz: detail.quiz, review, isFirstCompletion, isPersonalRecord, isQuizRecord, gamification };
 }

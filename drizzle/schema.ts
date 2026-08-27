@@ -141,7 +141,7 @@ export const supportMessages = mysqlTable("supportMessages", {
 export const accountTierValues = ["basic", "pro", "premium"] as const;
 export const paymentStatusValues = ["pending", "paid", "cancelled", "failed", "expired"] as const;
 export const quizModeValues = ["training", "testing"] as const;
-export const questionTypeValues = ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "essay"] as const;
+export const questionTypeValues = ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "essay"] as const;
 export const difficultyValues = ["easy", "medium", "hard"] as const;
 export const topicStatusValues = ["active", "archived"] as const;
 export const quizLifecycleStatusValues = ["draft", "pending_review", "rejected", "published", "locked", "archived"] as const;
@@ -712,6 +712,7 @@ export const questionOptions = mysqlTable("questionOptions", {
   id: int("id").autoincrement().primaryKey(),
   questionId: int("questionId").notNull(),
   body: text("body").notNull(),
+  imageUrl: varchar("imageUrl", { length: 1024 }),
   isCorrect: boolean("isCorrect").default(false).notNull(),
   sortOrder: int("sortOrder").default(0).notNull(),
 }, table => [index("question_options_question_idx").on(table.questionId)]);

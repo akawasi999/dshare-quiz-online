@@ -2,9 +2,9 @@ import { z } from "zod";
 import { parseAiQuestionDraft } from "./aiQuestionGenerator";
 import type { Tool, ToolCall } from "./_core/llm";
 
-const questionTypeSchema = z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "ordering", "image_choice", "essay"]);
+const questionTypeSchema = z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "ordering", "essay"]);
 const difficultySchema = z.enum(["easy", "medium", "hard"]);
-const optionSchema = z.object({ body: z.string().trim().min(1).max(2_000), isCorrect: z.boolean() });
+const optionSchema = z.object({ body: z.string().trim().min(1).max(2_000), imageUrl: z.string().max(2_000).optional(), isCorrect: z.boolean() });
 const questionDraftSchema = z.object({
   type: questionTypeSchema,
   difficulty: difficultySchema,
@@ -23,7 +23,7 @@ const studioQuestionContextSchema = z.object({
   prompt: z.string().trim().max(5_000),
   explanation: z.string().max(5_000),
   imageUrl: z.string().max(2_000),
-  options: z.array(z.object({ body: z.string().max(2_000), isCorrect: z.boolean() })).max(10),
+  options: z.array(z.object({ body: z.string().max(2_000), imageUrl: z.string().max(2_000).optional(), isCorrect: z.boolean() })).max(10),
   answerConfig: z.record(z.string(), z.unknown()),
 });
 const operationSchema = z.object({ kind: z.enum(["create", "update", "delete", "clear"]), targetId: z.string().trim().min(1).max(120).nullable(), question: questionDraftSchema.nullable() });
@@ -42,7 +42,7 @@ const studioChatResponseSchema = z.object({
   suggestedPrompts: z.array(z.string().trim().min(2).max(180)).max(3),
 });
 
-const toolQuestionSchema = { type: "object", properties: { type: { type: "string", enum: ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "ordering", "image_choice", "essay"] }, difficulty: { type: "string", enum: ["easy", "medium", "hard"] }, points: { type: "integer", minimum: 1, maximum: 100 }, prompt: { type: "string" }, explanation: { type: "string" }, imageUrl: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "points", "prompt", "explanation", "imageUrl", "options", "answerConfig"], additionalProperties: false };
+const toolQuestionSchema = { type: "object", properties: { type: { type: "string", enum: ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "ordering", "essay"] }, difficulty: { type: "string", enum: ["easy", "medium", "hard"] }, points: { type: "integer", minimum: 1, maximum: 100 }, prompt: { type: "string" }, explanation: { type: "string" }, imageUrl: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, imageUrl: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "points", "prompt", "explanation", "imageUrl", "options", "answerConfig"], additionalProperties: false };
 const toolQuestionUpdatesSchema = { type: "object", properties: { type: toolQuestionSchema.properties.type, difficulty: toolQuestionSchema.properties.difficulty, points: toolQuestionSchema.properties.points, prompt: toolQuestionSchema.properties.prompt, explanation: toolQuestionSchema.properties.explanation, imageUrl: toolQuestionSchema.properties.imageUrl, options: toolQuestionSchema.properties.options, answerConfig: toolQuestionSchema.properties.answerConfig }, additionalProperties: false };
 
 export const quizStudioChatTools: Tool[] = [
@@ -66,7 +66,7 @@ function normalizeAiOperationPayload(content: unknown) {
       const question = operation.question;
       const sourceOptions = Array.isArray(question.options) ? question.options : [];
       const options = sourceOptions.map((option, index) => {
-        if (isRecord(option) && typeof option.body === "string" && typeof option.isCorrect === "boolean") return option;
+        if (isRecord(option) && typeof option.body === "string" && typeof option.isCorrect === "boolean") return { body: option.body, imageUrl: typeof option.imageUrl === "string" ? option.imageUrl : undefined, isCorrect: option.isCorrect };
         if (typeof option === "boolean") return { body: option ? "Đúng" : "Sai", isCorrect: option };
         if (typeof option === "string" || typeof option === "number") return { body: String(option), isCorrect: index === 0 };
         return { body: `Phương án ${index + 1}`, isCorrect: index === 0 };
@@ -99,7 +99,7 @@ Quy tắc operations:
 1. create: targetId=null, question phải đầy đủ; tổng create không vượt requestedQuestionCount, 20, hoặc giới hạn 50 câu của Studio.
 2. update: targetId phải đúng id trong ngữ cảnh, question là phiên bản HOÀN CHỈNH sau khi sửa; có thể đổi kiểu, độ khó, điểm, nội dung, ảnh (imageUrl), đáp án, lời giải và answerConfig. Giữ nguyên trường hiện có nếu người dùng không yêu cầu thay đổi.
 3. delete: targetId phải đúng id trong ngữ cảnh, question=null. clear chỉ dùng khi người tạo yêu cầu xóa toàn bộ danh sách.
-4. Chỉ dùng các kiểu: single, multiple, true_false, true_false_statements, fill_blank, matching, ordering, image_choice, essay. Mọi câu phải có đáp án/answerConfig hợp lệ, points 1–100. imageUrl chỉ dùng URL ảnh hợp lệ hoặc chuỗi rỗng.
+4. Chỉ dùng các kiểu: single, multiple, true_false, true_false_statements, fill_blank, matching, ordering, essay. Mọi câu phải có đáp án/answerConfig hợp lệ, points 1–100. imageUrl chỉ dùng URL ảnh hợp lệ hoặc chuỗi rỗng.
 5. Trường options BẮT BUỘC là mảng object theo đúng mẫu [{"body":"Nội dung đáp án","isCorrect":true}]. Không bao giờ gửi options là chuỗi, boolean, số hoặc mảng boolean/chuỗi. answerConfig BẮT BUỘC là object JSON, dùng {} khi không có cấu hình riêng; không bao giờ là chuỗi, boolean, mảng hoặc null.
 6. Nếu không thể tạo cấu trúc đầy đủ, dùng action="clarify" và operations=[]; không gửi operation dở dang. Không tự bịa id, không thao tác ngoài yêu cầu, không tạo nội dung độc hại hoặc đáp án cho bài thi đang diễn ra. Luôn phản hồi JSON đúng schema.
 
@@ -155,7 +155,7 @@ export function parseQuizStudioToolCalls(toolCalls: ToolCall[] | undefined, curr
 
 const enhancementSchema = z.object({ action: z.enum(["explain", "rephrase", "latex"]), prompt: z.string().trim().max(5_000), explanation: z.string().trim().max(5_000), options: z.array(optionSchema).max(10), answerConfig: z.record(z.string(), z.unknown()) });
 
-export const questionEnhancementInputSchema = z.object({ action: z.enum(["explain", "rephrase", "latex"]), question: z.object({ type: questionTypeSchema, difficulty: difficultySchema, prompt: z.string().trim().min(8).max(5_000), explanation: z.string().max(5_000), options: z.array(z.object({ body: z.string().max(2_000), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) }) });
+export const questionEnhancementInputSchema = z.object({ action: z.enum(["explain", "rephrase", "latex"]), question: z.object({ type: questionTypeSchema, difficulty: difficultySchema, prompt: z.string().trim().min(8).max(5_000), explanation: z.string().max(5_000), options: z.array(z.object({ body: z.string().max(2_000), imageUrl: z.string().max(2_000).optional(), isCorrect: z.boolean() })).max(10), answerConfig: z.record(z.string(), z.unknown()).default({}) }) });
 
 export function buildQuestionEnhancementMessages(input: z.infer<typeof questionEnhancementInputSchema>) {
   const instruction = input.action === "explain" ? "Tạo lời giải chi tiết, rõ từng bước, dựa trên câu hỏi và đáp án đúng hiện có. Không thay đổi câu hỏi hoặc đáp án." : input.action === "rephrase" ? "Viết lại câu hỏi với ngữ cảnh hoặc số liệu khác nhưng giữ cùng mục tiêu kiến thức, dạng câu và đáp án đúng. Các phương án nhiễu phải hợp lý." : "Chỉ sửa lỗi chính tả, chuẩn hóa công thức toán/lý/hóa sang LaTeX trong dấu $...$ và giữ nguyên ý nghĩa, đáp án đúng.";

@@ -19,7 +19,7 @@ vi.mock("@/components/PermissionGuard", () => ({ default: ({ children }: { child
 vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => ({ data: undefined, isLoading: false }) }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: (options: { onSuccess?: (result: any) => void }) => { mocks.chat.onSuccess = options.onSuccess ?? null; return mocks.chat; } }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
-import UserQuizCreator, { QuestionImagePreview, ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
+import UserQuizCreator, { InlineAnswerImageUploader, QuestionImagePreview, ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
 
 describe("Quiz Creator theo đặc tả", () => {
   afterEach(() => { cleanup(); mocks.versions.data = []; mocks.pinVersion.mockReset(); mocks.analytics.data = { summary: { completedAttempts: 8, averageScore: 75, passRate: 63, latestCompletedAt: new Date("2026-08-21T00:00:00Z") }, questions: [{ questionId: 1, prompt: "Câu hỏi phân tích", points: 1, answerCount: 8, correctCount: 5, correctRate: 63 }] }; window.history.replaceState({}, "", "/build"); });
@@ -200,7 +200,7 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.getByRole("button", { name: "Thêm câu Nhiều đáp án" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Thêm câu Đúng / Sai" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Thêm câu Ghép nối" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Thêm câu Chọn bằng hình ảnh" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Thêm câu Chọn bằng hình ảnh" })).toBeNull();
     expect(screen.getByRole("button", { name: "Mở Chat AI trên điện thoại" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Thêm câu Trắc nghiệm" }).getAttribute("title")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Thêm câu Nhiều đáp án" }));
@@ -242,6 +242,31 @@ describe("Quiz Creator theo đặc tả", () => {
     expect(screen.queryByRole("button", { name: "Viết lại" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Chuẩn LaTeX" })).toBeNull();
     expect(screen.queryByText("Tùy chọn trả lời")).toBeNull();
+  });
+
+  it("chỉ hiện tải ảnh dưới đáp án đang focus và giới hạn xem trước một ảnh 62×62 px", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    const firstAnswer = screen.getByPlaceholderText("Tùy chọn 1");
+    const secondAnswer = screen.getByPlaceholderText("Tùy chọn 2");
+    expect(screen.queryByText("Thêm hình ảnh")).toBeNull();
+    await user.click(firstAnswer);
+    const answerImageButton = screen.getByRole("button", { name: "Thêm hình ảnh cho question-1-option-0" });
+    expect(answerImageButton).toBeTruthy();
+    expect(answerImageButton.parentElement?.className).toContain("answer-image-control");
+    expect(answerImageButton.parentElement?.parentElement?.className).not.toContain("rounded-lg");
+    expect(screen.queryByRole("button", { name: "Thêm hình ảnh cho question-1-option-1" })).toBeNull();
+    await user.click(secondAnswer);
+    expect(screen.queryByRole("button", { name: "Thêm hình ảnh cho question-1-option-0" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Thêm hình ảnh cho question-1-option-1" })).toBeTruthy();
+    cleanup();
+    const onImageChange = vi.fn();
+    render(<InlineAnswerImageUploader answerKey="answer-preview" focusedAnswerKey="" imageUrl="https://example.com/answer.webp" onImageChange={onImageChange} />);
+    const preview = screen.getByTestId("answer-image-preview-answer-preview");
+    expect(preview.className).toContain("size-[62px]");
+    expect(preview.querySelectorAll("img")).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "Xóa ảnh đáp án answer-preview" }));
+    expect(onImageChange).toHaveBeenCalledWith("");
   });
 
   it("hiển thị điều khiển sắp xếp và không còn năm dạng câu hỏi đã gỡ", async () => {
@@ -341,6 +366,7 @@ describe("Quiz Creator theo đặc tả", () => {
     const preview = screen.getByTestId("question-image-preview-1");
     expect(preview.className).toContain("h-[180px]");
     expect(preview.className).toContain("max-w-[600px]");
+    expect(screen.queryByText("Ảnh minh họa")).toBeNull();
     expect(screen.getByRole("img", { name: "Ảnh minh họa câu hỏi 1" }).getAttribute("src")).toBe("https://example.com/question-image.png");
     await user.click(screen.getByRole("button", { name: "Xóa ảnh minh họa câu hỏi 1" }));
     expect(onRemove).toHaveBeenCalledTimes(1);

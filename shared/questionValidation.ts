@@ -1,8 +1,8 @@
-export type QuestionValidationType = "single" | "multiple" | "true_false" | "true_false_statements" | "fill_blank" | "image" | "matching" | "ordering" | "image_choice" | "essay";
+export type QuestionValidationType = "single" | "multiple" | "true_false" | "true_false_statements" | "fill_blank" | "image" | "matching" | "ordering" | "essay";
 
-export type TrueFalseStatement = { id: string; text: string; correct: boolean };
-export type MatchingPair = { left: string; right: string };
-export type OrderingItem = { id: string; text: string };
+export type TrueFalseStatement = { id: string; text: string; imageUrl?: string; correct: boolean };
+export type MatchingPair = { left: string; right: string; leftImageUrl?: string; rightImageUrl?: string };
+export type OrderingItem = { id: string; text: string; imageUrl?: string };
 
 export function getTrueFalseStatements(answerConfig?: Record<string, unknown>): TrueFalseStatement[] {
   const values = answerConfig?.statements;
@@ -11,7 +11,7 @@ export function getTrueFalseStatements(answerConfig?: Record<string, unknown>): 
     if (!value || typeof value !== "object") return [];
     const statement = value as Record<string, unknown>;
     if (typeof statement.id !== "string" || typeof statement.text !== "string" || typeof statement.correct !== "boolean") return [];
-    return [{ id: statement.id, text: statement.text, correct: statement.correct }];
+    return [{ id: statement.id, text: statement.text, imageUrl: typeof statement.imageUrl === "string" ? statement.imageUrl : undefined, correct: statement.correct }];
   });
 }
 
@@ -23,7 +23,7 @@ export function getMatchingPairs(answerConfig?: Record<string, unknown>): Matchi
     const pair = value as Record<string, unknown>;
     if (typeof pair.left !== "string" || typeof pair.right !== "string") return [];
     const left = pair.left.trim(); const right = pair.right.trim();
-    return left && right ? [{ left, right }] : [];
+    return left && right ? [{ left, right, leftImageUrl: typeof pair.leftImageUrl === "string" ? pair.leftImageUrl : undefined, rightImageUrl: typeof pair.rightImageUrl === "string" ? pair.rightImageUrl : undefined }] : [];
   });
 }
 
@@ -41,20 +41,19 @@ export function getOrderingItems(answerConfig?: Record<string, unknown>): Orderi
     const item = value as Record<string, unknown>;
     if (typeof item.id !== "string" || typeof item.text !== "string") return [];
     const id = item.id.trim(); const text = item.text.trim();
-    return id && text ? [{ id, text }] : [];
+    return id && text ? [{ id, text, imageUrl: typeof item.imageUrl === "string" ? item.imageUrl : undefined }] : [];
   });
 }
 
-export type EditableQuestionConfig = { type: QuestionValidationType; options: Array<{ body: string; isCorrect: boolean }>; answerConfig?: Record<string, unknown>; imageUrl?: string | null };
+export type EditableQuestionConfig = { type: QuestionValidationType; options: Array<{ body: string; imageUrl?: string; isCorrect: boolean }>; answerConfig?: Record<string, unknown>; imageUrl?: string | null };
 
 export function validateQuestionConfiguration(input: EditableQuestionConfig) {
   const cleanOptions = input.options.filter(option => option.body.trim());
   const correctOptions = cleanOptions.filter(option => option.isCorrect);
-  if (["single", "image", "image_choice"].includes(input.type)) {
+  if (["single", "image"].includes(input.type)) {
     if (cleanOptions.length < 2) return "Câu chọn một đáp án cần ít nhất hai phương án.";
     if (correctOptions.length !== 1) return "Câu chọn một đáp án chỉ được có đúng một phương án đúng.";
-    if (["image", "image_choice"].includes(input.type) && !input.imageUrl?.trim()) return "Câu hỏi hình ảnh cần có URL hình minh họa.";
-    if (input.type === "image_choice" && (cleanOptions.length < 2 || cleanOptions.length > 6)) return "Câu chọn ảnh cần từ hai đến sáu phương án.";
+    if (input.type === "image" && !input.imageUrl?.trim()) return "Câu hỏi hình ảnh cần có URL hình minh họa.";
   }
   if (input.type === "multiple" && correctOptions.length < 2) return "Câu nhiều đáp án cần tối thiểu hai phương án đúng.";
   if (input.type === "true_false") {

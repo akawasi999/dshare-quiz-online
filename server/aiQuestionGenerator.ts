@@ -13,7 +13,7 @@ export const aiQuestionInputSchema = z.object({
 export type AiQuestionDraft = {
   prompt: string;
   explanation: string;
-  options: Array<{ body: string; isCorrect: boolean }>;
+  options: Array<{ body: string; imageUrl?: string; isCorrect: boolean }>;
   answerConfig: Record<string, unknown>;
 };
 
@@ -22,7 +22,7 @@ export function parseAiQuestionDraft(content: unknown, type: QuestionValidationT
   const draft = z.object({
     prompt: z.string().trim().min(8).max(5000),
     explanation: z.string().trim().min(3).max(5000),
-    options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(10),
+    options: z.array(z.object({ body: z.string().trim().min(1).max(2000), imageUrl: z.string().max(2000).optional(), isCorrect: z.boolean() })).max(10),
     answerConfig: z.record(z.string(), z.unknown()).default({}),
   }).parse(parsed);
   const error = validateQuestionConfiguration({ type, options: draft.options, answerConfig: draft.answerConfig, imageUrl: null });

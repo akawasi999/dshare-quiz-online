@@ -42,12 +42,12 @@ type ActiveQuestion = {
   tags: string[];
   explanation?: string | null;
   imageUrl?: string | null;
-  options: { id: number; body: string }[];
+  options: { id: number; body: string; imageUrl?: string | null }[];
   correctOptionIds?: number[];
-  statements?: Array<{ id: string; text: string; correct?: boolean }>;
-  matchingPairs?: Array<{ left: string; right: string }>;
+  statements?: Array<{ id: string; text: string; imageUrl?: string; correct?: boolean }>;
+  matchingPairs?: Array<{ left: string; right: string; leftImageUrl?: string; rightImageUrl?: string }>;
   acceptedAnswers?: string[];
-  orderingItems?: Array<{ id: string; text: string }>;
+  orderingItems?: Array<{ id: string; text: string; imageUrl?: string }>;
   sampleOutline?: string;
 };
 type SandboxPreview = {
@@ -684,14 +684,14 @@ export default function QuizRunner() {
                 </div>
                 <div className="mt-4 space-y-3">
                   {(current.matchingPairs ?? []).map((pair, index) => <div key={`${pair.left}-${index}`} className="grid gap-2 rounded-xl border border-border bg-surface p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center">
-                    <p className="text-sm font-semibold leading-6 text-foreground"><span className="mr-2 inline-grid size-6 place-items-center rounded-full bg-primary-light text-[11px] font-extrabold text-primary">{index + 1}</span>{pair.left}</p>
-                    <select aria-label={`Ghép nối cho ${pair.left}`} value={selectedMatching[String(index)] ?? ""} onChange={event => chooseMatching(index, event.target.value)} className="h-11 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"><option value="">Chọn đáp án phù hợp</option>{matchingChoices.map(choice => <option key={choice} value={choice}>{choice}</option>)}</select>
+                    <div className="min-w-0"><p className="text-sm font-semibold leading-6 text-foreground"><span className="mr-2 inline-grid size-6 place-items-center rounded-full bg-primary-light text-[11px] font-extrabold text-primary">{index + 1}</span>{pair.left}</p>{pair.leftImageUrl ? <img src={pair.leftImageUrl} alt={`Ảnh vế trái ${index + 1}`} className="mt-2 size-[62px] rounded-md border border-border object-cover" /> : null}</div>
+                    <div><select aria-label={`Ghép nối cho ${pair.left}`} value={selectedMatching[String(index)] ?? ""} onChange={event => chooseMatching(index, event.target.value)} className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"><option value="">Chọn đáp án phù hợp</option>{matchingChoices.map(choice => <option key={choice} value={choice}>{choice}</option>)}</select>{(current.matchingPairs ?? []).find(candidate => candidate.right === selectedMatching[String(index)])?.rightImageUrl ? <img src={(current.matchingPairs ?? []).find(candidate => candidate.right === selectedMatching[String(index)])?.rightImageUrl} alt="Ảnh đáp án ghép nối" className="mt-2 size-[62px] rounded-md border border-border object-cover" /> : null}</div>
                   </div>)}
                 </div>
               </section>
             ) : null}
             {current.type === "ordering" ? (
-              <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5"><p className="text-sm font-bold text-foreground">Sắp xếp theo đúng trình tự</p><p className="mt-1 text-xs text-text-secondary">Dùng nút mũi tên để thay đổi vị trí từng mục.</p><div className="mt-4 space-y-2">{selectedOrdering.map((id, index) => { const item = (current.orderingItems ?? []).find(candidate => candidate.id === id); return <div key={id} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary-light text-xs font-black text-primary">{index + 1}</span><p className="min-w-0 flex-1 text-sm font-semibold text-foreground">{item?.text || "Mục chưa xác định"}</p><div className="flex gap-1"><Button type="button" variant="outline" size="icon" disabled={index === 0} onClick={() => moveOrderingItem(index, -1)} aria-label={`Đưa mục ${index + 1} lên`} className="size-8">↑</Button><Button type="button" variant="outline" size="icon" disabled={index === selectedOrdering.length - 1} onClick={() => moveOrderingItem(index, 1)} aria-label={`Đưa mục ${index + 1} xuống`} className="size-8">↓</Button></div></div>; })}</div></section>
+              <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5"><p className="text-sm font-bold text-foreground">Sắp xếp theo đúng trình tự</p><p className="mt-1 text-xs text-text-secondary">Dùng nút mũi tên để thay đổi vị trí từng mục.</p><div className="mt-4 space-y-2">{selectedOrdering.map((id, index) => { const item = (current.orderingItems ?? []).find(candidate => candidate.id === id); return <div key={id} className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3"><span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary-light text-xs font-black text-primary">{index + 1}</span><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-foreground">{item?.text || "Mục chưa xác định"}</p>{item?.imageUrl ? <img src={item.imageUrl} alt={`Ảnh mục sắp xếp ${index + 1}`} className="mt-2 size-[62px] rounded-md border border-border object-cover" /> : null}</div><div className="flex gap-1"><Button type="button" variant="outline" size="icon" disabled={index === 0} onClick={() => moveOrderingItem(index, -1)} aria-label={`Đưa mục ${index + 1} lên`} className="size-8">↑</Button><Button type="button" variant="outline" size="icon" disabled={index === selectedOrdering.length - 1} onClick={() => moveOrderingItem(index, 1)} aria-label={`Đưa mục ${index + 1} xuống`} className="size-8">↓</Button></div></div>; })}</div></section>
             ) : null}
             {current.type === "fill_blank" ? (
               <section className="mt-8 rounded-[var(--radius-md-token)] border border-border bg-muted/45 p-4 sm:p-5">
@@ -762,9 +762,7 @@ export default function QuizRunner() {
                         String.fromCharCode(65 + index)
                       )}
                     </span>
-                    <span className="text-sm font-medium leading-6 text-foreground">
-                      {option.body}
-                    </span>
+                    <span className="min-w-0"><span className="block text-sm font-medium leading-6 text-foreground">{option.body}</span>{option.imageUrl ? <img src={option.imageUrl} alt={`Ảnh đáp án ${index + 1}`} className="mt-2 size-[62px] rounded-md border border-border object-cover" /> : null}</span>
                   </button>
                 );
               })}
@@ -1044,7 +1042,7 @@ function StatementAnswerTable({
   onChoose,
   reveal,
 }: {
-  statements: Array<{ id: string; text: string; correct?: boolean }>;
+  statements: Array<{ id: string; text: string; imageUrl?: string; correct?: boolean }>;
   selected: Record<string, boolean>;
   onChoose: (id: string, value: boolean) => void;
   reveal: boolean;
@@ -1068,10 +1066,7 @@ function StatementAnswerTable({
             key={statement.id}
             className="grid grid-cols-[minmax(0,1fr)_72px_84px] items-center gap-1 border-t border-border-light px-4 py-3"
           >
-            <p className="pr-3 text-sm font-medium leading-6 text-foreground">
-              <span className="mr-2 text-text-secondary">{index + 1}.</span>
-              {statement.text}
-            </p>
+            <div className="min-w-0 pr-3"><p className="text-sm font-medium leading-6 text-foreground"><span className="mr-2 text-text-secondary">{index + 1}.</span>{statement.text}</p>{statement.imageUrl ? <img src={statement.imageUrl} alt={`Ảnh nhận định ${index + 1}`} className="mt-2 size-[62px] rounded-md border border-border object-cover" /> : null}</div>
             {([true, false] as const).map(value => {
               const active = selectedValue === value;
               const correctChoice =

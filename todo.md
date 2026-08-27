@@ -898,3 +898,10 @@
 - [x] Hiển thị ảnh câu hỏi dưới nội dung trong khung nén tối đa 600 × 180 px.
 - [x] Gộp Nhân bản/Xóa vào menu ba chấm của thẻ câu hỏi và loại bỏ nút Sao chép trực tiếp.
 - [x] Tự động chuyển ảnh tải lên trong Quiz Studio sang WebP trước khi lưu để giảm dung lượng.
+- [x] Loại bỏ hoàn toàn kiểu câu hỏi Chọn ảnh khỏi Studio, validation, AI và Runner.
+- [x] Cho phép tải ảnh đáp án theo ngữ cảnh cho Trắc nghiệm, Nhiều đáp án, Ghép nối, Sắp xếp và Nhận định Có/Không.
+- [x] Chỉ hiện nút Thêm hình ảnh dưới ô đang focus và xác minh các luồng tải ảnh đáp án.
+- [x] Giới hạn một ảnh cho nội dung và mỗi đáp án; ảnh mới thay thế ảnh cũ, ảnh đáp án xem trước 62 × 62 px.
+- [x] Tách vùng ảnh đáp án khỏi input, thêm hover nhẹ cho nút Thêm hình ảnh và bỏ nhãn Ảnh minh hoạ ở ảnh câu hỏi.
+- [x] Bỏ đường nét đứt; hiển thị khối ảnh riêng dưới input của Trắc nghiệm và Nhiều đáp án.
+- [x] Đưa nút và ảnh đáp án hoàn toàn ra ngoài thẻ viền của đáp án tương ứng.

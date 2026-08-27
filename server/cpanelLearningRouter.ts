@@ -13,13 +13,13 @@ const quizStatusSchema = z.enum(["draft", "pending_review", "rejected", "publish
 const MAX_QUIZZES_PER_PAGE = 20;
 const quizQuestionPayloadSchema = z.object({
   prompt: z.string().trim().min(8).max(5000),
-  type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "image_choice", "essay"]),
+  type: z.enum(["single", "multiple", "true_false", "true_false_statements", "fill_blank", "image", "matching", "ordering", "essay"]),
   difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
   explanation: z.string().trim().max(5000).nullable().optional(),
   tags: z.array(z.string().trim().min(1).max(50)).max(20).default([]),
   answerConfig: z.record(z.string(), z.unknown()).optional(),
   imageUrl: z.string().url().max(1024).nullable().optional(),
-  options: z.array(z.object({ body: z.string().trim().min(1).max(2000), isCorrect: z.boolean() })).max(12).default([]),
+  options: z.array(z.object({ body: z.string().trim().min(1).max(2000), imageUrl: z.string().url().max(1024).optional(), isCorrect: z.boolean() })).max(12).default([]),
   points: z.number().int().min(0).max(1000).default(1),
 });
 
@@ -257,7 +257,7 @@ export const cpanelLearningRouter = router({
       const links = await db.select({ question: questions }).from(quizQuestions).innerJoin(questions, eq(quizQuestions.questionId, questions.id)).where(eq(quizQuestions.quizId, quiz.id));
       if (!links.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Quiz cần có ít nhất một câu hỏi hợp lệ trước khi publish." });
       const optionRows = await db.select().from(questionOptions).where(inArray(questionOptions.questionId, links.map(row => row.question.id)));
-      const invalidQuestion = links.find(({ question }) => validateQuestionConfiguration({ type: question.type, options: optionRows.filter(option => option.questionId === question.id).map(option => ({ body: option.body, isCorrect: option.isCorrect })), answerConfig: question.answerConfig ?? undefined, imageUrl: question.imageUrl }) !== null);
+      const invalidQuestion = links.find(({ question }) => validateQuestionConfiguration({ type: question.type, options: optionRows.filter(option => option.questionId === question.id).map(option => ({ body: option.body, imageUrl: option.imageUrl ?? undefined, isCorrect: option.isCorrect })), answerConfig: question.answerConfig ?? undefined, imageUrl: question.imageUrl }) !== null);
       if (invalidQuestion) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Câu hỏi #${invalidQuestion.question.id} chưa có cấu hình đáp án hợp lệ.` });
       const publishedAt = input.publishedAt ?? new Date();
       const isReviewApproval = quiz.status === "pending_review";
@@ -370,7 +370,7 @@ export const cpanelLearningRouter = router({
         const last = (await tx.select({ max: sql<number>`coalesce(max(${quizQuestions.sortOrder}), -1)` }).from(quizQuestions).where(eq(quizQuestions.quizId, quiz.id)))[0];
         const createdQuestion = await tx.insert(questions).values({ lessonId: null, topicId: quiz.topicId, creatorUserId: ctx.user.id, prompt: input.question.prompt, type: input.question.type, difficulty: input.question.difficulty, explanation: input.question.explanation ?? null, tags: input.question.tags, answerConfig: input.question.answerConfig ?? null, imageUrl: input.question.imageUrl ?? null });
         const questionId = Number(createdQuestion[0].insertId);
-        if (input.question.options.length) await tx.insert(questionOptions).values(input.question.options.map((option, sortOrder) => ({ questionId, body: option.body, isCorrect: option.isCorrect, sortOrder })));
+        if (input.question.options.length) await tx.insert(questionOptions).values(input.question.options.map((option, sortOrder) => ({ questionId, body: option.body, imageUrl: option.imageUrl, isCorrect: option.isCorrect, sortOrder })));
         await tx.insert(quizQuestions).values({ quizId: quiz.id, questionId, points: input.question.points, sortOrder: Number(last?.max ?? -1) + 1 });
         const count = (await tx.select({ count: sql<number>`count(*)` }).from(quizQuestions).where(eq(quizQuestions.quizId, quiz.id)))[0];
         await tx.update(quizzes).set({ questionCount: Number(count?.count ?? 0), version: quiz.version + 1 }).where(eq(quizzes.id, quiz.id));
@@ -394,7 +394,7 @@ export const cpanelLearningRouter = router({
       await db.transaction(async tx => {
         await tx.update(questions).set({ topicId: source.topicId, prompt: input.question.prompt, type: input.question.type, difficulty: input.question.difficulty, explanation: input.question.explanation ?? null, tags: input.question.tags, answerConfig: input.question.answerConfig ?? null, imageUrl: input.question.imageUrl ?? null }).where(eq(questions.id, input.questionId));
         await tx.delete(questionOptions).where(eq(questionOptions.questionId, input.questionId));
-        if (input.question.options.length) await tx.insert(questionOptions).values(input.question.options.map((option, sortOrder) => ({ questionId: input.questionId, body: option.body, isCorrect: option.isCorrect, sortOrder })));
+        if (input.question.options.length) await tx.insert(questionOptions).values(input.question.options.map((option, sortOrder) => ({ questionId: input.questionId, body: option.body, imageUrl: option.imageUrl, isCorrect: option.isCorrect, sortOrder })));
         await tx.update(quizQuestions).set({ points: input.question.points }).where(and(eq(quizQuestions.quizId, input.quizId), eq(quizQuestions.questionId, input.questionId)));
         await tx.update(quizzes).set({ version: source.version + 1 }).where(eq(quizzes.id, source.id));
         await tx.insert(auditLogs).values({ actorUserId: ctx.user.id, action: "quiz.question_updated", entityType: "quiz", entityId: source.id, metadata: { questionId: input.questionId, reason: input.reason } });

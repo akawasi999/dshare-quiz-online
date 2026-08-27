@@ -15,7 +15,7 @@ const makeStatement = (index: number): StatementDraft => ({ id: `statement-${Dat
 const emptyOptions = (): OptionDraft[] => [{ body: "", isCorrect: true }, { body: "", isCorrect: false }];
 
 const typeDescriptions: Record<QuestionValidationType, string> = {
-  single: "Chọn đúng một phương án.", multiple: "Chọn tất cả phương án đúng.", true_false: "Chọn một trong hai kết luận Đúng hoặc Sai.", true_false_statements: "Mỗi nhận định chọn độc lập Có hoặc Không.", fill_blank: "So khớp đáp án nhập theo các biến thể được chấp nhận.", image: "Quan sát hình minh họa rồi chọn một phương án.", matching: "Ghép các cặp trái–phải trong chế độ luyện tập.", ordering: "Sắp xếp các mục theo đúng trình tự.", image_choice: "Chọn đúng đáp án dựa trên hình ảnh.", essay: "Câu tự luận có dàn ý hoặc đáp án mẫu để chấm thủ công.",
+  single: "Chọn đúng một phương án.", multiple: "Chọn tất cả phương án đúng.", true_false: "Chọn một trong hai kết luận Đúng hoặc Sai.", true_false_statements: "Mỗi nhận định chọn độc lập Có hoặc Không.", fill_blank: "So khớp đáp án nhập theo các biến thể được chấp nhận.", image: "Quan sát hình minh họa rồi chọn một phương án.", matching: "Ghép các cặp trái–phải trong chế độ luyện tập.", ordering: "Sắp xếp các mục theo đúng trình tự.", essay: "Câu tự luận có dàn ý hoặc đáp án mẫu để chấm thủ công.",
 };
 
 export default function QuestionEditorPanel() {
