@@ -308,7 +308,7 @@ button, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
 button:active { transform: scale(.97); }
-button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 36%, transparent); outline-offset: 3px; }
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 36%, transparent); outline-offset: 3px; }
 h1, h2, h3, h4, h5, h6, .font-serif { font-family: "Inter", ui-sans-serif, system-ui, sans-serif; color: var(--text); }
 h1 { font-size: clamp(2.25rem, 5vw, 3rem); line-height: 1.15; letter-spacing: -.035em; }
 h2 { font-size: clamp(1.75rem, 3vw, 2.25rem); line-height: 1.2; letter-spacing: -.025em; }
@@ -712,10 +712,12 @@ body:has(main[data-ai-viewport="true"]) #root {
   .my-quiz-card-actions > button:last-child { min-width: 0; padding-inline: 10px; }
 }
 
-/* Keep form fields visually neutral while focused; validation states remain explicit. */
-:where(input[data-slot="input"], textarea[data-slot="textarea"], select, [data-slot="select-trigger"]):not([aria-invalid="true"]):focus-visible {
+/* Focused fields use a purple underline; invalid-state styling remains explicit. */
+:where(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), textarea, select, [data-slot="select-trigger"]):not([aria-invalid="true"]):focus-visible {
   outline: none;
   border-color: transparent !important;
+  border-bottom-color: #7057e8 !important;
+  border-bottom-width: 2px !important;
   --tw-ring-shadow: 0 0 #0000 !important;
   --tw-ring-offset-shadow: 0 0 #0000 !important;
 }

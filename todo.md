@@ -905,3 +905,6 @@
 - [x] Tách vùng ảnh đáp án khỏi input, thêm hover nhẹ cho nút Thêm hình ảnh và bỏ nhãn Ảnh minh hoạ ở ảnh câu hỏi.
 - [x] Bỏ đường nét đứt; hiển thị khối ảnh riêng dưới input của Trắc nghiệm và Nhiều đáp án.
 - [x] Đưa nút và ảnh đáp án hoàn toàn ra ngoài thẻ viền của đáp án tương ứng.
+- [x] Thay menu ba chấm của thẻ câu hỏi bằng icon Nhân bản và Xóa không chữ.
+- [x] Gỡ Trợ lý biên soạn và Bảo mật & nâng cao khỏi tab Cài đặt Quiz Studio.
+- [x] Áp dụng focus input toàn hệ thống không viền, chỉ có đường viền dưới màu tím.

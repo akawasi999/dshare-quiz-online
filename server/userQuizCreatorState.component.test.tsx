@@ -85,7 +85,8 @@ describe("Quiz Creator theo đặc tả", () => {
     await user.click(screen.getByRole("button", { name: "Cài đặt" }));
     expect(screen.getByText("Thông tin cơ bản")).toBeTruthy();
     expect(screen.getByText("Cấu hình làm bài")).toBeTruthy();
-    expect(screen.getByText("Bảo mật & nâng cao")).toBeTruthy();
+    expect(screen.queryByText("Trợ lý biên soạn")).toBeNull();
+    expect(screen.queryByText("Bảo mật & nâng cao")).toBeNull();
     expect(screen.getByRole("textbox", { name: "Tiêu đề Quiz trong studio" })).toBeTruthy();
     expect(screen.getByRole("option", { name: "Tin học văn phòng" })).toBeTruthy();
     expect(screen.queryByText("Bản đồ Game")).toBeNull();
@@ -185,10 +186,10 @@ describe("Quiz Creator theo đặc tả", () => {
     await user.selectOptions(screen.getByRole("combobox", { name: "Loại câu hỏi 1" }), "true_false");
     expect((screen.getByRole("combobox", { name: "Loại câu hỏi 1" }) as HTMLSelectElement).value).toBe("true_false");
     expect(screen.queryByRole("button", { name: "Sao chép câu hỏi 1" })).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Thao tác câu hỏi 1" }));
-    expect(screen.getByText("Nhân bản")).toBeTruthy();
-    expect(screen.getByText("Xóa")).toBeTruthy();
-    await user.click(screen.getByText("Nhân bản"));
+    expect(screen.queryByRole("button", { name: "Thao tác câu hỏi 1" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Nhân bản câu hỏi 1" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Xóa câu hỏi 1" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Nhân bản câu hỏi 1" }));
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
   });
 
@@ -213,8 +214,7 @@ describe("Quiz Creator theo đặc tả", () => {
   it("cho phép xóa toàn bộ câu hỏi sau khi xác nhận", async () => {
     const user = userEvent.setup();
     render(<UserQuizCreator />);
-    await user.click(screen.getByRole("button", { name: "Thao tác câu hỏi 1" }));
-    await user.click(screen.getByText("Nhân bản"));
+    await user.click(screen.getByRole("button", { name: "Nhân bản câu hỏi 1" }));
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "Xóa tất cả câu hỏi" }));
     expect(screen.getByRole("heading", { name: "Xóa toàn bộ câu hỏi?" })).toBeTruthy();
