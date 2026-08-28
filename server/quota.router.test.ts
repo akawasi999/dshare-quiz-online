@@ -58,4 +58,24 @@ describe("membership quota gates", () => {
       remaining: { attempts: 16, quizzes: 1, aiCredits: 14 },
     });
   });
+
+  it("để Premium dùng AI không giới hạn dù đã ghi nhận nhiều Credits", async () => {
+    mocks.ensureLearnerProfile.mockResolvedValue({ id: 1, userId: 31, tier: "premium", tierExpiresAt: null, pointBalance: 0, isBanned: false });
+    mocks.getMonthlyQuotaUsage.mockResolvedValue({ attempts: 0, quizzes: 49, aiCredits: 999_999 });
+    await expect(caller().learner.quota()).resolves.toMatchObject({
+      tier: "premium",
+      limits: { aiCreditsPerMonth: null },
+      remaining: { aiCredits: null },
+    });
+  });
+
+  it("hạ Premium hết hạn về Basic cho quota AI", async () => {
+    mocks.ensureLearnerProfile.mockResolvedValue({ id: 1, userId: 31, tier: "premium", tierExpiresAt: new Date("2026-01-01T00:00:00.000Z"), pointBalance: 0, isBanned: false });
+    mocks.getMonthlyQuotaUsage.mockResolvedValue({ attempts: 0, quizzes: 0, aiCredits: 20 });
+    await expect(caller().learner.quota()).resolves.toMatchObject({
+      tier: "basic",
+      limits: { aiCreditsPerMonth: 20 },
+      remaining: { aiCredits: 0 },
+    });
+  });
 });

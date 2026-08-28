@@ -9,7 +9,7 @@ export type MembershipQuota = {
 export const membershipQuotas: Record<QuotaTier, MembershipQuota> = {
   basic: { attemptsPerMonth: 20, quizzesPerMonth: 2, aiCreditsPerMonth: 20 },
   pro: { attemptsPerMonth: 40, quizzesPerMonth: 20, aiCreditsPerMonth: 40 },
-  premium: { attemptsPerMonth: null, quizzesPerMonth: 50, aiCreditsPerMonth: 50 },
+  premium: { attemptsPerMonth: null, quizzesPerMonth: 50, aiCreditsPerMonth: null },
 };
 
 export function getQuotaPeriod(now = new Date()) {

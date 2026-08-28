@@ -5,7 +5,7 @@ describe("membership quotas", () => {
   it("phản ánh quota đã chốt cho ba hạng thành viên", () => {
     expect(membershipQuotas.basic).toEqual({ attemptsPerMonth: 20, quizzesPerMonth: 2, aiCreditsPerMonth: 20 });
     expect(membershipQuotas.pro).toEqual({ attemptsPerMonth: 40, quizzesPerMonth: 20, aiCreditsPerMonth: 40 });
-    expect(membershipQuotas.premium).toEqual({ attemptsPerMonth: null, quizzesPerMonth: 50, aiCreditsPerMonth: 50 });
+    expect(membershipQuotas.premium).toEqual({ attemptsPerMonth: null, quizzesPerMonth: 50, aiCreditsPerMonth: null });
   });
 
   it("xử lý quota hữu hạn, vô hạn và chu kỳ tháng theo UTC", () => {

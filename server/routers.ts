@@ -303,7 +303,8 @@ async function assertMembershipGroupPermission(userId: number, permission: Membe
     }
   }
   const groups = await getMembershipGroupPermissions();
-  const group = groups.find(item => item.tier === profile.tier);
+  const effectiveTier = getEffectiveTier({ tier: profile.tier as "basic" | "pro" | "premium", tierExpiresAt: profile.tierExpiresAt });
+  const group = groups.find(item => item.tier === effectiveTier);
   if (!group?.[permission]) throw new TRPCError({ code: "FORBIDDEN", message: `Nhóm ${profile.tier.toUpperCase()} chưa được cấp quyền ${featureLabel}.` });
 }
 
@@ -333,7 +334,7 @@ async function assertQuotaAvailable(userId: number, resource: "attemptsPerMonth"
   const profile = await ensureLearnerProfile(userId);
   if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập quota thành viên." });
   const usage = await getMonthlyQuotaUsage(userId);
-  const tier = profile.tier as QuotaTier;
+  const tier = getEffectiveTier({ tier: profile.tier as "basic" | "pro" | "premium", tierExpiresAt: profile.tierExpiresAt }) as QuotaTier;
   const quota = membershipQuotas[tier];
   const limit = quota[resource];
   const used = resource === "attemptsPerMonth" ? usage.attempts : resource === "quizzesPerMonth" ? usage.quizzes : usage.aiCredits;
@@ -649,7 +650,7 @@ export const appRouter = router({
     quota: protectedProcedure.query(async ({ ctx }) => {
       const profile = await ensureLearnerProfile(ctx.user.id);
       if (!profile) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập quota thành viên." });
-      const tier = profile.tier as QuotaTier;
+      const tier = getEffectiveTier({ tier: profile.tier as "basic" | "pro" | "premium", tierExpiresAt: profile.tierExpiresAt }) as QuotaTier;
       const limits = membershipQuotas[tier];
       const usage = await getMonthlyQuotaUsage(ctx.user.id);
       const remaining = {

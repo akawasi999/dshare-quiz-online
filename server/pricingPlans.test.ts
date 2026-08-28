@@ -10,7 +10,7 @@ describe("pricing plans display quotas", () => {
     expect(getValue("Pro", "AI Credits mỗi tháng")).toBe("40");
     expect(getValue("Pro", "Lượt thi tối đa/tháng")).toBe("40");
     expect(getValue("Pro", "Số Quiz được tạo/tháng")).toBe("20");
-    expect(getValue("Premium", "AI Credits mỗi tháng")).toBe("50");
+    expect(getValue("Premium", "AI Credits mỗi tháng")).toBe("Vô hạn");
     expect(getValue("Premium", "Lượt thi tối đa/tháng")).toBe("Vô hạn");
     expect(getValue("Premium", "Số Quiz được tạo/tháng")).toBe("50");
   });
