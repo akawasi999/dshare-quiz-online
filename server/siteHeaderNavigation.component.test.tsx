@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), logout: vi.fn(), markRead: vi.fn(), markAllRead: vi.fn(), user: null as null | { id: number; name: string; role: "user" | "admin" }, summary: { profile: { avatarUrl: "https://example.com/minh.png", pointBalance: 1250 } }, notifications: { items: [{ id: 77, type: "quiz_rejected", title: "Quiz cần chỉnh sửa", body: "Lý do: cần bổ sung đáp án.", href: "/my-quizzes?status=rejected", isRead: false, createdAt: new Date("2026-08-22T08:00:00Z") }], unreadCount: 1 }, topics: [{ id: 10, name: "Tiểu học", slug: "tieu-hoc", parentId: null, depth: 0 }, { id: 11, name: "Lớp 1", slug: "lop-1", parentId: 10, depth: 1 }] }));
+const mocks = vi.hoisted(() => ({ toggleTheme: vi.fn(), logout: vi.fn(), markRead: vi.fn(), markAllRead: vi.fn(), user: null as null | { id: number; name: string; role: "user" | "admin" }, summary: { profile: { avatarUrl: "https://example.com/minh.png", pointBalance: 1250, tier: "premium" } }, notifications: { items: [{ id: 77, type: "quiz_rejected", title: "Quiz cần chỉnh sửa", body: "Lý do: cần bổ sung đáp án.", href: "/my-quizzes?status=rejected", isRead: false, createdAt: new Date("2026-08-22T08:00:00Z") }], unreadCount: 1 }, topics: [{ id: 10, name: "Tiểu học", slug: "tieu-hoc", parentId: null, depth: 0 }, { id: 11, name: "Lớp 1", slug: "lop-1", parentId: 10, depth: 1 }] }));
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: mocks.user, loading: false, logout: mocks.logout }) }));
 vi.mock("@/contexts/ThemeContext", () => ({ useTheme: () => ({ theme: "light", toggleTheme: mocks.toggleTheme }) }));
@@ -120,6 +120,7 @@ describe("SiteHeader navigation", () => {
     expect(accountTrigger.getAttribute("href")).toBe("/dashboard");
     fireEvent.mouseEnter(accountTrigger.parentElement!);
     expect(screen.getByAltText("Ảnh đại diện của Minh").getAttribute("src")).toBe("https://example.com/minh.png");
+    expect(screen.getByLabelText("Gói đăng ký Premium")).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: "Bảng điều khiển" }).getAttribute("href")).toBe("/dashboard");
     expect(screen.getByRole("menuitem", { name: /Ví Point/ }).textContent).toContain("1.250");
     expect(screen.getByRole("menu").className).toContain("account-dropdown");

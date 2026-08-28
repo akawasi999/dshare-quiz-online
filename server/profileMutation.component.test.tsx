@@ -79,10 +79,11 @@ describe("Profile mutation feedback", () => {
     expect(mocks.toast.success).toHaveBeenCalledWith("Đã xóa ảnh đại diện.", { description: "Hồ sơ đang sử dụng ảnh mặc định." });
   });
 
-  it("không hiển thị thẻ gói và quota cố định ở hai góc giao diện", () => {
+  it("hiển thị tag gói cạnh username, không hiển thị thẻ gói hay quota cố định ở hai góc giao diện", () => {
     mocks.summary.data.currentPlan = { name: "Basic học chủ động", tier: "basic", monthlyPrice: 0, promoPrice: null, benefits: ["20 lượt làm/tháng"] };
     mocks.summary.data.upgradePlans = [{ name: "PRO tăng tốc", tier: "pro", description: "Thêm quyền lợi chuyên sâu", payosEnabled: true }];
     render(<Profile />);
+    expect(screen.getByLabelText("Gói đăng ký Basic")).toBeTruthy();
     expect(screen.queryByLabelText("Gói đăng ký hiện tại")).toBeNull();
     expect(screen.queryByText("Quota tháng · BASIC")).toBeNull();
   });

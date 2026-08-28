@@ -927,3 +927,5 @@
 - [x] Chuẩn hóa AI khởi tạo và hiển thị đúng Nhận định Có/Không, Ghép nối và Sắp xếp thứ tự theo đặc tả.
 - [x] Bổ sung API /api/generate-from-file và Modal tải Word/PDF/PPTX/TXT để AI tạo câu hỏi theo đặc tả đính kèm.
 - [x] Hiển thị biểu tượng khóa trên ảnh bìa tất cả thẻ Quiz theo trạng thái public/private.
+- [x] Hiển thị tag gói đăng ký ngay cạnh username ở Tổng quan profile và mọi vị trí có username.
+- [x] Chỉ hiển thị tag gói khi người dùng đang đăng nhập xem chính username của mình, không áp dụng cho tài khoản khác.

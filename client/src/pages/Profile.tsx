@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import AccountLayout from "@/components/AccountLayout";
+import { UsernameWithPlan } from "@/components/SubscriptionPlanBadge";
 import { Button } from "@/components/ui/button";
 import { startLogin } from "@/const";
 import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
@@ -107,7 +108,7 @@ export default function Profile() {
               <ProfileAvatar name={user.name ?? "Học viên Dshare"} src={profile.avatarUrl} level={currentLevel?.displayOrder ?? 1} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="truncate text-[26px] font-black tracking-[-.05em] text-foreground sm:text-[29px]">{user.name ?? "Học viên Dshare"}</h1>
+                  <h1 className="min-w-0 text-[26px] font-black tracking-[-.05em] text-foreground sm:text-[29px]"><UsernameWithPlan name={user.name ?? "Học viên Dshare"} tier={profile.tier} nameClassName="max-w-[min(56vw,420px)]" /></h1>
                   <ShieldCheck className="shrink-0 text-primary" size={20} aria-label="Tài khoản đã xác minh" />
                 </div>
                 <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-violet-500/10 px-2 py-1 text-[11px] font-bold text-violet-700"><Trophy size={12} />Level {currentLevel?.displayOrder ?? 1}</span>
