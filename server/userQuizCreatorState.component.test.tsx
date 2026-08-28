@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   content: { data: { categories: [], subjects: [{ id: 1, title: "Tin học" }], lessons: [{ id: 7, subjectId: 1, title: "Excel cơ bản" }], topics: [{ id: 24, name: "Tin học văn phòng", parentId: null, depth: 0, status: "active" }, { id: 25, name: "Excel", parentId: 24, depth: 1, status: "active" }, { id: 26, name: "Hàm tính", parentId: 25, depth: 2, status: "active" }, { id: 27, name: "Chủ đề một cấp", parentId: null, depth: 0, status: "active" }, { id: 28, name: "Chủ đề hai cấp", parentId: null, depth: 0, status: "active" }, { id: 29, name: "Nhánh cuối", parentId: 28, depth: 1, status: "active" }] }, isLoading: false },
   create: { mutate: vi.fn(), isPending: false },
   chat: { mutate: vi.fn(), isPending: false, onSuccess: null as null | ((result: any) => void) },
+  fileGeneration: { mutate: vi.fn(), isPending: false, onSuccess: null as null | ((result: any) => void) },
   pinVersion: vi.fn(),
   draft: { data: undefined as any, isLoading: false },
   versions: { data: [] as any[], isLoading: false, refetch: vi.fn() },
@@ -17,7 +18,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children, hideHeader, hideFooter, staticHeader, compactViewport, allowMobileScroll }: { children: React.ReactNode; hideHeader?: boolean; hideFooter?: boolean; staticHeader?: boolean; compactViewport?: boolean; allowMobileScroll?: boolean }) => <div data-testid="account-layout" data-hide-header={hideHeader ? "true" : "false"} data-hide-footer={hideFooter ? "true" : "false"} data-static-header={staticHeader ? "true" : "false"} data-compact-viewport={compactViewport ? "true" : "false"} data-allow-mobile-scroll={allowMobileScroll ? "true" : "false"}>{children}</div> }));
 vi.mock("@/components/PermissionGuard", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => mocks.draft }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: (options: { onSuccess?: (result: any) => void }) => { mocks.chat.onSuccess = options.onSuccess ?? null; return mocks.chat; } }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { creator: { contentOptions: { useQuery: () => mocks.content }, getQuizForEdit: { useQuery: () => ({ data: undefined, isLoading: false }) }, quizAnalytics: { useQuery: () => mocks.analytics }, getDraft: { useQuery: () => mocks.draft }, listDraftVersions: { useQuery: () => mocks.versions }, saveDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, restoreDraftVersion: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, toggleDraftVersionPin: { useMutation: () => ({ mutate: mocks.pinVersion, isPending: false }) }, deleteDraft: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, createQuiz: { useMutation: () => mocks.create }, updateQuiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadCover: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, uploadQuestionImage: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) }, studioAiChat: { useMutation: (options: { onSuccess?: (result: any) => void }) => { mocks.chat.onSuccess = options.onSuccess ?? null; return mocks.chat; } }, generateQuestionsFromFile: { useMutation: (options: { onSuccess?: (result: any) => void }) => { mocks.fileGeneration.onSuccess = options.onSuccess ?? null; return mocks.fileGeneration; } }, generateQuestionsFromDocument: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, importManualQuizFile: { useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }, generateQuestionsFromRemoteSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 import UserQuizCreator, { InlineAnswerImageUploader, QuestionImagePreview, ShareQuizDialog } from "../client/src/pages/UserQuizCreator";
@@ -74,6 +75,20 @@ describe("Quiz Creator theo đặc tả", () => {
     renderBase(<UserQuizCreator />);
     expect(screen.getByTestId("topic-picker-dialog")).toBeTruthy();
     expect(screen.getByText("Chọn chủ đề Quiz")).toBeTruthy();
+  });
+
+  it("mở Modal tải Word, PDF, PowerPoint hoặc TXT khi trích xuất tệp", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Trích xuất tệp" }));
+    expect(screen.getByTestId("quiz-file-upload-modal")).toBeTruthy();
+    expect(screen.getByText("Tạo câu hỏi từ tệp")).toBeTruthy();
+    expect(screen.getByText(/Word \(.docx\), PDF, PowerPoint \(.pptx\), TXT/)).toBeTruthy();
+    const input = screen.getByTestId("quiz-file-upload-modal").querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [new File(["Nội dung bài học"], "bai-giang.pptx", { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" })] } });
+    expect(screen.getByTestId("file-upload-selected")).toBeTruthy();
+    expect(screen.getByText("bai-giang.pptx")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Tạo câu hỏi" })).toBeTruthy();
   });
 
   it("không tự mở popup chủ đề khi bản nháp đã có chủ đề", () => {
@@ -209,6 +224,24 @@ describe("Quiz Creator theo đặc tả", () => {
     await act(async () => { mocks.chat.onSuccess?.({ action: "apply", reply: "Đã cập nhật bản nháp.", detected: { topic: "Phân số", type: "single", difficulty: "hard", count: 1 }, suggestedPrompts: [], operations: [{ kind: "update", targetId: originalId, question: { type: "single", difficulty: "hard", points: 5, prompt: "Phân số nào tương đương một phần hai?", explanation: "2/4 rút gọn bằng 1/2.", imageUrl: "", options: [{ body: "2/4", isCorrect: true }, { body: "1/4", isCorrect: false }], answerConfig: {} } }, { kind: "create", targetId: null, question: { type: "multiple", difficulty: "medium", points: 3, prompt: "Chọn các phân số bằng một nửa.", explanation: "2/4 và 3/6 đều bằng 1/2.", imageUrl: "", options: [{ body: "2/4", isCorrect: true }, { body: "3/6", isCorrect: true }, { body: "1/3", isCorrect: false }], answerConfig: {} } }] }); });
     expect(screen.getByDisplayValue("Phân số nào tương đương một phần hai?")).toBeTruthy();
     expect(screen.getAllByText(/#2/).length).toBeGreaterThan(0);
+  });
+
+  it("hiển thị đúng biểu mẫu Nhận định, Ghép nối và Sắp xếp khi AI thêm câu hỏi", async () => {
+    const user = userEvent.setup();
+    render(<UserQuizCreator />);
+    await user.click(screen.getByRole("button", { name: "Nhập chủ đề" }));
+    await act(async () => { mocks.chat.onSuccess?.({ action: "apply", reply: "Đã tạo ba dạng câu hỏi.", detected: { topic: "Khoa học", type: "matching", difficulty: "medium", count: 3 }, suggestedPrompts: [], operations: [
+      { kind: "create", targetId: null, question: { type: "true_false_statements", difficulty: "easy", points: 2, prompt: "Chọn Có hoặc Không cho từng nhận định.", explanation: "Đối chiếu từng nhận định với kiến thức khoa học.", imageUrl: "", options: [], answerConfig: { statements: [{ id: "s-1", text: "Nước sôi ở 100 độ C.", correct: true }, { id: "s-2", text: "Mặt Trời quay quanh Trái Đất.", correct: false }] } } },
+      { kind: "create", targetId: null, question: { type: "matching", difficulty: "medium", points: 3, prompt: "Ghép mỗi chất với công thức hóa học phù hợp.", explanation: "Mỗi chất có công thức hóa học tương ứng.", imageUrl: "", options: [], answerConfig: { pairs: [{ left: "Nước", right: "H2O" }, { left: "Muối ăn", right: "NaCl" }] } } },
+      { kind: "create", targetId: null, question: { type: "ordering", difficulty: "hard", points: 4, prompt: "Sắp xếp các bước của quá trình bay hơi.", explanation: "Thực hiện theo thứ tự từ làm nóng đến hơi nước bay lên.", imageUrl: "", options: [], answerConfig: { orderingItems: [{ id: "step-1", text: "Đun nóng nước" }, { id: "step-2", text: "Nước bốc hơi" }] } } },
+    ] }); });
+    expect(screen.getByTestId("true-false-statements-table")).toBeTruthy();
+    expect(screen.getByDisplayValue("Nước sôi ở 100 độ C.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Chọn Có cho nội dung 1" }).getAttribute("aria-pressed")).toBe("true");
+    expect((screen.getByLabelText("Mục bên trái cặp 1") as HTMLInputElement).value).toBe("Nước");
+    expect((screen.getByLabelText("Mục bên phải cặp 2") as HTMLInputElement).value).toBe("NaCl");
+    expect((screen.getByLabelText("Bước sắp xếp 1") as HTMLInputElement).value).toBe("Đun nóng nước");
+    expect((screen.getByLabelText("Bước sắp xếp 2") as HTMLInputElement).value).toBe("Nước bốc hơi");
   });
 
   it("cho phép nhân bản và đổi loại câu hỏi ngay trong tab Câu hỏi", async () => {

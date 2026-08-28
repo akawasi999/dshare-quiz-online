@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getQuizStudioFileKind, toStudioQuestion, validateQuizStudioFile } from "../client/src/lib/quizStudioFile";
+import { getAiQuizGenerationFileKind, getQuizStudioFileKind, toStudioQuestion, validateAiQuizGenerationFile, validateQuizStudioFile } from "../client/src/lib/quizStudioFile";
 
 describe("quizStudioFile", () => {
   it("nhận diện định dạng tài liệu Studio và chặn tệp không hỗ trợ", () => {
@@ -11,5 +11,13 @@ describe("quizStudioFile", () => {
   it("chuyển câu hỏi nhập từ tệp về cấu trúc draft Studio", () => {
     const question = toStudioQuestion({ prompt: "Điền từ", explanation: "Lời giải", type: "fill_blank", difficulty: "easy", options: [], accepted: "Hà Nội|Ha Noi" });
     expect(question.answerConfig).toEqual({ acceptedAnswers: ["Hà Nội", "Ha Noi"] });
+  });
+
+  it("nhận diện Word, PDF, PowerPoint và TXT cho AI sinh câu hỏi", () => {
+    expect(getAiQuizGenerationFileKind(new File(["a"], "bai-giang.docx"))?.mimeType).toBe("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    expect(getAiQuizGenerationFileKind(new File(["a"], "bai-giang.pdf"))?.mimeType).toBe("application/pdf");
+    expect(getAiQuizGenerationFileKind(new File(["a"], "bai-giang.pptx"))?.mimeType).toBe("application/vnd.openxmlformats-officedocument.presentationml.presentation");
+    expect(getAiQuizGenerationFileKind(new File(["a"], "bai-giang.txt"))?.mimeType).toBe("text/plain");
+    expect(validateAiQuizGenerationFile(new File(["a"], "bai-giang.xlsx"))).toContain("Chỉ hỗ trợ");
   });
 });

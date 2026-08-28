@@ -49,6 +49,19 @@ describe("quizStudioChat", () => {
     expect(stringResult.operations[0]?.question?.options[0]).toEqual({ body: "2/4", isCorrect: true });
   });
 
+  it("chuẩn hóa ba dạng AI nâng cao sang answerConfig mà Studio hiển thị được", () => {
+    const makeDraft = (type: "true_false_statements" | "matching" | "ordering", answerConfig: Record<string, unknown>) => ({ type, difficulty: "medium" as const, points: 3, prompt: `Câu hỏi ${type} đầy đủ nội dung`, explanation: "Lời giải chi tiết cho câu hỏi.", imageUrl: "", options: [], answerConfig });
+    const result = parseQuizStudioChatResponse({ action: "apply", reply: "Đã tạo ba câu hỏi.", detected: { topic: "Khoa học", type: "matching", difficulty: "medium", count: 3 }, suggestedPrompts: [], operations: [
+      { kind: "create", targetId: null, question: makeDraft("true_false_statements", { statements: [{ text: "Nước sôi ở 100 độ C.", answer: "Có" }, { id: "s-2", content: "Mặt Trời quay quanh Trái Đất.", answer: "Không" }] }) },
+      { kind: "create", targetId: null, question: makeDraft("matching", { pairs: [{ id: "pair-1", left: "Nước", right: "H2O" }, { left: "Muối ăn", right: "NaCl" }] }) },
+      { kind: "create", targetId: null, question: { ...makeDraft("ordering", {}), steps: ["Đun nóng nước", "Nước bốc hơi"] } },
+    ] });
+    expect(result.action).toBe("apply");
+    expect(result.operations[0]?.question?.answerConfig).toMatchObject({ statements: [{ id: "statement-1", correct: true }, { id: "s-2", correct: false }] });
+    expect(result.operations[1]?.question?.answerConfig).toMatchObject({ pairs: [{ left: "Nước", right: "H2O" }, { left: "Muối ăn", right: "NaCl" }] });
+    expect(result.operations[2]?.question?.answerConfig).toMatchObject({ orderingItems: [{ id: "step-1", text: "Đun nóng nước" }, { id: "step-2", text: "Nước bốc hơi" }] });
+  });
+
   it("chuyển tool calls thành lệnh thêm, sửa và làm mới bản nháp", () => {
     expect(quizStudioChatTools.map(tool => tool.function.name)).toEqual(["add_questions", "update_question", "delete_question", "clear_questions"]);
     const current = [{ id: "q-1", ...singleDraft }];

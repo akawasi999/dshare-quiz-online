@@ -110,6 +110,7 @@ import { getAccountEntitlements, requirePermission } from "./permissionService";
 import { aiQuestionInputSchema, parseAiQuestionDraft } from "./aiQuestionGenerator";
 import { buildQuestionEnhancementMessages, buildQuizStudioChatMessages, parseQuestionEnhancement, parseQuizStudioChatResponse, parseQuizStudioToolCalls, questionEnhancementInputSchema, quizStudioChatInputSchema, quizStudioChatTools } from "./quizStudioChat";
 import { extractQuizDocumentText, generateMultipleChoiceFromDocument } from "./documentQuizExtraction";
+import { aiQuizFileInputSchema, extractQuizFileText, generateQuizQuestionsFromFile } from "./fileQuizGeneration";
 import { importManualQuizFile, ocrPdfWithVision } from "./manualQuizImport";
 import { cpanelLearningRouter } from "./cpanelLearningRouter";
 import { createInAppNotification } from "./inAppNotifications";
@@ -1233,6 +1234,26 @@ export const appRouter = router({
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể đọc tài liệu để tạo câu hỏi." });
+      }
+    }),
+    generateQuestionsFromFile: permissionProcedure("ai.quiz.generate").input(aiQuizFileInputSchema).mutation(async ({ ctx, input }) => {
+      await assertRegistryPermission(ctx.user.id, "quiz.ai.file_import");
+      const quota = await assertQuotaAvailable(ctx.user.id, "aiCreditsPerMonth");
+      if (quota.limit !== null && quota.used + input.questionCount > quota.limit) throw new TRPCError({ code: "FORBIDDEN", message: `Bạn cần ${input.questionCount} AI Credits nhưng chỉ còn ${Math.max(0, quota.limit - quota.used)} Credit.` });
+      try {
+        const document = await extractQuizFileText({ userId: ctx.user.id, ...input });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Không thể truy cập ví Point." });
+        const charged = await runWithAiPointCharge(db, { userId: ctx.user.id, code: "ai_question_generation", requestKey: `file:${ctx.user.id}:${Date.now()}` }, () => generateQuizQuestionsFromFile({ text: document.text, questionCount: input.questionCount, difficulty: input.difficulty }));
+        const generated = charged.value;
+        for (let index = 0; index < generated.length; index += 1) await recordAiUsage(ctx.user.id, "generate_question");
+        const sourceTextLimit = 6_000;
+        const responsePayload = { sourceName: document.sourceName, sourceUrl: document.sourceUrl, sourceText: document.text.slice(0, sourceTextLimit), sourceTextTruncated: document.text.length > sourceTextLimit, sourceCharacterCount: document.text.length, questions: generated, quota: { used: quota.used + generated.length, limit: quota.limit }, pointCharge: charged.pointCharge };
+        await saveQuizStudioAiHistory({ userId: ctx.user.id, kind: "chat", label: `Từ tệp: ${document.sourceName}`, payload: { input: { fileName: input.fileName, difficulty: input.difficulty, questionCount: input.questionCount }, result: responsePayload } });
+        return responsePayload;
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Không thể đọc tệp để tạo câu hỏi." });
       }
     }),
     generateQuestionsFromRemoteSource: protectedProcedure.input(z.object({ url: z.string().trim().url().max(2_000), questionCount: z.number().int().min(1).max(20).default(5), difficulty: z.enum(["easy", "medium", "hard"]).default("medium") })).mutation(async ({ ctx, input }) => {

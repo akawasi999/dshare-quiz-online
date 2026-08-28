@@ -1,5 +1,6 @@
 export type StudioImportedQuestion = { prompt: string; explanation: string; type: string; difficulty: string; points?: number; options: Array<{ body: string; isCorrect: boolean }>; accepted?: string; pairs?: Array<{ left: string; right: string }>; outline?: string };
 type StudioFileKind = { kind: "document"; mimeType: "application/pdf" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" } | { kind: "spreadsheet"; mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-excel" };
+export type AiQuizGenerationFileKind = { mimeType: "application/pdf" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "text/plain" };
 
 export function getQuizStudioFileKind(file: File): StudioFileKind | null {
   const name = file.name.toLowerCase();
@@ -13,6 +14,21 @@ export function getQuizStudioFileKind(file: File): StudioFileKind | null {
 export function validateQuizStudioFile(file: File) {
   if (file.size > 15 * 1024 * 1024) return "Tệp đính kèm tối đa 15 MB.";
   if (!getQuizStudioFileKind(file)) return "Chỉ hỗ trợ Excel (.xlsx/.xls), Word (.docx) hoặc PDF.";
+  return null;
+}
+
+export function getAiQuizGenerationFileKind(file: File): AiQuizGenerationFileKind | null {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".pdf")) return { mimeType: "application/pdf" };
+  if (name.endsWith(".docx")) return { mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" };
+  if (name.endsWith(".pptx")) return { mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation" };
+  if (name.endsWith(".txt")) return { mimeType: "text/plain" };
+  return null;
+}
+
+export function validateAiQuizGenerationFile(file: File) {
+  if (file.size > 15 * 1024 * 1024) return "Tệp tải lên tối đa 15 MB.";
+  if (!getAiQuizGenerationFileKind(file)) return "Chỉ hỗ trợ Word (.docx), PDF, PowerPoint (.pptx) hoặc TXT.";
   return null;
 }
 

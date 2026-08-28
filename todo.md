@@ -924,3 +924,5 @@
 - [x] Hiển thị ảnh đại diện 150 × 98 px phía trên Tên Quiz; thu nhỏ tiêu đề Cài đặt và bỏ mô tả.
 - [x] Thêm nền và hover sinh động, dễ nhận biết cho popup chọn chủ đề.
 - [x] Chỉ tự mở popup chủ đề khi Studio khởi tạo mà bản nháp hoặc Quiz chưa có chủ đề.
+- [x] Chuẩn hóa AI khởi tạo và hiển thị đúng Nhận định Có/Không, Ghép nối và Sắp xếp thứ tự theo đặc tả.
+- [x] Bổ sung API /api/generate-from-file và Modal tải Word/PDF/PPTX/TXT để AI tạo câu hỏi theo đặc tả đính kèm.

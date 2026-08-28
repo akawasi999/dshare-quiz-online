@@ -42,7 +42,7 @@ const studioChatResponseSchema = z.object({
   suggestedPrompts: z.array(z.string().trim().min(2).max(180)).max(3),
 });
 
-const toolQuestionSchema = { type: "object", properties: { type: { type: "string", enum: ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "ordering", "essay"] }, difficulty: { type: "string", enum: ["easy", "medium", "hard"] }, points: { type: "integer", minimum: 1, maximum: 100 }, prompt: { type: "string" }, explanation: { type: "string" }, imageUrl: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, imageUrl: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", additionalProperties: true } }, required: ["type", "difficulty", "points", "prompt", "explanation", "imageUrl", "options", "answerConfig"], additionalProperties: false };
+const toolQuestionSchema = { type: "object", properties: { type: { type: "string", enum: ["single", "multiple", "true_false", "true_false_statements", "fill_blank", "matching", "ordering", "essay"] }, difficulty: { type: "string", enum: ["easy", "medium", "hard"] }, points: { type: "integer", minimum: 1, maximum: 100 }, prompt: { type: "string" }, explanation: { type: "string" }, imageUrl: { type: "string" }, options: { type: "array", items: { type: "object", properties: { body: { type: "string" }, imageUrl: { type: "string" }, isCorrect: { type: "boolean" } }, required: ["body", "isCorrect"], additionalProperties: false } }, answerConfig: { type: "object", properties: { statements: { type: "array", items: { type: "object", properties: { id: { type: "string" }, text: { type: "string" }, correct: { type: "boolean" }, imageUrl: { type: "string" } }, required: ["id", "text", "correct"], additionalProperties: false } }, pairs: { type: "array", items: { type: "object", properties: { left: { type: "string" }, right: { type: "string" }, leftImageUrl: { type: "string" }, rightImageUrl: { type: "string" } }, required: ["left", "right"], additionalProperties: false } }, orderingItems: { type: "array", items: { type: "object", properties: { id: { type: "string" }, text: { type: "string" }, imageUrl: { type: "string" } }, required: ["id", "text"], additionalProperties: false } } }, additionalProperties: true } }, required: ["type", "difficulty", "points", "prompt", "explanation", "imageUrl", "options", "answerConfig"], additionalProperties: false };
 const toolQuestionUpdatesSchema = { type: "object", properties: { type: toolQuestionSchema.properties.type, difficulty: toolQuestionSchema.properties.difficulty, points: toolQuestionSchema.properties.points, prompt: toolQuestionSchema.properties.prompt, explanation: toolQuestionSchema.properties.explanation, imageUrl: toolQuestionSchema.properties.imageUrl, options: toolQuestionSchema.properties.options, answerConfig: toolQuestionSchema.properties.answerConfig }, additionalProperties: false };
 
 export const quizStudioChatTools: Tool[] = [
@@ -73,7 +73,14 @@ function normalizeAiOperationPayload(content: unknown) {
       });
       if (question.type === "single" && options.length) options.forEach((option, index) => { option.isCorrect = index === options.findIndex(candidate => candidate.isCorrect); });
       if (options.length && !options.some(option => option.isCorrect)) options[0]!.isCorrect = true;
-      return { ...operation, question: { ...question, options, answerConfig: isRecord(question.answerConfig) ? question.answerConfig : {} } };
+      const answerConfig = isRecord(question.answerConfig) ? { ...question.answerConfig } : {};
+      if (question.type === "true_false_statements" && !Array.isArray(answerConfig.statements) && Array.isArray(question.statements)) answerConfig.statements = question.statements;
+      if (question.type === "matching" && !Array.isArray(answerConfig.pairs) && Array.isArray(question.pairs)) answerConfig.pairs = question.pairs;
+      if (question.type === "ordering" && !Array.isArray(answerConfig.orderingItems)) {
+        if (Array.isArray(question.ordering)) answerConfig.orderingItems = question.ordering;
+        else if (Array.isArray(question.steps)) answerConfig.steps = question.steps;
+      }
+      return { ...operation, question: { ...question, options, answerConfig } };
     }),
   };
 }
@@ -101,7 +108,8 @@ Quy tắc operations:
 3. delete: targetId phải đúng id trong ngữ cảnh, question=null. clear chỉ dùng khi người tạo yêu cầu xóa toàn bộ danh sách.
 4. Chỉ dùng các kiểu: single, multiple, true_false, true_false_statements, fill_blank, matching, ordering, essay. Mọi câu phải có đáp án/answerConfig hợp lệ, points 1–100. imageUrl chỉ dùng URL ảnh hợp lệ hoặc chuỗi rỗng.
 5. Trường options BẮT BUỘC là mảng object theo đúng mẫu [{"body":"Nội dung đáp án","isCorrect":true}]. Không bao giờ gửi options là chuỗi, boolean, số hoặc mảng boolean/chuỗi. answerConfig BẮT BUỘC là object JSON, dùng {} khi không có cấu hình riêng; không bao giờ là chuỗi, boolean, mảng hoặc null.
-6. Nếu không thể tạo cấu trúc đầy đủ, dùng action="clarify" và operations=[]; không gửi operation dở dang. Không tự bịa id, không thao tác ngoài yêu cầu, không tạo nội dung độc hại hoặc đáp án cho bài thi đang diễn ra. Luôn phản hồi JSON đúng schema.
+6. Với true_false_statements, answerConfig phải là {"statements":[{"id":"statement-1","text":"Nhận định đủ ý","correct":true}]}; true nghĩa là Có, false nghĩa là Không, và luôn tạo 2–8 nhận định. Với matching, dùng {"pairs":[{"left":"Mục bên trái","right":"Mục bên phải"}]} và luôn tạo ít nhất 2 cặp. Với ordering, dùng {"orderingItems":[{"id":"step-1","text":"Bước đầu tiên"}]} theo đúng thứ tự đáp án, luôn có 2–10 bước. Ba kiểu này để options=[]; không dùng keys statements/pairs/steps sai cấu trúc.
+7. Nếu không thể tạo cấu trúc đầy đủ, dùng action="clarify" và operations=[]; không gửi operation dở dang. Không tự bịa id, không thao tác ngoài yêu cầu, không tạo nội dung độc hại hoặc đáp án cho bài thi đang diễn ra. Luôn phản hồi JSON đúng schema.
 
 Ngữ cảnh Studio:
 ${studioContext}` }, ...input.messages.map(message => ({ role: message.role, content: message.content }))];

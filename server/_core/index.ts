@@ -11,6 +11,7 @@ import { serveStatic, setupVite } from "./vite";
 import { registerPayosWebhook } from "../payosWebhook";
 import { registerSeoRoutes } from "../seoRoutes";
 import { registerGoogleOAuthRoutes } from "../googleOAuth";
+import { registerFileQuizGenerationRoute } from "../fileQuizGenerationRoute";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -42,6 +43,7 @@ async function startServer() {
   registerOAuthRoutes(app);
   registerGoogleOAuthRoutes(app);
   registerPayosWebhook(app);
+  registerFileQuizGenerationRoute(app);
   // tRPC API
   app.use(
     "/api/trpc",
