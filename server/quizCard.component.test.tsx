@@ -34,6 +34,7 @@ describe("QuizCard", () => {
       tier: "Basic",
       accent: "#007453",
       coverImage: "/manus-storage/cover.png",
+      visibility: "public",
     }} />);
 
     expect(screen.getByText("Tiểu học › Lớp 6 › Tin học")).toBeTruthy();
@@ -47,5 +48,11 @@ describe("QuizCard", () => {
     expect(quizLink.getAttribute("href")).toBe("/quiz/77");
     expect(quizLink.querySelector("article")).toBeTruthy();
     expect(screen.getByText("+0 XP")).toBeTruthy();
+    expect(screen.getByLabelText("Quiz công khai").getAttribute("data-icon-tooltip")).toContain("Công khai");
+  });
+
+  it("hiển thị ổ khóa đóng ở góc ảnh bìa khi Quiz ở chế độ private", () => {
+    render(<QuizCard quiz={{ id: 78, title: "Quiz riêng", summary: "", category: "", subject: "", lesson: "", difficulty: "Dễ", mode: "Ôn tập", questionCount: 2, duration: "5 phút", points: 0, reward: 0, tier: "Basic", accent: "#007453", visibility: "private" }} />);
+    expect(screen.getByLabelText("Quiz riêng tư").getAttribute("data-icon-tooltip")).toContain("ẩn khỏi Khám phá");
   });
 });

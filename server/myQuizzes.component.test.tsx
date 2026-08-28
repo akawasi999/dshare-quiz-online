@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ setLocation: vi.fn(), duplicate: vi.fn(), remove: vi.fn(), data: [{ id: 1, title: "Ôn tập Sinh học 10", summary: "Hệ thống câu hỏi tế bào", coverImageUrl: null, questionCount: 12, durationSeconds: 900, isPublished: false, status: "draft", updatedAt: new Date("2026-08-20T00:00:00.000Z") }, { id: 2, title: "Lịch sử Việt Nam", summary: "Quiz đã công khai", coverImageUrl: null, questionCount: 8, durationSeconds: 600, isPublished: true, status: "published", updatedAt: new Date("2026-08-19T00:00:00.000Z") }, { id: 3, title: "Đề cần chỉnh sửa", summary: "Quiz đang phản hồi", coverImageUrl: null, questionCount: 5, durationSeconds: 600, isPublished: false, status: "rejected", reviewReason: "Bổ sung đáp án đúng cho câu 3.", reviewedAt: new Date("2026-08-21T00:00:00.000Z"), updatedAt: new Date("2026-08-21T00:00:00.000Z") }] }));
+const mocks = vi.hoisted(() => ({ setLocation: vi.fn(), duplicate: vi.fn(), remove: vi.fn(), data: [{ id: 1, title: "Ôn tập Sinh học 10", summary: "Hệ thống câu hỏi tế bào", coverImageUrl: null, questionCount: 12, durationSeconds: 900, isPublished: false, status: "draft", visibility: "private", updatedAt: new Date("2026-08-20T00:00:00.000Z") }, { id: 2, title: "Lịch sử Việt Nam", summary: "Quiz đã công khai", coverImageUrl: null, questionCount: 8, durationSeconds: 600, isPublished: true, status: "published", visibility: "public", updatedAt: new Date("2026-08-19T00:00:00.000Z") }, { id: 3, title: "Đề cần chỉnh sửa", summary: "Quiz đang phản hồi", coverImageUrl: null, questionCount: 5, durationSeconds: 600, isPublished: false, status: "rejected", reviewReason: "Bổ sung đáp án đúng cho câu 3.", reviewedAt: new Date("2026-08-21T00:00:00.000Z"), updatedAt: new Date("2026-08-21T00:00:00.000Z") }] }));
 
 vi.mock("@/components/AccountLayout", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock("@/lib/trpc", () => ({ trpc: { creator: { myQuizzes: { useQuery: () => ({ data: mocks.data, isLoading: false }) }, duplicateQuiz: { useMutation: () => ({ isPending: false, mutate: mocks.duplicate }) }, deleteQuiz: { useMutation: () => ({ isPending: false, mutate: mocks.remove }) } }, useUtils: () => ({ creator: { myQuizzes: { invalidate: vi.fn() } } }) } }));
@@ -25,6 +25,8 @@ describe("MyQuizzes", () => {
     expect(screen.getByText("Đề cần chỉnh sửa")).toBeTruthy();
     expect(screen.getByTestId("my-quizzes-filter").className).toContain("my-quizzes-filter");
     expect(screen.getByTestId("my-quiz-card-1").className).toContain("my-quiz-card");
+    expect(within(screen.getByTestId("my-quiz-card-1")).getByLabelText("Quiz riêng tư").getAttribute("data-icon-tooltip")).toContain("ẩn khỏi Khám phá");
+    expect(within(screen.getByTestId("my-quiz-card-2")).getByLabelText("Quiz công khai").getAttribute("data-icon-tooltip")).toContain("Công khai");
     expect(screen.getByText("Bổ sung đáp án đúng cho câu 3.")).toBeTruthy();
     await user.type(screen.getByRole("textbox", { name: "Tìm kiếm Quiz của tôi" }), "lịch sử");
     expect(screen.queryByText("Ôn tập Sinh học 10")).toBeNull();

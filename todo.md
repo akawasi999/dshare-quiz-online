@@ -926,3 +926,4 @@
 - [x] Chỉ tự mở popup chủ đề khi Studio khởi tạo mà bản nháp hoặc Quiz chưa có chủ đề.
 - [x] Chuẩn hóa AI khởi tạo và hiển thị đúng Nhận định Có/Không, Ghép nối và Sắp xếp thứ tự theo đặc tả.
 - [x] Bổ sung API /api/generate-from-file và Modal tải Word/PDF/PPTX/TXT để AI tạo câu hỏi theo đặc tả đính kèm.
+- [x] Hiển thị biểu tượng khóa trên ảnh bìa tất cả thẻ Quiz theo trạng thái public/private.

@@ -219,6 +219,7 @@ export default function QuizLibrary({
           coverImage: quiz.coverImageUrl ?? undefined,
           authorName: quiz.creatorName ?? undefined,
           tier: tierLabels[quiz.accessTier],
+          visibility: "public" as const,
           rootTopicId: quiz.rootTopicId ?? null,
         }))
       ),

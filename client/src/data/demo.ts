@@ -18,6 +18,7 @@ export type ShowcaseQuiz = {
   createdAt?: Date;
   coverImage?: string;
   authorName?: string | null;
+  visibility?: "public" | "unlisted" | "private";
   tier: "Basic" | "Pro" | "Premium";
   accent: string;
 };
