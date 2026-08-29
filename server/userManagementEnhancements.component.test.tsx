@@ -8,8 +8,8 @@ const mocks = vi.hoisted(() => ({
   bulkMutate: vi.fn(),
   statusMutate: vi.fn(),
   toast: { success: vi.fn(), error: vi.fn() },
-  users: { data: { items: [{ user: { id: 9, name: "Người làm bài mẫu", email: "participant@example.com", openId: "participant-9", createdAt: new Date() }, profile: { tier: "basic", pointBalance: 20, isBanned: false }, completedCount: 3 }], total: 25, page: 1, pageSize: 12, totalPages: 3 }, isLoading: false, refetch: vi.fn() },
-  detail: { data: { user: { id: 9, name: "Người làm bài mẫu", email: "participant@example.com", openId: "participant-9" }, profile: { tier: "pro", pointBalance: 170, isBanned: false }, activity: [], recentAttempts: [], recentTransactions: [], paymentOrders: [{ order: { id: 42, description: "Nâng cấp PRO", itemCode: "membership-2", payosOrderCode: 1787025000123, status: "paid", createdAt: new Date("2026-08-20T00:00:00Z") }, emailDeliveries: [{ id: 11, subject: "Xác nhận kích hoạt PRO · Dshare Quiz Online", recipient: "participant@example.com", status: "sent", errorMessage: null, createdAt: new Date("2026-08-20T00:02:00Z") }] }] }, isLoading: false },
+  users: { data: { items: [{ user: { id: 9, name: "Người làm bài mẫu", email: "participant@example.com", openId: "participant-9", createdAt: new Date() }, profile: { tier: "basic", pointBalance: 20, xpBalance: 220, isBanned: false }, completedCount: 3 }], total: 25, page: 1, pageSize: 12, totalPages: 3 }, isLoading: false, refetch: vi.fn() },
+  detail: { data: { user: { id: 9, name: "Người làm bài mẫu", email: "participant@example.com", openId: "participant-9" }, profile: { tier: "pro", pointBalance: 170, xpBalance: 480, isBanned: false }, activity: [], recentAttempts: [], recentTransactions: [], paymentOrders: [{ order: { id: 42, description: "Nâng cấp PRO", itemCode: "membership-2", payosOrderCode: 1787025000123, status: "paid", createdAt: new Date("2026-08-20T00:00:00Z") }, emailDeliveries: [{ id: 11, subject: "Xác nhận kích hoạt PRO · Dshare Quiz Online", recipient: "participant@example.com", status: "sent", errorMessage: null, createdAt: new Date("2026-08-20T00:02:00Z") }] }] }, isLoading: false },
   permissionAudit: { data: [{ id: 77, action: "user.tier_updated", metadata: { previousTier: "basic", tier: "pro" }, actor: { id: 1, name: "Quản trị viên", email: "admin@example.com" }, createdAt: new Date("2026-08-21T00:00:00Z") }], isLoading: false, refetch: vi.fn() },
 }));
 
@@ -46,11 +46,18 @@ describe("UserManagementPanel enhancements", () => {
     expect(mocks.bulkMutate).toHaveBeenCalledWith({ userIds: [9], tier: "pro" });
   });
 
+  it("hiển thị XP và Point theo cùng hồ sơ User trong danh sách CPanel", () => {
+    render(<UserManagementPanel />);
+    expect(screen.getAllByText("220").length).toBeGreaterThan(0);
+    expect(screen.getByText("XP")).toBeTruthy();
+  });
+
   it("hiển thị lịch sử gửi email theo từng đơn thanh toán trong chi tiết tài khoản", async () => {
     const user = userEvent.setup();
     render(<UserManagementPanel />);
     await user.click(screen.getAllByText("Người làm bài mẫu")[0]);
     expect(screen.getByText("Lịch sử xác nhận giao dịch")).toBeTruthy();
+    expect(screen.getByText("480")).toBeTruthy();
     expect(screen.getByText("Nâng cấp PRO")).toBeTruthy();
     expect(screen.getByText("Xác nhận kích hoạt PRO · Dshare Quiz Online")).toBeTruthy();
     expect(screen.getByText("Đã gửi")).toBeTruthy();

@@ -930,3 +930,4 @@
 - [x] Hiển thị tag gói đăng ký ngay cạnh username ở Tổng quan profile và mọi vị trí có username.
 - [x] Chỉ hiển thị tag gói khi người dùng đang đăng nhập xem chính username của mình, không áp dụng cho tài khoản khác.
 - [x] Cấu hình gói Premium không giới hạn sử dụng AI, đồng bộ backend, quota UI và regression.
+- [x] Đồng bộ dữ liệu và giao diện giữa CPanel Admin với khu vực User, giữ nguyên phân quyền quản trị.

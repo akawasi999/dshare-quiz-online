@@ -14,6 +14,7 @@ vi.stubGlobal("scrollTo", vi.fn());
 Element.prototype.scrollIntoView = vi.fn();
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: 1, name: "Admin", email: "admin@dshare.vn" }, loading: false, logout: mocks.logout }) }));
+vi.mock("@/lib/trpc", () => ({ trpc: { learner: { summary: { useQuery: () => ({ data: { profile: { tier: "premium" } } }) } } } }));
 vi.mock("@/contexts/ThemeContext", () => ({ useTheme: () => ({ theme: "light", toggleTheme: mocks.toggleTheme }) }));
 vi.mock("@/hooks/useMobile", () => ({ useIsMobile: () => false }));
 vi.mock("@/components/BrandLogo", () => ({ default: () => <span>Dshare</span> }));
@@ -30,6 +31,7 @@ describe("DashboardLayout CPanel v2", () => {
     fireEvent.keyDown(window, { key: "k", ctrlKey: true });
 
     expect(screen.getByPlaceholderText("Tìm dashboard, người dùng, Point, báo lỗi…")).toBeTruthy();
+    expect(screen.getAllByText("Premium").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Người dùng").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Live Monitoring").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Chủ đề").length).toBeGreaterThan(1);

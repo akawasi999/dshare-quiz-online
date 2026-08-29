@@ -29,7 +29,7 @@ export default function AdminOperationsDashboard() {
     { label: "Người học", value: `${overview.data?.users ?? 0}`, note: "Tài khoản học tập", progress: Math.min(100, (overview.data?.users ?? 0) * 10) },
   ];
   const kpis = [
-    { label: "Người học", value: overview.data?.users ?? 0, note: "Tổng tài khoản học tập", icon: UsersRound, href: ROUTES.adminUsers },
+    { label: "Tài khoản", value: overview.data?.users ?? 0, note: "Tổng tài khoản người dùng", icon: UsersRound, href: ROUTES.adminUsers },
     { label: "Lượt làm Quiz", value: overview.data?.submitted ?? 0, note: "Bài đã nộp", icon: ClipboardList, href: ROUTES.adminAnalytics },
     { label: "Point đã tiêu", value: analytics.data?.pointsConsumed ?? 0, note: "Dòng Point đã ghi nhận", icon: CircleDollarSign, href: ROUTES.adminPoints },
     { label: "Cần kiểm duyệt", value: pending.length, note: "Báo lỗi đang chờ xử lý", icon: FileWarning, href: ROUTES.adminErrors },
