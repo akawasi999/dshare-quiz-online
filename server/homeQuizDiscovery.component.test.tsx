@@ -3,11 +3,28 @@ import React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { showcaseQuizzes } from "../client/src/data/demo";
 
 vi.mock("@/components/SiteHeader", () => ({ default: () => <header>Header</header> }));
 vi.mock("@/components/QuizCard", () => ({ default: ({ quiz }: { quiz: { title: string } }) => <article data-testid="quiz-card">{quiz.title}</article> }));
-vi.mock("@/lib/trpc", () => ({ trpc: { catalog: { list: { useQuery: () => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() }) } } } }));
+vi.mock("@/lib/trpc", () => ({
+  trpc: {
+    catalog: {
+      list: {
+        useQuery: () => ({
+          data: [
+            { quizId: 901, title: "Catalog Python", rootTopicTitle: "Công nghệ", topicTitle: "Lập trình", categoryTitle: "Công nghệ", subjectTitle: "Python", lessonTitle: "Bài 1", topicPath: "Công nghệ › Lập trình", summary: "Quiz live", mode: "testing", difficulty: "easy", durationSeconds: 1500, questionCount: 20, entryPointCost: 0, completionReward: 30, attemptCount: 12, recentAttemptCount: 3, createdAt: new Date("2026-08-01"), coverImageUrl: null, creatorName: "Tác giả live", accessTier: "basic" },
+            { quizId: 902, title: "Catalog Data", rootTopicTitle: "Công nghệ", topicTitle: "Phân tích", categoryTitle: "Công nghệ", subjectTitle: "Dữ liệu", lessonTitle: "Bài 2", topicPath: "Công nghệ › Phân tích", summary: "Quiz live", mode: "testing", difficulty: "medium", durationSeconds: 2100, questionCount: 30, entryPointCost: 10, completionReward: 80, attemptCount: 8, recentAttemptCount: 2, createdAt: new Date("2026-08-02"), coverImageUrl: null, creatorName: "Tác giả live", accessTier: "pro" },
+            { quizId: 903, title: "Catalog Writing", rootTopicTitle: "Ngoại ngữ", topicTitle: "IELTS", categoryTitle: "Ngoại ngữ", subjectTitle: "Writing", lessonTitle: "Bài 5", topicPath: "Ngoại ngữ › IELTS", summary: "Quiz live", mode: "testing", difficulty: "medium", durationSeconds: 1800, questionCount: 24, entryPointCost: 0, completionReward: 40, attemptCount: 5, recentAttemptCount: 1, createdAt: new Date("2026-08-03"), coverImageUrl: null, creatorName: "Tác giả live", accessTier: "basic" },
+            { quizId: 904, title: "Catalog Critical Thinking", rootTopicTitle: "Kỹ năng", topicTitle: "Tư duy", categoryTitle: "Kỹ năng", subjectTitle: "Phản biện", lessonTitle: "Bài 3", topicPath: "Kỹ năng › Tư duy", summary: "Quiz live", mode: "testing", difficulty: "hard", durationSeconds: 2400, questionCount: 25, entryPointCost: 15, completionReward: 120, attemptCount: 15, recentAttemptCount: 4, createdAt: new Date("2026-08-04"), coverImageUrl: null, creatorName: "Tác giả live", accessTier: "premium" },
+          ],
+          isLoading: false,
+          isError: false,
+          refetch: vi.fn(),
+        }),
+      },
+    },
+  },
+}));
 vi.mock("wouter", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>, useLocation: () => ["/", vi.fn()] }));
 
 import Home from "../client/src/pages/Home";
@@ -56,13 +73,12 @@ describe("Home quiz discovery", () => {
     const user = userEvent.setup();
     render(<Home />);
 
-    expect(screen.getAllByTestId("quiz-card")).toHaveLength(showcaseQuizzes.length);
+    expect(screen.getAllByTestId("quiz-card")).toHaveLength(4);
     await user.selectOptions(screen.getByRole("combobox", { name: "Sắp xếp bộ đề" }), "reward");
-    const expectedTopTitle = [...showcaseQuizzes].sort((left, right) => Number(right.reward ?? 0) - Number(left.reward ?? 0))[0]?.title;
-    expect(screen.getAllByTestId("quiz-card")[0]?.textContent).toBe(expectedTopTitle);
+    expect(screen.getAllByTestId("quiz-card")[0]?.textContent).toBe("Catalog Critical Thinking");
 
     const search = screen.getByRole("textbox", { name: "Tìm bộ đề" });
-    await user.type(search, showcaseQuizzes[0]?.title ?? "");
+    await user.type(search, "Catalog Python");
     expect(screen.getAllByTestId("quiz-card")).toHaveLength(1);
   });
 });

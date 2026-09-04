@@ -9,10 +9,10 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination";
 import { useAuth } from "@/_core/hooks/useAuth";
-import type { ShowcaseQuiz } from "@/data/demo";
 import { ROUTES } from "@/lib/routes";
 import { trpc } from "@/lib/trpc";
 import { sharedDataQueryOptions } from "@/lib/sharedDataSync";
+import { toShowcaseQuiz } from "@/lib/catalogQuiz";
 import { cn } from "@/lib/utils";
 import { withTrendingStatus } from "@shared/quizTrending";
 import {
@@ -30,12 +30,6 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 
-const difficultyLabels = {
-  easy: "Dễ",
-  medium: "Trung bình",
-  hard: "Nâng cao",
-} as const;
-const tierLabels = { basic: "Basic", pro: "Pro", premium: "Premium" } as const;
 const libraryPreferenceKey = "dshare-quiz-library-preferences";
 type LibraryPreferences = { topicId: number | null; difficulty: string };
 const defaultLibraryPreferences: LibraryPreferences = {
@@ -180,46 +174,11 @@ export default function QuizLibrary({
     !hasUnlimitedAttempts &&
     attemptLimit !== undefined &&
     remainingAttempts <= Math.max(2, Math.ceil(attemptLimit * 0.2));
-  const liveQuizzes = useMemo<
-    (ShowcaseQuiz & { rootTopicId: number | null })[]
-  >(
+  const liveQuizzes = useMemo(
     () =>
       withTrendingStatus(
         (catalog.data ?? []).map(quiz => ({
-          id: quiz.quizId,
-          title: quiz.title,
-          category:
-            quiz.rootTopicTitle ??
-            quiz.topicTitle ??
-            quiz.categoryTitle ??
-            "Chưa phân loại",
-          subject: quiz.subjectTitle ?? "",
-          lesson: quiz.lessonTitle ?? "",
-          topicPath:
-            quiz.topicPath ??
-            ([quiz.rootTopicTitle, quiz.topicTitle]
-              .filter(Boolean)
-              .join(" › ") ||
-              quiz.categoryTitle ||
-              "Chưa phân loại"),
-          summary: quiz.summary ?? "Bộ đề đã được biên soạn trong Dshare.",
-          mode:
-            quiz.mode === "testing"
-              ? ("Kiểm tra" as const)
-              : ("Ôn tập" as const),
-          difficulty: difficultyLabels[quiz.difficulty],
-          duration: `${Math.ceil(quiz.durationSeconds / 60)} phút`,
-          questionCount: quiz.questionCount,
-          accent: "var(--primary)",
-          points: quiz.entryPointCost,
-          reward: quiz.completionReward,
-          attemptCount: Number(quiz.attemptCount ?? 0),
-          recentAttemptCount: Number(quiz.recentAttemptCount ?? 0),
-          createdAt: quiz.createdAt,
-          coverImage: quiz.coverImageUrl ?? undefined,
-          authorName: quiz.creatorName ?? undefined,
-          tier: tierLabels[quiz.accessTier],
-          visibility: "public" as const,
+          ...toShowcaseQuiz(quiz),
           rootTopicId: quiz.rootTopicId ?? null,
         }))
       ),
